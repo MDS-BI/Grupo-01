@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Destination Manager</title>
+  </head>
+  <body>
+    <main id="app">
+      <h1>Destination Manager</h1>
+
+      <section aria-labelledby="form-heading">
+        <h2 id="form-heading">Add / Edit Destination</h2>
+        <form id="destination-form">
+          <input type="hidden" id="destination-id" />
+          <div>
+            <label for="name">Name *</label>
+            <input id="name" name="name" required />
+            <div class="error" id="error-name" aria-live="polite"></div>
+          </div>
+          <div>
+            <label for="location">Location *</label>
+            <input id="location" name="location" required />
+            <div class="error" id="error-location" aria-live="polite"></div>
+          </div>
+          <div>
+            <label for="category">Category</label>
+            <input id="category" name="category" />
+          </div>
+          <div>
+            <label for="description">Notes</label>
+            <textarea id="description" name="description"></textarea>
+          </div>
+          <div>
+            <label for="plannedDate">Planned visit date</label>
+            <input id="plannedDate" name="plannedDate" type="date" />
+            <div class="error" id="error-plannedDate" aria-live="polite"></div>
+          </div>
+          <button type="submit" id="submit-button">Save</button>
+          <button type="button" id="cancel-edit" hidden>Cancel Edit</button>
+        </form>
+      </section>
+
+      <section aria-labelledby="booking-form-heading">
+        <h2 id="booking-form-heading">Add / Edit Booking</h2>
+        <form id="booking-form">
+          <input type="hidden" id="booking-id" />
+          <input type="hidden" id="booking-destination-id" />
+          <div>
+            <label for="booking-destination">Destination *</label>
+            <select id="booking-destination" name="booking-destination"></select>
+            <div class="error" id="error-booking-destination" aria-live="polite"></div>
+          </div>
+          <div>
+            <label for="booking-reference">Reference *</label>
+            <input id="booking-reference" name="booking-reference" required />
+            <div class="error" id="error-booking-reference" aria-live="polite"></div>
+          </div>
+          <div>
+            <label for="booking-checkIn">Check-in *</label>
+            <input id="booking-checkIn" name="booking-checkIn" type="date" required />
+            <div class="error" id="error-booking-checkIn" aria-live="polite"></div>
+          </div>
+          <div>
+            <label for="booking-checkOut">Check-out *</label>
+            <input id="booking-checkOut" name="booking-checkOut" type="date" required />
+            <div class="error" id="error-booking-checkOut" aria-live="polite"></div>
+          </div>
+          <div>
+            <label for="booking-guests">Guests</label>
+            <input id="booking-guests" name="booking-guests" type="number" min="1" step="1" />
+            <div class="error" id="error-booking-guests" aria-live="polite"></div>
+          </div>
+          <div>
+            <label for="booking-totalPrice">Total price</label>
+            <input id="booking-totalPrice" name="booking-totalPrice" type="number" min="0" step="0.01" />
+            <div class="error" id="error-booking-totalPrice" aria-live="polite"></div>
+          </div>
+          <div>
+            <label for="booking-currency">Currency</label>
+            <input id="booking-currency" name="booking-currency" placeholder="e.g. USD" />
+          </div>
+          <div>
+            <label for="booking-status">Status</label>
+            <select id="booking-status" name="booking-status">
+              <option value="">--</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="pending">Pending</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          <button type="submit" id="booking-submit-button">Save Booking</button>
+          <button type="button" id="booking-cancel-edit" hidden>Cancel Edit</button>
+        </form>
+      </section>
+
+      <section aria-labelledby="search-heading">
+        <h2 id="search-heading">Search</h2>
+        <input id="search-input" placeholder="Search by name, location, category..." />
+      </section>
+
+      <section aria-labelledby="list-heading">
+        <h2 id="list-heading">Destinations</h2>
+        <div id="list-empty" class="empty">No destinations yet.</div>
+        <ul id="destination-list" aria-live="polite"></ul>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

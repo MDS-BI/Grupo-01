@@ -1,0 +1,21 @@
+* { box-sizing: border-box; }
+body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; padding: 20px; line-height:1.4; }
+main { max-width: 800px; margin: 0 auto; }
+form > div { margin-bottom: 10px; }
+label { display:block; font-weight:600; margin-bottom:4px; }
+input, textarea, select { padding:8px; border:1px solid #ccc; border-radius:4px; }
+input, textarea, select { width:100%; }
+button { padding:8px 12px; margin-right:8px; }
+.error { color:#b00020; font-size:0.9em; margin-top:4px; }
+.empty { color:#666; padding:12px 0; }
+.muted { color:#666; font-size:0.9em; }
+#destination-list { list-style:none; padding:0; margin:0; }
+.destination-item { padding:12px; border-bottom:1px solid #eee; }
+.destination-top { display:flex; justify-content:space-between; align-items:center; }
+.destination-meta { max-width:70%; }
+.destination-actions button{ margin-left:8px; }
+.destination-bookings { margin-top:8px; padding-left:10px; border-left:2px solid #eee; }
+.booking-list { list-style:none; padding:0; margin:6px 0; }
+.booking-item { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:4px 0; font-size:0.95em; }
+.booking-item span:first-child { max-width:70%; }
+@media (min-width:700px){ input, textarea, select{ max-width:600px; } }
