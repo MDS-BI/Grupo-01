@@ -9,11 +9,18 @@ button { padding:8px 12px; margin-right:8px; }
 .error { color:#b00020; font-size:0.9em; margin-top:4px; }
 .empty { color:#666; padding:12px 0; }
 .muted { color:#666; font-size:0.9em; }
-#destination-list { list-style:none; padding:0; margin:0; }
+.welcome-actions { display:flex; flex-direction:column; gap:12px; max-width:400px; margin-top:20px; }
+.welcome-actions button { padding:14px 18px; font-size:1.05em; text-align:left; }
+.view-nav { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+.view-nav h1 { margin:0; font-size:1.4em; }
+.view-nav button { margin-right:0; }
+.nav-tabs { display:flex; gap:8px; margin-bottom:20px; border-bottom:2px solid #ddd; }
+.tab-button { padding:8px 16px; margin:0 8px -2px 0; border:1px solid transparent; border-bottom:2px solid transparent; background:none; cursor:pointer; font-size:1em; color:#444; }
+.tab-button:hover { color:#111; }
+.tab-button.active { border:1px solid #ddd; border-bottom-color:#fff; background:#fff; color:#111; font-weight:600; }
+#search-results-list { list-style:none; padding:0; margin:0; }
 .destination-item { padding:12px; border-bottom:1px solid #eee; }
-.destination-top { display:flex; justify-content:space-between; align-items:center; }
-.destination-meta { max-width:70%; }
-.destination-actions button{ margin-left:8px; }
+.destination-meta { max-width:100%; }
 .destination-bookings { margin-top:8px; padding-left:10px; border-left:2px solid #eee; }
 .booking-list { list-style:none; padding:0; margin:6px 0; }
 .booking-item { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:4px 0; font-size:0.95em; }

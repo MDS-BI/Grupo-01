@@ -144,6 +144,41 @@
 
 ---
 
+## Phase 9: User Story 6-8 - Welcome screen, manage screen with navigation tab, and search screen
+
+**Goal**: Split the single-page app into a welcome screen, a manage screen with a horizontal navigation tab (Destinations, Bookings, Home) that does not display the destination list, and a dedicated search screen.
+
+**Independent Test**: A user can open the app on the welcome screen, reach the manage and search screens, use the Destinations/Bookings/Home navigation tab on the manage screen, and return Home.
+
+### Implementation for User Story 6 - Welcome screen
+
+- [x] T039 [P] [US6] Add a welcome screen view with two clearly labeled navigation buttons in index.html
+- [x] T040 [P] [US6] Add view-switching logic for the welcome, manage, and search screens in src/app.js
+
+### Implementation for User Story 7 - Dedicated manage screen
+
+- [x] T041 [P] [US7] Add a horizontal navigation tab with Destinations, Bookings, and Home buttons to the manage view in index.html
+- [x] T042 [P] [US7] Organize the manage view into destinations and bookings panels and remove the destination list in index.html
+- [x] T043 [US7] Add tab-switching logic and Home navigation from the manage screen in src/app.js
+- [x] T044 [US7] Add selector-based edit and delete for destinations and bookings in src/app.js
+- [x] T045 [P] [US7] Add integration tests for the manage navigation tab in tests/integration/manage-tabs.test.js
+- [x] T046 [US7] Add styling for the horizontal navigation tab in src/styles.css
+
+### Implementation for User Story 8 - Dedicated search screen
+
+- [x] T047 [P] [US8] Add the search input and results list to the dedicated search view in index.html
+- [x] T048 [US8] Wire the search input to filter results and show an empty state on the search screen in src/app.js
+- [x] T049 [US8] Add Home navigation from the search screen in index.html
+
+### Polish & Verification
+
+- [x] T050 Add styling for the welcome screen and view navigation in src/styles.css
+- [x] T051 Run the full test suite and production build to verify no regressions
+
+**Checkpoint**: All user stories should be fully functional and testable independently.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -155,6 +190,7 @@
 - User Story 3 (Phase 5): Depends on Foundational completion and can proceed after search UI is ready
 - User Story 4 (Phase 6): Depends on Foundational completion and can proceed after User Story 1 implementation completion
 - User Story 5 (Phase 7): Depends on User Story 1 implementation completion and can proceed after the destination_id field is added
+- User Story 6-8 (Phase 9): Depends on User Stories 1-5 implementation completion
 - Polish (Phase 8): Depends on all desired user stories being complete
 
 ### Parallel Opportunities

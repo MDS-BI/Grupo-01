@@ -2,6 +2,29 @@ import { loadDestinations, addDestination, updateDestination, deleteDestination,
 
 function qs(id){ return document.getElementById(id); }
 
+const VIEWS = { welcome: 'view-welcome', manage: 'view-manage', search: 'view-search' };
+
+function showView(name){
+  Object.entries(VIEWS).forEach(([key, id]) => { qs(id).hidden = key !== name; });
+  if(name === 'manage'){
+    showManageTab('destinations');
+    refreshManage();
+  }
+  if(name === 'search') refreshSearch();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showManageTab(tab){
+  qs('panel-destinations').hidden = tab !== 'destinations';
+  qs('panel-bookings').hidden = tab !== 'bookings';
+  qs('tab-destinations').classList.toggle('active', tab === 'destinations');
+  qs('tab-bookings').classList.toggle('active', tab === 'bookings');
+  qs('tab-destinations').setAttribute('aria-selected', String(tab === 'destinations'));
+  qs('tab-bookings').setAttribute('aria-selected', String(tab === 'bookings'));
+}
+
+function escapeHtml(s){ return String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+
 function renderBookingsFor(dest, container){
   const bookings = loadBookings().filter(b => b.destination_id === dest.destination_id);
   const heading = document.createElement('div');
@@ -22,63 +45,42 @@ function renderBookingsFor(dest, container){
       const info = document.createElement('span');
       const price = (b.totalPrice !== undefined) ? ' &middot; '+escapeHtml(String(b.currency||''))+escapeHtml(String(b.totalPrice)) : '';
       info.innerHTML = `<strong>${escapeHtml(b.reference)}</strong> &middot; ${escapeHtml(b.checkIn)} &rarr; ${escapeHtml(b.checkOut)}${b.guests? ' &middot; '+escapeHtml(String(b.guests))+' guests':''}${b.status? ' &middot; '+escapeHtml(b.status):''}${price}`;
-      const actions = document.createElement('span');
-      const edit = document.createElement('button'); edit.textContent = 'Edit';
-      edit.addEventListener('click', () => startBookingEdit(b));
-      const del = document.createElement('button'); del.textContent = 'Delete';
-      del.addEventListener('click', () => handleBookingDelete(b.id));
-      actions.appendChild(edit); actions.appendChild(del);
-      li.appendChild(info); li.appendChild(actions);
+      li.appendChild(info);
       ul.appendChild(li);
     });
     container.appendChild(ul);
   }
-  const add = document.createElement('button');
-  add.textContent = '+ Add booking';
-  add.addEventListener('click', () => startBookingFor(dest));
-  container.appendChild(add);
 }
 
-function renderList(items){
-  const listEl = qs('destination-list');
-  const emptyEl = qs('list-empty');
+function createDestinationItem(d){
+  const li = document.createElement('li');
+  li.className = 'destination-item';
+  const meta = document.createElement('div');
+  meta.className = 'destination-meta';
+  meta.innerHTML = `<strong>${escapeHtml(d.name)}</strong><div>${escapeHtml(d.location)}${d.category? ' • '+escapeHtml(d.category):''}</div>${d.plannedDate? '<div class="muted">Planned: '+escapeHtml(d.plannedDate)+'</div>':''}<div class="muted">${escapeHtml(d.description)}</div>`;
+  const bookings = document.createElement('div');
+  bookings.className = 'destination-bookings';
+  renderBookingsFor(d, bookings);
+  li.appendChild(meta);
+  li.appendChild(bookings);
+  return li;
+}
+
+function renderSearchResults(items){
+  const listEl = qs('search-results-list');
+  const emptyEl = qs('search-empty');
   listEl.innerHTML = '';
   if(!items || items.length === 0){
     emptyEl.hidden = false;
     return;
   }
   emptyEl.hidden = true;
-  items.forEach(d => {
-    const li = document.createElement('li');
-    li.className = 'destination-item';
-    const top = document.createElement('div');
-    top.className = 'destination-top';
-    const meta = document.createElement('div');
-    meta.className = 'destination-meta';
-    meta.innerHTML = `<strong>${escapeHtml(d.name)}</strong><div>${escapeHtml(d.location)}${d.category? ' • '+escapeHtml(d.category):''}</div>${d.plannedDate? '<div class="muted">Planned: '+escapeHtml(d.plannedDate)+'</div>':''}<div class="muted">${escapeHtml(d.description)}</div>`;
-    const actions = document.createElement('div');
-    actions.className = 'destination-actions';
-    const edit = document.createElement('button'); edit.textContent = 'Edit';
-    edit.addEventListener('click', () => startEdit(d));
-    const del = document.createElement('button'); del.textContent = 'Delete';
-    del.addEventListener('click', () => handleDelete(d.id));
-    actions.appendChild(edit); actions.appendChild(del);
-    top.appendChild(meta); top.appendChild(actions);
-    const bookings = document.createElement('div');
-    bookings.className = 'destination-bookings';
-    renderBookingsFor(d, bookings);
-    li.appendChild(top); li.appendChild(bookings);
-    listEl.appendChild(li);
-  });
+  items.forEach(d => listEl.appendChild(createDestinationItem(d)));
 }
 
-function escapeHtml(s){ return String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
-
-function refreshList(){
+function refreshSearch(){
   const term = qs('search-input').value;
-  const items = searchDestinations(term);
-  populateDestinationSelect();
-  renderList(items);
+  renderSearchResults(searchDestinations(term));
 }
 
 function populateDestinationSelect(){
@@ -92,6 +94,49 @@ function populateDestinationSelect(){
     select.appendChild(opt);
   });
   if(prev && [...select.options].some(o => o.value === prev)) select.value = prev;
+}
+
+function populateEditDestinationSelect(){
+  const select = qs('edit-destination');
+  const prev = select.value;
+  select.innerHTML = '';
+  const none = document.createElement('option');
+  none.value = '';
+  none.textContent = '-- Select a destination --';
+  select.appendChild(none);
+  loadDestinations().forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.id;
+    opt.textContent = `${d.name} — ${d.location}`;
+    select.appendChild(opt);
+  });
+  if(prev && [...select.options].some(o => o.value === prev)) select.value = prev;
+}
+
+function populateEditBookingSelect(){
+  const select = qs('edit-booking');
+  const prev = select.value;
+  select.innerHTML = '';
+  const none = document.createElement('option');
+  none.value = '';
+  none.textContent = '-- Select a booking --';
+  select.appendChild(none);
+  const destinations = loadDestinations();
+  loadBookings().forEach(b => {
+    const dest = destinations.find(d => d.destination_id === b.destination_id);
+    const label = `${dest ? dest.name : 'Unknown destination'} · ${b.reference} · ${b.checkIn} → ${b.checkOut}`;
+    const opt = document.createElement('option');
+    opt.value = b.id;
+    opt.textContent = label;
+    select.appendChild(opt);
+  });
+  if(prev && [...select.options].some(o => o.value === prev)) select.value = prev;
+}
+
+function refreshManage(){
+  populateDestinationSelect();
+  populateEditDestinationSelect();
+  populateEditBookingSelect();
 }
 
 function clearForm(){
@@ -120,10 +165,21 @@ function startEdit(dest){
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function handleDelete(id){
+function onEditDestinationChange(){
+  const id = qs('edit-destination').value;
+  if(!id){ clearForm(); return; }
+  const dest = loadDestinations().find(d => d.id === id);
+  if(dest) startEdit(dest);
+}
+
+function handleDeleteSelectedDestination(){
+  const id = qs('edit-destination').value;
+  if(!id){ qs('error-edit-destination').textContent = 'Select a destination to delete.'; return; }
   if(!confirm('Delete this destination? Its bookings will also be deleted.')) return;
   deleteDestination(id);
-  refreshList();
+  qs('error-edit-destination').textContent = '';
+  clearForm();
+  refreshManage();
 }
 
 function clearBookingForm(){
@@ -146,13 +202,6 @@ function clearBookingForm(){
   qs('booking-submit-button').textContent = 'Save Booking';
 }
 
-function startBookingFor(dest){
-  clearBookingForm();
-  qs('booking-destination-id').value = dest.destination_id;
-  qs('booking-destination').value = dest.destination_id;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
 function startBookingEdit(booking){
   populateDestinationSelect();
   qs('booking-id').value = booking.id;
@@ -170,10 +219,21 @@ function startBookingEdit(booking){
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function handleBookingDelete(id){
+function onEditBookingChange(){
+  const id = qs('edit-booking').value;
+  if(!id){ clearBookingForm(); return; }
+  const booking = loadBookings().find(b => b.id === id);
+  if(booking) startBookingEdit(booking);
+}
+
+function handleDeleteSelectedBooking(){
+  const id = qs('edit-booking').value;
+  if(!id){ qs('error-edit-booking').textContent = 'Select a booking to delete.'; return; }
   if(!confirm('Delete this booking?')) return;
   deleteBooking(id);
-  refreshList();
+  qs('error-edit-booking').textContent = '';
+  clearBookingForm();
+  refreshManage();
 }
 
 function handleBookingSubmit(ev){
@@ -206,7 +266,7 @@ function handleBookingSubmit(ev){
     addBooking(payload);
     clearBookingForm();
   }
-  refreshList();
+  refreshManage();
 }
 
 function handleSubmit(ev){
@@ -227,17 +287,27 @@ function handleSubmit(ev){
     addDestination(payload);
     clearForm();
   }
-  refreshList();
+  refreshManage();
 }
 
 function init(){
   document.addEventListener('DOMContentLoaded', () => {
     qs('destination-form').addEventListener('submit', handleSubmit);
     qs('cancel-edit').addEventListener('click', clearForm);
-    qs('search-input').addEventListener('input', () => refreshList());
     qs('booking-form').addEventListener('submit', handleBookingSubmit);
     qs('booking-cancel-edit').addEventListener('click', clearBookingForm);
-    refreshList();
+    qs('welcome-manage').addEventListener('click', () => showView('manage'));
+    qs('welcome-search').addEventListener('click', () => showView('search'));
+    qs('back-from-search').addEventListener('click', () => showView('welcome'));
+    qs('search-input').addEventListener('input', () => refreshSearch());
+    qs('tab-destinations').addEventListener('click', () => showManageTab('destinations'));
+    qs('tab-bookings').addEventListener('click', () => showManageTab('bookings'));
+    qs('tab-home').addEventListener('click', () => showView('welcome'));
+    qs('edit-destination').addEventListener('change', onEditDestinationChange);
+    qs('edit-booking').addEventListener('change', onEditBookingChange);
+    qs('delete-destination').addEventListener('click', handleDeleteSelectedDestination);
+    qs('delete-booking').addEventListener('click', handleDeleteSelectedBooking);
+    showView('welcome');
   });
 }
 
