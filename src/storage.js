@@ -1,158 +1,245 @@
-const STORAGE_KEY = 'destination_manager:destinations';
-const BOOKINGS_KEY = 'destination_manager:bookings';
+import { getConfig } from './module-config.js';
 
-export function loadDestinations(){
+const ENTITIES_KEY = 'erp_base_module:entities';
+const DOCUMENTS_KEY = 'erp_base_module:documents';
+
+export function loadEntities(){
   try{
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(ENTITIES_KEY);
     return raw ? JSON.parse(raw) : [];
   }catch(e){
-    console.error('Failed to parse destinations from storage', e);
+    console.error('Failed to parse entities from storage', e);
     return [];
   }
 }
 
-export function saveDestinations(destinations){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(destinations));
+export function saveEntities(entities){
+  localStorage.setItem(ENTITIES_KEY, JSON.stringify(entities));
 }
 
-export function loadBookings(){
+export function loadDocuments(){
   try{
-    const raw = localStorage.getItem(BOOKINGS_KEY);
+    const raw = localStorage.getItem(DOCUMENTS_KEY);
     return raw ? JSON.parse(raw) : [];
   }catch(e){
-    console.error('Failed to parse bookings from storage', e);
+    console.error('Failed to parse documents from storage', e);
     return [];
   }
 }
 
-export function saveBookings(bookings){
-  localStorage.setItem(BOOKINGS_KEY, JSON.stringify(bookings));
+export function saveDocuments(documents){
+  localStorage.setItem(DOCUMENTS_KEY, JSON.stringify(documents));
 }
 
 function generateId(){
   return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8);
 }
 
+function declaredFields(target){
+  return getConfig().customFields.filter(f => f.target === target);
+}
+
 export function isValidDate(value){
-  if(!value) return true;
+  if(!value) return false;
   if(!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const [y, m, d] = value.split('-').map(Number);
   const dt = new Date(Date.UTC(y, m - 1, d));
   return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
 }
 
-export function validateDestination({name, location, plannedDate}){
+function isEmpty(v){ return v === undefined || v === null || (typeof v === 'string' && !v.trim()); }
+
+function normalizeCustomValue(field, value){
+  if(isEmpty(value)) return undefined;
+  if(field.type === 'number') return Number(value);
+  return String(value).trim();
+}
+
+function collectCustomErrors(target, data){
+  const errs = {};
+  for(const f of declaredFields(target)){
+    const v = data ? data[f.key] : undefined;
+    if(f.required && isEmpty(v)){ errs[f.key] = `${f.label} is required`; continue; }
+    if(!isEmpty(v)){
+      if(f.type === 'number' && !Number.isFinite(Number(v))){ errs[f.key] = `${f.label} must be a number`; continue; }
+      if(f.type === 'date' && !isValidDate(v)){ errs[f.key] = `${f.label} must be a valid date (YYYY-MM-DD)`; continue; }
+      if(f.type === 'select' && !f.options.includes(String(v).trim())){ errs[f.key] = `${f.label} must be one of: ${f.options.join(', ')}`; }
+    }
+  }
+  return errs;
+}
+
+function validateLifecycleStatus(status, currentStatus, errors){
+  const lc = getConfig().statusLifecycle;
+  if(!lc) return;
+  if(currentStatus === undefined || currentStatus === null){
+    if(!isEmpty(status) && !lc.statuses.includes(status)){
+      errors.status = `Status must be one of: ${lc.statuses.join(', ')}`;
+    }
+    return;
+  }
+  if(status === currentStatus) return;
+  const allowed = lc.transitions[currentStatus] || [];
+  if(!allowed.includes(status)){
+    errors.status = `Invalid status transition from "${currentStatus}" to "${status}"`;
+  }
+}
+
+export function validateEntity({name, code, targetDate, ...rest}){
   const errors = {};
   if(!name || !name.trim()) errors.name = 'Name is required';
-  if(!location || !location.trim()) errors.location = 'Location is required';
-  if(plannedDate && !isValidDate(plannedDate)) errors.plannedDate = 'Planned visit date must be a valid date (YYYY-MM-DD)';
+  if(!code || !code.trim()) errors.code = 'Code is required';
+  if(!isEmpty(targetDate) && !isValidDate(targetDate)) errors.targetDate = 'Target date must be a valid date (YYYY-MM-DD)';
+  Object.assign(errors, collectCustomErrors('entity', rest));
   return { valid: Object.keys(errors).length === 0, errors };
 }
 
-export function addDestination(payload){
+function pickCustomFields(target, data){
+  const out = {};
+  for(const f of declaredFields(target)){
+    const n = normalizeCustomValue(f, data[f.key]);
+    if(n !== undefined) out[f.key] = n;
+  }
+  return out;
+}
+
+export function addEntity(payload){
   const now = new Date().toISOString();
-  const dest = { id: generateId(), destination_id: generateId(), name: (payload.name||'').trim(), location: (payload.location||'').trim(), category: (payload.category||'').trim(), description: (payload.description||'').trim(), plannedDate: (payload.plannedDate||'').trim(), createdAt: now, updatedAt: now };
-  const list = loadDestinations();
-  list.push(dest);
-  saveDestinations(list);
-  return dest;
-}
-
-export function updateDestination(id, updates){
-  const list = loadDestinations();
-  const idx = list.findIndex(d => d.id === id);
-  if(idx === -1) throw new Error('Destination not found');
-  list[idx] = { ...list[idx], ...updates, updatedAt: new Date().toISOString() };
-  saveDestinations(list);
-  return list[idx];
-}
-
-export function deleteDestination(id){
-  const list = loadDestinations();
-  const dest = list.find(d => d.id === id);
-  const newList = list.filter(d => d.id !== id);
-  saveDestinations(newList);
-  if(dest) deleteBookingsForDestination(dest.destination_id);
-  return newList;
-}
-
-export function validateBooking({destinationId, reference, checkIn, checkOut, guests, totalPrice}){
-  const errors = {};
-  const destinations = loadDestinations();
-  if(!destinationId || !destinations.some(d => d.destination_id === destinationId)){
-    errors.destinationId = 'Select a destination for the booking';
-  }
-  if(!reference || !reference.trim()) errors.reference = 'Booking reference is required';
-  if(!checkIn) errors.checkIn = 'Check-in date is required';
-  else if(!isValidDate(checkIn)) errors.checkIn = 'Check-in must be a valid date (YYYY-MM-DD)';
-  if(!checkOut) errors.checkOut = 'Check-out date is required';
-  else if(!isValidDate(checkOut)) errors.checkOut = 'Check-out must be a valid date (YYYY-MM-DD)';
-  if(checkIn && checkOut && isValidDate(checkIn) && isValidDate(checkOut) && checkOut < checkIn){
-    errors.checkOut = 'Check-out must be on or after check-in';
-  }
-  if(guests !== undefined && guests !== null && guests !== ''){
-    const n = Number(guests);
-    if(!Number.isInteger(n) || n <= 0) errors.guests = 'Guests must be a positive whole number';
-  }
-  if(totalPrice !== undefined && totalPrice !== null && totalPrice !== ''){
-    const p = Number(totalPrice);
-    if(Number.isNaN(p) || p < 0) errors.totalPrice = 'Total price must be a non-negative number';
-  }
-  return { valid: Object.keys(errors).length === 0, errors };
-}
-
-export function addBooking(payload){
-  const now = new Date().toISOString();
-  const booking = {
+  const entity = {
     id: generateId(),
-    destination_id: payload.destinationId,
-    reference: (payload.reference||'').trim(),
-    checkIn: payload.checkIn,
-    checkOut: payload.checkOut,
-    guests: (payload.guests === undefined || payload.guests === null || payload.guests === '') ? undefined : Number(payload.guests),
-    totalPrice: (payload.totalPrice === undefined || payload.totalPrice === null || payload.totalPrice === '') ? undefined : Number(payload.totalPrice),
-    currency: (payload.currency||'').trim() || undefined,
-    status: (payload.status||'').trim() || undefined,
+    entity_id: generateId(),
+    name: (payload.name||'').trim(),
+    code: (payload.code||'').trim(),
+    category: (payload.category||'').trim() || undefined,
+    description: (payload.description||'').trim() || undefined,
+    targetDate: (payload.targetDate||'').trim() || undefined,
+    ...pickCustomFields('entity', payload),
     createdAt: now,
     updatedAt: now
   };
-  const list = loadBookings();
-  list.push(booking);
-  saveBookings(list);
-  return booking;
+  const list = loadEntities();
+  list.push(entity);
+  saveEntities(list);
+  return entity;
 }
 
-export function updateBooking(id, updates){
-  const list = loadBookings();
-  const idx = list.findIndex(b => b.id === id);
-  if(idx === -1) throw new Error('Booking not found');
-  list[idx] = { ...list[idx], ...updates, updatedAt: new Date().toISOString() };
-  saveBookings(list);
+export function updateEntity(id, updates){
+  const list = loadEntities();
+  const idx = list.findIndex(e => e.id === id);
+  if(idx === -1) throw new Error('Entity not found');
+  list[idx] = { ...list[idx], ...updates, ...pickCustomFields('entity', { ...list[idx], ...updates }), updatedAt: new Date().toISOString() };
+  saveEntities(list);
   return list[idx];
 }
 
-export function deleteBooking(id){
-  const list = loadBookings();
-  const newList = list.filter(b => b.id !== id);
-  saveBookings(newList);
+export function deleteEntity(id){
+  const list = loadEntities();
+  const entity = list.find(e => e.id === id);
+  const newList = list.filter(e => e.id !== id);
+  saveEntities(newList);
+  if(entity) deleteDocumentsForEntity(entity.entity_id);
   return newList;
 }
 
-export function deleteBookingsForDestination(destinationId){
-  const list = loadBookings();
-  const newList = list.filter(b => b.destination_id !== destinationId);
-  saveBookings(newList);
+export function validateDocument(payload, currentStatus){
+  const {entityId, reference, startDate, endDate, quantity, totalAmount, status} = payload;
+  const errors = {};
+  const entities = loadEntities();
+  if(!entityId || !entities.some(e => e.entity_id === entityId)){
+    errors.entityId = 'Select an entity for the document';
+  }
+  if(!reference || !reference.trim()) errors.reference = 'Reference is required';
+  if(!startDate){ errors.startDate = 'Start date is required'; }
+  else if(!isValidDate(startDate)) errors.startDate = 'Start date must be a valid date (YYYY-MM-DD)';
+  if(!endDate){ errors.endDate = 'End date is required'; }
+  else if(!isValidDate(endDate)) errors.endDate = 'End date must be a valid date (YYYY-MM-DD)';
+  if(startDate && endDate && isValidDate(startDate) && isValidDate(endDate) && endDate < startDate){
+    errors.endDate = 'End date must be on or after start date';
+  }
+  if(quantity !== undefined && quantity !== null && quantity !== ''){
+    const n = Number(quantity);
+    if(!Number.isInteger(n) || n <= 0) errors.quantity = 'Quantity must be a positive whole number';
+  }
+  if(totalAmount !== undefined && totalAmount !== null && totalAmount !== ''){
+    const p = Number(totalAmount);
+    if(Number.isNaN(p) || p < 0) errors.totalAmount = 'Total amount must be a non-negative number';
+  }
+  validateLifecycleStatus((status||'').trim(), currentStatus, errors);
+  Object.assign(errors, collectCustomErrors('document', payload));
+  return { valid: Object.keys(errors).length === 0, errors };
+}
+
+export function addDocument(payload){
+  const now = new Date().toISOString();
+  const check = validateDocument(payload);
+  if(!check.valid){
+    throw new Error(Object.values(check.errors)[0]);
+  }
+  const document = {
+    id: generateId(),
+    entity_id: payload.entityId,
+    reference: (payload.reference||'').trim(),
+    startDate: payload.startDate,
+    endDate: payload.endDate,
+    quantity: (isEmpty(payload.quantity)) ? undefined : Number(payload.quantity),
+    totalAmount: (isEmpty(payload.totalAmount)) ? undefined : Number(payload.totalAmount),
+    currency: (payload.currency||'').trim() || undefined,
+    status: (payload.status||'').trim() || undefined,
+    ...pickCustomFields('document', payload),
+    createdAt: now,
+    updatedAt: now
+  };
+  const list = loadDocuments();
+  list.push(document);
+  saveDocuments(list);
+  return document;
+}
+
+export function updateDocument(id, updates){
+  const list = loadDocuments();
+  const idx = list.findIndex(d => d.id === id);
+  if(idx === -1) throw new Error('Document not found');
+  const prev = list[idx];
+  const merged = { ...prev, ...updates };
+  const check = validateDocument({
+    entityId: merged.entity_id,
+    reference: merged.reference,
+    startDate: merged.startDate,
+    endDate: merged.endDate,
+    quantity: merged.quantity,
+    totalAmount: merged.totalAmount,
+    status: updates.status !== undefined ? (updates.status||'').trim() : merged.status
+  }, prev.status);
+  if(!check.valid){
+    throw new Error(Object.values(check.errors)[0]);
+  }
+  list[idx] = { ...merged, status: updates.status !== undefined ? (updates.status||'').trim() : merged.status, updatedAt: new Date().toISOString() };
+  saveDocuments(list);
+  return list[idx];
+}
+
+export function deleteDocument(id){
+  const list = loadDocuments();
+  const newList = list.filter(d => d.id !== id);
+  saveDocuments(newList);
+  return newList;
+}
+
+export function deleteDocumentsForEntity(entityId){
+  const list = loadDocuments();
+  const newList = list.filter(d => d.entity_id !== entityId);
+  saveDocuments(newList);
   return newList;
 }
 
 export function clearAll(){
-  saveDestinations([]);
+  saveEntities([]);
+  saveDocuments([]);
 }
 
-export function searchDestinations(term){
+export function searchEntities(term){
   const q = (term||'').trim().toLowerCase();
-  if(!q) return loadDestinations();
-  return loadDestinations().filter(d => {
-    return [d.name, d.location, d.category, d.description, d.plannedDate].some(f => (f||'').toLowerCase().includes(q));
-  });
+  if(!q) return loadEntities();
+  const fields = ['name', 'code', 'category', 'description', 'targetDate', ...declaredFields('entity').map(f => f.key)];
+  return loadEntities().filter(e => fields.some(f => String(e[f] ?? '').toLowerCase().includes(q)));
 }

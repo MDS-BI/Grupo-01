@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { clearAll, loadDestinations, addDestination, updateDestination, deleteDestination, validateDestination, searchDestinations, loadBookings, addBooking, updateBooking, deleteBooking, deleteBookingsForDestination, validateBooking } from '../../src/storage.js';
+import { clearAll, loadEntities, addEntity, updateEntity, deleteEntity, validateEntity, searchEntities, loadDocuments, addDocument, updateDocument, deleteDocument, deleteDocumentsForEntity, validateDocument } from '../../src/storage.js';
+import { setActiveConfig } from '../../src/module-config.js';
 
 const store = new Map();
 globalThis.localStorage = {
@@ -9,141 +10,258 @@ globalThis.localStorage = {
   clear: () => store.clear()
 };
 
-beforeEach(() => { store.clear(); });
+beforeEach(() => {
+  store.clear();
+  setActiveConfig(null);
+});
 
-describe('storage', () => {
-  it('validates destination', () => {
-    expect(validateDestination({name:'', location:''}).valid).toBe(false);
-    expect(validateDestination({name:'A', location:'B'}).valid).toBe(true);
+describe('entity storage', () => {
+  it('validates entity name and code', () => {
+    expect(validateEntity({name:'', code:''}).valid).toBe(false);
+    expect(validateEntity({name:'Acme', code:''}).valid).toBe(false);
+    expect(validateEntity({name:'A', code:'B'}).valid).toBe(true);
   });
 
-  it('adds and loads destinations', () => {
-    const d = addDestination({name:'Paris', location:'France'});
-    const all = loadDestinations();
+  it('adds and loads entities', () => {
+    const e = addEntity({name:'Acme', code:'AC-001'});
+    const all = loadEntities();
     expect(all.length).toBe(1);
-    expect(all[0].id).toBe(d.id);
+    expect(all[0].id).toBe(e.id);
   });
 
-  it('updates a destination', () => {
-    const d = addDestination({name:'X', location:'Y'});
-    const updated = updateDestination(d.id, { name: 'X2' });
+  it('generates a unique entity_id for each entity', () => {
+    const e1 = addEntity({name:'Acme', code:'AC-001'});
+    const e2 = addEntity({name:'Globex', code:'GL-002'});
+    expect(e1.entity_id).toBeDefined();
+    expect(e1.entity_id).not.toBe(e2.entity_id);
+    expect(loadEntities()[0].entity_id).toBe(e1.entity_id);
+  });
+
+  it('updates an entity', () => {
+    const e = addEntity({name:'X', code:'X-1'});
+    const updated = updateEntity(e.id, { name: 'X2' });
     expect(updated.name).toBe('X2');
   });
 
-  it('deletes a destination', () => {
-    const d1 = addDestination({name:'A', location:'B'});
-    const d2 = addDestination({name:'C', location:'D'});
-    deleteDestination(d1.id);
-    const all = loadDestinations();
+  it('deletes an entity', () => {
+    const e1 = addEntity({name:'A', code:'A-1'});
+    const e2 = addEntity({name:'C', code:'C-1'});
+    deleteEntity(e1.id);
+    const all = loadEntities();
+    expect(all.length).toBe(1);
+    expect(all[0].id).toBe(e2.id);
+  });
+
+  it('accepts a valid target date', () => {
+    const res = validateEntity({name:'A', code:'B', targetDate:'2026-08-06'});
+    expect(res.valid).toBe(true);
+  });
+
+  it('rejects an invalid target date', () => {
+    const res = validateEntity({name:'A', code:'B', targetDate:'2026-13-45'});
+    expect(res.valid).toBe(false);
+    expect(res.errors.targetDate).toBeDefined();
+  });
+
+  it('allows an empty target date', () => {
+    const res = validateEntity({name:'A', code:'B', targetDate:''});
+    expect(res.valid).toBe(true);
+  });
+
+  it('persists target date on create and update', () => {
+    const e = addEntity({name:'Acme', code:'AC-001', targetDate:'2026-09-01'});
+    expect(loadEntities()[0].targetDate).toBe('2026-09-01');
+    const updated = updateEntity(e.id, { targetDate:'2026-10-01' });
+    expect(updated.targetDate).toBe('2026-10-01');
+  });
+
+  it('searches by target date', () => {
+    addEntity({name:'Acme', code:'AC-001', targetDate:'2026-09-01'});
+    addEntity({name:'Globex', code:'GL-002', targetDate:'2026-11-20'});
+    const results = searchEntities('2026-09-01');
+    expect(results.length).toBe(1);
+    expect(results[0].name).toBe('Acme');
+  });
+
+  it('validates required custom fields declared in configuration', () => {
+    setActiveConfig({
+      customFields: [{ target: 'entity', key: 'creditLimit', label: 'Credit limit', type: 'number', required: true }]
+    });
+    const res = validateEntity({name:'A', code:'B'});
+    expect(res.valid).toBe(false);
+    expect(res.errors.creditLimit).toContain('required');
+    expect(validateEntity({name:'A', code:'B', creditLimit: 500}).valid).toBe(true);
+  });
+
+  it('rejects non-numeric values for number custom fields', () => {
+    setActiveConfig({
+      customFields: [{ target: 'entity', key: 'creditLimit', label: 'Credit limit', type: 'number' }]
+    });
+    const res = validateEntity({name:'A', code:'B', creditLimit: 'lots'});
+    expect(res.valid).toBe(false);
+    expect(res.errors.creditLimit).toContain('number');
+  });
+
+  it('persists custom field values alongside base fields without schema changes', () => {
+    setActiveConfig({
+      customFields: [{ target: 'entity', key: 'region', label: 'Region', type: 'text' }]
+    });
+    const e = addEntity({name:'Acme', code:'AC-001', region:'EMEA'});
+    expect(loadEntities()[0].region).toBe('EMEA');
+    const updated = updateEntity(e.id, { region: 'APAC' });
+    expect(updated.region).toBe('APAC');
+    expect(updated.name).toBe('Acme');
+  });
+
+  it('includes custom field values in search results', () => {
+    setActiveConfig({
+      customFields: [{ target: 'entity', key: 'region', label: 'Region', type: 'text' }]
+    });
+    addEntity({name:'Acme', code:'AC-001', region:'EMEA'});
+    addEntity({name:'Globex', code:'GL-002', region:'APAC'});
+    const results = searchEntities('emea');
+    expect(results.length).toBe(1);
+    expect(results[0].name).toBe('Acme');
+  });
+
+  it('ignores undeclared custom keys when persisting', () => {
+    const e = addEntity({name:'Acme', code:'AC-001', rogueField:'x'});
+    expect(e.rogueField).toBeUndefined();
+  });
+});
+
+describe('document storage', () => {
+  let entity;
+  beforeEach(() => {
+    entity = addEntity({name:'Acme', code:'AC-001'});
+  });
+
+  it('validates a document against base rules', () => {
+    const base = { entityId:entity.entity_id, reference:'SO-1', startDate:'2026-08-01', endDate:'2026-08-05' };
+    expect(validateDocument(base).valid).toBe(true);
+    expect(validateDocument({...base, entityId:'missing'}).valid).toBe(false);
+    expect(validateDocument({...base, reference:''}).valid).toBe(false);
+    expect(validateDocument({...base, endDate:'2026-08-01', startDate:'2026-08-05'}).valid).toBe(false);
+    expect(validateDocument({...base, quantity:0}).valid).toBe(false);
+    expect(validateDocument({...base, quantity:2.5}).valid).toBe(false);
+    expect(validateDocument({...base, quantity:3}).valid).toBe(true);
+    expect(validateDocument({...base, totalAmount:-1}).valid).toBe(false);
+    expect(validateDocument({...base, totalAmount:99.5}).valid).toBe(true);
+  });
+
+  it('adds and loads documents linked by entity_id', () => {
+    const d = addDocument({entityId:entity.entity_id, reference:'REF-1', startDate:'2026-08-01', endDate:'2026-08-05', quantity:2, totalAmount:500, currency:'EUR', status:'pending'});
+    const all = loadDocuments();
+    expect(all.length).toBe(1);
+    expect(all[0].id).toBe(d.id);
+    expect(all[0].entity_id).toBe(entity.entity_id);
+    expect(all[0].quantity).toBe(2);
+    expect(all[0].totalAmount).toBe(500);
+  });
+
+  it('updates a document', () => {
+    const d = addDocument({entityId:entity.entity_id, reference:'REF-1', startDate:'2026-08-01', endDate:'2026-08-05'});
+    const updated = updateDocument(d.id, { reference: 'REF-2' });
+    expect(updated.reference).toBe('REF-2');
+  });
+
+  it('deletes a document', () => {
+    const d1 = addDocument({entityId:entity.entity_id, reference:'REF-1', startDate:'2026-08-01', endDate:'2026-08-05'});
+    const d2 = addDocument({entityId:entity.entity_id, reference:'REF-2', startDate:'2026-08-02', endDate:'2026-08-06'});
+    deleteDocument(d1.id);
+    const all = loadDocuments();
     expect(all.length).toBe(1);
     expect(all[0].id).toBe(d2.id);
   });
 
-  it('accepts a valid planned date', () => {
-    const res = validateDestination({name:'A', location:'B', plannedDate:'2026-08-06'});
-    expect(res.valid).toBe(true);
+  it('deletes documents for an entity', () => {
+    const other = addEntity({name:'Globex', code:'GL-002'});
+    addDocument({entityId:entity.entity_id, reference:'REF-1', startDate:'2026-08-01', endDate:'2026-08-05'});
+    addDocument({entityId:entity.entity_id, reference:'REF-2', startDate:'2026-08-02', endDate:'2026-08-06'});
+    addDocument({entityId:other.entity_id, reference:'REF-3', startDate:'2026-08-03', endDate:'2026-08-07'});
+    deleteDocumentsForEntity(entity.entity_id);
+    const all = loadDocuments();
+    expect(all.length).toBe(1);
+    expect(all[0].entity_id).toBe(other.entity_id);
   });
 
-  it('rejects an invalid planned date', () => {
-    const res = validateDestination({name:'A', location:'B', plannedDate:'2026-13-45'});
+  it('cascades document deletion when an entity is deleted', () => {
+    const other = addEntity({name:'Globex', code:'GL-002'});
+    addDocument({entityId:entity.entity_id, reference:'REF-1', startDate:'2026-08-01', endDate:'2026-08-05'});
+    addDocument({entityId:other.entity_id, reference:'REF-2', startDate:'2026-08-02', endDate:'2026-08-06'});
+    deleteEntity(entity.id);
+    const docs = loadDocuments();
+    expect(docs.length).toBe(1);
+    expect(docs[0].entity_id).toBe(other.entity_id);
+  });
+
+  it('persists declared document custom fields', () => {
+    setActiveConfig({
+      customFields: [{ target: 'document', key: 'paymentTerms', label: 'Payment terms', type: 'select', options: ['net30','net60'] }]
+    });
+    const d = addDocument({entityId:entity.entity_id, reference:'REF-1', startDate:'2026-08-01', endDate:'2026-08-05', paymentTerms:'net30'});
+    expect(loadDocuments()[0].paymentTerms).toBe('net30');
+    expect(validateDocument({entityId:entity.entity_id, reference:'R', startDate:'2026-08-01', endDate:'2026-08-05', paymentTerms:'net90'}).errors.paymentTerms).toContain('must be one of');
+  });
+});
+
+describe('document status lifecycle', () => {
+  let entity;
+  beforeEach(() => {
+    entity = addEntity({name:'Acme', code:'AC-001'});
+  });
+
+  it('keeps status free-form when no lifecycle is configured', () => {
+    const d = addDocument({entityId:entity.entity_id, reference:'REF-1', startDate:'2026-08-01', endDate:'2026-08-05', status:'whatever'});
+    expect(loadDocuments()[0].status).toBe('whatever');
+    const updated = updateDocument(d.id, { status: 'anything else' });
+    expect(updated.status).toBe('anything else');
+  });
+
+  it('rejects unknown statuses on creation when a lifecycle is configured', () => {
+    setActiveConfig({
+      statusLifecycle: { statuses:['quote','order','invoiced'], transitions:{ quote:['order'], order:['invoiced'], invoiced:[] } }
+    });
+    const res = validateDocument({entityId:entity.entity_id, reference:'R', startDate:'2026-08-01', endDate:'2026-08-05', status:'bogus'});
     expect(res.valid).toBe(false);
-    expect(res.errors.plannedDate).toBeDefined();
+    expect(res.errors.status).toContain('must be one of');
   });
 
-  it('allows an empty planned date', () => {
-    const res = validateDestination({name:'A', location:'B', plannedDate:''});
-    expect(res.valid).toBe(true);
+  it('allows any configured status on creation', () => {
+    setActiveConfig({
+      statusLifecycle: { statuses:['quote','order','invoiced'], transitions:{ quote:['order'], order:['invoiced'], invoiced:[] } }
+    });
+    const d = addDocument({entityId:entity.entity_id, reference:'REF-1', startDate:'2026-08-01', endDate:'2026-08-05', status:'order'});
+    expect(loadDocuments()[0].status).toBe('order');
   });
 
-  it('persists planned date on create and update', () => {
-    const d = addDestination({name:'Paris', location:'France', plannedDate:'2026-09-01'});
-    expect(loadDestinations()[0].plannedDate).toBe('2026-09-01');
-    const updated = updateDestination(d.id, { plannedDate:'2026-10-01' });
-    expect(updated.plannedDate).toBe('2026-10-01');
+  it('enforces permitted transitions on update regardless of how a change is submitted', () => {
+    setActiveConfig({
+      statusLifecycle: { statuses:['quote','order','invoiced'], transitions:{ quote:['order'], order:['invoiced'], invoiced:[] } }
+    });
+    const d = addDocument({entityId:entity.entity_id, reference:'REF-1', startDate:'2026-08-01', endDate:'2026-08-05', status:'quote'});
+    expect(() => updateDocument(d.id, { status: 'invoiced' })).toThrow(/Invalid status transition/);
+    expect(loadDocuments()[0].status).toBe('quote');
+    const updated = updateDocument(d.id, { status: 'order' });
+    expect(updated.status).toBe('order');
+    expect(updateDocument(d.id, { status: 'invoiced' }).status).toBe('invoiced');
   });
 
-  it('searches by planned date', () => {
-    addDestination({name:'Paris', location:'France', plannedDate:'2026-09-01'});
-    addDestination({name:'Rome', location:'Italy', plannedDate:'2026-11-20'});
-    const results = searchDestinations('2026-09-01');
-    expect(results.length).toBe(1);
-    expect(results[0].name).toBe('Paris');
+  it('allows keeping the same status on update', () => {
+    setActiveConfig({
+      statusLifecycle: { statuses:['draft'], transitions:{ draft: [] } }
+    });
+    const d = addDocument({entityId:entity.entity_id, reference:'REF-1', startDate:'2026-08-01', endDate:'2026-08-05', status:'draft'});
+    expect(updateDocument(d.id, { reference: 'REF-1b' }).status).toBe('draft');
   });
+});
 
-  it('generates a unique destination_id for each destination', () => {
-    const d1 = addDestination({name:'Paris', location:'France'});
-    const d2 = addDestination({name:'Rome', location:'Italy'});
-    expect(d1.destination_id).toBeDefined();
-    expect(d1.destination_id).not.toBe(d2.destination_id);
-    expect(loadDestinations()[0].destination_id).toBe(d1.destination_id);
-  });
-
-  it('validates a booking', () => {
-    const dest = addDestination({name:'Paris', location:'France'});
-    expect(validateBooking({destinationId:dest.destination_id, reference:'ABC', checkIn:'2026-08-01', checkOut:'2026-08-05'}).valid).toBe(true);
-    expect(validateBooking({destinationId:'missing', reference:'ABC', checkIn:'2026-08-01', checkOut:'2026-08-05'}).valid).toBe(false);
-    expect(validateBooking({destinationId:dest.destination_id, reference:'', checkIn:'2026-08-01', checkOut:'2026-08-05'}).valid).toBe(false);
-    expect(validateBooking({destinationId:dest.destination_id, reference:'ABC', checkIn:'2026-08-05', checkOut:'2026-08-01'}).valid).toBe(false);
-  });
-
-  it('rejects invalid guests and totalPrice on a booking', () => {
-    const dest = addDestination({name:'Paris', location:'France'});
-    const base = { destinationId:dest.destination_id, reference:'ABC', checkIn:'2026-08-01', checkOut:'2026-08-05' };
-    expect(validateBooking({...base, guests:0}).valid).toBe(false);
-    expect(validateBooking({...base, guests:2.5}).valid).toBe(false);
-    expect(validateBooking({...base, guests:2}).valid).toBe(true);
-    expect(validateBooking({...base, totalPrice:-1}).valid).toBe(false);
-    expect(validateBooking({...base, totalPrice:100.5}).valid).toBe(true);
-  });
-
-  it('adds and loads bookings linked by destination_id', () => {
-    const dest = addDestination({name:'Paris', location:'France'});
-    const b = addBooking({destinationId:dest.destination_id, reference:'REF-1', checkIn:'2026-08-01', checkOut:'2026-08-05', guests:2, totalPrice:500, currency:'EUR', status:'confirmed'});
-    const all = loadBookings();
-    expect(all.length).toBe(1);
-    expect(all[0].id).toBe(b.id);
-    expect(all[0].destination_id).toBe(dest.destination_id);
-    expect(all[0].guests).toBe(2);
-    expect(all[0].totalPrice).toBe(500);
-  });
-
-  it('updates a booking', () => {
-    const dest = addDestination({name:'Paris', location:'France'});
-    const b = addBooking({destinationId:dest.destination_id, reference:'REF-1', checkIn:'2026-08-01', checkOut:'2026-08-05'});
-    const updated = updateBooking(b.id, { reference: 'REF-2' });
-    expect(updated.reference).toBe('REF-2');
-  });
-
-  it('deletes a booking', () => {
-    const dest = addDestination({name:'Paris', location:'France'});
-    const b1 = addBooking({destinationId:dest.destination_id, reference:'REF-1', checkIn:'2026-08-01', checkOut:'2026-08-05'});
-    const b2 = addBooking({destinationId:dest.destination_id, reference:'REF-2', checkIn:'2026-08-02', checkOut:'2026-08-06'});
-    deleteBooking(b1.id);
-    const all = loadBookings();
-    expect(all.length).toBe(1);
-    expect(all[0].id).toBe(b2.id);
-  });
-
-  it('deletes bookings for a destination', () => {
-    const d1 = addDestination({name:'Paris', location:'France'});
-    const d2 = addDestination({name:'Rome', location:'Italy'});
-    addBooking({destinationId:d1.destination_id, reference:'REF-1', checkIn:'2026-08-01', checkOut:'2026-08-05'});
-    addBooking({destinationId:d1.destination_id, reference:'REF-2', checkIn:'2026-08-02', checkOut:'2026-08-06'});
-    addBooking({destinationId:d2.destination_id, reference:'REF-3', checkIn:'2026-08-03', checkOut:'2026-08-07'});
-    deleteBookingsForDestination(d1.destination_id);
-    const all = loadBookings();
-    expect(all.length).toBe(1);
-    expect(all[0].destination_id).toBe(d2.destination_id);
-  });
-
-  it('cascades booking deletion when a destination is deleted', () => {
-    const d1 = addDestination({name:'Paris', location:'France'});
-    const d2 = addDestination({name:'Rome', location:'Italy'});
-    addBooking({destinationId:d1.destination_id, reference:'REF-1', checkIn:'2026-08-01', checkOut:'2026-08-05'});
-    addBooking({destinationId:d2.destination_id, reference:'REF-2', checkIn:'2026-08-02', checkOut:'2026-08-06'});
-    deleteDestination(d1.id);
-    const bookings = loadBookings();
-    expect(bookings.length).toBe(1);
-    expect(bookings[0].destination_id).toBe(d2.destination_id);
+describe('clearAll', () => {
+  it('empties both stores', () => {
+    const e = addEntity({name:'A', code:'A-1'});
+    addDocument({entityId:e.entity_id, reference:'R', startDate:'2026-08-01', endDate:'2026-08-02'});
+    clearAll();
+    expect(loadEntities().length).toBe(0);
+    expect(loadDocuments().length).toBe(0);
   });
 });

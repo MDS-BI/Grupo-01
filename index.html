@@ -3,134 +3,130 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Destination Manager</title>
+    <title>ERP Base Module</title>
   </head>
   <body>
     <main id="app">
+      <div id="config-errors" class="config-error" role="alert" hidden></div>
+
       <section id="view-welcome" aria-labelledby="welcome-heading">
-        <h1 id="welcome-heading">Destination Manager</h1>
-        <p class="muted">Manage your travel plans or find a destination.</p>
+        <h1 id="welcome-heading">ERP Base Module</h1>
+        <p class="muted">Manage your master data or find a record.</p>
         <div class="welcome-actions">
-          <button id="welcome-manage" type="button">Manage Destinations &amp; Bookings</button>
-          <button id="welcome-search" type="button">Search Destinations</button>
+          <button id="welcome-manage" type="button">Manage Entities &amp; Documents</button>
+          <button id="welcome-search" type="button">Search Entities</button>
         </div>
       </section>
 
       <section id="view-manage" aria-labelledby="manage-heading" hidden>
-        <h1 id="manage-heading">Manage Destinations &amp; Bookings</h1>
+        <h1 id="manage-heading">Manage Entities &amp; Documents</h1>
 
         <nav class="nav-tabs" aria-label="Manage navigation">
-          <button id="tab-destinations" type="button" class="tab-button active" aria-selected="true">Destinations</button>
-          <button id="tab-bookings" type="button" class="tab-button" aria-selected="false">Bookings</button>
+          <button id="tab-entities" type="button" class="tab-button active" aria-selected="true">Entities</button>
+          <button id="tab-documents" type="button" class="tab-button" aria-selected="false">Documents</button>
           <button id="tab-home" type="button" class="tab-button">Home</button>
         </nav>
 
-        <div id="panel-destinations" role="tabpanel" aria-labelledby="tab-destinations">
-        <section aria-labelledby="form-heading">
-          <h2 id="form-heading">Add / Edit Destination</h2>
-          <form id="destination-form">
-            <input type="hidden" id="destination-id" />
+        <div id="panel-entities" role="tabpanel" aria-labelledby="tab-entities">
+        <section aria-labelledby="entity-form-heading">
+          <h2 id="entity-form-heading">Add / Edit Entity</h2>
+          <form id="entity-form">
+            <input type="hidden" id="entity-id" />
             <div>
               <label for="name">Name *</label>
               <input id="name" name="name" required />
               <div class="error" id="error-name" aria-live="polite"></div>
             </div>
             <div>
-              <label for="location">Location *</label>
-              <input id="location" name="location" required />
-              <div class="error" id="error-location" aria-live="polite"></div>
+              <label for="code">Code *</label>
+              <input id="code" name="code" required />
+              <div class="error" id="error-code" aria-live="polite"></div>
             </div>
             <div>
               <label for="category">Category</label>
               <input id="category" name="category" />
             </div>
             <div>
-              <label for="description">Notes</label>
+              <label for="description">Description</label>
               <textarea id="description" name="description"></textarea>
             </div>
             <div>
-              <label for="plannedDate">Planned visit date</label>
-              <input id="plannedDate" name="plannedDate" type="date" />
-              <div class="error" id="error-plannedDate" aria-live="polite"></div>
+              <label for="targetDate">Target date</label>
+              <input id="targetDate" name="targetDate" type="date" />
+              <div class="error" id="error-targetDate" aria-live="polite"></div>
             </div>
+            <div id="entity-custom-fields"></div>
             <button type="submit" id="submit-button">Save</button>
             <button type="button" id="cancel-edit" hidden>Cancel Edit</button>
           </form>
         </section>
 
-        <section aria-labelledby="edit-destination-heading">
-          <h2 id="edit-destination-heading">Edit or remove a destination</h2>
+        <section aria-labelledby="edit-entity-heading">
+          <h2 id="edit-entity-heading">Edit or remove an entity</h2>
           <div>
-            <label for="edit-destination">Select a destination</label>
-            <select id="edit-destination"></select>
-            <div class="error" id="error-edit-destination" aria-live="polite"></div>
+            <label for="edit-entity">Select an entity</label>
+            <select id="edit-entity"></select>
+            <div class="error" id="error-edit-entity" aria-live="polite"></div>
           </div>
-          <button type="button" id="delete-destination">Delete selected destination</button>
+          <button type="button" id="delete-entity">Delete selected entity</button>
         </section>
         </div>
 
-        <div id="panel-bookings" role="tabpanel" aria-labelledby="tab-bookings" hidden>
-        <section aria-labelledby="booking-form-heading">
-          <h2 id="booking-form-heading">Add / Edit Booking</h2>
-          <form id="booking-form">
-            <input type="hidden" id="booking-id" />
-            <input type="hidden" id="booking-destination-id" />
+        <div id="panel-documents" role="tabpanel" aria-labelledby="tab-documents" hidden>
+        <section aria-labelledby="document-form-heading">
+          <h2 id="document-form-heading">Add / Edit Document</h2>
+          <form id="document-form">
+            <input type="hidden" id="document-id" />
+            <input type="hidden" id="document-entity-id" />
             <div>
-              <label for="booking-destination">Destination *</label>
-              <select id="booking-destination" name="booking-destination"></select>
-              <div class="error" id="error-booking-destination" aria-live="polite"></div>
+              <label for="document-entity">Entity *</label>
+              <select id="document-entity" name="document-entity"></select>
+              <div class="error" id="error-document-entity" aria-live="polite"></div>
             </div>
             <div>
-              <label for="booking-reference">Reference *</label>
-              <input id="booking-reference" name="booking-reference" required />
-              <div class="error" id="error-booking-reference" aria-live="polite"></div>
+              <label for="reference">Reference *</label>
+              <input id="reference" name="reference" required />
+              <div class="error" id="error-reference" aria-live="polite"></div>
             </div>
             <div>
-              <label for="booking-checkIn">Check-in *</label>
-              <input id="booking-checkIn" name="booking-checkIn" type="date" required />
-              <div class="error" id="error-booking-checkIn" aria-live="polite"></div>
+              <label for="startDate">Start date *</label>
+              <input id="startDate" name="startDate" type="date" required />
+              <div class="error" id="error-startDate" aria-live="polite"></div>
             </div>
             <div>
-              <label for="booking-checkOut">Check-out *</label>
-              <input id="booking-checkOut" name="booking-checkOut" type="date" required />
-              <div class="error" id="error-booking-checkOut" aria-live="polite"></div>
+              <label for="endDate">End date *</label>
+              <input id="endDate" name="endDate" type="date" required />
+              <div class="error" id="error-endDate" aria-live="polite"></div>
             </div>
             <div>
-              <label for="booking-guests">Guests</label>
-              <input id="booking-guests" name="booking-guests" type="number" min="1" step="1" />
-              <div class="error" id="error-booking-guests" aria-live="polite"></div>
+              <label for="quantity">Quantity</label>
+              <input id="quantity" name="quantity" type="number" min="1" step="1" />
+              <div class="error" id="error-quantity" aria-live="polite"></div>
             </div>
             <div>
-              <label for="booking-totalPrice">Total price</label>
-              <input id="booking-totalPrice" name="booking-totalPrice" type="number" min="0" step="0.01" />
-              <div class="error" id="error-booking-totalPrice" aria-live="polite"></div>
+              <label for="totalAmount">Total amount</label>
+              <input id="totalAmount" name="totalAmount" type="number" min="0" step="0.01" />
+              <div class="error" id="error-totalAmount" aria-live="polite"></div>
             </div>
             <div>
-              <label for="booking-currency">Currency</label>
-              <input id="booking-currency" name="booking-currency" placeholder="e.g. USD" />
+              <label for="currency">Currency</label>
+              <input id="currency" name="currency" placeholder="e.g. USD" />
             </div>
-            <div>
-              <label for="booking-status">Status</label>
-              <select id="booking-status" name="booking-status">
-                <option value="">--</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="pending">Pending</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-            <button type="submit" id="booking-submit-button">Save Booking</button>
-            <button type="button" id="booking-cancel-edit" hidden>Cancel Edit</button>
+            <div id="document-status-control"></div>
+            <div id="document-custom-fields"></div>
+            <button type="submit" id="document-submit-button">Save Document</button>
+            <button type="button" id="document-cancel-edit" hidden>Cancel Edit</button>
           </form>
         </section>
 
-        <section aria-labelledby="edit-booking-heading">
-          <h2 id="edit-booking-heading">Edit or remove a booking</h2>
+        <section aria-labelledby="edit-document-heading">
+          <h2 id="edit-document-heading">Edit or remove a document</h2>
           <div>
-            <label for="edit-booking">Select a booking</label>
-            <select id="edit-booking"></select>
-            <div class="error" id="error-edit-booking" aria-live="polite"></div>
+            <label for="edit-document">Select a document</label>
+            <select id="edit-document"></select>
+            <div class="error" id="error-edit-document" aria-live="polite"></div>
           </div>
-          <button type="button" id="delete-booking">Delete selected booking</button>
+          <button type="button" id="delete-document">Delete selected document</button>
         </section>
         </div>
       </section>
@@ -138,17 +134,17 @@
       <section id="view-search" aria-labelledby="search-view-heading" hidden>
         <nav class="view-nav">
           <button id="back-from-search" type="button">&larr; Home</button>
-          <h1 id="search-view-heading">Search Destinations</h1>
+          <h1 id="search-view-heading">Search Entities</h1>
         </nav>
 
         <section aria-labelledby="search-heading">
-          <h2 id="search-heading">Find a destination</h2>
-          <input id="search-input" name="search-input" placeholder="Search by name, location, category..." aria-label="Search destinations" />
+          <h2 id="search-heading">Find an entity</h2>
+          <input id="search-input" name="search-input" placeholder="Search by name, code, category..." aria-label="Search entities" />
         </section>
 
         <section aria-labelledby="results-heading">
           <h2 id="results-heading">Results</h2>
-          <div id="search-empty" class="empty" hidden>No destinations match your search.</div>
+          <div id="search-empty" class="empty" hidden>No entities match your search.</div>
           <ul id="search-results-list" aria-live="polite"></ul>
         </section>
       </section>
