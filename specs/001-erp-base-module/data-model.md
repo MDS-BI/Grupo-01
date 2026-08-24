@@ -1,76 +1,105 @@
-# Data Model: ERP Software Base Module
+# Modelo de Datos: Módulo Base de Software de Planificación de Recursos Empresariales (ERP)
 
-## Entity: Entity (master data record)
+## Entidad: Entity (registro de datos maestros)
 
-| Field | Type | Description | Constraints |
+Representa el dato maestro central del módulo (p. ej., cliente, proveedor, artículo) con su identidad fiscal, contacto y condiciones comerciales.
+
+| Campo | Tipo | Descripción | Restricciones |
 |---|---|---|---|
-| id | string | Unique internal identifier for the entity record | Required, generated automatically |
-| entity_id | string | Public identifier used to link documents to this entity | Required, generated automatically, unique |
-| name | string | Name of the entity | Required, non-empty |
-| code | string | Business code or key identifying the entity | Required, non-empty |
-| category | string | Optional classification such as type, group, or class | Optional |
-| description | string | Short description or notes | Optional |
-| targetDate | string | Optional target date in YYYY-MM-DD format; custom modules define its meaning (e.g., due date, review date) | Optional, must be a valid calendar date if provided |
-| createdAt | string | Timestamp when the entity was created | Required |
-| updatedAt | string | Timestamp when the entity was last updated | Required |
+| id | string | Identificador interno único del registro de entidad | Obligatorio, generado automáticamente |
+| entity_id | string | Identificador público usado para vincular documentos a esta entidad | Obligatorio, generado automáticamente, único |
+| name | string | Nombre o razón social de la entidad | Obligatorio, no vacío |
+| code | string | Código o clave de negocio que identifica la entidad | Obligatorio, no vacío |
+| taxId | string | Identificación fiscal de la entidad (p. ej., RFC, NIT, CUIT) | Opcional; se almacena recortada cuando se proporciona |
+| email | string | Correo electrónico principal de contacto | Opcional; debe tener formato de correo válido si se proporciona |
+| phone | string | Teléfono de contacto | Opcional |
+| address | string | Dirección fiscal o comercial | Opcional |
+| category | string | Clasificación opcional como tipo, grupo o clase | Opcional |
+| description | string | Descripción corta o notas | Opcional |
+| targetDate | string | Fecha objetivo opcional en formato YYYY-MM-DD; los módulos personalizados definen su significado (p. ej., fecha de vencimiento, fecha de revisión) | Opcional, debe ser una fecha de calendario válida si se proporciona |
+| creditLimit | number | Límite de crédito extendido a la entidad en la moneda configurada | Opcional, debe ser un número no negativo |
+| paymentTerms | string | Condiciones de pago acordadas (p. ej., contado, neto 30) | Opcional |
+| createdAt | string | Marca de tiempo de cuándo se creó la entidad | Obligatorio |
+| updatedAt | string | Marca de tiempo de la última actualización de la entidad | Obligatorio |
 
-## Entity: Document (transactional record)
+## Entidad: Document (registro transaccional)
 
-| Field | Type | Description | Constraints |
+Representa un documento transaccional vinculado a una entidad (p. ej., pedido, factura, contrato), identificado por serie y folio y con desglose económico.
+
+| Campo | Tipo | Descripción | Restricciones |
 |---|---|---|---|
-| id | string | Unique identifier for the document | Required, generated automatically |
-| entity_id | string | Identifier of the entity this document belongs to | Required, must reference an existing entity's entity_id |
-| reference | string | Document reference or confirmation number | Required, non-empty |
-| startDate | string | Start date in YYYY-MM-DD format | Required, must be a valid calendar date |
-| endDate | string | End date in YYYY-MM-DD format | Required, must be a valid calendar date, must be on or after startDate |
-| quantity | number | Quantity associated with the document | Optional, must be a positive integer |
-| totalAmount | number | Total document amount in the configured currency | Optional, must be non-negative |
-| currency | string | Currency code for the document amount | Optional |
-| status | string | Document status such as draft, pending, approved, or cancelled | Optional |
-| createdAt | string | Timestamp when the document was created | Required |
-| updatedAt | string | Timestamp when the document was last updated | Required |
+| id | string | Identificador único del documento | Obligatorio, generado automáticamente |
+| entity_id | string | Identificador de la entidad a la que pertenece este documento | Obligatorio, debe referenciar el entity_id de una entidad existente |
+| series | string | Serie del documento (p. ej., FAC, A, NV) que agrupa folios consecutivos | Opcional |
+| folio | number | Folio consecutivo que, junto con la serie, forma el número oficial del documento | Obligatorio, debe ser un entero positivo |
+| startDate | string | Fecha de inicio en formato YYYY-MM-DD | Obligatorio, debe ser una fecha de calendario válida |
+| endDate | string | Fecha de fin en formato YYYY-MM-DD | Obligatorio, debe ser una fecha de calendario válida, debe ser igual o posterior a startDate |
+| quantity | number | Cantidad asociada al documento | Opcional, debe ser un entero positivo |
+| subtotal | number | Importe antes de descuentos e impuestos | Opcional, debe ser un número no negativo |
+| discount | number | Descuento aplicado sobre el subtotal | Opcional, debe ser un número no negativo y no puede superar el subtotal |
+| taxAmount | number | Impuesto calculado para el documento | Opcional, debe ser un número no negativo |
+| totalAmount | number | Importe total del documento en la moneda configurada | Opcional, debe ser un número no negativo |
+| currency | string | Código de moneda para los importes del documento (p. ej., MXN, USD, EUR) | Opcional |
+| paymentTerms | string | Condiciones de pago del documento (p. ej., contado, neto 30) | Opcional |
+| notes | string | Notas u observaciones libres del documento | Opcional |
+| status | string | Estado del documento como borrador, pendiente, aprobado o cancelado | Opcional |
+| createdAt | string | Marca de tiempo de cuándo se creó el documento | Obligatorio |
+| updatedAt | string | Marca de tiempo de la última actualización del documento | Obligatorio |
 
-## Entity: ModuleConfig
+## Entidad: ModuleConfig
 
-Configuration object loaded at startup that tailors the base module into a specific module.
+Objeto de configuración cargado al arrancar que adapta el módulo base en un módulo específico.
 
-| Field | Type | Description | Constraints |
+| Campo | Tipo | Descripción | Restricciones |
 |---|---|---|---|
-| moduleName | string | Display name of the tailored module | Required, non-empty |
-| labels | object | Term mappings such as `{ entity: "Customer", entities: "Customers", document: "Sales Order", documents: "Sales Orders" }` | Optional; falls back to Entity/Document |
-| customFields | array | Field definitions per record type: `{ target: "entity"\|"document", key, label, type: "text"\|"number"\|"date"\|"select", required: boolean, options?: string[] }` | Optional; keys MUST NOT collide with base field names |
-| statusLifecycle | object | Ordered statuses and permitted transitions for documents, e.g., `{ statuses: ["quote", "order", "invoiced"], transitions: { quote: ["order"], order: ["invoiced"], invoiced: [] } }` | Optional |
+| moduleName | string | Nombre visible del módulo adaptado | Obligatorio, no vacío |
+| labels | object | Mapeos de términos como `{ entity: "Cliente", entities: "Clientes", document: "Pedido de Venta", documents: "Pedidos de Venta" }` | Opcional; retrocede a Entidad/Documento |
+| customFields | array | Definiciones de campos por tipo de registro: `{ target: "entity"\|"document", key, label, type: "text"\|"number"\|"date"\|"select", required: boolean, options?: string[] }` | Opcional; las claves NO DEBEN chocar con nombres de campos base |
+| statusLifecycle | object | Estados ordenados y transiciones permitidas para documentos, p. ej., `{ statuses: ["cotización", "pedido", "facturado"], transitions: { cotización: ["pedido"], pedido: ["facturado"], facturado: [] } }` | Opcional |
+| theme | object | Opciones de marca, p. ej., `{ accentColor: "#0f62fe" }`; aplicado como propiedad personalizada de CSS en todo el marco del espacio de trabajo | Opcional; accentColor debe ser un color CSS válido o retrocede al predeterminado |
 
-## ModuleConfig Rules
+## Reglas de ModuleConfig
 
-- The configuration is loaded once at startup and applied across all screens.
-- When the configuration is absent, built-in defaults apply: Entity/Document labels, no custom fields, free-form status.
-- Invalid or conflicting values must be reported clearly instead of failing silently.
-- Custom field keys must not collide with base field names (`id`, `entity_id`, `name`, `code`, `category`, `description`, `targetDate`, `reference`, `startDate`, `endDate`, `quantity`, `totalAmount`, `currency`, `status`).
-- Custom field values are persisted alongside base fields without schema changes to storage.
-- A configured lifecycle replaces free-form status entry; without one, status stays free-form.
+- La configuración se carga una vez al arrancar y se aplica en todas las pantallas.
+- Cuando la configuración está ausente, se aplican los valores predeterminados integrados: etiquetas Entidad/Documento, sin campos personalizados, estado de texto libre, color de acento predeterminado.
+- Los valores inválidos o conflictivos deben informarse con claridad en lugar de fallar silenciosamente.
+- Las claves de campos personalizados no deben chocar con los nombres de campos base (`id`, `entity_id`, `name`, `code`, `taxId`, `email`, `phone`, `address`, `category`, `description`, `targetDate`, `creditLimit`, `paymentTerms`, `series`, `folio`, `startDate`, `endDate`, `quantity`, `subtotal`, `discount`, `taxAmount`, `totalAmount`, `currency`, `notes`, `status`).
+- Los valores de campos personalizados se persisten junto a los campos base sin cambios de esquema en el almacenamiento.
+- Un ciclo de vida configurado reemplaza la entrada de estado de texto libre; sin uno, el estado permanece como texto libre.
 
-## Validation Rules
+## Reglas de Validación
 
-- An entity must include a non-empty name.
-- An entity must include a non-empty code.
-- Category and description are optional but should be stored as strings.
-- Target date is optional but, when present, must be a valid calendar date in YYYY-MM-DD format.
-- An entity_id must be generated automatically and must be unique across all entities.
-- A document must include a reference and valid start and end dates.
-- End date must be on or after start date.
-- A document must reference an existing entity via entity_id.
-- The application should normalize text for consistent search behavior.
+### Entidad
 
-## Relationships
+- Una entidad debe incluir un nombre no vacío.
+- Una entidad debe incluir un código no vacío.
+- La identificación fiscal, teléfono, dirección, categoría, descripción y condiciones de pago son opcionales pero deben almacenarse como cadenas recortadas.
+- El correo electrónico es opcional pero, cuando está presente, debe tener formato de correo válido.
+- El límite de crédito es opcional pero, cuando está presente, debe ser un número no negativo.
+- La fecha objetivo es opcional pero, cuando está presente, debe ser una fecha de calendario válida en formato YYYY-MM-DD.
+- Un entity_id debe generarse automáticamente y debe ser único entre todas las entidades.
 
-- Each entity is stored independently and appears as a single row in the entity list.
-- Each entity has one entity_id used to connect to its documents.
-- Each document belongs to exactly one entity, linked by the entity's entity_id.
-- When an entity is deleted, all documents referencing its entity_id are also deleted.
-- Search operations are performed across the stored entity records.
+### Documento
 
-## Extensibility Notes
+- Un documento debe referenciar una entidad existente mediante entity_id.
+- Un documento debe incluir un folio entero positivo; la serie es opcional y, cuando existe, se combina con el folio para formar el número oficial del documento (p. ej., `FAC-1001`).
+- Un documento debe incluir fechas de inicio y fin válidas; la fecha de fin debe ser igual o posterior a la fecha de inicio.
+- La cantidad es opcional y debe ser un entero positivo.
+- Subtotal, descuento, impuesto e importe total son opcionales y deben ser números no negativos; el descuento no puede superar el subtotal.
+- La aplicación debe normalizar el texto para un comportamiento de búsqueda consistente.
 
-- Custom modules may add domain-specific fields to either record type; base fields above must keep their names and semantics so storage, validation, and referential integrity remain intact.
-- The `status` field is intentionally free-form at the base level so each custom module can impose its own lifecycle (e.g., order statuses, approval states).
+> Nota: el cálculo automático de totales (p. ej., `total = subtotal - descuento + impuesto`) queda como punto de extensión; el módulo base valida cada importe de forma independiente para evitar sorpresas por redondeo.
+
+## Relaciones
+
+- Cada entidad se almacena independientemente y aparece como una única fila en la lista de entidades.
+- Cada entidad tiene un entity_id usado para conectarse a sus documentos.
+- Cada documento pertenece exactamente a una entidad, vinculada por el entity_id de la entidad.
+- Cuando se elimina una entidad, todos los documentos que referencian su entity_id también se eliminan.
+- Las operaciones de búsqueda se realizan sobre los registros de entidad almacenados, incluyendo identidad fiscal, contacto y condiciones comerciales.
+
+## Notas de Extensibilidad
+
+- Los módulos personalizados pueden añadir campos específicos del dominio a cualquiera de los dos tipos de registro; los campos base anteriores deben mantener sus nombres y semántica para que el almacenamiento, la validación y la integridad referencial permanezcan intactos.
+- El campo `status` es intencionadamente de texto libre a nivel base para que cada módulo personalizado pueda imponer su propio ciclo de vida (p. ej., estados de pedidos, estados de aprobación).
+- La unicidad de folio por serie, las partidas de documento (líneas con producto, cantidad y precio) y la numeración automática son puntos de extensión naturales para módulos que los requieran.

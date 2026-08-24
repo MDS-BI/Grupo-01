@@ -1,34 +1,58 @@
 import { loadModuleConfig, normalizeConfig, setActiveConfig, labelFor } from './module-config.js';
 import { loadEntities, addEntity, updateEntity, deleteEntity, validateEntity, searchEntities, loadDocuments, addDocument, updateDocument, deleteDocument, validateDocument } from './storage.js';
 import { clearEntityForm, startEntityEdit, collectEntityPayload, showEntityErrors } from './components/entity-form.js';
-import { renderEntityList, createEntityItem } from './components/entity-list.js';
+import { createEntityItem } from './components/entity-list.js';
 import { clearDocumentForm, startDocumentEdit, collectDocumentPayload, showDocumentErrors } from './components/document-form.js';
-import { renderDocumentList } from './components/document-list.js';
+import { folioLabel } from './components/document-list.js';
+import { renderLogo, applyShellLabels, setActiveModule } from './components/shell.js';
+import { renderDashboard } from './components/dashboard.js';
 import { setupSearchBar, renderSearchResults } from './components/search-bar.js';
 
 function qs(id){ return document.getElementById(id); }
 
-const VIEWS = { welcome: 'view-welcome', manage: 'view-manage', search: 'view-search' };
+// Ayudantes de género gramatical para etiquetas configurables en español.
+// El género se deduce de la primera palabra (p. ej., "Pedido de Venta" → masculino)
+// usando terminaciones femeninas comunes (-a, -dad, -ción, ...).
+const palabraClave = (word) => String(word).trim().split(/\s+/)[0] || '';
+const esFemenina = (word) => /(a|dad|tad|ción|sión|tud|umbre|ie)$/i.test(palabraClave(word));
+const articulo = (word) => esFemenina(word) ? 'la' : 'el';
+const demostrativo = (word) => esFemenina(word) ? 'esta' : 'este';
+const seleccionada = (word) => esFemenina(word) ? 'seleccionada' : 'seleccionado';
+
+const MODULES = ['dashboard', 'entities', 'documents', 'search'];
+const VIEWS = {
+  dashboard: 'view-dashboard',
+  entities: 'view-entities',
+  documents: 'view-documents',
+  search: 'view-search'
+};
 
 let wired = false;
 
-function showView(name){
-  Object.entries(VIEWS).forEach(([key, id]) => { qs(id).hidden = key !== name; });
-  if(name === 'manage'){
-    showManageTab('entities');
-    refreshManage();
+function showModule(name, opts = {}){
+  if(!MODULES.includes(name)) name = 'dashboard';
+  MODULES.forEach(m => { qs(VIEWS[m]).hidden = m !== name; });
+  setActiveModule(name);
+  if(name === 'dashboard'){
+    renderDashboard();
   }
-  if(name === 'search') refreshSearch();
+  if(name === 'entities'){
+    populateDocumentEntitySelect();
+    populateEditEntitySelect();
+    if(opts.newRecord) clearEntityForm();
+    if(opts.focusForm) qs('name').focus();
+  }
+  if(name === 'documents'){
+    populateDocumentEntitySelect();
+    populateEditDocumentSelect();
+    if(opts.newRecord) clearDocumentForm();
+    if(opts.focusForm) qs('document-entity').focus();
+  }
+  if(name === 'search'){
+    refreshSearch();
+    if(opts.focusSearch) qs('search-input').focus();
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function showManageTab(tab){
-  qs('panel-entities').hidden = tab !== 'entities';
-  qs('panel-documents').hidden = tab !== 'documents';
-  qs('tab-entities').classList.toggle('active', tab === 'entities');
-  qs('tab-documents').classList.toggle('active', tab === 'documents');
-  qs('tab-entities').setAttribute('aria-selected', String(tab === 'entities'));
-  qs('tab-documents').setAttribute('aria-selected', String(tab === 'documents'));
 }
 
 function populateDocumentEntitySelect(){
@@ -50,7 +74,7 @@ function populateEditEntitySelect(){
   select.innerHTML = '';
   const none = document.createElement('option');
   none.value = '';
-  none.textContent = `-- Select an ${labelFor('entity')} --`;
+  none.textContent = `-- Selecciona ${articulo(labelFor('entity'))} ${labelFor('entity').toLowerCase()} --`;
   select.appendChild(none);
   loadEntities().forEach(e => {
     const opt = document.createElement('option');
@@ -67,24 +91,18 @@ function populateEditDocumentSelect(){
   select.innerHTML = '';
   const none = document.createElement('option');
   none.value = '';
-  none.textContent = `-- Select a ${labelFor('document')} --`;
+  none.textContent = `-- Selecciona ${articulo(labelFor('document'))} ${labelFor('document').toLowerCase()} --`;
   select.appendChild(none);
   const entities = loadEntities();
   loadDocuments().forEach(d => {
     const entity = entities.find(e => e.entity_id === d.entity_id);
-    const label = `${entity ? entity.name : 'Unknown'} · ${d.reference} · ${d.startDate} → ${d.endDate}`;
+    const label = `${entity ? entity.name : 'Entidad desconocida'} · ${folioLabel(d)} · ${d.startDate} → ${d.endDate}`;
     const opt = document.createElement('option');
     opt.value = d.id;
     opt.textContent = label;
     select.appendChild(opt);
   });
   if(prev && [...select.options].some(o => o.value === prev)) select.value = prev;
-}
-
-function refreshManage(){
-  populateDocumentEntitySelect();
-  populateEditEntitySelect();
-  populateEditDocumentSelect();
 }
 
 function refreshSearch(){
@@ -100,12 +118,14 @@ function onEditEntityChange(){
 
 function handleDeleteSelectedEntity(){
   const id = qs('edit-entity').value;
-  if(!id){ qs('error-edit-entity').textContent = `Select a ${labelFor('entity').toLowerCase()} to delete.`; return; }
-  if(!confirm(`Delete this ${labelFor('entity').toLowerCase()}? Its ${labelFor('documents').toLowerCase()} will also be deleted.`)) return;
+  if(!id){ qs('error-edit-entity').textContent = `Selecciona ${articulo(labelFor('entity'))} ${labelFor('entity').toLowerCase()} para eliminar.`; return; }
+  if(!confirm(`¿Eliminar ${demostrativo(labelFor('entity'))} ${labelFor('entity').toLowerCase()}? Sus ${labelFor('documents').toLowerCase()} también se eliminarán.`)) return;
   deleteEntity(id);
   qs('error-edit-entity').textContent = '';
   clearEntityForm();
-  refreshManage();
+  populateDocumentEntitySelect();
+  populateEditEntitySelect();
+  populateEditDocumentSelect();
 }
 
 function onEditDocumentChange(){
@@ -117,12 +137,18 @@ function onEditDocumentChange(){
 
 function handleDeleteSelectedDocument(){
   const id = qs('edit-document').value;
-  if(!id){ qs('error-edit-document').textContent = `Select a ${labelFor('document').toLowerCase()} to delete.`; return; }
-  if(!confirm(`Delete this ${labelFor('document').toLowerCase()}?`)) return;
+  if(!id){ qs('error-edit-document').textContent = `Selecciona ${articulo(labelFor('document'))} ${labelFor('document').toLowerCase()} para eliminar.`; return; }
+  if(!confirm(`¿Eliminar ${demostrativo(labelFor('document'))} ${labelFor('document').toLowerCase()}?`)) return;
   deleteDocument(id);
   qs('error-edit-document').textContent = '';
   clearDocumentForm();
-  refreshManage();
+  populateEditDocumentSelect();
+}
+
+function afterSaveRefresh(){
+  populateDocumentEntitySelect();
+  populateEditEntitySelect();
+  populateEditDocumentSelect();
 }
 
 function handleEntitySubmit(ev){
@@ -141,7 +167,7 @@ function handleEntitySubmit(ev){
     addEntity(payload);
     clearEntityForm();
   }
-  refreshManage();
+  afterSaveRefresh();
 }
 
 function handleDocumentSubmit(ev){
@@ -163,34 +189,55 @@ function handleDocumentSubmit(ev){
     alert(e.message);
     showDocumentErrors({ status: e.message });
   }
-  refreshManage();
+  afterSaveRefresh();
 }
 
 function applyLabels(config){
+  const entity = config.labels.entity;
+  const entities = config.labels.entities;
+  const document_ = config.labels.document;
+  const documents = config.labels.documents;
+  const femEntity = esFemenina(entity);
+  const femDocument = esFemenina(document_);
+
   document.title = config.moduleName;
-  qs('welcome-heading').textContent = config.moduleName;
-  qs('welcome-manage').textContent = `Manage ${config.labels.entities} & ${config.labels.documents}`;
-  qs('welcome-search').textContent = `Search ${config.labels.entities}`;
-  qs('manage-heading').textContent = `Manage ${config.labels.entities} & ${config.labels.documents}`;
-  qs('tab-entities').textContent = config.labels.entities;
-  qs('tab-documents').textContent = config.labels.documents;
-  qs('entity-form-heading').textContent = `Add / Edit ${config.labels.entity}`;
-  qs('edit-entity-heading').textContent = `Edit or remove a${/^[aeiou]/i.test(config.labels.entity) ? 'n' : ''} ${config.labels.entity.toLowerCase()}`;
-  qs('document-form-heading').textContent = `Add / Edit ${config.labels.document}`;
-  qs('edit-document-heading').textContent = `Edit or remove a ${config.labels.document.toLowerCase()}`;
-  qs('search-view-heading').textContent = `Search ${config.labels.entities}`;
-  qs('search-heading').textContent = `Find a${/^[aeiou]/i.test(config.labels.entity) ? 'n' : ''} ${config.labels.entity.toLowerCase()}`;
-  qs('search-input').placeholder = 'Search by name, code, category...';
-  qs('search-input').setAttribute('aria-label', `Search ${config.labels.entities.toLowerCase()}`);
-  qs('search-empty').textContent = `No ${config.labels.entities.toLowerCase()} match your search.`;
-  qs('delete-entity').textContent = `Delete selected ${config.labels.entity.toLowerCase()}`;
-  qs('delete-document').textContent = `Delete selected ${config.labels.document.toLowerCase()}`;
+  qs('brand-name').textContent = config.moduleName;
+  applyShellLabels();
+
+  qs('dashboard-heading').textContent = config.moduleName;
+  qs('dashboard-subtitle').textContent = `Gestiona tus ${entities.toLowerCase()} y ${documents.toLowerCase()} en un solo lugar.`;
+  qs('action-new-entity-title').textContent = `${femEntity ? 'Nueva' : 'Nuevo'} ${entity}`;
+  qs('action-new-entity-sub').textContent = `Crear un registro de ${entity.toLowerCase()}`;
+  qs('action-new-document-title').textContent = `${femDocument ? 'Nueva' : 'Nuevo'} ${document_}`;
+  qs('action-new-document-sub').textContent = `Registrar un registro de ${document_.toLowerCase()}`;
+  qs('action-open-entities-title').textContent = entities;
+  qs('action-open-entities-sub').textContent = `Abrir la gestión de ${entities.toLowerCase()}`;
+  qs('action-find-title').textContent = 'Buscar registros';
+  qs('action-find-sub').textContent = `Buscar ${entities.toLowerCase()}`;
+
+  qs('entities-view-heading').textContent = entities;
+  qs('documents-view-heading').textContent = documents;
+  qs('entity-form-heading').textContent = `Agregar / Editar ${entity}`;
+  qs('edit-entity-heading').textContent = `Editar o eliminar ${articulo(entity)} ${entity.toLowerCase()}`;
+  qs('document-form-heading').textContent = `Agregar / Editar ${document_}`;
+  qs('edit-document-heading').textContent = `Editar o eliminar ${articulo(document_)} ${document_.toLowerCase()}`;
+  qs('search-view-heading').textContent = `Buscar ${entities}`;
+  qs('search-heading').textContent = `Buscar ${articulo(entity)} ${entity.toLowerCase()}`;
+  qs('search-input').placeholder = 'Buscar por nombre, código, categoría...';
+  qs('search-input').setAttribute('aria-label', `Buscar ${entities.toLowerCase()}`);
+  qs('search-empty').textContent = 'Sin coincidencias para tu búsqueda.';
+  qs('delete-entity').textContent = `Eliminar ${articulo(entity)} ${entity.toLowerCase()} ${seleccionada(entity)}`;
+  qs('delete-document').textContent = `Eliminar ${articulo(document_)} ${document_.toLowerCase()} ${seleccionada(document_)}`;
+}
+
+function applyTheme(config){
+  document.documentElement.style.setProperty('--accent', config.theme.accentColor);
 }
 
 function showConfigErrors(errors){
   const banner = qs('config-errors');
   if(errors && errors.length > 0){
-    banner.textContent = `Module configuration problem: ${errors.join(' ')}`;
+    banner.textContent = `Problema de configuración del módulo: ${errors.join(' ')}`;
     banner.hidden = false;
   } else {
     banner.hidden = true;
@@ -201,17 +248,18 @@ function showConfigErrors(errors){
 function wireEvents(){
   if(wired) return;
   wired = true;
+  document.querySelectorAll('.nav-module').forEach(btn => {
+    btn.addEventListener('click', () => showModule(btn.dataset.module));
+  });
+  qs('action-new-entity').addEventListener('click', () => showModule('entities', { newRecord: true, focusForm: true }));
+  qs('action-new-document').addEventListener('click', () => showModule('documents', { newRecord: true, focusForm: true }));
+  qs('action-open-entities').addEventListener('click', () => showModule('entities'));
+  qs('action-find').addEventListener('click', () => showModule('search', { focusSearch: true }));
   qs('entity-form').addEventListener('submit', handleEntitySubmit);
   qs('cancel-edit').addEventListener('click', clearEntityForm);
   qs('document-form').addEventListener('submit', handleDocumentSubmit);
   qs('document-cancel-edit').addEventListener('click', clearDocumentForm);
-  qs('welcome-manage').addEventListener('click', () => showView('manage'));
-  qs('welcome-search').addEventListener('click', () => showView('search'));
-  qs('back-from-search').addEventListener('click', () => showView('welcome'));
   setupSearchBar(qs('search-input'), () => refreshSearch());
-  qs('tab-entities').addEventListener('click', () => showManageTab('entities'));
-  qs('tab-documents').addEventListener('click', () => showManageTab('documents'));
-  qs('tab-home').addEventListener('click', () => showView('welcome'));
   qs('edit-entity').addEventListener('change', onEditEntityChange);
   qs('edit-document').addEventListener('change', onEditDocumentChange);
   qs('delete-entity').addEventListener('click', handleDeleteSelectedEntity);
@@ -221,11 +269,13 @@ function wireEvents(){
 export function initApp(resolved){
   showConfigErrors(resolved.errors);
   setActiveConfig(resolved.config);
+  applyTheme(resolved.config);
+  renderLogo(qs('logo-mark'));
   applyLabels(resolved.config);
   wireEvents();
   clearEntityForm();
   clearDocumentForm();
-  showView('welcome');
+  showModule('dashboard');
 }
 
 export async function boot(overrideConfig){

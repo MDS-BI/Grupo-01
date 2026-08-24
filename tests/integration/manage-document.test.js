@@ -44,28 +44,29 @@ describe('User Story 10 - manage documents (edit, delete, cascade)', () => {
   it('edits a selected document through the selector and persists the change', async () => {
     await bootWith(undefined);
     const entity = addEntity({ name: 'Acme', code: 'AC-001' });
-    const doc = await (await import('../../src/storage.js')).addDocument({ entityId: entity.entity_id, reference: 'SO-1', startDate: '2026-08-01', endDate: '2026-08-05' });
-    qs('welcome-manage').click();
-    qs('tab-documents').click();
+    const doc = await (await import('../../src/storage.js')).addDocument({ entityId: entity.entity_id, series: 'FAC', folio: 1001, startDate: '2026-08-01', endDate: '2026-08-05' });
+    qs('nav-entities').click();
+    qs('nav-documents').click();
     const select = qs('edit-document');
     select.value = doc.id;
     select.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
     expect(qs('document-id').value).toBe(doc.id);
-    expect(qs('reference').value).toBe('SO-1');
-    expect(qs('document-submit-button').textContent).toBe('Update Document');
+    expect(qs('series').value).toBe('FAC');
+    expect(qs('folio').value).toBe('1001');
+    expect(qs('document-submit-button').textContent).toBe('Actualizar Documento');
 
-    qs('reference').value = 'SO-1-rev';
+    qs('folio').value = '1002';
     qs('document-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
-    expect(loadDocuments()[0].reference).toBe('SO-1-rev');
+    expect(loadDocuments()[0].folio).toBe(1002);
   });
 
   it('deletes a selected document', async () => {
     await bootWith(undefined);
     const entity = addEntity({ name: 'Acme', code: 'AC-001' });
     const { addDocument } = await import('../../src/storage.js');
-    const doc = addDocument({ entityId: entity.entity_id, reference: 'SO-2', startDate: '2026-08-01', endDate: '2026-08-05' });
-    qs('welcome-manage').click();
-    qs('tab-documents').click();
+    const doc = addDocument({ entityId: entity.entity_id, folio: 1001, startDate: '2026-08-01', endDate: '2026-08-05' });
+    qs('nav-entities').click();
+    qs('nav-documents').click();
     const select = qs('edit-document');
     select.value = doc.id;
     select.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
@@ -78,10 +79,10 @@ describe('User Story 10 - manage documents (edit, delete, cascade)', () => {
     const entity = addEntity({ name: 'Acme', code: 'AC-001' });
     const other = addEntity({ name: 'Globex', code: 'GL-002' });
     const { addDocument } = await import('../../src/storage.js');
-    addDocument({ entityId: entity.entity_id, reference: 'SO-A', startDate: '2026-08-01', endDate: '2026-08-05' });
-    addDocument({ entityId: other.entity_id, reference: 'SO-B', startDate: '2026-08-02', endDate: '2026-08-06' });
+    addDocument({ entityId: entity.entity_id, folio: 1001, startDate: '2026-08-01', endDate: '2026-08-05' });
+    addDocument({ entityId: other.entity_id, folio: 2001, startDate: '2026-08-02', endDate: '2026-08-06' });
 
-    qs('welcome-manage').click();
+    qs('nav-entities').click();
     const select = qs('edit-entity');
     select.value = select.options[1].value;
     select.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
@@ -98,10 +99,10 @@ describe('User Story 12 - configured document status lifecycle', () => {
     await bootWith(lifecycle);
     const entity = addEntity({ name: 'Acme', code: 'AC-001' });
     const { addDocument } = await import('../../src/storage.js');
-    addDocument({ entityId: entity.entity_id, reference: 'SO-Q', startDate: '2026-08-01', endDate: '2026-08-05', status: 'quote' });
+    addDocument({ entityId: entity.entity_id, folio: 1001, startDate: '2026-08-01', endDate: '2026-08-05', status: 'quote' });
 
-    qs('welcome-manage').click();
-    qs('tab-documents').click();
+    qs('nav-entities').click();
+    qs('nav-documents').click();
     const select = qs('edit-document');
     select.value = select.options[1].value;
     select.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
@@ -113,16 +114,16 @@ describe('User Story 12 - configured document status lifecycle', () => {
 
   it('offers all configured statuses when creating a document', async () => {
     await bootWith(lifecycle);
-    qs('welcome-manage').click();
-    qs('tab-documents').click();
+    qs('nav-entities').click();
+    qs('nav-documents').click();
     const statusOptions = [...qs('status').options].map(o => o.value);
     expect(statusOptions).toEqual(['', 'quote', 'order', 'invoiced']);
   });
 
   it('keeps status free-form text input when no lifecycle is configured', async () => {
     await bootWith(undefined);
-    qs('welcome-manage').click();
-    qs('tab-documents').click();
+    qs('nav-entities').click();
+    qs('nav-documents').click();
     const control = qs('status');
     expect(control.tagName).toBe('INPUT');
     expect(control.getAttribute('type')).toBe('text');
@@ -132,9 +133,9 @@ describe('User Story 12 - configured document status lifecycle', () => {
     await bootWith(lifecycle);
     const entity = addEntity({ name: 'Acme', code: 'AC-001' });
     const { addDocument } = await import('../../src/storage.js');
-    addDocument({ entityId: entity.entity_id, reference: 'SO-V', startDate: '2026-08-01', endDate: '2026-08-05', status: 'order' });
+    addDocument({ entityId: entity.entity_id, folio: 1001, startDate: '2026-08-01', endDate: '2026-08-05', status: 'order' });
 
-    qs('welcome-search').click();
+    qs('nav-search').click();
     qs('search-input').value = 'acme';
     qs('search-input').dispatchEvent(new dom.window.Event('input', { bubbles: true }));
     const badge = qs('search-results-list').querySelector('.status-badge');

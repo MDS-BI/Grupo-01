@@ -59,11 +59,11 @@ function collectCustomErrors(target, data){
   const errs = {};
   for(const f of declaredFields(target)){
     const v = data ? data[f.key] : undefined;
-    if(f.required && isEmpty(v)){ errs[f.key] = `${f.label} is required`; continue; }
+    if(f.required && isEmpty(v)){ errs[f.key] = `${f.label} es obligatorio`; continue; }
     if(!isEmpty(v)){
-      if(f.type === 'number' && !Number.isFinite(Number(v))){ errs[f.key] = `${f.label} must be a number`; continue; }
-      if(f.type === 'date' && !isValidDate(v)){ errs[f.key] = `${f.label} must be a valid date (YYYY-MM-DD)`; continue; }
-      if(f.type === 'select' && !f.options.includes(String(v).trim())){ errs[f.key] = `${f.label} must be one of: ${f.options.join(', ')}`; }
+      if(f.type === 'number' && !Number.isFinite(Number(v))){ errs[f.key] = `${f.label} debe ser un número`; continue; }
+      if(f.type === 'date' && !isValidDate(v)){ errs[f.key] = `${f.label} debe ser una fecha válida (YYYY-MM-DD)`; continue; }
+      if(f.type === 'select' && !f.options.includes(String(v).trim())){ errs[f.key] = `${f.label} debe ser uno de: ${f.options.join(', ')}`; }
     }
   }
   return errs;
@@ -74,22 +74,31 @@ function validateLifecycleStatus(status, currentStatus, errors){
   if(!lc) return;
   if(currentStatus === undefined || currentStatus === null){
     if(!isEmpty(status) && !lc.statuses.includes(status)){
-      errors.status = `Status must be one of: ${lc.statuses.join(', ')}`;
+      errors.status = `El estado debe ser uno de: ${lc.statuses.join(', ')}`;
     }
     return;
   }
   if(status === currentStatus) return;
   const allowed = lc.transitions[currentStatus] || [];
   if(!allowed.includes(status)){
-    errors.status = `Invalid status transition from "${currentStatus}" to "${status}"`;
+    errors.status = `Transición de estado inválida de "${currentStatus}" a "${status}"`;
   }
 }
 
-export function validateEntity({name, code, targetDate, ...rest}){
+function isValidEmail(value){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value).trim());
+}
+
+export function validateEntity({name, code, email, targetDate, creditLimit, ...rest}){
   const errors = {};
-  if(!name || !name.trim()) errors.name = 'Name is required';
-  if(!code || !code.trim()) errors.code = 'Code is required';
-  if(!isEmpty(targetDate) && !isValidDate(targetDate)) errors.targetDate = 'Target date must be a valid date (YYYY-MM-DD)';
+  if(!name || !name.trim()) errors.name = 'El nombre es obligatorio';
+  if(!code || !code.trim()) errors.code = 'El código es obligatorio';
+  if(!isEmpty(email) && !isValidEmail(email)) errors.email = 'El correo electrónico no es válido';
+  if(!isEmpty(targetDate) && !isValidDate(targetDate)) errors.targetDate = 'La fecha objetivo debe ser una fecha válida (YYYY-MM-DD)';
+  if(!isEmpty(creditLimit)){
+    const c = Number(creditLimit);
+    if(Number.isNaN(c) || c < 0) errors.creditLimit = 'El límite de crédito debe ser un número no negativo';
+  }
   Object.assign(errors, collectCustomErrors('entity', rest));
   return { valid: Object.keys(errors).length === 0, errors };
 }
@@ -110,9 +119,15 @@ export function addEntity(payload){
     entity_id: generateId(),
     name: (payload.name||'').trim(),
     code: (payload.code||'').trim(),
+    taxId: (payload.taxId||'').trim() || undefined,
+    email: (payload.email||'').trim() || undefined,
+    phone: (payload.phone||'').trim() || undefined,
+    address: (payload.address||'').trim() || undefined,
     category: (payload.category||'').trim() || undefined,
     description: (payload.description||'').trim() || undefined,
     targetDate: (payload.targetDate||'').trim() || undefined,
+    creditLimit: isEmpty(payload.creditLimit) ? undefined : Number(payload.creditLimit),
+    paymentTerms: (payload.paymentTerms||'').trim() || undefined,
     ...pickCustomFields('entity', payload),
     createdAt: now,
     updatedAt: now
@@ -126,8 +141,24 @@ export function addEntity(payload){
 export function updateEntity(id, updates){
   const list = loadEntities();
   const idx = list.findIndex(e => e.id === id);
-  if(idx === -1) throw new Error('Entity not found');
-  list[idx] = { ...list[idx], ...updates, ...pickCustomFields('entity', { ...list[idx], ...updates }), updatedAt: new Date().toISOString() };
+  if(idx === -1) throw new Error('Entidad no encontrada');
+  const merged = { ...list[idx], ...updates };
+  list[idx] = {
+    ...list[idx],
+    name: (merged.name||'').trim(),
+    code: (merged.code||'').trim(),
+    taxId: (merged.taxId||'').trim() || undefined,
+    email: (merged.email||'').trim() || undefined,
+    phone: (merged.phone||'').trim() || undefined,
+    address: (merged.address||'').trim() || undefined,
+    category: (merged.category||'').trim() || undefined,
+    description: (merged.description||'').trim() || undefined,
+    targetDate: (merged.targetDate||'').trim() || undefined,
+    creditLimit: isEmpty(merged.creditLimit) ? undefined : Number(merged.creditLimit),
+    paymentTerms: (merged.paymentTerms||'').trim() || undefined,
+    ...pickCustomFields('entity', merged),
+    updatedAt: new Date().toISOString()
+  };
   saveEntities(list);
   return list[idx];
 }
@@ -142,27 +173,39 @@ export function deleteEntity(id){
 }
 
 export function validateDocument(payload, currentStatus){
-  const {entityId, reference, startDate, endDate, quantity, totalAmount, status} = payload;
+  const {entityId, series, folio, startDate, endDate, quantity, subtotal, discount, taxAmount, totalAmount, status} = payload;
   const errors = {};
   const entities = loadEntities();
   if(!entityId || !entities.some(e => e.entity_id === entityId)){
-    errors.entityId = 'Select an entity for the document';
+    errors.entityId = 'Selecciona una entidad para el documento';
   }
-  if(!reference || !reference.trim()) errors.reference = 'Reference is required';
-  if(!startDate){ errors.startDate = 'Start date is required'; }
-  else if(!isValidDate(startDate)) errors.startDate = 'Start date must be a valid date (YYYY-MM-DD)';
-  if(!endDate){ errors.endDate = 'End date is required'; }
-  else if(!isValidDate(endDate)) errors.endDate = 'End date must be a valid date (YYYY-MM-DD)';
+  if(isEmpty(folio)){ errors.folio = 'El folio es obligatorio'; }
+  else {
+    const f = Number(folio);
+    if(!Number.isInteger(f) || f <= 0) errors.folio = 'El folio debe ser un entero positivo';
+  }
+  if(!startDate){ errors.startDate = 'La fecha de inicio es obligatoria'; }
+  else if(!isValidDate(startDate)) errors.startDate = 'La fecha de inicio debe ser una fecha válida (YYYY-MM-DD)';
+  if(!endDate){ errors.endDate = 'La fecha de fin es obligatoria'; }
+  else if(!isValidDate(endDate)) errors.endDate = 'La fecha de fin debe ser una fecha válida (YYYY-MM-DD)';
   if(startDate && endDate && isValidDate(startDate) && isValidDate(endDate) && endDate < startDate){
-    errors.endDate = 'End date must be on or after start date';
+    errors.endDate = 'La fecha de fin debe ser igual o posterior a la fecha de inicio';
   }
   if(quantity !== undefined && quantity !== null && quantity !== ''){
     const n = Number(quantity);
-    if(!Number.isInteger(n) || n <= 0) errors.quantity = 'Quantity must be a positive whole number';
+    if(!Number.isInteger(n) || n <= 0) errors.quantity = 'La cantidad debe ser un entero positivo';
   }
-  if(totalAmount !== undefined && totalAmount !== null && totalAmount !== ''){
-    const p = Number(totalAmount);
-    if(Number.isNaN(p) || p < 0) errors.totalAmount = 'Total amount must be a non-negative number';
+  for(const [key, label] of [['subtotal', 'El subtotal'], ['discount', 'El descuento'], ['taxAmount', 'El impuesto'], ['totalAmount', 'El importe total']]){
+    const v = payload[key];
+    if(v === undefined || v === null || v === '') continue;
+    const n = Number(v);
+    if(Number.isNaN(n) || n < 0) errors[key] = `${label} debe ser un número no negativo`;
+  }
+  if(!errors.subtotal && !errors.discount
+    && subtotal !== undefined && subtotal !== null && subtotal !== ''
+    && discount !== undefined && discount !== null && discount !== ''
+    && Number(discount) > Number(subtotal)){
+    errors.discount = 'El descuento no puede superar el subtotal';
   }
   validateLifecycleStatus((status||'').trim(), currentStatus, errors);
   Object.assign(errors, collectCustomErrors('document', payload));
@@ -178,12 +221,18 @@ export function addDocument(payload){
   const document = {
     id: generateId(),
     entity_id: payload.entityId,
-    reference: (payload.reference||'').trim(),
+    series: (payload.series||'').trim() || undefined,
+    folio: Number(payload.folio),
     startDate: payload.startDate,
     endDate: payload.endDate,
     quantity: (isEmpty(payload.quantity)) ? undefined : Number(payload.quantity),
+    subtotal: (isEmpty(payload.subtotal)) ? undefined : Number(payload.subtotal),
+    discount: (isEmpty(payload.discount)) ? undefined : Number(payload.discount),
+    taxAmount: (isEmpty(payload.taxAmount)) ? undefined : Number(payload.taxAmount),
     totalAmount: (isEmpty(payload.totalAmount)) ? undefined : Number(payload.totalAmount),
     currency: (payload.currency||'').trim() || undefined,
+    paymentTerms: (payload.paymentTerms||'').trim() || undefined,
+    notes: (payload.notes||'').trim() || undefined,
     status: (payload.status||'').trim() || undefined,
     ...pickCustomFields('document', payload),
     createdAt: now,
@@ -198,22 +247,43 @@ export function addDocument(payload){
 export function updateDocument(id, updates){
   const list = loadDocuments();
   const idx = list.findIndex(d => d.id === id);
-  if(idx === -1) throw new Error('Document not found');
+  if(idx === -1) throw new Error('Documento no encontrado');
   const prev = list[idx];
   const merged = { ...prev, ...updates };
   const check = validateDocument({
     entityId: merged.entity_id,
-    reference: merged.reference,
+    series: merged.series,
+    folio: merged.folio,
     startDate: merged.startDate,
     endDate: merged.endDate,
     quantity: merged.quantity,
+    subtotal: merged.subtotal,
+    discount: merged.discount,
+    taxAmount: merged.taxAmount,
     totalAmount: merged.totalAmount,
     status: updates.status !== undefined ? (updates.status||'').trim() : merged.status
   }, prev.status);
   if(!check.valid){
     throw new Error(Object.values(check.errors)[0]);
   }
-  list[idx] = { ...merged, status: updates.status !== undefined ? (updates.status||'').trim() : merged.status, updatedAt: new Date().toISOString() };
+  list[idx] = {
+    ...prev,
+    series: (merged.series||'').trim() || undefined,
+    folio: Number(merged.folio),
+    startDate: merged.startDate,
+    endDate: merged.endDate,
+    quantity: (isEmpty(merged.quantity)) ? undefined : Number(merged.quantity),
+    subtotal: (isEmpty(merged.subtotal)) ? undefined : Number(merged.subtotal),
+    discount: (isEmpty(merged.discount)) ? undefined : Number(merged.discount),
+    taxAmount: (isEmpty(merged.taxAmount)) ? undefined : Number(merged.taxAmount),
+    totalAmount: (isEmpty(merged.totalAmount)) ? undefined : Number(merged.totalAmount),
+    currency: (merged.currency||'').trim() || undefined,
+    paymentTerms: (merged.paymentTerms||'').trim() || undefined,
+    notes: (merged.notes||'').trim() || undefined,
+    status: updates.status !== undefined ? (updates.status||'').trim() : merged.status,
+    ...pickCustomFields('document', { ...prev, ...updates }),
+    updatedAt: new Date().toISOString()
+  };
   saveDocuments(list);
   return list[idx];
 }
@@ -240,6 +310,6 @@ export function clearAll(){
 export function searchEntities(term){
   const q = (term||'').trim().toLowerCase();
   if(!q) return loadEntities();
-  const fields = ['name', 'code', 'category', 'description', 'targetDate', ...declaredFields('entity').map(f => f.key)];
+  const fields = ['name', 'code', 'taxId', 'email', 'phone', 'address', 'category', 'description', 'targetDate', 'paymentTerms', ...declaredFields('entity').map(f => f.key)];
   return loadEntities().filter(e => fields.some(f => String(e[f] ?? '').toLowerCase().includes(q)));
 }

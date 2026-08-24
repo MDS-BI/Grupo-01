@@ -29,55 +29,38 @@ afterEach(() => {
   dom.window.close();
 });
 
-describe('User Story 3 - welcome screen with navigation', () => {
-  it('shows a welcome screen with two clearly labeled buttons on load', () => {
-    expect(qs('view-welcome').hidden).toBe(false);
-    expect(qs('welcome-manage').textContent).toBe('Manage Entities & Documents');
-    expect(qs('welcome-search').textContent).toBe('Search Entities');
+describe('User Story 4 - manage entities and documents via the workspace sidebar', () => {
+  it('shows a persistent module navigation with Dashboard, Entities, Documents, and Search buttons', () => {
+    const buttons = [...document.querySelectorAll('.nav-module')];
+    expect(buttons.length).toBe(4);
+    expect(buttons.map(b => b.dataset.module)).toEqual(['dashboard', 'entities', 'documents', 'search']);
   });
 
-  it('navigates to the manage screen from the manage button', () => {
-    qs('welcome-manage').click();
-    expect(qs('view-manage').hidden).toBe(false);
-    expect(qs('view-welcome').hidden).toBe(true);
+  it('switches between the entities and documents management views', () => {
+    qs('nav-entities').click();
+    expect(qs('view-entities').hidden).toBe(false);
+    expect(qs('view-documents').hidden).toBe(true);
+
+    qs('nav-documents').click();
+    expect(qs('view-entities').hidden).toBe(true);
+    expect(qs('view-documents').hidden).toBe(false);
+
+    qs('nav-entities').click();
+    expect(qs('view-entities').hidden).toBe(false);
+    expect(qs('view-documents').hidden).toBe(true);
   });
 
-  it('navigates to the search screen from the search button', () => {
-    qs('welcome-search').click();
-    expect(qs('view-search').hidden).toBe(false);
-    expect(qs('view-welcome').hidden).toBe(true);
-  });
-});
-
-describe('User Story 4 - manage entities and documents on a dedicated screen', () => {
-  it('shows a horizontal navigation tab with three buttons', () => {
-    qs('welcome-manage').click();
-    const buttons = [...qs('view-manage').querySelectorAll('.nav-tabs .tab-button')];
-    expect(buttons.length).toBe(3);
-    expect(buttons.map(b => b.textContent)).toEqual(['Entities', 'Documents', 'Home']);
-  });
-
-  it('switches between the entities and documents panels', () => {
-    qs('welcome-manage').click();
-    expect(qs('panel-entities').hidden).toBe(false);
-    expect(qs('panel-documents').hidden).toBe(true);
-    qs('tab-documents').click();
-    expect(qs('panel-entities').hidden).toBe(true);
-    expect(qs('panel-documents').hidden).toBe(false);
-    qs('tab-entities').click();
-    expect(qs('panel-entities').hidden).toBe(false);
-    expect(qs('panel-documents').hidden).toBe(true);
-  });
-
-  it('does not display an entity list on the manage screen', () => {
+  it('does not display an entity list anywhere in the management views', () => {
     addEntity({ name: 'Acme', code: 'AC-001' });
-    qs('welcome-manage').click();
-    expect(qs('entity-list')).toBeNull();
-    expect(qs('view-manage').querySelector('ul#entity-list')).toBeNull();
+    qs('nav-entities').click();
+    expect(document.getElementById('entity-list')).toBeNull();
+
+    qs('nav-search').click();
+    expect(qs('search-input')).not.toBeNull();
   });
 
-  it('creates, edits, and deletes an entity without a list', () => {
-    qs('welcome-manage').click();
+  it('creates, edits, and deletes an entity from the entities view', () => {
+    qs('nav-entities').click();
     qs('name').value = 'Acme';
     qs('code').value = 'AC-001';
     qs('entity-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
@@ -86,7 +69,7 @@ describe('User Story 4 - manage entities and documents on a dedicated screen', (
     const editSelect = qs('edit-entity');
     editSelect.value = editSelect.options[1].value;
     editSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
-    expect(qs('submit-button').textContent).toBe('Update');
+    expect(qs('submit-button').textContent).toBe('Actualizar');
     qs('name').value = 'Acme Updated';
     qs('entity-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
     expect(loadEntities()[0].name).toBe('Acme Updated');
@@ -95,12 +78,12 @@ describe('User Story 4 - manage entities and documents on a dedicated screen', (
     expect(loadEntities().length).toBe(0);
   });
 
-  it('adds and deletes a document from the documents tab', () => {
+  it('adds and deletes a document from the documents view', () => {
     const entity = addEntity({ name: 'Acme', code: 'AC-001' });
-    qs('welcome-manage').click();
-    qs('tab-documents').click();
+    qs('nav-documents').click();
     qs('document-entity').value = entity.entity_id;
-    qs('reference').value = 'SO-1';
+    qs('series').value = 'FAC';
+    qs('folio').value = '1001';
     qs('startDate').value = '2026-08-01';
     qs('endDate').value = '2026-08-05';
     qs('document-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
@@ -114,10 +97,11 @@ describe('User Story 4 - manage entities and documents on a dedicated screen', (
     expect(loadDocuments().length).toBe(0);
   });
 
-  it('returns to the welcome screen via the Home tab', () => {
-    qs('welcome-manage').click();
-    qs('tab-home').click();
-    expect(qs('view-welcome').hidden).toBe(false);
-    expect(qs('view-manage').hidden).toBe(true);
+  it('returns to the dashboard via the Dashboard module button', () => {
+    qs('nav-entities').click();
+    expect(qs('view-dashboard').hidden).toBe(true);
+    qs('nav-dashboard').click();
+    expect(qs('view-dashboard').hidden).toBe(false);
+    expect(qs('view-entities').hidden).toBe(true);
   });
 });

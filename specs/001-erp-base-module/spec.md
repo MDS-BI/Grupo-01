@@ -1,304 +1,342 @@
-# Feature Specification: Enterprise Resource Planning (ERP) Software Base Module
+# Especificación de la Funcionalidad: Módulo Base de Software de Planificación de Recursos Empresariales (ERP)
 
-**Feature Branch**: 001-erp-base-module  
-**Created**: 2026-07-08  
-**Status**: Draft  
-**Input**: User description: "Build an Enterprise Resource Planning (ERP) software base module that can be extended into custom ERP modules. It must provide master data management (entities) and linked transactional documents with create/edit/delete/search capabilities."
+**Rama de la funcionalidad**: 001-erp-base-module  
+**Creada**: 2026-07-08  
+**Estado**: Borrador  
+**Entrada**: Descripción del usuario: "Construir un módulo base de software de planificación de recursos empresariales (ERP) que pueda extenderse en módulos ERP personalizados. Debe proporcionar gestión de datos maestros (entidades) y documentos transaccionales vinculados con capacidades de crear/editar/eliminar/buscar."
 
-## Purpose
+## Propósito
 
-This project serves as a reusable base module for building custom ERP modules. It establishes the common patterns every ERP module needs: managing master data records (**Entities**) and their associated transactional **Documents**, with navigation, validation, persistence, and search already in place so custom modules only need to define their domain-specific fields and rules.
+Este proyecto sirve como módulo base reutilizable para construir módulos ERP personalizados. Establece los patrones comunes que todo módulo ERP necesita: gestionar registros de datos maestros (**Entidades**) y sus **Documentos** transaccionales asociados, con navegación, validación, persistencia y búsqueda ya implementadas, de modo que los módulos personalizados solo necesiten definir sus campos y reglas específicos del dominio.
 
-## User Scenarios & Testing *(mandatory)*
+## Escenarios de Usuario y Pruebas *(obligatorio)*
 
-### User Story 1 - Create and organize entities (Priority: P1)
-As a business user, I want to create entity entries with clear details so I can build and maintain the module's master data.
+### Historia de Usuario 1 - Crear y organizar entidades (Prioridad: P1)
+Como usuario de negocio, quiero crear entradas de entidad con detalles claros para poder construir y mantener los datos maestros del módulo.
 
-**Why this priority**: This is the core value of the product because without creating entities, the rest of the experience cannot provide value.
+**Por qué esta prioridad**: Este es el valor central del producto porque, sin crear entidades, el resto de la experiencia no puede aportar valor.
 
-**Independent Test**: A user can open the module, add a new entity, and see it appear in the list.
+**Prueba Independiente**: Un usuario puede abrir el módulo, añadir una nueva entidad y verla aparecer en la lista.
 
-**Acceptance Scenarios**:
+**Escenarios de Aceptación**:
 
-1. **Given** a user is viewing the entity list, **When** they create a new entity with a name and code, **Then** the new entity is saved and appears in the list.
-2. **Given** a user is creating an entity, **When** they leave required information blank, **Then** the system prevents saving and explains what is needed.
-
----
-
-### User Story 2 - Edit and remove entities (Priority: P1)
-As a business user, I want to update or remove entities when master data changes so the records stay accurate.
-
-**Why this priority**: Keeping records current is essential for trust in the tool and for supporting everyday business operations.
-
-**Independent Test**: A user can select an existing entity, change its information, or remove it, and the list reflects the change.
-
-**Acceptance Scenarios**:
-
-1. **Given** an entity already exists in the list, **When** the user edits its details, **Then** the updated information is saved and shown in the list.
-2. **Given** an entity is no longer relevant, **When** the user deletes it, **Then** it is removed from the list and no longer appears in search results.
-3. **Given** hundreds of entities are stored, **When** the user edits or deletes one, **Then** the list updates correctly and remains responsive.
+1. **Dado** que un usuario está viendo la lista de entidades, **cuando** crea una nueva entidad con un nombre y un código, **entonces** la nueva entidad se guarda y aparece en la lista.
+2. **Dado** que un usuario está creando una entidad, **cuando** deja la información obligatoria en blanco, **entonces** el sistema impide guardar y explica qué se necesita.
 
 ---
 
-### User Story 3 - Welcome screen with navigation (Priority: P1)
+### Historia de Usuario 2 - Editar y eliminar entidades (Prioridad: P1)
+Como usuario de negocio, quiero actualizar o eliminar entidades cuando cambien los datos maestros para que los registros se mantengan precisos.
 
-As a business user, I want to land on a welcome screen with two clear buttons when I open the app so I can choose whether to manage my records or search them.
+**Por qué esta prioridad**: Mantener los registros actualizados es esencial para la confianza en la herramienta y para soportar las operaciones comerciales diarias.
 
-**Why this priority**: The welcome screen is the entry point of the app. Nothing else can be reached without it, so it must exist before the two management screens are useful.
+**Prueba Independiente**: Un usuario puede seleccionar una entidad existente, cambiar su información o eliminarla, y la lista refleja el cambio.
 
-**Independent Test**: A user can open the app, see a welcome screen, and reach the manage and search screens from its two buttons.
+**Escenarios de Aceptación**:
 
-**Acceptance Scenarios**:
-
-1. **Given** the user opens the app, **When** the app loads, **Then** a welcome screen is shown with two clearly labeled buttons, one for managing and one for searching.
-2. **Given** the welcome screen is shown, **When** the user activates the manage button, **Then** the app navigates to the manage screen.
-3. **Given** the welcome screen is shown, **When** the user activates the search button, **Then** the app navigates to the search screen.
-
----
-
-### User Story 4 - Manage entities and documents on a dedicated screen (Priority: P1)
-
-As a business user, I want a dedicated screen where I can add, edit, and remove entities and their documents so I can manage the module's data in one focused place.
-
-**Why this priority**: This preserves the core value of the module's management capabilities, presented as a single management screen reachable from the welcome screen.
-
-**Independent Test**: A user can navigate from the welcome screen to the manage screen, use the horizontal navigation tab to switch between entity and document management and return Home, and successfully add, edit, and delete an entity and a document.
-
-**Acceptance Scenarios**:
-
-1. **Given** the user is on the manage screen, **When** they view the top of the screen, **Then** a horizontal navigation tab is shown with three buttons: Entities, Documents, and Home.
-2. **Given** the navigation tab is shown, **When** the user activates the Entities button, **Then** the entity management content is displayed.
-3. **Given** the navigation tab is shown, **When** the user activates the Documents button, **Then** the document management content is displayed.
-4. **Given** the user is on the manage screen, **When** they view the screen, **Then** the list of entities is not shown.
-5. **Given** the user is on the manage screen, **When** they create a new entity, **Then** the entity is saved.
-6. **Given** an entity already exists, **When** the user edits its details, **Then** the updated information is saved.
-7. **Given** an entity is no longer relevant, **When** the user deletes it, **Then** it is removed along with its documents.
-8. **Given** an entity exists, **When** the user adds, edits, or deletes a document, **Then** the document changes are saved and associated with that entity.
-9. **Given** the user is on the manage screen, **When** they activate the Home button on the navigation tab, **Then** they return to the welcome screen.
+1. **Dada** una entidad que ya existe en la lista, **cuando** el usuario edita sus detalles, **entonces** la información actualizada se guarda y se muestra en la lista.
+2. **Dada** una entidad que ya no es relevante, **cuando** el usuario la elimina, **entonces** desaparece de la lista y deja de aparecer en los resultados de búsqueda.
+3. **Dadas** cientos de entidades almacenadas, **cuando** el usuario edita o elimina una, **entonces** la lista se actualiza correctamente y sigue siendo ágil.
 
 ---
 
-### User Story 5 - Define a module configuration profile (Priority: P1)
+### Historia de Usuario 3 - Panel de inicio con acciones rápidas y estadísticas de registros (Prioridad: P1)
 
-As a module developer, I want to declare a single configuration file that defines my module's identity, terminology, custom fields, and rules so I can tailor the base module into a specific module without modifying its core code.
+Como usuario de negocio, quiero aterrizar en un panel estilo ERP con botones de acción rápida claramente etiquetados para las tareas clave y totales de registros de un vistazo al abrir la aplicación, para poder empezar a trabajar de inmediato.
 
-**Why this priority**: Config-driven tailoring is what turns this project from a fixed app into a reusable base. Without it, every custom module would require editing core source files, which defeats the purpose of the template; all later customization stories depend on this mechanism existing first.
+**Por qué esta prioridad**: El panel es el punto de entrada de la aplicación. Nada más puede alcanzarse sin él, y las acciones rápidas son la ruta más rápida hacia cada flujo de trabajo central.
 
-**Independent Test**: A developer provides a configuration file defining a Sales profile (module name, Entity→Customer mappings, custom fields, lifecycle), and the app presents itself fully as a Sales module; removing the file restores base defaults without errors.
+**Prueba Independiente**: Un usuario abre la aplicación, ve un panel con múltiples botones de acción rápida y estadísticas de registros, inicia una nueva entidad o documento con un solo clic y ve estadísticas que reflejan los datos almacenados.
 
-**Acceptance Scenarios**:
+**Escenarios de Aceptación**:
 
-1. **Given** a configuration file defines the module name, **When** the app loads, **Then** the welcome screen shows the configured module name.
-2. **Given** a complete configuration (name, term mappings, custom fields, lifecycle), **When** the app loads, **Then** the module presents fully under the configured identity with no base-module terms visible anywhere.
-3. **Given** no configuration is provided, **When** the app loads, **Then** the app falls back to the built-in Entity/Document defaults without errors.
-4. **Given** the configuration contains invalid or conflicting values, **When** the app loads, **Then** the system reports the problem clearly instead of failing silently.
-
----
-
-### User Story 6 - Relabel screens from configuration (Priority: P1)
-
-As a module developer, I want all user-facing labels derived from the configuration so a tailored module speaks its domain language everywhere consistently.
-
-**Why this priority**: Users trust a module that consistently says "Customer" and "Sales Order" rather than a generic "Entity" leaking through half the interface; inconsistent terminology makes tailored modules feel broken. This story depends on the configuration profile (User Story 5).
-
-**Independent Test**: A developer maps Entity→Customer and Document→Sales Order in the configuration, and every tab, button, form label, heading, and message across all three screens uses the mapped terms.
-
-**Acceptance Scenarios**:
-
-1. **Given** term mappings are defined in the configuration, **When** any screen loads, **Then** tabs, buttons, form labels, headings, and empty-state messages show the configured terms.
-2. **Given** labels have been remapped, **When** the user navigates between screens, **Then** navigation behavior is unchanged.
-3. **Given** no mappings are provided, **When** any screen loads, **Then** the default Entity/Document terms are shown.
+1. **Dado** que el usuario abre la aplicación, **cuando** la aplicación carga, **entonces** se muestra el panel de inicio con al menos cuatro botones de acción rápida claramente etiquetados que cubren las tareas ERP clave: crear una nueva entidad, crear un nuevo documento, abrir la gestión de entidades y buscar registros.
+2. **Dado** que se muestra el panel, **cuando** el usuario activa la acción de nueva entidad, **entonces** la aplicación abre el área de gestión de entidades con un formulario vacío listo para introducir datos.
+3. **Dado** que se muestra el panel, **cuando** el usuario activa la acción de nuevo documento, **entonces** la aplicación abre el área de gestión de documentos con un formulario vacío listo para introducir datos.
+4. **Dado** que se muestra el panel, **cuando** el usuario activa la acción de buscar registros, **entonces** la aplicación abre la pantalla de búsqueda con el campo de búsqueda enfocado.
+5. **Dadas** entidades y documentos almacenados, **cuando** el usuario ve el panel, **entonces** las tarjetas de estadísticas muestran el recuento actual de entidades y documentos.
+6. **Dado** que el usuario crea o elimina registros en otra parte de la aplicación, **cuando** vuelve al panel, **entonces** las estadísticas reflejan el cambio.
 
 ---
 
-### User Story 7 - Declare custom fields for records (Priority: P1)
+### Historia de Usuario 4 - Gestionar entidades y documentos en una pantalla dedicada (Prioridad: P1)
 
-As a module developer, I want to declare additional fields for entities and documents in the configuration so they automatically appear on forms, lists, validation, and search without writing UI code.
+Como usuario de negocio, quiero una pantalla dedicada donde pueda añadir, editar y eliminar entidades y sus documentos, para poder gestionar los datos del módulo en un lugar enfocado.
 
-**Why this priority**: Custom modules exist because their records carry domain-specific data (a customer's credit limit, an invoice's due date). If adding fields requires editing forms and validation by hand, tailoring is error-prone and does not scale. This story depends on the configuration profile (User Story 5).
+**Por qué esta prioridad**: Esto preserva el valor central de las capacidades de gestión del módulo, presentado como una única pantalla de gestión accesible desde la barra lateral y las acciones rápidas del panel.
 
-**Independent Test**: A developer declares a custom required number field on entities; it renders as a number input on the form, blocks saving when blank, displays stored values in lists, and matches searches.
+**Prueba Independiente**: Un usuario puede navegar a la pantalla de gestión mediante la barra lateral o una acción rápida, alternar entre la gestión de entidades y documentos, y volver al panel, añadiendo, editando y eliminando con éxito una entidad y un documento.
 
-**Acceptance Scenarios**:
+**Escenarios de Aceptación**:
 
-1. **Given** a custom entity field of type number declared as required, **When** the user creates or edits an entity, **Then** the field renders as a number input and a blank value prevents saving with a clear explanation.
-2. **Given** a custom field has a saved value, **When** the user views the list or detail view, **Then** the value is displayed.
-3. **Given** custom fields are declared, **When** the user searches using a term matching a custom field value, **Then** matching records are returned.
-4. **Given** no custom fields are declared, **When** the app runs, **Then** behavior is identical to the unmodified base module.
-
----
-
-### User Story 8 - Search and find entities quickly (Priority: P2)
-As a business user, I want to search my entities by key details so I can quickly find the record I need.
-
-**Why this priority**: Fast retrieval improves usefulness once the dataset grows beyond a small number of entries.
-
-**Independent Test**: A user can enter a search term and see only matching entities.
-
-**Acceptance Scenarios**:
-
-1. **Given** multiple entities are stored, **When** the user searches with a matching term, **Then** only matching entities are shown.
-2. **Given** the search does not match any entity, **When** the user submits the search, **Then** the system shows a clear empty state and allows the user to try again.
-3. **Given** hundreds of entities are stored, **When** the user searches, **Then** matching results appear promptly without noticeable delay.
+1. **Dado** que el usuario está en la pantalla de gestión, **cuando** mira la navegación, **entonces** la barra lateral del espacio de trabajo ofrece botones de módulo para Entidades, Documentos y Panel con el módulo activo resaltado.
+2. **Dada** la barra lateral visible, **cuando** el usuario activa el botón Entidades, **entonces** se muestra el contenido de gestión de entidades.
+3. **Dada** la barra lateral visible, **cuando** el usuario activa el botón Documentos, **entonces** se muestra el contenido de gestión de documentos.
+4. **Dado** que el usuario está en la pantalla de gestión, **cuando** mira la pantalla, **entonces** la lista de entidades no se muestra.
+5. **Dado** que el usuario está en la pantalla de gestión, **cuando** crea una nueva entidad, **entonces** la entidad se guarda.
+6. **Dada** una entidad existente, **cuando** el usuario edita sus detalles, **entonces** la información actualizada se guarda.
+7. **Dada** una entidad que ya no es relevante, **cuando** el usuario la elimina, **entonces** se elimina junto con sus documentos.
+8. **Dada** una entidad existente, **cuando** el usuario añade, edita o elimina un documento, **entonces** los cambios del documento se guardan y quedan asociados a esa entidad.
+9. **Dado** que el usuario está en la pantalla de gestión, **cuando** activa el botón Panel en la barra lateral, **entonces** vuelve al panel de inicio.
 
 ---
 
-### User Story 9 - Record a target date (Priority: P2)
-As a business user, I want to attach an optional target date to an entity so I can plan and sort records by when something is due.
+### Historia de Usuario 5 - Definir un perfil de configuración del módulo (Prioridad: P1)
 
-**Why this priority**: Date-aware planning enhances the core value once the dataset grows, but is not required for basic management.
+Como desarrollador de módulos, quiero declarar un único archivo de configuración que defina la identidad, terminología, campos personalizados y reglas de mi módulo, para adaptar el módulo base en un módulo específico sin modificar su código central.
 
-**Independent Test**: A user can set a date on an entity and see it displayed in the list.
+**Por qué esta prioridad**: La adaptación mediante configuración es lo que convierte este proyecto de una aplicación fija en una base reutilizable. Sin ella, cada módulo personalizado requeriría editar archivos fuente centrales, lo que frustra el propósito de la plantilla; todas las historias de personalización posteriores dependen de que este mecanismo exista primero.
 
-**Acceptance Scenarios**:
+**Prueba Independiente**: Un desarrollador proporciona un archivo de configuración que define un perfil de Ventas (nombre del módulo, mapeos Entidad→Cliente, campos personalizados, ciclo de vida), y la aplicación se presenta plenamente como un módulo de Ventas; al quitar el archivo se restauran los valores predeterminados de la base sin errores.
 
-1. **Given** a user is creating or editing an entity, **When** they enter a target date, **Then** the date is saved and shown in the list.
-2. **Given** an entity has a date set, **When** the user views the list, **Then** entities with dates can be identified at a glance.
-3. **Given** a user leaves the date blank, **When** they save the entity, **Then** the entity is still saved without a date (optional field).
+**Escenarios de Aceptación**:
 
----
-
-### User Story 10 - Track document details for an entity (Priority: P2)
-As a business user, I want to record document details for an entity so I can keep transactional activity organized alongside each master data record.
-
-**Why this priority**: Documents add practical operational value once entities are managed, but are not required for core management.
-
-**Independent Test**: A user can add a document to an entity and see the document details displayed with that entity.
-
-**Acceptance Scenarios**:
-
-1. **Given** an entity exists in the list, **When** the user adds a document with details, **Then** the document is saved and associated with that entity.
-2. **Given** a document exists for an entity, **When** the user views the entity, **Then** the document details are shown together with the entity.
-3. **Given** an entity is deleted, **When** the deletion is confirmed, **Then** its associated documents are also removed.
-4. **Given** a user is creating a document, **When** they leave the required document information blank, **Then** the system prevents saving and explains what is needed.
+1. **Dado** que un archivo de configuración define el nombre del módulo, **cuando** la aplicación carga, **entonces** el panel de inicio y el marco del espacio de trabajo muestran el nombre configurado.
+2. **Dada** una configuración completa (nombre, mapeos de términos, campos personalizados, ciclo de vida), **cuando** la aplicación carga, **entonces** el módulo se presenta plenamente bajo la identidad configurada sin que se vean términos del módulo base en ningún sitio.
+3. **Dado** que no se proporciona configuración, **cuando** la aplicación carga, **entonces** la aplicación retrocede a los valores predeterminados integrados Entidad/Documento sin errores.
+4. **Dada** una configuración con valores inválidos o conflictivos, **cuando** la aplicación carga, **entonces** el sistema informa del problema con claridad en lugar de fallar silenciosamente.
 
 ---
 
-### User Story 11 - Search entities on a dedicated screen (Priority: P2)
+### Historia de Usuario 6 - Reetiquetar pantallas desde la configuración (Prioridad: P1)
 
-As a business user, I want a dedicated search screen so I can quickly find entities without the editing forms cluttering the view.
+Como desarrollador de módulos, quiero que todas las etiquetas visibles para el usuario deriven de la configuración, para que un módulo adaptado hable su idioma de dominio de forma consistente en todo momento.
 
-**Why this priority**: Fast retrieval is valuable once the dataset grows, and a separate screen keeps the management experience focused, but search is not required for basic management.
+**Por qué esta prioridad**: Los usuarios confían en un módulo que dice consistentemente "Cliente" y "Pedido de Venta" en lugar de dejar filtrarse una "Entidad" genérica por media interfaz; la terminología inconsistente hace que los módulos adaptados parezcan rotos. Esta historia depende del perfil de configuración (Historia de Usuario 5).
 
-**Independent Test**: A user can navigate from the welcome screen to the search screen, enter a search term, and see only matching entities.
+**Prueba Independiente**: Un desarrollador mapea Entidad→Cliente y Documento→Pedido de Venta en la configuración, y cada pestaña, botón, etiqueta de formulario, encabezado y mensaje en las tres pantallas usa los términos mapeados.
 
-**Acceptance Scenarios**:
+**Escenarios de Aceptación**:
 
-1. **Given** the user is on the search screen, **When** they enter a matching search term, **Then** only matching entities are shown.
-2. **Given** the search does not match any entity, **When** the user submits the search, **Then** a clear empty state is shown and the user can try again.
-3. **Given** hundreds of entities are stored, **When** the user searches from the search screen, **Then** matching results appear promptly without noticeable delay.
-4. **Given** the user is on the search screen, **When** they activate the back navigation, **Then** they return to the welcome screen.
-
----
-
-### User Story 12 - Configure document status lifecycle (Priority: P2)
-
-As a module developer, I want to define allowed document statuses and permitted transitions so documents follow the domain's lifecycle instead of accepting arbitrary status text.
-
-**Why this priority**: Real modules need controlled lifecycles (e.g., quote → order → invoiced), but free-form status remains acceptable for simple extensions, so this enhances the base without being required for basic tailoring. This story depends on the configuration profile (User Story 5).
-
-**Independent Test**: A developer configures a lifecycle of quote→order→invoiced; the status control offers only valid next statuses, invalid transitions are rejected with an explanation, and status is visible at a glance in lists.
-
-**Acceptance Scenarios**:
-
-1. **Given** a lifecycle is configured, **When** the user edits a document's status, **Then** only statuses reachable via permitted transitions are offered.
-2. **Given** an invalid transition is attempted through any means, **When** it is submitted, **Then** the system rejects it with a clear explanation.
-3. **Given** a lifecycle is configured, **When** the user views document lists or details, **Then** the current status is identifiable at a glance.
-4. **Given** no lifecycle is configured, **When** documents are edited, **Then** status remains free-form text as in the unmodified base module.
+1. **Dados** mapeos de términos definidos en la configuración, **cuando** cualquier pantalla carga, **entonces** pestañas, botones, etiquetas de formulario, encabezados y mensajes de estado vacío muestran los términos configurados.
+2. **Dado** que las etiquetas han sido remapeadas, **cuando** el usuario navega entre pantallas, **entonces** el comportamiento de navegación no cambia.
+3. **Dado** que no se proporcionan mapeos, **cuando** cualquier pantalla carga, **entonces** se muestran los términos predeterminados Entidad/Documento.
 
 ---
 
-### Edge Cases
+### Historia de Usuario 7 - Declarar campos personalizados para los registros (Prioridad: P1)
 
-- What happens when a user attempts to save an entity without a required name or code?
-- How does the system handle a search that returns no matches?
-- What happens if a user tries to edit or delete an entity that no longer exists?
-- What happens when a user enters a target date that is not a valid calendar date?
-- What happens to an entity's documents when the entity is deleted?
-- What happens when a user enters an end date that is before the start date on a document?
-- What happens when the configuration declares a custom field whose key collides with a base field name?
-- What happens when the configuration references an unknown field type or an invalid lifecycle transition definition?
-- What happens when stored records contain custom field values that are no longer declared in the configuration?
-- What happens when a user opens the app directly on the manage or search screen (e.g., via a deep link or browser reload) without going through the welcome screen?
-- What happens when a user presses the browser back button while on the manage or search screen?
-- What happens if a user navigates away from the manage screen while a form still has unsaved changes?
-- Do entities and documents remain intact when navigating between the welcome, manage, and search screens?
+Como desarrollador de módulos, quiero declarar campos adicionales para entidades y documentos en la configuración, para que aparezcan automáticamente en formularios, listas, validación y búsqueda sin escribir código de interfaz.
 
-## Requirements *(mandatory)*
+**Por qué esta prioridad**: Los módulos personalizados existen porque sus registros contienen datos específicos del dominio (el límite de crédito de un cliente, la fecha de vencimiento de una factura). Si añadir campos requiere editar formularios y validación a mano, la adaptación es propensa a errores y no escala. Esta historia depende del perfil de configuración (Historia de Usuario 5).
 
-### Functional Requirements
+**Prueba Independiente**: Un desarrollador declara un campo numérico obligatorio personalizado en las entidades; se muestra como entrada numérica en el formulario, bloquea el guardado cuando está en blanco, muestra los valores guardados en las listas y coincide en las búsquedas.
 
-- **FR-001**: The system MUST allow users to create an entity record with at least a name and code.
-- **FR-002**: The system MUST allow users to edit the details of an existing entity record.
-- **FR-003**: The system MUST allow users to delete an existing entity record.
-- **FR-004**: The system MUST allow users to search entity records by name, code, category, or other descriptive keywords.
-- **FR-005**: The system MUST display a clear list of entities and indicate when no results match a search.
-- **FR-006**: The system MUST present clear feedback when required information is missing or an action cannot be completed.
-- **FR-007**: The system MUST keep entity data consistent after create, edit, and delete operations.
-- **FR-008**: The system MUST allow users to add, edit, and remove document details for an entity.
-- **FR-009**: The system MUST associate each document with exactly one entity and remove associated documents when the entity is deleted.
-- **FR-010**: The system MUST display a welcome screen as the initial view, containing two clearly labeled navigation buttons.
-- **FR-011**: The system MUST navigate to a dedicated manage screen when the first button is selected.
-- **FR-012**: The manage screen MUST display a horizontal navigation tab at the top with three buttons: Entities, Documents, and Home.
-- **FR-013**: The Entities button MUST show the entity management content on the manage screen.
-- **FR-014**: The Documents button MUST show the document management content on the manage screen.
-- **FR-015**: The Home button MUST return the user to the welcome screen from the manage screen.
-- **FR-016**: The manage screen MUST NOT display the list of entities.
-- **FR-017**: The manage screen MUST provide the entity create, edit, and delete functionality.
-- **FR-018**: The manage screen MUST provide the document create, edit, and delete functionality.
-- **FR-019**: The system MUST navigate to a dedicated search screen when the second button is selected.
-- **FR-020**: The search screen MUST allow searching entities by name, code, category, description, or target date.
-- **FR-021**: The system MUST provide a way to return to the welcome screen from the search screen.
-- **FR-022**: The system MUST keep entity and document data intact and consistent while navigating between screens.
-- **FR-023**: The system MUST load the module configuration at startup and apply it across all screens.
-- **FR-024**: The system MUST fall back to built-in defaults (Entity/Document terminology, no custom fields, no lifecycle) when no configuration is provided.
-- **FR-025**: The system MUST report invalid or conflicting configuration clearly instead of failing silently.
-- **FR-026**: The system MUST render declared custom fields on create/edit forms with input types matching their declared types.
-- **FR-027**: The system MUST validate custom field values, including required ones, before saving, using the same feedback UX as base validation.
-- **FR-028**: The system MUST include custom field values in search results and display them in lists and detail views.
-- **FR-029**: The system MUST derive all user-facing labels from the module configuration rather than hard-coded text.
-- **FR-030**: The system MUST enforce configured status transitions on documents regardless of how a change is submitted.
-- **FR-031**: The system MUST keep document status free-form when no lifecycle is configured.
-- **FR-032**: The system MUST keep list rendering and search responsive and correct for datasets of at least 500 entity records.
+**Escenarios de Aceptación**:
 
-### Extensibility Requirements *(base module obligations)*
+1. **Dado** un campo personalizado de entidad de tipo número declarado como obligatorio, **cuando** el usuario crea o edita una entidad, **entonces** el campo se muestra como entrada numérica y un valor en blanco impide guardar con una explicación clara.
+2. **Dado** un campo personalizado con un valor guardado, **cuando** el usuario ve la lista o la vista de detalle, **entonces** el valor se muestra.
+3. **Dados** campos personalizados declarados, **cuando** el usuario busca usando un término que coincide con un valor de campo personalizado, **entonces** se devuelven los registros coincidentes.
+4. **Dado** que no hay campos personalizados declarados, **cuando** la aplicación se ejecuta, **entonces** el comportamiento es idéntico al del módulo base sin modificar.
 
-Custom modules built on this base MUST be able to:
+---
 
-- **XR-001**: Extend entity and document records with additional domain-specific fields without changing the base storage structure.
-- **XR-002**: Relabel screens, tabs, forms, and lists with module-specific terminology without altering navigation behavior.
-- **XR-003**: Add module-specific validation rules alongside the base validation rules.
-- **XR-004**: Rely on the base module for identity generation, timestamps, referential integrity between entities and documents, and cascade deletion.
+### Historia de Usuario 8 - Buscar y encontrar entidades rápidamente (Prioridad: P2)
+Como usuario de negocio, quiero buscar mis entidades por detalles clave para encontrar rápidamente el registro que necesito.
 
-### Key Entities *(include if feature involves data)*
+**Por qué esta prioridad**: La recuperación rápida mejora la utilidad cuando el conjunto de datos crece más allá de un pequeño número de entradas.
 
-- **Entity**: A master data record managed by the module, including its name, business code, descriptive details, classification category, an optional target date, and an auto-generated entity_id. Custom modules define what real-world thing an Entity represents (e.g., customer, product, asset).
-- **Document**: Transactional details attached to an entity, linked to it by the entity's entity_id. Custom modules define what a Document represents (e.g., order, invoice, contract).
-- **ModuleConfig**: The tailoring object loaded at startup defining the module name, terminology labels, custom field definitions, and document status lifecycle. See data-model.md for its full shape.
+**Prueba Independiente**: Un usuario puede introducir un término de búsqueda y ver solo las entidades coincidentes.
 
-## Success Criteria *(mandatory)*
+**Escenarios de Aceptación**:
 
-### Measurable Outcomes
+1. **Dadas** múltiples entidades almacenadas, **cuando** el usuario busca con un término coincidente, **entonces** solo se muestran las entidades coincidentes.
+2. **Dada** una búsqueda sin coincidencias, **cuando** el usuario envía la búsqueda, **entonces** el sistema muestra un estado vacío claro y permite volver a intentarlo.
+3. **Dadas** cientos de entidades almacenadas, **cuando** el usuario busca, **entonces** los resultados coincidentes aparecen con prontitud sin retraso perceptible.
 
-- **SC-001**: Users can create a new entity and see it in the list in under 2 minutes.
-- **SC-002**: Users can find an existing entity through search in under 10 seconds after entering a relevant term.
-- **SC-003**: At least 90% of test users can complete create, edit, delete, and search tasks without assistance.
-- **SC-004**: The system remains usable for a dataset of at least 500 entity records without loss of core functionality.
-- **SC-005**: A user can reach the manage and search screens from the welcome screen in under 10 seconds on first use.
-- **SC-006**: All existing entity and document management functionality remains functional after the multi-screen change (no regression).
-- **SC-007**: Users can navigate between the welcome, manage, and search screens without losing any stored entities or documents.
-- **SC-008**: A developer can produce a tailored module using only the configuration file, with zero modifications to core source files.
+---
 
-## Assumptions
+### Historia de Usuario 9 - Registrar una fecha objetivo (Prioridad: P2)
+Como usuario de negocio, quiero adjuntar una fecha objetivo opcional a una entidad para planificar y ordenar los registros según cuándo vence algo.
 
-- The base module manages data for a single workspace rather than a shared multi-tenant database.
-- Tailoring into a specific module is performed through a module configuration file rather than by editing core source files.
-- Each entity includes basic information sufficient for identification and tracking; custom modules supply domain-specific fields.
-- The initial release focuses on core master data and document management rather than advanced ERP capabilities such as approval workflows, posting periods, or reporting.
-- Search is performed against the stored entity records.
-- The manage screen consolidates the add/edit entity and add/edit document forms into one management screen.
-- The manage screen organizes entity and document management behind a horizontal navigation tab with Entities, Documents, and Home buttons, and does not display the entity list.
-- Only one screen is shown at a time; there is no side-by-side layout of manage and search content.
-- Navigation between screens is handled within the app (e.g., view switching), and the browser back button should behave predictably.
-- Data continues to be persisted to browser localStorage and is not affected by screen navigation.
-- The search screen focuses on finding and viewing entities; editing remains on the manage screen.
+**Por qué esta prioridad**: La planificación consciente de fechas mejora el valor central cuando el conjunto de datos crece, pero no es necesaria para la gestión básica.
+
+**Prueba Independiente**: Un usuario puede fijar una fecha en una entidad y verla mostrada en la lista.
+
+**Escenarios de Aceptación**:
+
+1. **Dado** que un usuario está creando o editando una entidad, **cuando** introduce una fecha objetivo, **entonces** la fecha se guarda y se muestra en la lista.
+2. **Dada** una entidad con fecha fijada, **cuando** el usuario ve la lista, **entonces** las entidades con fechas pueden identificarse de un vistazo.
+3. **Dado** que un usuario deja la fecha en blanco, **cuando** guarda la entidad, **entonces** la entidad igualmente se guarda sin fecha (campo opcional).
+
+---
+
+### Historia de Usuario 10 - Registrar los detalles de documentos de una entidad (Prioridad: P2)
+Como usuario de negocio, quiero registrar detalles de documentos para una entidad, para mantener la actividad transaccional organizada junto a cada registro de datos maestros.
+
+**Por qué esta prioridad**: Los documentos aportan valor operativo práctico una vez que las entidades están gestionadas, pero no son necesarios para la gestión central.
+
+**Prueba Independiente**: Un usuario puede añadir un documento a una entidad y ver los detalles del documento mostrados junto a esa entidad.
+
+**Escenarios de Aceptación**:
+
+1. **Dada** una entidad en la lista, **cuando** el usuario añade un documento con detalles, **entonces** el documento se guarda y queda asociado a esa entidad.
+2. **Dado** un documento existente para una entidad, **cuando** el usuario ve la entidad, **entonces** los detalles del documento se muestran junto con la entidad.
+3. **Dada** una entidad eliminada, **cuando** se confirma la eliminación, **entonces** sus documentos asociados también se eliminan.
+4. **Dado** que un usuario está creando un documento, **cuando** deja la información obligatoria del documento en blanco, **entonces** el sistema impide guardar y explica qué se necesita.
+
+---
+
+### Historia de Usuario 11 - Buscar entidades en una pantalla dedicada (Prioridad: P2)
+
+Como usuario de negocio, quiero una pantalla de búsqueda dedicada para encontrar rápidamente entidades sin que los formularios de edición saturen la vista.
+
+**Por qué esta prioridad**: La recuperación rápida es valiosa cuando el conjunto de datos crece, y una pantalla separada mantiene enfocada la experiencia de gestión, pero la búsqueda no es necesaria para la gestión básica.
+
+**Prueba Independiente**: Un usuario puede abrir la pantalla de búsqueda desde la barra lateral o una acción rápida, introducir un término de búsqueda y ver solo las entidades coincidentes.
+
+**Escenarios de Aceptación**:
+
+1. **Dado** que el usuario está en la pantalla de búsqueda, **cuando** introduce un término coincidente, **entonces** solo se muestran las entidades coincidentes.
+2. **Dada** una búsqueda sin coincidencias, **cuando** el usuario envía la búsqueda, **entonces** se muestra un estado vacío claro y puede volver a intentarlo.
+3. **Dadas** cientos de entidades almacenadas, **cuando** el usuario busca desde la pantalla de búsqueda, **entonces** los resultados aparecen con prontitud sin retraso perceptible.
+4. **Dado** que el usuario está en la pantalla de búsqueda, **cuando** activa el botón Panel en la barra lateral, **entonces** vuelve al panel de inicio.
+
+---
+
+### Historia de Usuario 12 - Configurar el ciclo de vida de estados de documentos (Prioridad: P2)
+
+Como desarrollador de módulos, quiero definir los estados permitidos de los documentos y las transiciones permitidas, para que los documentos sigan el ciclo de vida del dominio en lugar de aceptar texto de estado arbitrario.
+
+**Por qué esta prioridad**: Los módulos reales necesitan ciclos de vida controlados (p. ej., cotización → pedido → facturado), pero el estado de texto libre sigue siendo aceptable para extensiones simples, así que esto mejora la base sin ser necesario para la adaptación básica. Esta historia depende del perfil de configuración (Historia de Usuario 5).
+
+**Prueba Independiente**: Un desarrollador configura un ciclo de vida cotización→pedido→facturado; el control de estado ofrece solo estados siguientes válidos, las transiciones inválidas se rechazan con una explicación, y el estado es visible de un vistazo en las listas.
+
+**Escenarios de Aceptación**:
+
+1. **Dado** un ciclo de vida configurado, **cuando** el usuario edita el estado de un documento, **entonces** solo se ofrecen los estados alcanzables mediante transiciones permitidas.
+2. **Dado** que se intenta una transición inválida por cualquier vía, **cuando** se envía, **entonces** el sistema la rechaza con una explicación clara.
+3. **Dado** un ciclo de vida configurado, **cuando** el usuario ve listas o detalles de documentos, **entonces** el estado actual es identificable de un vistazo.
+4. **Dado** que no hay ciclo de vida configurado, **cuando** se editan documentos, **entonces** el estado permanece como texto libre igual que en el módulo base sin modificar.
+
+---
+
+### Historia de Usuario 13 - Marco de espacio de trabajo ERP con marca (Prioridad: P1)
+
+Como usuario de negocio, quiero un espacio de trabajo estilo ERP consistente, con una barra superior con marca y una barra lateral de módulos presentes en cada pantalla, para que la aplicación se sienta como un sistema empresarial coherente en lugar de páginas sueltas.
+
+**Por qué esta prioridad**: El marco aporta la marca y la navegación de todas las demás pantallas; construirlo como envoltorio evita tocar cada historia por separado y da al módulo su identidad ERP. Depende del perfil de configuración (Historia de Usuario 5) para el nombre del módulo y la terminología, y reestructura la navegación antes proporcionada por los botones de bienvenida y las pestañas de gestión (Historias de Usuario 3 y 4).
+
+**Prueba Independiente**: En cada pantalla, una barra superior muestra un logotipo derivado del nombre del módulo junto al nombre del módulo, una barra lateral ofrece botones de módulo para Panel, Entidades, Documentos y Buscar con el módulo activo resaltado visualmente, y navegar entre módulos nunca pierde datos.
+
+**Escenarios de Aceptación**:
+
+1. **Dada** cualquier pantalla mostrada, **cuando** el usuario mira la página, **entonces** es visible una barra superior que contiene un logotipo SVG en línea derivado del nombre del módulo y el nombre del módulo configurado.
+2. **Dada** cualquier pantalla mostrada, **cuando** el usuario mira la barra lateral, **entonces** se muestran botones de módulo para Panel, Entidades, Documentos y Buscar usando la terminología configurada.
+3. **Dado** que el usuario está en cualquier pantalla, **cuando** mira la barra lateral, **entonces** el botón del módulo activo está resaltado visualmente.
+4. **Dado** que la ventana gráfica es estrecha, **cuando** se usa la aplicación en una pantalla pequeña, **entonces** la barra lateral se contrae a una columna de iconos manteniéndose utilizable y etiquetada de forma accesible.
+5. **Dada** una configuración que define un color de acento, **cuando** cualquier pantalla carga, **entonces** el marco lo usa consistentemente para resaltados y controles principales; sin valor configurado o con un valor inválido, se usan los valores predeterminados integrados sin errores.
+6. **Dado** que el usuario navega entre módulos mediante la barra lateral, **cuando** inspecciona sus datos después, **entonces** todas las entidades y documentos almacenados permanecen intactos.
+
+---
+
+### Casos Límite
+
+- ¿Qué ocurre cuando un usuario intenta guardar una entidad sin nombre o código obligatorio?
+- ¿Cómo gestiona el sistema una búsqueda que no devuelve coincidencias?
+- ¿Qué ocurre si un usuario intenta editar o eliminar una entidad que ya no existe?
+- ¿Qué ocurre cuando un usuario introduce una fecha objetivo que no es una fecha de calendario válida?
+- ¿Qué ocurre con los documentos de una entidad cuando esta se elimina?
+- ¿Qué ocurre cuando un usuario introduce una fecha final anterior a la fecha inicial en un documento?
+- ¿Qué ocurre cuando la configuración declara un campo personalizado cuya clave choca con un nombre de campo base?
+- ¿Qué ocurre cuando la configuración referencia un tipo de campo desconocido o una definición de transición de ciclo de vida inválida?
+- ¿Qué ocurre cuando los registros almacenados contienen valores de campos personalizados que ya no están declarados en la configuración?
+- ¿Qué ocurre cuando un usuario abre la aplicación directamente en la pantalla de gestión o búsqueda (p. ej., vía enlace profundo o recarga del navegador) sin pasar por el panel de inicio?
+- ¿Qué ocurre cuando un usuario pulsa el botón atrás del navegador estando en la pantalla de gestión o búsqueda?
+- ¿Qué ocurre si un usuario navega fuera de la pantalla de gestión mientras un formulario aún tiene cambios sin guardar?
+- ¿Permanecen intactas las entidades y los documentos al navegar entre el panel, la gestión y la búsqueda?
+- ¿Qué ocurre cuando el panel se abre con cero entidades o cero documentos (valores estadísticos)?
+- ¿Qué ocurre cuando el color de acento configurado no es un valor de color válido?
+- ¿Cómo mantiene la barra lateral contraída las etiquetas de módulo accesibles en ventanas gráficas estrechas?
+
+## Requisitos *(obligatorio)*
+
+### Requisitos Funcionales
+
+- **FR-001**: El sistema DEBE permitir a los usuarios crear un registro de entidad con al menos un nombre y un código.
+- **FR-002**: El sistema DEBE permitir a los usuarios editar los detalles de un registro de entidad existente.
+- **FR-003**: El sistema DEBE permitir a los usuarios eliminar un registro de entidad existente.
+- **FR-004**: El sistema DEBE permitir a los usuarios buscar registros de entidad por nombre, código, categoría u otras palabras clave descriptivas.
+- **FR-005**: El sistema DEBE mostrar una lista clara de entidades e indicar cuándo ningún resultado coincide con una búsqueda.
+- **FR-006**: El sistema DEBE presentar retroalimentación clara cuando falta información obligatoria o no se puede completar una acción.
+- **FR-007**: El sistema DEBE mantener los datos de entidad consistentes tras operaciones de creación, edición y eliminación.
+- **FR-008**: El sistema DEBE permitir a los usuarios añadir, editar y eliminar detalles de documentos de una entidad.
+- **FR-009**: El sistema DEBE asociar cada documento exactamente a una entidad y eliminar los documentos asociados cuando la entidad se elimina.
+- **FR-010**: El sistema DEBE mostrar un panel de inicio como vista inicial, con botones de acción rápida claramente etiquetados para las tareas ERP clave.
+- **FR-011**: El sistema DEBE envolver cada pantalla en un marco de espacio de trabajo persistente compuesto por una barra superior con marca y una barra lateral de navegación de módulos.
+- **FR-012**: La barra lateral DEBE proporcionar botones de módulo para Panel, Entidades, Documentos y Buscar, etiquetados desde la configuración del módulo.
+- **FR-013**: El botón de módulo Entidades DEBE mostrar el contenido de gestión de entidades.
+- **FR-014**: El botón de módulo Documentos DEBE mostrar el contenido de gestión de documentos en la pantalla de gestión.
+- **FR-015**: El botón de módulo Panel DEBE devolver al usuario al panel de inicio.
+- **FR-016**: La pantalla de gestión NO DEBE mostrar la lista de entidades.
+- **FR-017**: La pantalla de gestión DEBE proporcionar la funcionalidad de crear, editar y eliminar entidades.
+- **FR-018**: La pantalla de gestión DEBE proporcionar la funcionalidad de crear, editar y eliminar documentos.
+- **FR-019**: El sistema DEBE navegar a una pantalla de búsqueda dedicada cuando se selecciona el segundo botón.
+- **FR-020**: La pantalla de búsqueda DEBE permitir buscar entidades por nombre, código, categoría, descripción o fecha objetivo.
+- **FR-021**: La pantalla de búsqueda DEBE ser accesible tanto desde la barra lateral como desde la acción rápida de buscar registros del panel.
+- **FR-022**: El sistema DEBE mantener los datos de entidades y documentos intactos y consistentes durante la navegación entre pantallas.
+- **FR-023**: El sistema DEBE cargar la configuración del módulo al arrancar y aplicarla en todas las pantallas.
+- **FR-024**: El sistema DEBE retroceder a los valores predeterminados integrados (terminología Entidad/Documento, sin campos personalizados, sin ciclo de vida) cuando no se proporciona configuración.
+- **FR-025**: El sistema DEBE informar claramente de una configuración inválida o conflictiva en lugar de fallar silenciosamente.
+- **FR-026**: El sistema DEBE mostrar los campos personalizados declarados en los formularios de creación/edición con tipos de entrada que coincidan con sus tipos declarados.
+- **FR-027**: El sistema DEBE validar los valores de campos personalizados, incluidos los obligatorios, antes de guardar, usando la misma experiencia de retroalimentación que la validación base.
+- **FR-028**: El sistema DEBE incluir los valores de campos personalizados en los resultados de búsqueda y mostrarlos en listas y vistas de detalle.
+- **FR-029**: El sistema DEBE derivar todas las etiquetas visibles para el usuario de la configuración del módulo en lugar de texto fijo en el código.
+- **FR-030**: El sistema DEBE aplicar las transiciones de estado configuradas en los documentos independientemente de cómo se envíe un cambio.
+- **FR-031**: El sistema DEBE mantener el estado del documento como texto libre cuando no hay ciclo de vida configurado.
+- **FR-032**: El sistema DEBE mantener el renderizado de listas y la búsqueda ágiles y correctos para conjuntos de datos de al menos 500 registros de entidad.
+- **FR-033**: El panel DEBE ofrecer al menos cuatro botones de acción rápida: nueva entidad, nuevo documento, abrir gestión de entidades y buscar registros.
+- **FR-034**: Activar la acción rápida de nueva entidad o nuevo documento DEBE abrir el área de gestión correspondiente con un formulario vacío listo para introducir datos.
+- **FR-035**: El panel DEBE mostrar tarjetas de estadísticas con el número de entidades y documentos almacenados, actualizadas cada vez que se muestra el panel.
+- **FR-036**: La barra superior DEBE mostrar un logotipo derivado del nombre del módulo junto con el nombre del módulo configurado en cada pantalla.
+- **FR-037**: La barra lateral DEBE resaltar visualmente el módulo activo en cada pantalla.
+- **FR-038**: La configuración PUEDE definir un color de acento; el sistema DEBE aplicarlo consistentemente en todo el marco y retroceder de forma segura a los valores integrados cuando esté ausente o sea inválido.
+- **FR-039**: En ventanas gráficas estrechas, la barra lateral DEBE contraerse a una columna de iconos manteniéndose operable.
+
+### Requisitos de Extensibilidad *(obligaciones del módulo base)*
+
+Los módulos personalizados construidos sobre esta base DEBEN poder:
+
+- **XR-001**: Extender los registros de entidad y documento con campos adicionales específicos del dominio sin cambiar la estructura de almacenamiento base.
+- **XR-002**: Reetiquetar pantallas, pestañas, formularios y listas con terminología específica del módulo sin alterar el comportamiento de navegación.
+- **XR-003**: Añadir reglas de validación específicas del módulo junto a las reglas de validación base.
+- **XR-004**: Apoyarse en el módulo base para generación de identidad, marcas de tiempo, integridad referencial entre entidades y documentos, y eliminación en cascada.
+- **XR-005**: Remarcar el espacio de trabajo —nombre del módulo, logotipo derivado y color de acento— únicamente mediante configuración.
+
+### Entidades Clave *(incluir si la funcionalidad implica datos)*
+
+- **Entidad**: Un registro de datos maestros gestionado por el módulo, que incluye su nombre, código de negocio, detalles descriptivos, categoría de clasificación, una fecha objetivo opcional y un entity_id autogenerado. Los módulos personalizados definen qué representa una Entidad en el mundo real (p. ej., cliente, producto, activo).
+- **Documento**: Detalles transaccionales adjuntos a una entidad, vinculados a ella por el entity_id de la entidad. Los módulos personalizados definen qué representa un Documento (p. ej., pedido, factura, contrato).
+- **ModuleConfig**: El objeto de adaptación cargado al arrancar que define el nombre del módulo, las etiquetas de terminología, las definiciones de campos personalizados y el ciclo de vida de estados de documentos. Consulte data-model.md para su forma completa.
+
+## Criterios de Éxito *(obligatorio)*
+
+### Resultados Medibles
+
+- **SC-001**: Los usuarios pueden crear una nueva entidad y verla en la lista en menos de 2 minutos.
+- **SC-002**: Los usuarios pueden encontrar una entidad existente mediante la búsqueda en menos de 10 segundos tras introducir un término relevante.
+- **SC-003**: Al menos el 90% de los usuarios de prueba pueden completar tareas de crear, editar, eliminar y buscar sin ayuda.
+- **SC-004**: El sistema sigue siendo utilizable para un conjunto de datos de al menos 500 registros de entidad sin pérdida de funcionalidad central.
+- **SC-005**: Un usuario puede alcanzar las pantallas de gestión y búsqueda desde el panel o la barra lateral en menos de 10 segundos en el primer uso.
+- **SC-006**: Toda la funcionalidad existente de gestión de entidades y documentos sigue operativa tras el rediseño del marco ERP y el panel (sin regresiones).
+- **SC-007**: Los usuarios pueden navegar entre las pantallas de panel, gestión y búsqueda sin perder ninguna entidad ni documento almacenado.
+- **SC-008**: Un desarrollador puede producir un módulo adaptado usando solo el archivo de configuración, con cero modificaciones en archivos fuente centrales.
+- **SC-009**: Cada pantalla presenta el mismo marco con marca, y los usuarios pueden identificar en qué módulo están de un vistazo.
+- **SC-010**: Las estadísticas de registros mostradas en el panel siempre coinciden con el número de entidades y documentos almacenados.
+
+## Suposiciones
+
+- El módulo base gestiona datos para un único espacio de trabajo en lugar de una base de datos multiinquilino compartida.
+- La adaptación a un módulo específico se realiza mediante un archivo de configuración del módulo en lugar de editando archivos fuente centrales.
+- Cada entidad incluye información básica suficiente para identificación y seguimiento; los módulos personalizados aportan los campos específicos del dominio.
+- La versión inicial se centra en la gestión central de datos maestros y documentos en lugar de capacidades ERP avanzadas como flujos de aprobación, períodos de contabilización o informes.
+- La búsqueda se realiza sobre los registros de entidad almacenados.
+- La pantalla de gestión consolida los formularios de añadir/editar entidad y añadir/editar documento en una sola pantalla de gestión.
+- La navegación entre áreas ocurre mediante una barra lateral persistente; la pantalla de gestión aloja ambos paneles de gestión y no muestra la lista de entidades.
+- El logotipo se genera como un monograma SVG en línea derivado del nombre del módulo; no se requieren recursos de imagen externos.
+- Se puede configurar un color de acento opcional para la marca; el resto de la paleta base permanece fija.
+- Solo se muestra una pantalla a la vez; no hay diseño lado a lado del contenido de gestión y búsqueda.
+- La navegación entre pantallas se maneja dentro de la aplicación (p. ej., cambio de vistas), y el botón atrás del navegador debe comportarse de forma predecible.
+- Los datos siguen persistiéndose en el localStorage del navegador y no se ven afectados por la navegación entre pantallas.
+- La pantalla de búsqueda se centra en encontrar y ver entidades; la edición permanece en la pantalla de gestión.
+

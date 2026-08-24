@@ -15,9 +15,9 @@ export function createEntityItem(entity){
   const meta = document.createElement('div');
   meta.className = 'entity-meta';
   meta.innerHTML = `<strong>${escapeHtml(entity.name)}</strong><div>${escapeHtml(entity.code)}${entity.category ? ' • ' + escapeHtml(entity.category) : ''}</div>` +
-    `${entity.targetDate ? '<div class="muted">' + escapeHtml(labelFor('entity')) + ' target: ' + escapeHtml(entity.targetDate) + '</div>' : ''}` +
+    `${entity.targetDate ? '<div class="muted">Fecha objetivo: ' + escapeHtml(entity.targetDate) + '</div>' : ''}` +
     `${entity.description ? '<div class="muted">' + escapeHtml(entity.description) + '</div>' : ''}` +
-    (customBits ? `<div class="muted">${customBits}</div>` : '');
+    (customBits ? `<div class="muted">${customBits}</div>` : '');;
   const docs = document.createElement('div');
   docs.className = 'entity-documents';
   renderDocumentsFor(entity, docs);
@@ -35,7 +35,7 @@ export function renderDocumentsFor(entity, container){
   if(documents.length === 0){
     const none = document.createElement('div');
     none.className = 'muted';
-    none.textContent = `No ${labelFor('documents').toLowerCase()} yet.`;
+    none.textContent = `Aún no hay ${labelFor('documents').toLowerCase()}.`;
     container.appendChild(none);
   } else {
     const ul = document.createElement('ul');

@@ -1,31 +1,36 @@
-# Quickstart: ERP Software Base Module
+# Inicio Rápido: Módulo Base de Software de Planificación de Recursos Empresariales (ERP)
 
-## Setup
+## Configuración
 
-1. Install dependencies with `npm install`.
-2. Start the development server with `npm run dev`.
-3. Open the local Vite URL in a browser.
+1. Instale las dependencias con `npm install`.
+2. Inicie el servidor de desarrollo con `npm run dev`.
+3. Abra la URL local de Vite en un navegador.
 
-## Core User Flow
+## Flujo de Usuario Principal
 
-1. Create an entity using the form.
-2. Search for an entity using the search box.
-3. Edit or delete an entity from the list.
-4. Refresh the page to confirm that entities persist in local storage.
+1. Aterrice en el panel ERP y use un botón de acción rápida (nueva entidad, nuevo documento, gestión de entidades o buscar registros).
+2. Cree una entidad usando el formulario.
+3. Busque una entidad usando la pantalla de búsqueda.
+4. Edite o elimine una entidad desde el área de gestión.
+5. Cambie entre módulos usando la barra lateral; actualice la página para confirmar que las entidades persisten en el almacenamiento local y que el marco con marca (logotipo, nombre del módulo) permanece consistente.
 
-## Validation
+## Validación
 
-- Verify that required fields show validation errors.
-- Verify that search results update as the user types.
-- Verify that the list stays consistent after edit and delete actions.
+- Verifique que los campos obligatorios muestran errores de validación.
+- Verifique que un documento exige folio entero positivo y que el descuento no puede superar el subtotal.
+- Verifique que un correo electrónico con formato inválido se rechaza con una explicación.
+- Verifique que los resultados de búsqueda se actualizan a medida que el usuario escribe.
+- Verifique que la lista permanece consistente tras las acciones de edición y eliminación.
+- Verifique que las estadísticas del panel coinciden con el número de registros almacenados.
 
-## Extending the Base Module
+## Extender el Módulo Base
 
-Custom ERP modules tailor the base through a single configuration file (`src/module-config.js`) rather than by editing core code:
+Los módulos ERP personalizados adaptan la base mediante un único archivo de configuración (`src/module-config.js`) en lugar de editar el código central:
 
-1. Set the module name and term mappings (e.g., Entity → Customer, Document → Sales Order); every screen relabels itself.
-2. Declare custom fields per record type (text, number, date, select) — they appear automatically on forms, lists, validation, and search.
-3. Define the document status lifecycle and permitted transitions (e.g., quote → order → invoiced).
-4. Add module-specific validation rules alongside the base rules where needed.
+1. Establezca el nombre del módulo y los mapeos de términos (p. ej., Entidad → Cliente, Documento → Pedido de Venta); cada pantalla se reetiqueta, incluida la barra lateral y el logotipo.
+2. Declare campos personalizados por tipo de registro (texto, número, fecha, selección) — aparecen automáticamente en formularios, listas, validación y búsqueda.
+3. Defina el ciclo de vida de estados de documentos y las transiciones permitidas (p. ej., cotización → pedido → facturado).
+4. Opcionalmente establezca `theme.accentColor` para remarcar los resaltados y controles principales de todo el espacio de trabajo.
+5. Añada reglas de validación específicas del módulo junto a las reglas base donde sea necesario.
 
-Identity generation, timestamps, referential integrity between entities and documents, cascade deletion, navigation, and search remain handled by the base module. Without a config file, the app runs with default Entity/Document behavior. See `specs/001-erp-base-module/` for the full specification.
+La generación de identidad, marcas de tiempo, integridad referencial entre entidades y documentos, eliminación en cascada, navegación y búsqueda siguen siendo gestionadas por el módulo base. Sin archivo de configuración, la aplicación se ejecuta con el comportamiento predeterminado Entidad/Documento. Consulte `specs/001-erp-base-module/` para la especificación completa.

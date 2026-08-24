@@ -13,8 +13,8 @@ function qs(id){ return document.getElementById(id); }
 
 const configWithFields = {
   customFields: [
-    { target: 'entity', key: 'creditLimit', label: 'Credit limit', type: 'number', required: true },
-    { target: 'entity', key: 'region', label: 'Region', type: 'select', options: ['EMEA', 'APAC'] }
+    { target: 'entity', key: 'ingresosAnuales', label: 'Ingresos anuales', type: 'number', required: true },
+    { target: 'entity', key: 'region', label: 'Región', type: 'select', options: ['EMEA', 'APAC'] }
   ]
 };
 
@@ -43,11 +43,11 @@ async function bootWith(configOverride){
 describe('User Story 7 - declare custom fields for records', () => {
   it('renders declared fields with the correct input types on the entity form', async () => {
     await bootWith();
-    qs('welcome-manage').click();
-    const numberInput = qs('cf-creditLimit');
+    qs('nav-entities').click();
+    const numberInput = qs('cf-ingresosAnuales');
     expect(numberInput).not.toBeNull();
     expect(numberInput.getAttribute('type')).toBe('number');
-    expect(numberInput.closest('.custom-field').querySelector('label').textContent).toBe('Credit limit *');
+    expect(numberInput.closest('.custom-field').querySelector('label').textContent).toBe('Ingresos anuales *');
     const select = qs('cf-region');
     expect(select.tagName).toBe('SELECT');
     expect([...select.options].map(o => o.value)).toEqual(['', 'EMEA', 'APAC']);
@@ -55,51 +55,51 @@ describe('User Story 7 - declare custom fields for records', () => {
 
   it('blocks saving when a required custom field is blank and explains why', async () => {
     await bootWith();
-    qs('welcome-manage').click();
+    qs('nav-entities').click();
     qs('name').value = 'Acme';
     qs('code').value = 'AC-001';
     qs('entity-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
     expect(loadEntities().length).toBe(0);
-    expect(qs('error-cf-creditLimit').textContent).toContain('required');
+    expect(qs('error-cf-ingresosAnuales').textContent).toContain('obligatorio');
   });
 
   it('persists custom values and displays them in search results with labels', async () => {
     await bootWith();
-    qs('welcome-manage').click();
+    qs('nav-entities').click();
     qs('name').value = 'Acme';
     qs('code').value = 'AC-001';
-    qs('cf-creditLimit').value = '5000';
+    qs('cf-ingresosAnuales').value = '5000';
     qs('cf-region').value = 'EMEA';
     qs('entity-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
     const saved = loadEntities()[0];
-    expect(saved.creditLimit).toBe(5000);
+    expect(saved.ingresosAnuales).toBe(5000);
     expect(saved.region).toBe('EMEA');
 
-    qs('welcome-search').click();
+    qs('nav-search').click();
     qs('search-input').value = 'emea';
     qs('search-input').dispatchEvent(new dom.window.Event('input', { bubbles: true }));
     const items = [...qs('search-results-list').querySelectorAll('.entity-item')];
     expect(items.length).toBe(1);
-    expect(items[0].textContent).toContain('Region: EMEA');
+    expect(items[0].textContent).toContain('Región: EMEA');
   });
 
   it('renders document select custom fields from configuration', async () => {
     await bootWith({
       customFields: [
-        { target: 'document', key: 'paymentTerms', label: 'Payment terms', type: 'select', options: ['net30', 'net60'] }
+        { target: 'document', key: 'metodoEnvio', label: 'Método de envío', type: 'select', options: ['estándar', 'exprés'] }
       ]
     });
-    qs('welcome-manage').click();
-    qs('tab-documents').click();
-    const select = qs('cf-paymentTerms');
+    qs('nav-entities').click();
+    qs('nav-documents').click();
+    const select = qs('cf-metodoEnvio');
     expect(select).not.toBeNull();
     expect(select.tagName).toBe('SELECT');
-    expect([...select.options].map(o => o.textContent)).toEqual(['--', 'net30', 'net60']);
+    expect([...select.options].map(o => o.textContent)).toEqual(['--', 'estándar', 'exprés']);
   });
 
   it('behaves identically to the unmodified base when no fields are declared', async () => {
     await bootWith({});
-    qs('welcome-manage').click();
+    qs('nav-entities').click();
     expect(qs('entity-custom-fields').hidden).toBe(true);
     qs('name').value = 'Acme';
     qs('code').value = 'AC-001';
@@ -110,19 +110,19 @@ describe('User Story 7 - declare custom fields for records', () => {
 
   it('populates custom field values when editing an existing entity', async () => {
     await bootWith();
-    qs('welcome-manage').click();
+    qs('nav-entities').click();
     qs('name').value = 'Acme';
     qs('code').value = 'AC-001';
-    qs('cf-creditLimit').value = '750';
+    qs('cf-ingresosAnuales').value = '750';
     qs('entity-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
 
     const select = qs('edit-entity');
     select.value = select.options[1].value;
     select.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
-    expect(qs('cf-creditLimit').value).toBe('750');
+    expect(qs('cf-ingresosAnuales').value).toBe('750');
 
-    qs('cf-creditLimit').value = '900';
+    qs('cf-ingresosAnuales').value = '900';
     qs('entity-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
-    expect(loadEntities()[0].creditLimit).toBe(900);
+    expect(loadEntities()[0].ingresosAnuales).toBe(900);
   });
 });

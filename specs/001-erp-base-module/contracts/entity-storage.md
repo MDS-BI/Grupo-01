@@ -1,64 +1,79 @@
-# Entity Storage Contract
+# Contrato de Almacenamiento de Entidades
 
-## Purpose
+## Propósito
 
-The app stores entity records locally in the browser using `localStorage`.
+La aplicación almacena los registros de entidad localmente en el navegador usando `localStorage`.
 
-## Data Shape
+## Forma de los Datos
 
-Each entity record must include:
+Cada registro de entidad debe incluir:
 
-- `id`: unique string
-- `entity_id`: unique string, automatically generated, used to link documents
-- `name`: non-empty string
-- `code`: non-empty string
-- `category`: optional string
-- `description`: optional string
-- `createdAt`: ISO timestamp string
-- `updatedAt`: ISO timestamp string
+- `id`: cadena única
+- `entity_id`: cadena única, generada automáticamente, usada para vincular documentos
+- `name`: cadena no vacía
+- `code`: cadena no vacía
+- `taxId`: cadena opcional (identificación fiscal)
+- `email`: cadena opcional con formato de correo válido cuando está presente
+- `phone`: cadena opcional
+- `address`: cadena opcional
+- `category`: cadena opcional
+- `description`: cadena opcional
+- `targetDate`: cadena de fecha opcional (YYYY-MM-DD) válida cuando está presente
+- `creditLimit`: número opcional no negativo
+- `paymentTerms`: cadena opcional
+- `createdAt`: cadena de marca de tiempo ISO
+- `updatedAt`: cadena de marca de tiempo ISO
 
-## Operations
+## Operaciones
 
-- `loadEntities()`: returns all stored entities.
-- `saveEntities(entities)`: persists the full list.
-- `addEntity(entity)`: appends a new entity.
-- `updateEntity(id, updates)`: updates an existing entity.
-- `deleteEntity(id)`: removes an entity by id.
+- `loadEntities()`: devuelve todas las entidades almacenadas.
+- `saveEntities(entities)`: persiste la lista completa.
+- `addEntity(entity)`: añade una nueva entidad.
+- `updateEntity(id, updates)`: actualiza una entidad existente.
+- `deleteEntity(id)`: elimina una entidad por id.
 
-## Document Storage
+## Almacenamiento de Documentos
 
-Each document record must include:
+Cada registro de documento debe incluir:
 
-- `id`: unique string
-- `entity_id`: the linked entity's auto-generated entity_id
-- `reference`: non-empty string
-- `startDate`: valid calendar date string
-- `endDate`: valid calendar date string, on or after startDate
-- `quantity`: optional positive integer
-- `totalAmount`: optional non-negative number
-- `currency`: optional string
-- `status`: optional string
-- `createdAt`: ISO timestamp string
-- `updatedAt`: ISO timestamp string
+- `id`: cadena única
+- `entity_id`: el entity_id autogenerado de la entidad vinculada
+- `series`: cadena opcional que agrupa folios consecutivos
+- `folio`: entero positivo obligatorio; junto con la serie forma el número oficial del documento
+- `startDate`: cadena de fecha de calendario válida
+- `endDate`: cadena de fecha de calendario válida, igual o posterior a startDate
+- `quantity`: entero positivo opcional
+- `subtotal`: número no negativo opcional
+- `discount`: número no negativo opcional; no puede superar el subtotal
+- `taxAmount`: número no negativo opcional
+- `totalAmount`: número no negativo opcional
+- `currency`: cadena opcional
+- `paymentTerms`: cadena opcional
+- `notes`: cadena opcional
+- `status`: cadena opcional
+- `createdAt`: cadena de marca de tiempo ISO
+- `updatedAt`: cadena de marca de tiempo ISO
 
-Operations:
+Operaciones:
 
-- `loadDocuments()`: returns all stored documents.
-- `saveDocuments(documents)`: persists the full list.
-- `addDocument(document)`: appends a new document.
-- `updateDocument(id, updates)`: updates an existing document.
-- `deleteDocument(id)`: removes a document by id.
-- `deleteDocumentsForEntity(entityId)`: removes all documents linked to a deleted entity.
+- `loadDocuments()`: devuelve todos los documentos almacenados.
+- `saveDocuments(documents)`: persiste la lista completa.
+- `addDocument(document)`: añade un nuevo documento.
+- `updateDocument(id, updates)`: actualiza un documento existente.
+- `deleteDocument(id)`: elimina un documento por id.
+- `deleteDocumentsForEntity(entityId)`: elimina todos los documentos vinculados a una entidad eliminada.
 
-## Validation Expectations
+## Expectativas de Validación
 
-- Missing `name` or `code` must be rejected before persistence.
-- An entity_id must be generated automatically and must be unique.
-- A document without an `entity_id` matching an existing entity must be rejected.
-- Deleting an entity must also remove all documents linked to its entity_id.
-- Storage operations should preserve the current list order and update timestamps.
+- Un `name` o `code` faltante debe rechazarse antes de la persistencia.
+- Un `email` presente debe tener formato de correo válido y un `creditLimit` presente debe ser un número no negativo.
+- Un documento sin `folio` entero positivo debe rechazarse; un `discount` mayor que el `subtotal` debe rechazarse.
+- Un entity_id debe generarse automáticamente y debe ser único.
+- Un documento sin un `entity_id` que coincida con una entidad existente debe rechazarse.
+- Eliminar una entidad también debe eliminar todos los documentos vinculados a su entity_id.
+- Las operaciones de almacenamiento deben preservar el orden actual de la lista y actualizar las marcas de tiempo.
 
-## Extensibility Expectations
+## Expectativas de Extensibilidad
 
-- Additional fields added by custom modules must be persisted alongside base fields without special handling in the storage layer.
-- Base operations above remain stable so custom modules can build on them without modification.
+- Los campos adicionales añadidos por módulos personalizados deben persistirse junto a los campos base sin manejo especial en la capa de almacenamiento.
+- Las operaciones base anteriores permanecen estables para que los módulos personalizados puedan construir sobre ellas sin modificación.

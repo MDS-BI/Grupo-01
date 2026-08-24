@@ -31,8 +31,8 @@ afterEach(() => {
 
 describe('User Story 1 - create and organize entities', () => {
   it('creates a new entity that appears in storage and the edit selector', () => {
-    qs('welcome-manage').click();
-    expect(qs('view-manage').hidden).toBe(false);
+    qs('nav-entities').click();
+    expect(qs('view-entities').hidden).toBe(false);
     qs('name').value = 'Acme';
     qs('code').value = 'AC-001';
     qs('entity-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
@@ -45,13 +45,43 @@ describe('User Story 1 - create and organize entities', () => {
     expect([...select.options].map(o => o.textContent)).toContain('Acme — AC-001');
   });
 
+  it('persists ERP identity and commercial fields entered through the form', () => {
+    qs('nav-entities').click();
+    qs('name').value = 'Acme';
+    qs('code').value = 'AC-001';
+    qs('taxId').value = 'RFC800101AB1';
+    qs('email').value = 'ventas@acme.mx';
+    qs('phone').value = '555-1234';
+    qs('address').value = 'Av. Reforma 100';
+    qs('creditLimit').value = '50000';
+    qs('paymentTerms').value = 'neto 30';
+    qs('entity-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
+    const saved = loadEntities()[0];
+    expect(saved.taxId).toBe('RFC800101AB1');
+    expect(saved.email).toBe('ventas@acme.mx');
+    expect(saved.phone).toBe('555-1234');
+    expect(saved.address).toBe('Av. Reforma 100');
+    expect(saved.creditLimit).toBe(50000);
+    expect(saved.paymentTerms).toBe('neto 30');
+  });
+
+  it('rejects a malformed email with an explanation', () => {
+    qs('nav-entities').click();
+    qs('name').value = 'Acme';
+    qs('code').value = 'AC-001';
+    qs('email').value = 'no-es-correo';
+    qs('entity-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
+    expect(loadEntities().length).toBe(0);
+    expect(qs('error-email').textContent).toContain('correo electrónico');
+  });
+
   it('prevents saving when required information is blank and explains what is needed', () => {
-    qs('welcome-manage').click();
+    qs('nav-entities').click();
     qs('name').value = '';
     qs('code').value = '';
     qs('entity-form').dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
     expect(loadEntities().length).toBe(0);
-    expect(qs('error-name').textContent).toContain('required');
-    expect(qs('error-code').textContent).toContain('required');
+    expect(qs('error-name').textContent).toContain('obligatorio');
+    expect(qs('error-code').textContent).toContain('obligatorio');
   });
 });

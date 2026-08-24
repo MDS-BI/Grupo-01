@@ -34,12 +34,12 @@ afterEach(() => {
 
 describe('User Story 2 - edit and remove entities', () => {
   it('edits an existing entity through the selector and persists the change', () => {
-    qs('welcome-manage').click();
+    qs('nav-entities').click();
     const select = qs('edit-entity');
     select.value = select.options[1].value;
     select.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
     expect(qs('entity-id').value).toBe(globalThis.__firstId);
-    expect(qs('submit-button').textContent).toBe('Update');
+    expect(qs('submit-button').textContent).toBe('Actualizar');
     expect(qs('name').value).toBe('Acme');
 
     qs('name').value = 'Acme Updated';
@@ -48,7 +48,7 @@ describe('User Story 2 - edit and remove entities', () => {
   });
 
   it('deletes a selected entity so it disappears from storage', () => {
-    qs('welcome-manage').click();
+    qs('nav-entities').click();
     const select = qs('edit-entity');
     select.value = select.options[1].value;
     select.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
@@ -61,7 +61,7 @@ describe('User Story 2 - edit and remove entities', () => {
     for(let i = 0; i < 300; i++){
       addEntity({ name: `Bulk ${i}`, code: `B-${String(i).padStart(4, '0')}` });
     }
-    qs('welcome-manage').click();
+    qs('nav-entities').click();
     const select = qs('edit-entity');
     expect(select.options.length).toBe(303);
     const target = [...select.options].find(o => o.textContent.includes('Bulk 150'));

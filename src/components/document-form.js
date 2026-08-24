@@ -20,7 +20,7 @@ export function renderStatusControl(currentStatus){
   const wrap = document.createElement('div');
   const label = document.createElement('label');
   label.setAttribute('for', 'status');
-  label.textContent = 'Status';
+  label.textContent = 'Estado';
   wrap.appendChild(label);
   let control;
   if(allowed){
@@ -44,7 +44,7 @@ export function renderStatusControl(currentStatus){
     control.id = 'status';
     control.name = 'status';
     control.type = 'text';
-    control.placeholder = 'e.g. pending';
+    control.placeholder = 'p. ej., pendiente';
   }
   wrap.appendChild(control);
   const err = document.createElement('div');
@@ -57,21 +57,29 @@ export function renderStatusControl(currentStatus){
 
 export function clearDocumentForm(){
   qs('document-id').value = '';
-  qs('reference').value = '';
+  qs('series').value = '';
+  qs('folio').value = '';
   qs('startDate').value = '';
   qs('endDate').value = '';
   qs('quantity').value = '';
+  qs('subtotal').value = '';
+  qs('discount').value = '';
+  qs('taxAmount').value = '';
   qs('totalAmount').value = '';
   qs('currency').value = '';
+  qs('docPaymentTerms').value = '';
+  qs('notes').value = '';
   clearDocumentErrors();
   renderCustomFields(qs('document-custom-fields'), 'document');
   renderStatusControl('');
   qs('document-cancel-edit').hidden = true;
-  qs('document-submit-button').textContent = 'Save Document';
+  qs('document-submit-button').textContent = 'Guardar Documento';
 }
 
+const DOCUMENT_ERROR_FIELDS = ['entityId', 'folio', 'startDate', 'endDate', 'quantity', 'subtotal', 'discount', 'taxAmount', 'totalAmount', 'status'];
+
 export function clearDocumentErrors(){
-  ['entityId', 'reference', 'startDate', 'endDate', 'quantity', 'totalAmount', 'status'].forEach(f => {
+  DOCUMENT_ERROR_FIELDS.forEach(f => {
     const elId = f === 'entityId' ? 'error-document-entity' : `error-${f}`;
     const el = qs(elId);
     if(el) el.textContent = '';
@@ -84,17 +92,23 @@ export function startDocumentEdit(doc){
   qs('document-id').value = doc.id;
   qs('document-entity-id').value = doc.entity_id;
   qs('document-entity').value = doc.entity_id;
-  qs('reference').value = doc.reference || '';
+  qs('series').value = doc.series || '';
+  qs('folio').value = doc.folio === undefined ? '' : doc.folio;
   qs('startDate').value = doc.startDate || '';
   qs('endDate').value = doc.endDate || '';
   qs('quantity').value = doc.quantity === undefined ? '' : doc.quantity;
+  qs('subtotal').value = doc.subtotal === undefined ? '' : doc.subtotal;
+  qs('discount').value = doc.discount === undefined ? '' : doc.discount;
+  qs('taxAmount').value = doc.taxAmount === undefined ? '' : doc.taxAmount;
   qs('totalAmount').value = doc.totalAmount === undefined ? '' : doc.totalAmount;
   qs('currency').value = doc.currency || '';
+  qs('docPaymentTerms').value = doc.paymentTerms || '';
+  qs('notes').value = doc.notes || '';
   renderStatusControl(doc.status);
   setStatusValue(doc.status);
   clearDocumentErrors();
   qs('document-cancel-edit').hidden = false;
-  qs('document-submit-button').textContent = 'Update Document';
+  qs('document-submit-button').textContent = 'Actualizar Documento';
 }
 
 function setStatusValue(value){
@@ -105,25 +119,28 @@ function setStatusValue(value){
 export function collectDocumentPayload(){
   return {
     entityId: qs('document-entity-id').value || qs('document-entity').value,
-    reference: qs('reference').value,
+    series: qs('series').value,
+    folio: qs('folio').value,
     startDate: qs('startDate').value,
     endDate: qs('endDate').value,
     quantity: qs('quantity').value,
+    subtotal: qs('subtotal').value,
+    discount: qs('discount').value,
+    taxAmount: qs('taxAmount').value,
     totalAmount: qs('totalAmount').value,
     currency: qs('currency').value,
+    paymentTerms: qs('docPaymentTerms').value,
+    notes: qs('notes').value,
     status: qs('status') ? qs('status').value : '',
     ...collectCustomFields(qs('document-custom-fields'), 'document')
   };
 }
 
 export function showDocumentErrors(errors){
-  qs('error-document-entity').textContent = errors.entityId || '';
-  qs('error-reference').textContent = errors.reference || '';
-  qs('error-startDate').textContent = errors.startDate || '';
-  qs('error-endDate').textContent = errors.endDate || '';
-  qs('error-quantity').textContent = errors.quantity || '';
-  qs('error-totalAmount').textContent = errors.totalAmount || '';
-  const statusErr = qs('error-status');
-  if(statusErr) statusErr.textContent = errors.status || '';
+  for(const f of DOCUMENT_ERROR_FIELDS){
+    const elId = f === 'entityId' ? 'error-document-entity' : `error-${f}`;
+    const el = qs(elId);
+    if(el) el.textContent = errors[f] || '';
+  }
   showCustomFieldErrors(qs('document-custom-fields'), 'document', errors);
 }

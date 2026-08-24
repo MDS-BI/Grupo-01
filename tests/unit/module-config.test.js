@@ -2,15 +2,15 @@ import { describe, it, expect } from 'vitest';
 import { DEFAULT_CONFIG, BASE_FIELDS, FIELD_TYPES, normalizeConfig, loadModuleConfig, setActiveConfig, getConfig, labelFor } from '../../src/module-config.js';
 
 const salesConfig = {
-  moduleName: 'Sales',
-  labels: { entity: 'Customer', entities: 'Customers', document: 'Sales Order', documents: 'Sales Orders' },
+  moduleName: 'Ventas',
+  labels: { entity: 'Cliente', entities: 'Clientes', document: 'Pedido de Venta', documents: 'Pedidos de Venta' },
   customFields: [
-    { target: 'entity', key: 'creditLimit', label: 'Credit limit', type: 'number', required: true },
-    { target: 'document', key: 'paymentTerms', label: 'Payment terms', type: 'select', options: ['net30', 'net60'] }
+    { target: 'entity', key: 'riesgo', label: 'Riesgo', type: 'number', required: true },
+    { target: 'document', key: 'metodoEnvio', label: 'Método de envío', type: 'select', options: ['estándar', 'exprés'] }
   ],
   statusLifecycle: {
-    statuses: ['quote', 'order', 'invoiced'],
-    transitions: { quote: ['order'], order: ['invoiced'], invoiced: [] }
+    statuses: ['cotización', 'pedido', 'facturado'],
+    transitions: { cotización: ['pedido'], pedido: ['facturado'], facturado: [] }
   }
 };
 
@@ -30,10 +30,10 @@ describe('module-config', () => {
   it('accepts a complete sales-style profile', () => {
     const { config, errors } = normalizeConfig(salesConfig);
     expect(errors).toEqual([]);
-    expect(config.moduleName).toBe('Sales');
-    expect(config.labels.entity).toBe('Customer');
+    expect(config.moduleName).toBe('Ventas');
+    expect(config.labels.entity).toBe('Cliente');
     expect(config.customFields.length).toBe(2);
-    expect(config.statusLifecycle.statuses).toEqual(['quote', 'order', 'invoiced']);
+    expect(config.statusLifecycle.statuses).toEqual(['cotización', 'pedido', 'facturado']);
   });
 
   it('reports an invalid module name instead of failing silently', () => {
@@ -62,7 +62,7 @@ describe('module-config', () => {
     const { errors } = normalizeConfig({
       customFields: [{ target: 'entity', key: 'name', label: 'X', type: 'text' }]
     });
-    expect(errors.some(e => e.includes('collides'))).toBe(true);
+    expect(errors.some(e => e.includes('choca con un campo base'))).toBe(true);
   });
 
   it('rejects select fields without options', () => {
@@ -75,7 +75,7 @@ describe('module-config', () => {
   it('rejects duplicate custom field keys per target', () => {
     const field = { target: 'entity', key: 'dup', label: 'Dup', type: 'text' };
     const { errors } = normalizeConfig({ customFields: [field, { ...field }] });
-    expect(errors.some(e => e.includes('more than once'))).toBe(true);
+    expect(errors.some(e => e.includes('más de una vez'))).toBe(true);
   });
 
   it('rejects lifecycle transitions referencing unknown statuses', () => {
@@ -107,11 +107,11 @@ describe('module-config', () => {
   it('exposes active config and label helpers after setActiveConfig', () => {
     const { config } = normalizeConfig(salesConfig);
     setActiveConfig(config);
-    expect(getConfig().moduleName).toBe('Sales');
-    expect(labelFor('entity')).toBe('Customer');
-    expect(labelFor('documents')).toBe('Sales Orders');
+    expect(getConfig().moduleName).toBe('Ventas');
+    expect(labelFor('entity')).toBe('Cliente');
+    expect(labelFor('documents')).toBe('Pedidos de Venta');
     setActiveConfig(null);
-    expect(labelFor('entity')).toBe('Entity');
+    expect(labelFor('entity')).toBe('Entidad');
   });
 
   it('supports all declared field types', () => {
@@ -119,5 +119,51 @@ describe('module-config', () => {
     expect(FIELD_TYPES).toContain('number');
     expect(FIELD_TYPES).toContain('date');
     expect(FIELD_TYPES).toContain('select');
+  });
+
+  describe('theme', () => {
+    it('provides a default accent color when no theme is configured', () => {
+      const { config, errors } = normalizeConfig(null);
+      expect(errors).toEqual([]);
+      expect(config.theme.accentColor).toBe(DEFAULT_CONFIG.theme.accentColor);
+    });
+
+    it('accepts a six-digit hex accent color', () => {
+      const { config, errors } = normalizeConfig({ theme: { accentColor: '#0f62fe' } });
+      expect(errors).toEqual([]);
+      expect(config.theme.accentColor).toBe('#0f62fe');
+    });
+
+    it('accepts a three-digit hex accent color', () => {
+      const { config, errors } = normalizeConfig({ theme: { accentColor: '#f0b' } });
+      expect(errors).toEqual([]);
+      expect(config.theme.accentColor).toBe('#f0b');
+    });
+
+    it('accepts uppercase hex digits', () => {
+      const { config, errors } = normalizeConfig({ theme: { accentColor: '#FF8800' } });
+      expect(errors).toEqual([]);
+      expect(config.theme.accentColor).toBe('#FF8800');
+    });
+
+    it('rejects non-hex accent colors and keeps the default', () => {
+      for(const bad of ['blue', '#12345', '123456', '#zzzzzz']){
+        const { config, errors } = normalizeConfig({ theme: { accentColor: bad } });
+        expect(errors.some(e => e.includes('theme.accentColor'))).toBe(true);
+        expect(config.theme.accentColor).toBe(DEFAULT_CONFIG.theme.accentColor);
+      }
+    });
+
+    it('rejects a non-object theme and keeps defaults', () => {
+      const { config, errors } = normalizeConfig({ theme: 'dark' });
+      expect(errors.some(e => e.includes('theme'))).toBe(true);
+      expect(config.theme.accentColor).toBe(DEFAULT_CONFIG.theme.accentColor);
+    });
+
+    it('keeps the default accent when accentColor is omitted', () => {
+      const { config, errors } = normalizeConfig({ theme: {} });
+      expect(errors).toEqual([]);
+      expect(config.theme.accentColor).toBe(DEFAULT_CONFIG.theme.accentColor);
+    });
   });
 });
