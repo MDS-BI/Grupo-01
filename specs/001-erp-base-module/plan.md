@@ -54,11 +54,8 @@ src/
 └── components/
     ├── shell.js        (marco del espacio de trabajo: barra superior, logotipo SVG, barra lateral, estado de módulo activo)
     ├── dashboard.js    (vista de inicio: cuadrícula de acciones rápidas + tarjetas de estadísticas en vivo)
-    ├── entity-list.js
-    ├── entity-form.js
-    ├── search-bar.js
-    ├── document-list.js
-    └── document-form.js
+    ├── entity-form.js  (formulario de creación/edición de entidades con campos personalizados)
+    └── document-form.js (formulario de creación/edición de documentos con campos personalizados y ciclo de vida de estados)
 
 tests/
 ├── unit/
