@@ -1,8 +1,14 @@
 # Plan de Desarrollo: Módulo de Cuentas por Cobrar
 
+El módulo de \*\*Cuentas por Cobrar\*\* es fundamental dentro del área de Finanzas para gestionar la cartera de clientes, el seguimiento de facturas emitidas y el control de pagos recibidos. Muchas empresas sufren descontrol en sus flujos de caja debido a la falta de registro centralizado del límite de crédito de sus clientes y al estado de sus facturas (pendientes vs. pagadas).
+
 Este documento define la estrategia de implementación del MVP del módulo de Finanzas utilizando Spec Driven Development.
 
 El alcance es exclusivamente frontend: administrar Clientes y Facturas con los estados Borrador, Emitida y Pagada. Se reutiliza la persistencia local del template, sin backend ni base de datos remota. Esta revisión modifica solamente el plan; las tareas de implementación siguientes no se ejecutan en esta entrega.
+
+## Clientes y Usuarios Objetivos 
+
+\* \*\*Ejecutivo de Cobranzas / Ventas:\*\* Registra nuevos clientes, valida RUT/límite de crédito y emite facturas en borrador. \* \*\*Encargado de Finanzas / Contador:\*\* Revisa las facturas emitidas, valida los pagos recibidos y cambia el estado a "Pagada". \* \*\*Gerencia:\*\* Revisa el total de deuda por cliente y el estado global de la cartera de cobros.
 
 ## Compatibilidad con la estructura base
 
