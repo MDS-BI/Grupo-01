@@ -9,7 +9,9 @@ El alcance es exclusivamente frontend: administrar Clientes y Facturas con los e
 ## Clientes y Usuarios Objetivos 
 
 Ejecutivo de Cobranzas / Ventas: Registra nuevos clientes, valida RUT/límite de crédito y emite facturas en borrador. 
+
 Encargado de Finanzas / Contador: Revisa las facturas emitidas, valida los pagos recibidos y cambia el estado a "Pagada".
+
 Gerencia: Revisa el total de deuda por cliente y el estado global de la cartera de cobros.
 
 ## Compatibilidad con la estructura base
