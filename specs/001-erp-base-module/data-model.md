@@ -1,58 +1,147 @@
-# Modelo de Datos - Módulo de Cuentas por Cobrar (Clientes y Facturas)
+# Modelo de Datos: Facturación y Pagos (Módulo de Contabilidad y Finanzas)
 
-## Visión General
-El módulo de **Cuentas por Cobrar** permite gestionar el registro maestro de **Clientes** (Entidades) y el seguimiento de las **Facturas** (Documentos transaccionales) asociadas. La arquitectura reutiliza la estructura Entidad–Documento de la plantilla Speckit, garantizando la integridad referencial mediante `entity_id`, el borrado en cascada y la persistencia local en `localStorage`.
+**Rama**: `001-erp-base-module` · **Fecha**: 2026-10-29 · **Estado**: Borrador
+**Relacionado con**: `spec.md` (historias de usuario y requisitos FR-001 a FR-019)
 
-## Entidad Principal: Cliente (`Entity`)
-Representa el registro maestro de clientes sobre los cuales se emiten las facturas y se administra el límite de crédito comercial.
+## 1. Descripción y justificación de los datos
 
-### Campos Estándar de la Plantilla Base
+El módulo necesita responder tres preguntas: ¿cuánto me deben mis clientes?, ¿cuánto debo a mis proveedores? y ¿qué está vencido? Para eso basta con dos conceptos, que el template ya ofrece:
 
-* `id` (String): Identificador único interno (UUID) para la gestión y edición/eliminación del registro.
-* `entity_id` (String): Identificador público del cliente generado automáticamente y referenciado por las facturas.
-* `name` (String, Requerido): Nombre o razón social del cliente.
-* `code` (String, Requerido): Código único identificador del cliente (ej. *"CLI-001"*).
-* `createdAt` (Date): Marca de tiempo de creación del registro.
-* `updatedAt` (Date): Marca de tiempo de última actualización.
+| Concepto del módulo | Tipo en el template | Para qué existe |
+|---|---|---|
+| **Tercero** | Entidad | Es la contraparte: un cliente (a quien se le cobra) o un proveedor (a quien se le paga). |
+| **Factura** | Documento | Es la deuda o el cobro: una factura de venta (por cobrar) o de compra (por pagar). |
 
-### Campos Base Reutilizados
+**Por qué solo dos.** Cada dato guardado debe servir a una historia de usuario. Todo lo demás (plan de cuentas, asientos, pagos como registro propio) queda para etapas futuras y no se modela ahora.
 
-* `taxId` (String, Opcional): Identificación fiscal del cliente (RUT / Tax ID).
-* `creditLimit` (Number, Opcional): Límite de crédito asignado en valor numérico no negativo.
+**Por qué un solo tipo de entidad y de documento, con un campo `tipo`.** El template permite una entidad y un documento por módulo. Cliente y proveedor comparten los mismos datos (nombre, código, RUT), y la factura de venta y la de compra también. *(Por confirmar con el ayudante.)*
 
-## Documento Transaccional: Factura (`Document`)
+## 2. Entidad: Tercero
 
-Representa las facturas y comprobantes de cobro emitidos a un cliente específico.
+Campos del template que usa el módulo:
 
-### Campos Estándar y Base Reutilizados
+| Campo | Tipo | Obligatorio | Uso en el módulo |
+|---|---|---|---|
+| `id` | texto | sí (automático) | Identificador interno. |
+| `entity_id` | texto | sí (automático) | Vínculo con las facturas. |
+| `name` | texto | sí | Nombre o razón social. |
+| `code` | texto | sí | Código interno del tercero. |
+| `taxId` | texto | no | RUT. Dato personal (ver sección 7). |
+| `creditLimit` | número ≥ 0 | no | Límite de crédito. Solo aplica a clientes. |
+| `createdAt`, `updatedAt` | fecha-hora | sí (automático) | Trazabilidad. |
 
-* `id` (String): Identificador único interno del documento para edición y eliminación.
-* `entity_id` (String, Requerido): Clave foránea que referencia exactamente al `Entity.entity_id` del Cliente asociado.
-* `series` (String, Opcional): Serie comercial del documento (ej. *"F001"*).
-* `folio` (Number, Requerido): Número correlativo de la factura (entero positivo).
-* `startDate` (Date, Requerido): Fecha de emisión de la factura.
-* `endDate` (Date, Requerido): Fecha de vencimiento de la factura (debe ser mayor o igual a `startDate`).
-* `totalAmount` (Number, Requerido): Monto total de la factura (monto numérico no negativo).
-* `subtotal` / `taxAmount` / `discount` (Number, Opcionales): Desglose de montos netos, impuestos y descuentos.
-* `currency` (String, Opcional): Moneda de la transacción (ej. *"CLP"*, *"USD"*).
-* `status` (String, Requerido): Estado actual en el ciclo de vida de cobro.
+Campo personalizado (nuevo):
 
-## Ciclo de Vida de la Factura (`statusLifecycle`)
+| Campo | Tipo | Obligatorio | Valores |
+|---|---|---|---|
+| `tipo` | selección | sí | `cliente`, `proveedor` |
 
-Establece el flujo comercial para el control de la cartera de cobros:
+## 3. Documento: Factura
 
-1. **`Borrador`**: Factura ingresada en el sistema, pendiente de emisión formal. Estado inicial obligatorio.
-2. **`Emitida`**: Factura enviada al cliente; representa la deuda activa por cobrar.
-3. **`Pagada`**: Estado terminal que indica el pago completo de la factura.
+Campos del template que usa el módulo:
 
-### Transiciones Permitidas
-* `Borrador` -> `Emitida`
-* `Emitida` -> `Pagada`
+| Campo | Tipo | Obligatorio | Uso en el módulo |
+|---|---|---|---|
+| `id` | texto | sí (automático) | Identificador interno. |
+| `entity_id` | texto | sí | Tercero al que pertenece la factura. |
+| `series` | texto | no | Serie de la factura. |
+| `folio` | entero > 0 | sí | Número de la factura. Junto con la serie forma el número oficial. |
+| `startDate` | fecha | sí | **Fecha de emisión.** *(Por confirmar.)* |
+| `endDate` | fecha ≥ `startDate` | sí | **Fecha de vencimiento.** *(Por confirmar.)* |
+| `subtotal` | número ≥ 0 | no | Monto antes de descuento e impuesto. |
+| `discount` | número ≥ 0 | no | Descuento. No puede superar el subtotal. |
+| `taxAmount` | número ≥ 0 | no | Impuesto (IVA). |
+| `totalAmount` | número ≥ 0 | sí al emitir | Monto total de la factura. |
+| `currency` | texto | no | Moneda. El MVP usa una sola. |
+| `status` | texto | sí | `Borrador`, `Emitida` o `Pagada`. |
+| `createdAt`, `updatedAt` | fecha-hora | sí (automático) | Trazabilidad. |
 
-*Nota: No se permiten modificaciones ni salidas desde el estado terminal `Pagada`.*
+Campos personalizados (nuevos):
 
-## Reglas de Integridad y Almacenamiento
+| Campo | Tipo | Obligatorio | Valores / regla |
+|---|---|---|---|
+| `tipo` | selección | sí | `venta` (por cobrar) o `compra` (por pagar) |
+| `montoPagado` | número ≥ 0 | solo al pagar | Debe ser igual a `totalAmount` para pasar a Pagada. |
+| `fechaPago` | fecha | solo al pagar | Fecha en que se pagó. |
 
-1. **Relación Cliente a Facturas (1:N):** Un Cliente puede tener 0 o muchas Facturas. Cada Factura pertenece obligatoriamente a un Cliente mediante la referencia `Document.entity_id` -> `Entity.entity_id`.
-2. **Eliminación en Cascada:** Al eliminar un Cliente, el sistema elimina automáticamente todas sus Facturas asociadas.
-3. **Persistencia Local:** Los datos se almacenan en el navegador mediante `localStorage` bajo las claves `erp_entities` y `erp_documents`. 
+**Nota.** Los nombres de los campos personalizados no pueden coincidir con los del template. `tipo`, `montoPagado` y `fechaPago` no coinciden con ninguno.
+
+## 4. Relaciones y reglas
+
+- Un Tercero tiene **cero o muchas** Facturas. Una Factura pertenece a **un solo** Tercero.
+- Al eliminar un Tercero se eliminan sus Facturas, previa confirmación (FR-005).
+- Una factura de **venta** solo puede asociarse a un tercero **cliente**, y una de **compra** a uno **proveedor**. *(Regla propuesta; falta agregarla al spec.)*
+- El límite de crédito solo aplica a terceros de tipo cliente.
+
+## 5. Ciclo de vida de la factura
+
+```
+Borrador → Emitida → Pagada
+```
+
+- Toda factura nace en **Borrador**.
+- Solo se permiten esas dos transiciones. No se retrocede y **Pagada** es el estado final (FR-009 y FR-010).
+- Para pasar a **Pagada** hay que registrar `montoPagado` igual a `totalAmount` y una `fechaPago` (FR-011).
+
+## 6. Datos derivados (no se guardan)
+
+Se calculan al mostrar el seguimiento, para no duplicar información (FR-012 a FR-014):
+
+| Dato | Cómo se calcula |
+|---|---|
+| Total por cobrar de un cliente | Suma de `totalAmount` de sus facturas de venta en estado Emitida. |
+| Total por pagar a un proveedor | Suma de `totalAmount` de sus facturas de compra en estado Emitida. |
+| Factura vencida | Factura en estado Emitida cuyo `endDate` es anterior a la fecha de hoy. |
+
+Las facturas en Borrador y las Pagadas no cuentan como deuda.
+
+## 7. Riesgos de datos y sesgos
+
+- **RUT (`taxId`).** Es un dato personal. En el MVP se usan solo datos ficticios.
+- **Límite de crédito (`creditLimit`).** Fijarlo puede discriminar a ciertos clientes. Debe documentarse con qué criterio se define y cómo se revisa.
+- **Almacenamiento.** `localStorage` no es seguro ni cifrado. No debe usarse con datos reales.
+
+## 8. Almacenamiento
+
+Los datos se guardan en el navegador (`localStorage`) bajo las claves del template: `erp_base_module:entities` y `erp_base_module:documents`. La carga de datos de demostración (FR-015) usa solo datos ficticios.
+
+## 9. Modelo Entidad-Relación (MER)
+
+```mermaid
+erDiagram
+    TERCERO ||--o{ FACTURA : "tiene"
+
+    TERCERO {
+        string id PK
+        string entity_id
+        string name
+        string code
+        string taxId "RUT"
+        number creditLimit "solo clientes"
+        string tipo "cliente o proveedor"
+    }
+
+    FACTURA {
+        string id PK
+        string entity_id FK "tercero"
+        string series
+        int folio
+        date startDate "emision"
+        date endDate "vencimiento"
+        number subtotal
+        number discount
+        number taxAmount
+        number totalAmount
+        string currency
+        string status "Borrador, Emitida, Pagada"
+        string tipo "venta o compra"
+        number montoPagado
+        date fechaPago
+    }
+```
+
+## 10. Desarrollo futuro (fuera del MVP)
+
+- **Etapa 2:** el pago pasa a ser un registro propio (`PAGO`) ligado a la factura, para permitir pagos parciales y varios pagos por factura.
+- **Etapa 3:** plan de cuentas y asientos contables alimentados por las facturas.
+- **Etapa 4:** referencias a otros módulos (`customers`, `vendors`, `sales_orders`, `purchase_orders`) y backend real.
