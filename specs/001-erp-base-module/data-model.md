@@ -147,8 +147,8 @@ Este módulo simplifica las tablas de Finanzas del modelo ERP base. Esta tabla p
 
 | Este módulo | Modelo ERP base | Nota |
 |---|---|---|
-| Tercero con `tipoTercero` = cliente | `customers` (CRM) | `entity_id` corresponde a `customer_id` |
-| Tercero con `tipoTercero` = proveedor | `vendors` (Compras) | `entity_id` corresponde a `vendor_id` |
+| Tercero con `tipoTercero` = cliente | `customers` (CRM) | `entity_id` cumple el rol de `customer_id` (llave compartida por acordar, FR-016) |
+| Tercero con `tipoTercero` = proveedor | `vendors` (Compras) | `entity_id` cumple el rol de `vendor_id` (llave compartida por acordar, FR-016) |
 | Factura con `tipoFactura` = venta | `ar_invoices` | |
 | Factura con `tipoFactura` = compra | `ap_invoices` | |
 | `startDate` | `invoice_date` | Fecha de emisión |
@@ -179,7 +179,7 @@ erDiagram
 
     TERCERO {
         string id PK
-        string entity_id "vinculo con facturas"
+        string entity_id UK "vinculo con facturas"
         string name
         string code
         string taxId "RUT"

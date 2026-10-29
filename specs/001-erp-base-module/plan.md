@@ -11,10 +11,10 @@ Muchas pequeñas y medianas empresas llevan sus facturas en planillas sueltas. A
 
 **Usuarios objetivo:**
 
-- **Encargado de cobranzas:** registra clientes, emite facturas de venta y registra los pagos recibidos.
-- **Encargado de pagos a proveedores:** registra facturas de compra y los pagos realizados.
-- **Contador:** revisa las facturas emitidas y verifica los pagos.
-- **Gerencia:** ve cuánto se debe, cuánto se cobra y qué está vencido.
+- **Encargado de cobranzas:** registra clientes y emite facturas de venta.
+- **Encargado de pagos a proveedores:** registra facturas de compra.
+- **Contador:** registra los pagos y cierra las facturas.
+- **Gerencia:** revisa la deuda por tercero y las facturas vencidas.
 
 ## Contexto Técnico
 

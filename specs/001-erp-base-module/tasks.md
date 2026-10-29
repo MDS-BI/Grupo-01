@@ -70,7 +70,7 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 
 ---
 
-## Fase 3: HU1 - Registrar terceros: clientes y proveedores (Prioridad: P1) - MVP
+## Fase 3: HU1 - Registrar terceros: clientes y proveedores (Prioridad: P1)
 
 **Objetivo**: registrar, editar, buscar y eliminar clientes y proveedores.
 
@@ -202,9 +202,9 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 
 **Propósito**: mejoras que afectan a varias historias.
 
-- [ ] T045 [P] Actualizar las instrucciones de uso (instalación, ejecución y pruebas) en `README.md`
-- [ ] T046 [P] Completar el anexo de uso de IA (modelo, fecha y prompts) en `README.md`
-- [ ] T047 [P] Mantener el registro de decisiones en `README.md` (o en issues de GitHub), como sugiere el enunciado
+- [ ] T045 Actualizar las instrucciones de uso (instalación, ejecución y pruebas) en `README.md`
+- [ ] T046 Completar el anexo de uso de IA (modelo, fecha y prompts) en `README.md`
+- [ ] T047 Mantener el registro de decisiones en `README.md` (o en issues de GitHub), como sugiere el enunciado
 - [ ] T048 Ejecutar `npx vitest run` y corregir las pruebas que fallen
 - [ ] T049 Recorrer el flujo completo con los datos de demostración (tercero, factura, emisión, pago y seguimiento) en la aplicación local (`npm run dev`), y confirmar que se hace en menos de 5 minutos (SC-005) y que una persona nueva registra un tercero y emite su primera factura en menos de 3 minutos (SC-001), siguiendo también las verificaciones de `specs/001-erp-base-module/quickstart.md`
 - [ ] T050 Comprobar que la interfaz solo usa datos ficticios y que `README.md` advierte que `localStorage` no es seguro (riesgos de datos)
@@ -290,6 +290,7 @@ Tarea: "Prueba de integración de terceros en tests/integration/create-entity.te
 - Cada historia debe poder completarse y probarse de forma independiente.
 - Verificar que las pruebas fallen antes de implementar.
 - Este archivo agrega tres archivos nuevos (`src/tracking.js`, `src/components/tracking.js` y `src/demo-data.js`) que `plan.md` no lista en su estructura: son extensiones del módulo base.
-- Hacer un commit después de cada tarea o grupo lógico de tareas. Los commits los hace cada integrante a mano, no la IA, como pide el curso.
+- Hacer un commit después de cada tarea o grupo lógico de tareas. Los commits los hace cada integrante a mano, no la IA, como pide el curso. Si un comando de Speckit ofrece hacer un commit automático, responder que no.
+- Varias historias tocan los mismos archivos (`src/storage.js`, `src/components/document-form.js` y `tests/unit/storage.test.js`). Si dos integrantes los editan a la vez puede haber conflictos al unir las ramas: conviene avisar al grupo antes de editarlos y hacer `git pull` antes de empezar.
 - Las tareas marcadas **(depende de aclaración)** deben revisarse al resolver los `[NEEDS CLARIFICATION]` del `spec.md`.
 - Evitar tareas vagas, conflictos en el mismo archivo y dependencias entre historias que rompan su independencia.
