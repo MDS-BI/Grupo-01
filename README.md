@@ -1,4 +1,88 @@
-# ERP Software Base Module (Vite + Vanilla JS)
+# Módulo de Contabilidad y Finanzas — Grupo 1
+
+Modelación de Sistemas 2026-2 · Departamento de Ingeniería Industrial · Universidad de Concepción
+
+Módulo de facturación y pagos (por cobrar y por pagar) de un sistema ERP, construido sobre el template `Speckit_Template` con Spec Driven Development (Plan → Spec → Tasks → Implement). Es una aplicación solo frontend: los datos se guardan en el `localStorage` del navegador y no hay backend ni base de datos remota.
+
+## Equipo
+
+| Integrante | Rol | Historia de usuario |
+|---|---|---|
+| Rivera Benavente, Jaime Alberto | Por definir | Por asignar |
+| Zavala Campos, Elías Ignacio | Por definir | Por asignar |
+| Vásquez Mera, Carolina Andrea | Por definir | Por asignar |
+| Espinoza Muñoz, Matías Ignacio | Por definir | Por asignar |
+| Ulloa Troncoso, Javier Ignacio | Por definir | Por asignar |
+| Aguayo Puentes, Mauro Alejandro | Por definir | Por asignar |
+
+Líder del grupo: por definir.
+
+## Visión de producto
+
+**Problema.** Muchas pequeñas y medianas empresas llevan sus facturas en planillas sueltas. Eso les hace perder de vista cuánto les deben, cuánto deben y qué está vencido, y su flujo de caja se resiente.
+
+**Usuarios.** Encargado de cobranzas, encargado de pagos a proveedores, contador y gerencia.
+
+**Qué incluye el MVP.**
+
+- Terceros, que pueden ser clientes o proveedores (campo `tipo`).
+- Facturas de venta (por cobrar) y de compra (por pagar), también con campo `tipo`.
+- Ciclo de la factura: Borrador → Emitida → Pagada.
+- Pagos como campos de la factura (monto pagado y fecha de pago), no como registro aparte.
+- Vista de seguimiento: deuda por tercero y facturas vencidas, hasta donde lo permita el template.
+
+**Qué no incluye el MVP (desarrollo futuro).** Pagos como registro propio, plan de cuentas y asientos contables, activos fijos, presupuestos y conciliación bancaria.
+
+## Escalabilidad y desarrollo futuro
+
+- **Etapa 2: pagos como registro propio.** Hoy el pago va como campos de la factura. Más adelante se separaría en un registro ligado a la factura, para permitir pagos parciales y varios pagos por factura.
+- **Etapa 3: contabilidad general.** Plan de cuentas y asientos contables alimentados por las facturas emitidas y pagadas, además de activos fijos y presupuestos.
+- **Etapa 4: sistema completo.** Backend y base de datos reales, roles y permisos, e integración con el resto de los módulos del ERP.
+
+**Integración con otros módulos.** Los terceros se relacionan con `customers` (CRM) y `vendors` (Compras). Las facturas de venta, con `sales_orders` (Ventas), y las de compra, con `purchase_orders` (Compras). Los productos vendrían de `products` (Logística). Estas llaves salen del modelo ERP base del curso (`ar_invoices` y `ap_invoices`).
+
+## Riesgos de datos
+
+- El RUT es un dato personal: hay que definir quién puede verlo y cómo se muestra.
+- El límite de crédito es una decisión que puede discriminar a algunos clientes. Hay que documentar con qué criterios se fija y cómo se revisa, considerando los sesgos que señala el profesor.
+- `localStorage` no es un almacenamiento seguro: el MVP no debe usarse con datos reales.
+
+## No confirmado (consultar con ayudante o profesor)
+
+1. Usar un solo tipo de Entidad (Tercero, con `tipo`) y un solo tipo de Documento (Factura, con `tipo`) con campos adicionales, en vez de registros separados.
+2. Modelar los pagos como campos de la factura.
+3. Usar `startDate` y `endDate` del template como fecha de emisión y de vencimiento.
+4. Que `src/` e `index.html` se generen con Speckit: no están en este repositorio ni en el template.
+5. Si el MER debe mostrar solo lo que implementa el MVP o también las etapas futuras.
+6. Si basta con el README y los specs, o se espera un informe aparte.
+
+## Estado del proyecto
+
+- Las especificaciones están en `specs/001-erp-base-module/`.
+- `spec.md`, `data-model.md` y `plan.md` se están rehaciendo con este alcance. `tasks.md` se generará con Speckit una vez definidas las historias de usuario.
+- Al 29-10-2026 el repositorio no incluye las carpetas `src/` ni `index.html`, por lo que las instrucciones de *Setup* del template todavía no se pueden ejecutar. Eliminar esta línea cuando estén.
+
+## Registro de decisiones
+
+| Fecha | Decisión | Quién |
+|---|---|---|
+| 28-10-2026 | Mover los specs a `specs/001-erp-base-module/`, según el feedback del profesor | Jaime Rivera |
+| 29-10-2026 | Alcance del MVP: facturación y pagos, por cobrar y por pagar (pendiente de validar con el grupo) | Jaime Rivera |
+
+## Uso de IA (anexo)
+
+Según la política del curso, cada consulta a un modelo de IA generativa se registra con modelo, fecha y secuencia de prompts.
+
+| Fecha | Integrante | Modelo (versión) | Para qué | Prompts |
+|---|---|---|---|---|
+| Completar | Jaime Rivera | Gemini (Google), completar versión | Primer avance: versión anterior de los specs | Completar |
+| 28-10-2026 y 29-10-2026 | Jaime Rivera | Claude (Anthropic), completar versión | Organización del repositorio, definición del alcance y este README | Completar |
+
+---
+
+## Base técnica del template (original, no modificar)
+
+### ERP Software Base Module (Vite + Vanilla JS)
 
 Minimal single-page app serving as an Enterprise Resource Planning (ERP) software base module. It provides the common foundation for building custom ERP modules: master data management (Entities) and linked transactional documents (Documents) with create/edit/delete/search, validation, and browser localStorage persistence — using Vite and vanilla HTML, CSS, and JavaScript.
 
@@ -12,7 +96,7 @@ The app presents itself as a coherent ERP workspace:
 - **Home dashboard** — the entry screen offers quick-action buttons for key ERP tasks (new entity, new document, open management areas, find records) and live statistic cards showing record counts.
 - **Design tokens** — styling is driven by CSS custom properties in `src/styles.css`, so branding changes apply globally.
 
-## Setup
+### Setup
 
 Install dependencies and run the dev server:
 
@@ -23,7 +107,7 @@ npm run dev
 
 Open http://localhost:5173 (or the URL Vite prints).
 
-## Tests
+### Tests
 
 Run the full test suite (unit + integration) with:
 
@@ -37,7 +121,7 @@ Or a one-off run without watch mode:
 npx vitest run
 ```
 
-## Building Custom Modules
+### Building Custom Modules
 
 Custom ERP modules built on this base define:
 
@@ -47,7 +131,7 @@ Custom ERP modules built on this base define:
 
 The base module handles identity generation, timestamps, referential integrity between entities and documents, cascade deletion, navigation, and search. See `specs/001-erp-base-module/` for the full specification.
 
-## Tailoring via Configuration
+### Tailoring via Configuration
 
 All tailoring lives in one place: the `userConfig` object at the top of `src/module-config.js`. Developers edit this single export; no core code changes are required. Available knobs:
 
@@ -59,7 +143,7 @@ All tailoring lives in one place: the `userConfig` object at the top of `src/mod
 
 If the configuration is invalid (unknown types, bad keys, transitions referencing unknown statuses, non-hex accent colors), the app shows the problems in a banner and falls back to defaults instead of breaking.
 
-## Notes
+### Notes
 
 - Data is persisted to `localStorage` under the keys `erp_base_module:entities` and `erp_base_module:documents`.
 - Deleting an entity also deletes its documents (cascade).
