@@ -25,8 +25,8 @@ Líder del grupo: por definir.
 
 **Qué incluye el MVP.**
 
-- Terceros, que pueden ser clientes o proveedores (campo `tipo`).
-- Facturas de venta (por cobrar) y de compra (por pagar), también con campo `tipo`.
+- Terceros, que pueden ser clientes o proveedores (campo `tipoTercero`).
+- Facturas de venta (por cobrar) y de compra (por pagar), con campo `tipoFactura`.
 - Ciclo de la factura: Borrador → Emitida → Pagada.
 - Pagos como campos de la factura (monto pagado y fecha de pago), no como registro aparte.
 - Vista de seguimiento: deuda por tercero y facturas vencidas, hasta donde lo permita el template.
@@ -49,7 +49,7 @@ Líder del grupo: por definir.
 
 ## No confirmado (consultar con ayudante o profesor)
 
-1. Usar un solo tipo de Entidad (Tercero, con `tipo`) y un solo tipo de Documento (Factura, con `tipo`) con campos adicionales, en vez de registros separados.
+1. Usar un solo tipo de Entidad (Tercero, con `tipoTercero`) y un solo tipo de Documento (Factura, con `tipoFactura`) con campos adicionales, en vez de registros separados.
 2. Modelar los pagos como campos de la factura.
 3. Usar `startDate` y `endDate` del template como fecha de emisión y de vencimiento.
 4. Que `src/` e `index.html` se generen con Speckit: no están en este repositorio ni en el template.
@@ -59,7 +59,7 @@ Líder del grupo: por definir.
 ## Estado del proyecto
 
 - Las especificaciones están en `specs/001-erp-base-module/`.
-- `spec.md`, `data-model.md` y `plan.md` se están rehaciendo con este alcance. `tasks.md` se generará con Speckit una vez definidas las historias de usuario.
+- `spec.md` y `data-model.md` están rehechos con este alcance, y en `plan.md` se editó solo el resumen, como pide el curso. `mer.png` es el diagrama entidad-relación. `tasks.md` se generará con Speckit una vez validadas las historias de usuario.
 - Al 29-10-2026 el repositorio no incluye las carpetas `src/` ni `index.html`, por lo que las instrucciones de *Setup* del template todavía no se pueden ejecutar. Eliminar esta línea cuando estén.
 
 ## Registro de decisiones

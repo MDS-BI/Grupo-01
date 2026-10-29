@@ -163,7 +163,7 @@ Como integrante del equipo, quiero cargar datos de ejemplo y registrar en cada t
 
 **Facturas**
 
-- **FR-006**: El sistema DEBE permitir registrar facturas de venta y de compra, cada una asociada a un tercero existente, indicando su tipo.
+- **FR-006**: El sistema DEBE permitir registrar facturas de venta y de compra, cada una asociada a un tercero existente, indicando su tipo. Una factura de venta solo puede asociarse a un cliente, y una de compra a un proveedor.
 - **FR-007**: Cada factura DEBE tener folio (entero positivo), serie opcional, fecha de emisión, fecha de vencimiento (igual o posterior a la de emisión) y monto total no negativo.
 - **FR-008**: El sistema DEBE rechazar una factura cuyo descuento sea mayor que su subtotal.
 - **FR-009**: Toda factura nueva DEBE iniciar en estado Borrador.
