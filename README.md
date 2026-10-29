@@ -44,7 +44,7 @@ Líder del grupo: por definir.
 ## Riesgos de datos
 
 - El RUT es un dato personal: hay que definir quién puede verlo y cómo se muestra.
-- El límite de crédito es una decisión que puede discriminar a algunos clientes. Hay que documentar con qué criterios se fija y cómo se revisa, considerando los sesgos que señala el profesor.
+- El límite de crédito es una decisión que puede discriminar a algunos clientes. Hay que documentar con qué criterios se fija y cómo se revisa, considerando los sesgos que señala el profesor (O'Neil, 2016).
 - `localStorage` no es un almacenamiento seguro: el MVP no debe usarse con datos reales.
 
 ## No confirmado (consultar con ayudante o profesor)
@@ -55,11 +55,12 @@ Líder del grupo: por definir.
 4. Que `src/` e `index.html` se generen con Speckit: no están en este repositorio ni en el template.
 5. Si el MER debe mostrar solo lo que implementa el MVP o también las etapas futuras.
 6. Si basta con el README y los specs, o se espera un informe aparte.
+7. Cómo se coordina con los grupos de CRM, Ventas y Compras el identificador que se comparte para relacionar terceros y facturas.
 
 ## Estado del proyecto
 
 - Las especificaciones están en `specs/001-erp-base-module/`.
-- `spec.md` y `data-model.md` están rehechos con este alcance, y en `plan.md` se editó solo el resumen, como pide el curso. `mer.png` es el diagrama entidad-relación. `tasks.md` se generará con Speckit una vez validadas las historias de usuario.
+- `spec.md` y `data-model.md` están rehechos con este alcance, y en `plan.md` se editó solo el resumen, como pide el curso. `mer.png` es el diagrama entidad-relación. `tasks.md` tiene las tareas por historia de usuario, armadas siguiendo las reglas de `speckit.tasks`, y se validará con `speckit.clarify` y `speckit.analyze` cuando se puedan ejecutar. `quickstart.md` y `research.md` son los del template.
 - Al 29-10-2026 el repositorio no incluye las carpetas `src/` ni `index.html`, por lo que las instrucciones de *Setup* del template todavía no se pueden ejecutar. Eliminar esta línea cuando estén.
 
 ## Registro de decisiones
@@ -68,6 +69,9 @@ Líder del grupo: por definir.
 |---|---|---|
 | 28-10-2026 | Mover los specs a `specs/001-erp-base-module/`, según el feedback del profesor | Jaime Rivera |
 | 29-10-2026 | Alcance del MVP: facturación y pagos, por cobrar y por pagar (pendiente de validar con el grupo) | Jaime Rivera |
+| 29-10-2026 | Modelo de datos: un solo Tercero y una sola Factura, con los campos `tipoTercero` y `tipoFactura`; el pago va como campos de la factura (pendiente de confirmar con el ayudante) | Jaime Rivera |
+| 29-10-2026 | `plan.md`: se edita solo el resumen y se mantienen las partes técnicas del template, como indican las clases | Jaime Rivera |
+| 29-10-2026 | `tasks.md`: tareas por historia de usuario, armadas siguiendo las reglas de `speckit.tasks` porque OpenCode aún no está configurado | Jaime Rivera |
 
 ## Uso de IA (anexo)
 
@@ -76,7 +80,13 @@ Según la política del curso, cada consulta a un modelo de IA generativa se reg
 | Fecha | Integrante | Modelo (versión) | Para qué | Prompts |
 |---|---|---|---|---|
 | Completar | Jaime Rivera | Gemini (Google), completar versión | Primer avance: versión anterior de los specs | Completar |
-| 28-10-2026 y 29-10-2026 | Jaime Rivera | Claude (Anthropic), completar versión | Organización del repositorio, definición del alcance y este README | Completar |
+| 28-10-2026 y 29-10-2026 | Jaime Rivera | Claude (Anthropic); modelo configurado en la sesión: claude-sonnet-5-5 (el modelo que respondió puede variar, verificar) | Organización del repositorio, definición del alcance, README, spec, data-model, MER, plan y tasks | Completar |
+
+## Referencias
+
+- O'Neil, C. (2016). *Weapons of Math Destruction: How Big Data Increases Inequality and Threatens Democracy*. Crown.
+- Template `MDS-BI/Speckit_Template` y modelo de datos ERP base del curso.
+- Enunciado del trabajo grupal y diapositivas de Modelación de Sistemas 2026-2, Universidad de Concepción.
 
 ---
 

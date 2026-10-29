@@ -161,8 +161,8 @@ Este módulo simplifica las tablas de Finanzas del modelo ERP base. Esta tabla p
 ## 10. Riesgos de datos y sesgos
 
 - **RUT (`taxId`).** Es un dato personal. Siguiendo el principio de minimización del GDPR, el MVP no pide correo, teléfono ni dirección, y usa solo datos ficticios.
-- **Límite de crédito (`creditLimit`).** Fijarlo puede discriminar a ciertos clientes. Debe documentarse con qué criterio se define y cómo se revisa. El MVP no decide automáticamente: a lo más avisa (FR-018, por definir). Una decisión automática de este tipo es el riesgo que describe *Weapons of Math Destruction*.
-- **Análisis futuro de morosidad.** Si más adelante se analiza qué terceros pagan tarde, hay que revisar que las variables usadas no generen sesgos.
+- **Límite de crédito (`creditLimit`).** Fijarlo puede discriminar a ciertos clientes. O'Neil (2016, cap. 8) distingue los puntajes de crédito tradicionales, que miran el historial de pagos y son relativamente transparentes y regulados, de los modelos que usan sustitutos (*proxies*) como el código postal, que pueden discriminar. Por eso el criterio del límite debe basarse en el comportamiento de pago del propio tercero (facturas vencidas, monto adeudado) y no en datos como su ubicación o su nombre. Debe documentarse y poder revisarse. El MVP no decide automáticamente: a lo más avisa (FR-018, por definir).
+- **Análisis futuro de morosidad.** Si más adelante se calcula un puntaje o se predice la morosidad, hay que revisar los tres elementos que O'Neil (2016, cap. 1) identifica en un modelo dañino: opacidad (el afectado no entiende cómo se calcula), escala (se aplica a muchas personas) y daño (puede perjudicar a quien se evalúa). También hay que evitar los ciclos de retroalimentación, en que la decisión empeora la situación que el modelo mide.
 - **Almacenamiento.** `localStorage` no es seguro ni cifrado. No debe usarse con datos reales.
 
 ## 11. Almacenamiento
@@ -222,3 +222,4 @@ erDiagram
 - Template `MDS-BI/Speckit_Template` (campos base, ModuleConfig y reglas de validación).
 - Modelo de datos ERP base del curso (`ar_invoices`, `ap_invoices`, `customers`, `vendors`).
 - Diapositivas del curso (Modelación de Sistemas, 2026-2): modelos de datos y manejo de riesgos.
+- O'Neil, C. (2016). *Weapons of Math Destruction: How Big Data Increases Inequality and Threatens Democracy*. Crown.

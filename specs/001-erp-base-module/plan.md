@@ -1,4 +1,3 @@
----
 # Plan de Implementación: Módulo Base de Software de Planificación de Recursos Empresariales (ERP)
 
 **Rama**: `001-erp-base-module` | **Fecha**: 2026-07-08 | **Especificación**: [spec.md](spec.md)
