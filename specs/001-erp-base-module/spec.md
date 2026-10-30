@@ -17,7 +17,13 @@ El MVP permitirá:
 - **HU1:** Como Asistente de Finanzas, quiero registrar un nuevo cliente con su RUT y datos de contacto, para poder asociarle facturas en el futuro.
 - **HU2:** Como Asistente de Finanzas, quiero emitir una factura ingresando el monto total y la fecha de vencimiento, para tener registro de la deuda del cliente.
 - **HU3:** Como Jefe de Finanzas, quiero poder cambiar el estado de una factura de "Emitida" a "Pagada", para mantener el flujo de caja actualizado.
-
+- ### Historia de Usuario 4 (prioridad: p1)-
+  como analista de finanzas, quiero tener la capacidad de consultar los registros de facturas por numero y fecha para tener un seguimiento preciso. 
+  **porque esta prioridad**:tener un registro actualizado es vital para la toma de desiciones de una empresa.
+  **prueba independiente**: el usuario puede filtrar y buscar una factura especifica en cualquier momento.
+  **escenario de aceptacion**:
+  1. **dado** una factura valida **cuando** busca nro de facura **entonces** aparece la factura con datos del cliente.
+  2. **dado** una fecha especifica **cuando** se busca esa fecha **entonces** se muestran todas las facturas emitidas en esa fecha.
 ## 5. Manejo de Riesgos de Datos y Sesgos
 - **Privacidad y Datos Sensibles:** El sistema almacena información confidencial (RUT, teléfonos, correos y límites de crédito). Se debe asegurar que estos datos no sean de acceso público y estén limitados solo al personal de finanzas.
 - **Sesgos Algorítmicos / Humanos:** Existe un riesgo de sesgo al momento de definir manualmente el campo `Límite de Crédito` (credit_limit) para los clientes. Si un usuario asigna estos límites basándose en criterios subjetivos, se podría discriminar injustamente a ciertos clientes. Para un desarrollo futuro, el límite de crédito debería calcularse mediante una fórmula estandarizada y transparente.
