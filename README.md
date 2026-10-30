@@ -47,21 +47,20 @@ Líder del grupo: por definir.
 - El límite de crédito es una decisión que puede discriminar a algunos clientes. Hay que documentar con qué criterios se fija y cómo se revisa, considerando los sesgos que señala el profesor (O'Neil, 2016).
 - `localStorage` no es un almacenamiento seguro: el MVP no debe usarse con datos reales.
 
-## No confirmado (consultar con ayudante o profesor)
+## Pendiente de confirmar (consultar con el profesor)
 
-1. Usar un solo tipo de Entidad (Tercero, con `tipoTercero`) y un solo tipo de Documento (Factura, con `tipoFactura`) con campos adicionales, en vez de registros separados.
+1. Usar un solo tipo de Entidad (Tercero, con `tipoTercero`) y un solo tipo de Documento (Factura, con `tipoFactura`), o documentos separados (cuenta por cobrar y cuenta por pagar), como recomendó el ayudante.
 2. Modelar los pagos como campos de la factura.
 3. Usar `startDate` y `endDate` del template como fecha de emisión y de vencimiento.
-4. Que `src/` e `index.html` se generen con Speckit: no están en este repositorio ni en el template.
-5. Si el MER debe mostrar solo lo que implementa el MVP o también las etapas futuras.
-6. Si basta con el README y los specs, o se espera un informe aparte.
-7. Cómo se coordina con los grupos de CRM, Ventas y Compras el identificador que se comparte para relacionar terceros y facturas.
+4. Si las líneas de detalle de la factura (ítems) son necesarias en el MVP, o basta con subtotal y total.
+5. A qué se refiere la "nomenclatura que dejó el profesor": los nombres del template (Entity, Document) o los del modelo ERP base (`ar_invoices`, `ap_invoices`).
+6. Cómo se coordina con los grupos de CRM, Ventas y Compras el identificador que se comparte para relacionar terceros y facturas. Por ahora se deja de forma universal, enfocados en este departamento, y el ayudante lo confirmará con el profesor.
 
 ## Estado del proyecto
 
 - Las especificaciones están en `specs/001-erp-base-module/`.
 - `spec.md` y `data-model.md` están rehechos con este alcance, y en `plan.md` se editó solo el resumen, como pide el curso. `mer.png` es el diagrama entidad-relación. `tasks.md` tiene las tareas por historia de usuario, armadas siguiendo las reglas de `speckit.tasks`, y se validará con `speckit.clarify` y `speckit.analyze` cuando se puedan ejecutar. `quickstart.md` y `research.md` son los del template.
-- Al 29-10-2026 el repositorio no incluye las carpetas `src/` ni `index.html`, por lo que las instrucciones de *Setup* del template todavía no se pueden ejecutar. Eliminar esta línea cuando estén.
+- Al 30-10-2026 el repositorio no incluye las carpetas `src/` ni `index.html`, por lo que las instrucciones de *Setup* del template todavía no se pueden ejecutar. Según el ayudante, el código se genera con `speckit.implement`, fuera de las carpetas de Speckit. Eliminar esta línea cuando estén.
 
 ## Registro de decisiones
 
@@ -69,9 +68,12 @@ Líder del grupo: por definir.
 |---|---|---|
 | 28-10-2026 | Mover los specs a `specs/001-erp-base-module/`, según el feedback del profesor | Jaime Rivera |
 | 29-10-2026 | Alcance del MVP: facturación y pagos, por cobrar y por pagar (pendiente de validar con el grupo) | Jaime Rivera |
-| 29-10-2026 | Modelo de datos: un solo Tercero y una sola Factura, con los campos `tipoTercero` y `tipoFactura`; el pago va como campos de la factura (pendiente de confirmar con el ayudante) | Jaime Rivera |
+| 29-10-2026 | Modelo de datos: un solo Tercero y una sola Factura, con los campos `tipoTercero` y `tipoFactura`; el pago va como campos de la factura (el ayudante recomendó documentos separados; pendiente de confirmar con el profesor) | Jaime Rivera |
 | 29-10-2026 | `plan.md`: se edita solo el resumen y se mantienen las partes técnicas del template, como indican las clases | Jaime Rivera |
 | 29-10-2026 | `tasks.md`: tareas por historia de usuario, armadas siguiendo las reglas de `speckit.tasks` porque OpenCode aún no está configurado | Jaime Rivera |
+| 30-10-2026 | Respuestas del ayudante (Matías Arriagada): el MVP solo necesita lo esencial del departamento y no tiene que estar completo; el MER muestra solo lo que tendrá el proyecto y se puede cambiar después; basta con el README y los specs, sin informe aparte | Jaime Rivera |
+| 30-10-2026 | Respuestas del ayudante: los comandos de Speckit se ejecutan desde OpenCode (`/speckit-...`); el código se genera con `speckit.implement`; cada integrante escribe su historia de usuario en el mismo `spec.md`, editándolo a mano | Jaime Rivera |
+| 30-10-2026 | Integración con otros módulos: se deja de forma universal y se enfoca en este departamento; el ayudante lo confirmará con el profesor | Jaime Rivera |
 
 ## Uso de IA (anexo)
 

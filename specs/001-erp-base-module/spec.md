@@ -205,7 +205,7 @@ Como integrante del equipo, quiero cargar datos de ejemplo y registrar en cada t
 ## Supuestos
 
 - El MVP es solo frontend: los datos se guardan en el navegador, hay un solo usuario por navegador y no hay inicio de sesión ni perfiles.
-- Hay un solo tipo de entidad (Tercero, con tipo) y un solo tipo de documento (Factura, con tipo). *(Por confirmar con el ayudante.)*
+- Hay un solo tipo de entidad (Tercero, con tipo) y un solo tipo de documento (Factura, con tipo). *(Por confirmar con el profesor; el ayudante recomendó documentos separados.)*
 - Los pagos son campos de la factura. Los pagos parciales quedan fuera del MVP.
 - La fecha de inicio y la de fin del template se usan como fecha de emisión y de vencimiento. *(Por confirmar.)*
 - El MVP usa una sola moneda, y el monto total es obligatorio al emitir una factura. *(Por confirmar.)*

@@ -14,7 +14,7 @@ El módulo debe responder tres preguntas: ¿cuánto me deben mis clientes?, ¿cu
 
 **Por qué solo dos.** Cada dato guardado debe servir a una historia de usuario. Todo lo demás (plan de cuentas, asientos, pagos como registro propio) queda para etapas futuras.
 
-**Por qué un solo tipo de entidad y de documento, cada uno con un campo de tipo.** El template ofrece una entidad y un documento por módulo. Cliente y proveedor comparten los mismos datos (nombre, código, RUT), y la factura de venta y la de compra también. Separarlos duplicaría campos y pantallas sin aportar información nueva. *(Por confirmar con el ayudante.)*
+**Por qué un solo tipo de entidad y de documento, cada uno con un campo de tipo.** El template ofrece una entidad y un documento por módulo. Cliente y proveedor comparten los mismos datos (nombre, código, RUT), y la factura de venta y la de compra también. Separarlos duplicaría campos y pantallas sin aportar información nueva. *(Por confirmar con el profesor; el ayudante recomendó documentos separados.)*
 
 **Por qué los pagos son campos de la factura.** En el MVP una factura se paga completa y una sola vez. Un registro de pagos separado solo se justifica cuando existan pagos parciales (etapa futura).
 
