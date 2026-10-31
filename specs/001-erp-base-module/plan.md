@@ -1,3 +1,10 @@
+# Plan de Implementación: Módulo Base de Software de Planificación de Recursos Empresariales (ERP)
+
+**Rama**: `001-erp-base-module` | **Fecha**: 2026-07-08 | **Especificación**: [spec.md](spec.md)
+**Entrada**: Especificación de la funcionalidad desde `/specs/001-erp-base-module/spec.md`
+
+## Resumen
+
 # Plan de Desarrollo: Módulo de Cuentas por Cobrar
 
 El módulo de Cuentas por Cobrar es fundamental dentro del área de Finanzas para gestionar la cartera de clientes, el seguimiento de facturas emitidas y el control de pagos recibidos. Muchas empresas sufren descontrol en sus flujos de caja debido a la falta de registro centralizado del límite de crédito de sus clientes y al estado de sus facturas (pendientes vs. pagadas).
@@ -72,3 +79,72 @@ La especialización prevista es `Entity` como Cliente y `Document` como Factura,
 - Agregar o ajustar pruebas de las reglas implementadas y ejecutar `npx vitest run`: campos obligatorios de la base, importes no negativos, fechas según la decisión aprobada, estado inicial y rechazo de estados/transiciones no permitidos.
 - Comprobar el borrado en cascada con datos de demostración y confirmar que no se introducen tipos de registro ni estados fuera del alcance.
 - Preparar la demostración funcional (demo) para la presentación final.
+
+
+## Contexto Técnico
+
+**Lenguaje/Versión**: JavaScript (ES2022), HTML, CSS  
+**Dependencias Principales**: Vite, sin framework de interfaz pesado  
+**Almacenamiento**: localStorage del navegador para una instancia del módulo de espacio único  
+**Pruebas**: Vitest con jsdom para pruebas unitarias y de interacción  
+**Plataforma Objetivo**: Navegadores modernos de escritorio y móviles  
+**Tipo de Proyecto**: Aplicación web  
+**Objetivos de Rendimiento**: búsqueda y renderizado de listas <= 100 ms para 500 registros; actualizaciones de lista sin re-render completo del documento  
+**Restricciones**: Huella mínima de librerías, despliegue simple, sin backend requerido; la estructura debe mantenerse extensible para módulos personalizados  
+**Escala/Alcance**: Módulo base con CRUD de datos maestros (Entidad) y documentos transaccionales (Documento), búsqueda y capacidades de navegación
+
+## Verificación de la Constitución
+
+*COMPROBACIÓN: Debe pasar antes de la investigación de la Fase 0. Reverificar tras el diseño de la Fase 1.*
+
+- **I. Base modular y configuración única**: PASA. Todo punto de adaptación (nombre, etiquetas, campos personalizados, ciclo de vida, color de acento) vive en `src/module-config.js`; el código central no contiene términos de dominio.
+- **II. Test-First (NO NEGOCIABLE)**: PASA CON CONDICIÓN. Los flujos centrales requieren pruebas Vitest escritas antes de la implementación; las tareas T001–T081 deben marcarse completas solo cuando existan sus pruebas y pasen.
+- **III. UX de workspace consistente**: PASA. `shell.js` posee barra superior y barra lateral; todas las etiquetas derivan de la configuración; se exige accesibilidad (`aria-current`, foco, etiquetas).
+- **IV. Rendimiento medible**: PASA. Objetivo numérico <= 100 ms para 500 registros con actualizaciones dirigidas del DOM (FR-027, SC-004).
+- **V. Simplicidad y local-first**: PASA. Sin backend, sin framework pesado, persistencia en localStorage, dependencias mínimas.
+
+## Estructura del Proyecto
+
+### Documentación (esta funcionalidad)
+
+```text
+specs/001-erp-base-module/
+├── plan.md
+├── research.md
+├── data-model.md
+├── quickstart.md
+├── spec.md
+├── contracts/
+└── tasks.md
+```
+
+### Código Fuente (raíz del repositorio)
+
+```text
+src/
+├── main.js
+├── styles.css
+├── storage.js
+├── app.js
+├── module-config.js
+└── components/
+    ├── shell.js         (marco del espacio de trabajo: barra superior, logotipo SVG, barra lateral, estado de módulo activo)
+    ├── dashboard.js     (vista de inicio: cuadrícula de acciones rápidas + tarjetas de estadísticas en vivo)
+    ├── entity-form.js   (formulario de creación/edición de entidades con campos personalizados)
+    ├── entity-list.js   (lista de entidades con controles de edición/eliminación y validación)
+    ├── document-form.js (formulario de creación/edición de documentos con campos personalizados y ciclo de vida)
+    ├── document-list.js (lista de documentos asociados a una entidad)
+    └── search-bar.js    (interfaz de búsqueda de entidades)
+
+tests/
+├── unit/
+├── integration/
+└── setup/
+```
+
+**Decisión de Estructura**: Una aplicación Vite simple con un único punto de entrada HTML, un pequeño conjunto de módulos JavaScript y CSS en un archivo separado. Se usará localStorage para la persistencia de modo que la aplicación permanezca ligera y autónoma. Los componentes se dividen en pares de entidad (datos maestros) y documento (transaccional) que reflejan los dos conceptos centrales del módulo base, de modo que un módulo personalizado pueda renombrar o extender cada par de forma independiente. `shell.js` posee el marco del espacio de trabajo ERP — un logotipo monograma SVG en línea derivado del nombre del módulo, la barra superior y la barra lateral de módulos — envolviendo todas las vistas para que la marca y la navegación permanezcan consistentes sin duplicar marcado. `dashboard.js` renderiza los botones de acción rápida y las tarjetas de estadísticas de la pantalla de entrada, leyendo los recuentos del almacenamiento cada vez que se vuelve visible. `module-config.js` centraliza todos los puntos de adaptación — nombre del módulo, etiquetas de términos, definiciones de campos personalizados, ciclo de vida de estados y color de acento — manteniendo la personalización del dominio fuera del código central; el estilo se controla mediante propiedades personalizadas de CSS (tokens de diseño) en `styles.css` para que el color de acento configurado se aplique globalmente.
+
+## Seguimiento de Complejidad
+
+Este plan no introdujo violaciones de la constitución.
+
