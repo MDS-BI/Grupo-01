@@ -8,12 +8,12 @@ Módulo de facturación y pagos (por cobrar y por pagar) de un sistema ERP, cons
 
 | Integrante | Rol | Historia de usuario |
 |---|---|---|
-| Rivera Benavente, Jaime Alberto | Por definir | Por asignar |
-| Zavala Campos, Elías Ignacio | Por definir | Por asignar |
-| Vásquez Mera, Carolina Andrea | Por definir | Por asignar |
-| Espinoza Muñoz, Matías Ignacio | Por definir | Por asignar |
-| Ulloa Troncoso, Javier Ignacio | Por definir | Por asignar |
-| Aguayo Puentes, Mauro Alejandro | Por definir | Por asignar |
+| Rivera Benavente, Jaime Alberto | Por definir | HU1 Registrar terceros |
+| Zavala Campos, Elías Ignacio | Por definir | Por asignar (queda la HU5) |
+| Vásquez Mera, Carolina Andrea | Por definir | HU2 Emitir facturas de venta |
+| Espinoza Muñoz, Matías Ignacio | Por definir | HU3 Registrar facturas de compra |
+| Ulloa Troncoso, Javier Ignacio | Por definir | HU4 Registrar el pago y marcar Pagada |
+| Aguayo Puentes, Mauro Alejandro | Por definir | HU6 Datos de demostración y otros módulos |
 
 Líder del grupo: por definir.
 
@@ -74,6 +74,9 @@ Líder del grupo: por definir.
 | 30-10-2026 | Respuestas del ayudante (Matías Arriagada): el MVP solo necesita lo esencial del departamento y no tiene que estar completo; el MER muestra solo lo que tendrá el proyecto y se puede cambiar después; basta con el README y los specs, sin informe aparte | Jaime Rivera |
 | 30-10-2026 | Respuestas del ayudante: los comandos de Speckit se ejecutan desde OpenCode (`/speckit-...`); el código se genera con `speckit.implement`; cada integrante escribe su historia de usuario en el mismo `spec.md`, editándolo a mano | Jaime Rivera |
 | 30-10-2026 | Integración con otros módulos: se deja de forma universal y se enfoca en este departamento; el ayudante lo confirmará con el profesor | Jaime Rivera |
+| 01-11-2026 | Se fusionó el PR #2 a `main` y se borró la rama `docs/actualizar-readme`. Desde ahora el grupo trabaja solo en `main` y hace Fetch/Pull antes de editar, como indicó el profesor en su video | Jaime Rivera |
+| 01-11-2026 | Reparto de historias: HU1 Jaime, HU2 Carolina, HU3 Matías, HU4 Javier y HU6 Mauro. Quedan por definir la HU5 y el líder del grupo. Se retira la HU7 (consultar facturas por número y fecha) y se mantiene la HU3 de Matías, para dejar seis historias | Grupo |
+| 01-11-2026 | Se eliminó la copia duplicada de `spec.md` en la raíz (`001-erp-base-module/`), que reapareció por una edición hecha sobre la ruta antigua | Jaime Rivera |
 
 ## Uso de IA (anexo)
 

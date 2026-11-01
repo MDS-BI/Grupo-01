@@ -13,7 +13,7 @@
 
 ## Completitud de los Requisitos
 
-- [ ] No quedan marcadores [NEEDS CLARIFICATION] (quedan 11 en `spec.md`)
+- [ ] No quedan marcadores [NEEDS CLARIFICATION] (quedan 12 en `spec.md`)
 - [ ] Los requisitos son comprobables y sin ambigüedades (FR-016 a FR-019 dependen de las aclaraciones pendientes)
 - [x] Los criterios de éxito son medibles
 - [x] Los criterios de éxito son agnósticos a la tecnología (sin detalles de implementación)
@@ -31,4 +31,4 @@
 
 ## Notas
 
-- La especificación todavía no está lista para implementarse: quedan 11 marcadores [NEEDS CLARIFICATION] en `spec.md`. Resolverlos con `speckit.clarify` o con el ayudante, y volver a revisar esta lista.
+- La especificación todavía no está lista para implementarse: quedan 12 marcadores [NEEDS CLARIFICATION] en `spec.md`. Resolverlos con `speckit.clarify` o con el ayudante, y volver a revisar esta lista.
