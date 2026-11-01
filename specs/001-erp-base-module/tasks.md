@@ -294,3 +294,22 @@ Tarea: "Prueba de integración de terceros en tests/integration/create-entity.te
 - Varias historias tocan los mismos archivos (`src/storage.js`, `src/components/document-form.js` y `tests/unit/storage.test.js`). Si dos integrantes los editan a la vez puede haber conflictos al unir las ramas: conviene avisar al grupo antes de editarlos y hacer `git pull` antes de empezar.
 - Las tareas marcadas **(depende de aclaración)** deben revisarse al resolver los `[NEEDS CLARIFICATION]` del `spec.md`.
 - Evitar tareas vagas, conflictos en el mismo archivo y dependencias entre historias que rompan su independencia.
+
+
+---
+
+## Anexo: tareas propuestas por Caro para la HU2
+
+Caro agregó estas tareas en `main` para la HU2 (Emisión y Registro de Facturas a Clientes). Se conservan como referencia: cubren lo mismo que T020 a T027 de la Fase 4, pero con más detalle en las validaciones. Al regenerar este archivo con `speckit.tasks`, hay que compararlas y consolidarlas en una sola lista. Las Tareas 1 a 8 de esa versión anterior (cambios en `module-config.js`, instalación y prueba local) corresponden a las Fases 1 y 2 de este archivo, y las Tareas 1 y 2 (MER y archivos iniciales de Speckit) ya están hechas.
+
+Depende de las Tareas 3 y 6 de esa versión (etiquetas Cliente/Factura y ciclo de vida Borrador, Emitida, Pagada), que aquí son T006 y T009. Reutilizar los campos base definidos en `data-model.md`: `entity_id`, `series`, `folio`, `startDate` (emisión), `endDate` (vencimiento), `totalAmount` y `status`; no crear campos duplicados.
+
+- [ ] **Tarea 9:** Escribir pruebas unitarias en `tests/unit/storage.test.js` para la validación de facturas: cliente existente obligatorio, `folio` entero positivo, `totalAmount` no negativo, `endDate` igual o posterior a `startDate` y estado inicial Borrador.
+- [ ] **Tarea 10:** Escribir pruebas de integración en `tests/integration/add-document.test.js` que cubran el registro de una factura desde el formulario, su asociación al `entity_id` del cliente y el rechazo de monto negativo, vencimiento anterior a la emisión y cliente inexistente.
+- [ ] **Tarea 11:** Ajustar `index.html` y `src/components/document-form.js` para capturar cliente, `series` opcional, `folio`, fecha de emisión (`startDate`), fecha de vencimiento (`endDate`) y monto total (`totalAmount`), mostrando mensajes de error por campo.
+- [ ] **Tarea 12:** Implementar en `src/storage.js` la validación de factura: `entity_id` debe coincidir con un `Entity.entity_id` existente, `folio` entero positivo, `totalAmount` requerido y no negativo, `startDate`/`endDate` requeridas y `endDate >= startDate`.
+- [ ] **Tarea 13:** Implementar en `src/storage.js` el alta de facturas mediante `addDocument`, persistiendo `entity_id`, `folio`, `series`, fechas, `totalAmount`, estado inicial Borrador e identificadores/timestamps automáticos; aplicar las mismas validaciones en `updateDocument`.
+- [ ] **Tarea 14:** Implementar en `src/components/document-form.js` la emisión de la factura, permitiendo la transición Borrador -> Emitida y bloqueando estados no permitidos o salidas desde Pagada.
+- [ ] **Tarea 15:** Mostrar en `src/components/document-list.js` el monto total, la fecha de vencimiento y el estado de cada factura asociada al cliente.
+- [ ] **Tarea 16:** Verificar la integridad referencial y el borrado en cascada: impedir facturas sin cliente válido y eliminar las facturas asociadas al eliminar un cliente.
+- [ ] **Tarea 17:** Ejecutar `npx vitest run`, corregir los fallos y validar con `npm run dev` el flujo completo: crear cliente -> registrar factura en Borrador -> emitir factura -> visualizar la deuda del cliente.
