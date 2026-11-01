@@ -136,6 +136,23 @@ Como integrante del equipo, quiero cargar datos de ejemplo y registrar en cada t
 
 ---
 
+### Historia de Usuario 7 - Consultar facturas por número y fecha (Prioridad: por definir)
+
+*(Historia propuesta por un integrante del grupo, con el texto original ajustado solo en ortografía. Falta decidir si se mantiene como HU7 o se une a la HU5, y quién se encarga.)*
+
+Como analista de finanzas, quiero consultar los registros de facturas por número y fecha, para tener un seguimiento preciso.
+
+**Por qué esta prioridad**: tener un registro actualizado es vital para la toma de decisiones de una empresa. El integrante la propuso como P1.
+
+**Prueba independiente**: el usuario puede filtrar y buscar una factura específica en cualquier momento.
+
+**Escenarios de aceptación**:
+
+1. **Dada** una factura válida, **cuando** busco por su número de factura, **entonces** aparece la factura con los datos del tercero.
+2. **Dada** una fecha específica, **cuando** busco por esa fecha, **entonces** se muestran todas las facturas emitidas en esa fecha.
+
+---
+
 ### Casos Límite
 
 - ¿Qué pasa si se registran dos terceros con el mismo código? **[NEEDS CLARIFICATION: el template solo exige que el código no esté vacío; definir si debe ser único.]**
