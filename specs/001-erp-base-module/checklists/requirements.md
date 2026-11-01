@@ -1,7 +1,7 @@
-# Lista de Verificación de Calidad de la Especificación: Módulo Base de Software de Planificación de Recursos Empresariales (ERP)
+# Lista de Verificación de Calidad de la Especificación: Facturación y Pagos (Módulo de Contabilidad y Finanzas)
 
 **Propósito**: Validar la completitud y calidad de la especificación antes de proceder a la planificación
-**Creada**: 2026-07-08
+**Creada**: 2026-10-29
 **Funcionalidad**: [Enlace a spec.md](spec.md)
 
 ## Calidad del Contenido
@@ -13,8 +13,8 @@
 
 ## Completitud de los Requisitos
 
-- [x] No quedan marcadores [NEEDS CLARIFICATION]
-- [x] Los requisitos son comprobables y sin ambigüedades
+- [ ] No quedan marcadores [NEEDS CLARIFICATION] (quedan 11 en `spec.md`)
+- [ ] Los requisitos son comprobables y sin ambigüedades (FR-016 a FR-019 dependen de las aclaraciones pendientes)
 - [x] Los criterios de éxito son medibles
 - [x] Los criterios de éxito son agnósticos a la tecnología (sin detalles de implementación)
 - [x] Todos los escenarios de aceptación están definidos
@@ -31,4 +31,4 @@
 
 ## Notas
 
-- La especificación está lista para la planificación y la implementación.
+- La especificación todavía no está lista para implementarse: quedan 11 marcadores [NEEDS CLARIFICATION] en `spec.md`. Resolverlos con `speckit.clarify` o con el ayudante, y volver a revisar esta lista.
