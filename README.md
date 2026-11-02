@@ -77,6 +77,9 @@ Líder del grupo: por definir.
 | 01-11-2026 | Se fusionó el PR #2 a `main` y se borró la rama `docs/actualizar-readme`. Desde ahora el grupo trabaja solo en `main` y hace Fetch/Pull antes de editar, como indicó el profesor en su video | Jaime Rivera |
 | 01-11-2026 | Reparto de historias: HU1 Jaime, HU2 Carolina, HU3 Matías, HU4 Javier y HU6 Mauro. Quedan por definir la HU5 y el líder del grupo. Se retira la HU7 (consultar facturas por número y fecha) y se mantiene la HU3 de Matías, para dejar seis historias | Grupo |
 | 01-11-2026 | Se eliminó la copia duplicada de `spec.md` en la raíz (`001-erp-base-module/`), que reapareció por una edición hecha sobre la ruta antigua | Jaime Rivera |
+| 01-11-2026 | Se precisó la HU6 para cargar clientes, proveedores y facturas ficticias, probar los procesos de cobro y pago y guardar referencias manuales a otros módulos. Se mantiene el alcance genérico indicado por el ayudante, pendiente de confirmación con el profesor y de alinear los demás documentos. | Mauro Aguayo |
+| 01-11-2026 | Para la carga de demostración se definió que el módulo debe estar vacío. Repetir la carga no debe generar duplicados y, si existen registros propios, deben conservarse sin agregar los ejemplos. Estas condiciones quedaron incorporadas en los escenarios de aceptación de HU6. | Mauro Aguayo |
+| 01-11-2026 | Se detallaron las tareas T040–T044 para cubrir pruebas, datos ficticios, botón de carga y referencias a otros módulos. Se conservaron sus identificadores y las tareas de los demás integrantes. La implementación sigue pendiente; tener la historia redactada no implica marcar estas tareas como terminadas. | Mauro Aguayo |
 
 ## Uso de IA (anexo)
 
@@ -163,3 +166,4 @@ If the configuration is invalid (unknown types, bad keys, transitions referencin
 - Data is persisted to `localStorage` under the keys `erp_base_module:entities` and `erp_base_module:documents`.
 - Deleting an entity also deletes its documents (cascade).
 - This project intentionally uses vanilla HTML, CSS, and JavaScript for simplicity.
+
