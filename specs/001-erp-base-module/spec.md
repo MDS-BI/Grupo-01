@@ -124,17 +124,19 @@ Como gerente, quiero ver cuánto me deben mis clientes, cuánto debo a mis prove
 
 ### Historia de Usuario 6 - Cargar datos de demostración y relacionar con otros módulos (Prioridad: P3)
 
-Como integrante del equipo, quiero cargar datos de ejemplo y registrar en cada tercero y factura su referencia a los otros módulos del ERP, para demostrar el módulo funcionando e integrado.
+Como integrante del equipo, quiero cargar ejemplos ficticios de clientes, proveedores y facturas, y guardar sus referencias a otros módulos del ERP, para probar los procesos de cobro y pago y mostrar cómo se relacionan los registros.
 
-**Por qué esta prioridad**: no cambia el funcionamiento del módulo, pero es lo que permite mostrarlo en la demo y conectarlo con los demás grupos.
+**Por qué esta prioridad**: Para presentar el módulo necesitamos ejemplos que permitan recorrer sus funciones sin ingresar todos los datos a mano. Estos ejemplos también nos servirán para comprobar que las facturas se asocian al tercero correcto, que los pagos actualizan las deudas y que se identifican las facturas vencidas.
 
-**Prueba independiente**: se cargan los datos de ejemplo y se comprueba que aparecen terceros y facturas en distintos estados, también después de recargar la página.
+**Prueba independiente**: Abrir el módulo sin datos, cargar los ejemplos y comprobar que aparecen clientes, proveedores y facturas en distintos estados. Recargar la página y verificar que los registros y sus relaciones se mantienen.
 
 **Escenarios de aceptación**:
 
-1. **Dado** un sistema sin datos, **cuando** cargo los datos de demostración, **entonces** aparecen terceros y facturas de ejemplo en distintos estados.
-2. **Dados** datos de demostración cargados, **cuando** recargo la página, **entonces** los datos siguen ahí.
-3. **Dado** un tercero o una factura, **cuando** registro su referencia a otro módulo (cliente de CRM, proveedor de Compras, pedido de Ventas u orden de Compras), **entonces** queda guardada junto al registro. **[NEEDS CLARIFICATION: falta acordar con los grupos de CRM, Ventas y Compras qué identificador se comparte.]**
+1. **Dado** que el módulo está vacío, cuando cargo los datos de demostración, entonces aparecen clientes, proveedores y facturas ficticias de venta y compra, incluyendo casos pendientes, pagados y vencidos.
+2. **Dados** los ejemplos cargados, cuando recargo la página, entonces los registros conservan sus datos, estados y relaciones.
+3. **Dados** los ejemplos ya cargados, cuando intento cargarlos nuevamente, entonces el sistema informa que ya existen datos y no genera duplicados.
+4. **Dado** que ya ingresé mis propios registros, cuando intento cargar la demostración, entonces el sistema informa que la carga requiere un módulo vacío y conserva mis registros.
+5. **Dado** un tercero o una factura, cuando guardo una referencia a otro módulo, entonces puedo volver a consultarla después de cerrar y abrir el registro.
 
 ---
 
