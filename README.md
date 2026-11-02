@@ -59,8 +59,10 @@ Líder del grupo: por definir.
 ## Estado del proyecto
 
 - Las especificaciones están en `specs/001-erp-base-module/`.
-- `spec.md` y `data-model.md` están rehechos con este alcance, y en `plan.md` se editó solo el resumen, como pide el curso. `mer.png` es el diagrama entidad-relación. `tasks.md` tiene las tareas por historia de usuario, armadas siguiendo las reglas de `speckit.tasks`, y se validará con `speckit.clarify` y `speckit.analyze` cuando se puedan ejecutar. `quickstart.md` y `research.md` son los del template.
+- `spec.md` y `data-model.md` están rehechos con este alcance, y en `plan.md` se editó solo el resumen, como pide el curso. `mer.png` es el diagrama entidad-relación. `tasks.md` tiene las tareas por historia de usuario, armadas siguiendo las reglas de `speckit.tasks`. `quickstart.md` y `research.md` son los del template.
 - Al 30-10-2026 el repositorio no incluye las carpetas `src/` ni `index.html`, por lo que las instrucciones de *Setup* del template todavía no se pueden ejecutar. Según el ayudante, el código se genera con `speckit.implement`, fuera de las carpetas de Speckit. Eliminar esta línea cuando estén.
+
+El 02-11-2026 Mauro ejecutó `speckit.analyze` desde OpenCode. El informe identificó decisiones pendientes y diferencias entre los documentos, además de mejoras en pruebas, calidad, accesibilidad y rendimiento. Se solicitaron propuestas de corrección para revisarlas antes de aplicarlas. Sigue pendiente resolver las aclaraciones y validar los ajustes con el grupo.
 
 ## Registro de decisiones
 
