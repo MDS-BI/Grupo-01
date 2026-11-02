@@ -14,7 +14,6 @@ Proximos pasos:
 Feedback Avance 02 (2/11/26)
 
 - excelente avance en estructura de cara a poder hacer una primera implementacion e iteracion de los specs
-- 
 
 Proximos pasos:
 
