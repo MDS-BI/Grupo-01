@@ -9,7 +9,7 @@ Módulo de facturación y pagos (por cobrar y por pagar) de un sistema ERP, cons
 | Integrante | Rol | Historia de usuario |
 |---|---|---|
 | Rivera Benavente, Jaime Alberto | Por definir | HU1 Registrar terceros |
-| Zavala Campos, Elías Ignacio | Por definir | Por asignar (queda la HU5) |
+| Zavala Campos, Elías Ignacio | Por definir | HU5 Ver la deuda por tercero y las facturas vencidas |
 | Vásquez Mera, Carolina Andrea | Por definir | HU2 Emitir facturas de venta |
 | Espinoza Muñoz, Matías Ignacio | Por definir | HU3 Registrar facturas de compra |
 | Ulloa Troncoso, Javier Ignacio | Por definir | HU4 Registrar el pago y marcar Pagada |
