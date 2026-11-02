@@ -177,24 +177,42 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 
 ---
 
-## Fase 8: HU6 - Datos de demostración y relación con otros módulos (Prioridad: P3)
+## Fase 8: HU6 - Datos de demostración y referencias genéricas a otros módulos (Prioridad: P3)
 
-**Objetivo**: cargar datos de ejemplo y registrar referencias a otros módulos.
+**Objetivo**: cargar ejemplos ficticios para probar cobros y pagos, y permitir guardar una referencia manual a otro módulo.
 
-**Prueba independiente**: cargar los datos de ejemplo y comprobar que aparecen terceros y facturas en distintos estados, también después de recargar.
+**Avance confirmado**: la redacción de HU6 y sus cinco escenarios de aceptación están incorporados en `spec.md` mediante el commit [5d72123](https://github.com/MDS-BI/Grupo-01/commit/5d721239f3da3af443de44f4c292bdfcb7839fae). Este avance es documental; no significa que el cargador, el botón o las pruebas ya estén implementados.
+
+**Requisitos previos**: completar las Fases 1 y 2 y usar las reglas compartidas de HU1 a HU4. Antes de preparar los ejemplos definitivos, resolver las decisiones pendientes sobre moneda y monto total. Los ejemplos no deben saltarse las validaciones ni introducir campos duplicados.
+
+**Alcance de las referencias**: por ahora se usa un campo de texto genérico, siguiendo la orientación del ayudante comunicada por Jaime. Se puede anotar, por ejemplo, "Ventas: pedido PED-035". No hay conexión en vivo ni validación contra los sistemas de otros grupos. El formato definitivo se confirmará con el profesor; coordinar identificadores con otros grupos no bloquea esta versión.
+
+**Prueba independiente**: con el módulo vacío, cargar los ejemplos, revisar sus relaciones y recargar la página. Repetir la carga y comprobar que no hay duplicados. Probar también con registros ingresados previamente y verificar que se conservan. Guardar y volver a consultar una referencia en un tercero y en una factura.
 
 ### Pruebas de HU6
 
-- [ ] T040 [P] [HU6] Prueba de integración: cargar datos de demostración y comprobar que persisten al recargar en `tests/integration/demo-data.test.js`
+- [ ] T040 [HU6] Escribir primero los escenarios de prueba en `tests/integration/demo-data.test.js`: carga inicial con clientes, proveedores y facturas de venta y compra; casos Borrador, Emitida y Pagada; facturas Emitidas vencidas y vigentes; conservación de registros y relaciones al iniciar de nuevo la aplicación con el mismo almacenamiento; segundo intento sin duplicados; rechazo de carga cuando ya exista algún tercero o factura, sin modificar los datos previos. Incluir la conservación de la referencia de un tercero y de una factura al guardar, cerrar y volver a abrir. Comprobar que las pruebas detectan la funcionalidad faltante y, después de implementar T041 a T044, ejecutarlas hasta que pasen.
 
 ### Implementación de HU6
 
-- [ ] T041 [P] [HU6] Crear los datos de demostración, solo ficticios (terceros y facturas en estados Borrador, Emitida y Pagada, con y sin vencimiento) en `src/demo-data.js`
-- [ ] T042 [HU6] Agregar el botón "Cargar datos de demostración" al panel de inicio en `src/components/dashboard.js`
-- [ ] T043 [HU6] Acordar con los grupos de CRM, Ventas y Compras qué identificador se comparte, y registrar el acuerdo en `specs/001-erp-base-module/data-model.md` **(depende de aclaración, FR-016)**
-- [ ] T044 [HU6] Registrar la referencia a otros módulos (CRM, Ventas, Compras) en terceros y facturas en `src/components/entity-form.js` y `src/components/document-form.js` **(depende de aclaración, FR-016)**
+- [ ] T041 [HU6] Crear los ejemplos y su función de carga en `src/demo-data.js`, usando solo datos ficticios y la moneda acordada. Incluir clientes y proveedores con facturas del tipo correspondiente; estados Borrador, Emitida y Pagada; y facturas Emitidas con vencimiento pasado y futuro al cargar. Todas las facturas deben tener fechas válidas. Las Pagadas deben tener monto pagado igual al total y fecha de pago. Usar las operaciones y transiciones compartidas del módulo, vinculando cada factura al `entity_id` de su tercero. Cargar únicamente si no existen terceros ni facturas; repetir la operación o encontrar datos previos debe conservar el contenido sin agregar ejemplos ni borrar registros.
 
-**Punto de control**: todas las historias funcionan y la demo se puede mostrar.
+- [ ] T042 [HU6] Agregar "Cargar datos de demostración" al panel en `src/components/dashboard.js` y conectar su acción con la función de `src/demo-data.js`. Mostrar un aviso de carga completada o de módulo con datos, mantener los registros existentes y actualizar la vista y sus estadísticas después de una carga exitosa. Si falla el almacenamiento, mostrar el error sin informar que la carga terminó correctamente.
+
+- [ ] T043 [HU6] Definir la clave del campo opcional "Referencia a otro módulo" para terceros y facturas, sin colisionar con campos base, y declararlo en `src/module-config.js`. Documentar su nombre, tipo texto, carácter opcional y conservación en `specs/001-erp-base-module/data-model.md` y `specs/001-erp-base-module/contracts/entity-storage.md`; reflejarlo en `specs/001-erp-base-module/mer.png` cuando se actualice el diagrama. Registrar el alcance genérico de esta versión y separar la confirmación futura del formato de identificadores. Esta tarea reemplaza la coordinación inmediata con otros grupos planteada en el borrador anterior.
+
+- [ ] T044 [HU6] Mostrar y permitir guardar y consultar la referencia genérica en `src/components/entity-form.js` y `src/components/document-form.js`, respetando las reglas de edición y pago de HU4. Utilizar el mecanismo de campos personalizados y la persistencia de `src/storage.js`; verificar que la referencia no se descarte ni reemplace el vínculo `entity_id` entre factura y tercero. Completar en `tests/integration/demo-data.test.js` los casos de referencia en ambos registros, incluidos su conservación después de recargar y el guardado con el campo vacío.
+
+### Seguimiento y coherencia
+
+- T040 a T044 siguen pendientes: se marcan con `[x]` solo cuando su resultado esté implementado y comprobado. Tener la historia escrita, una prueba redactada o un archivo creado no basta para afirmar que la función ya está terminada.
+- Se conservan los identificadores de las tareas para no alterar referencias del resto del trabajo. Se retiran las marcas `[P]` de este bloque: el cargador depende de las reglas comunes, y las pruebas deben revisarse junto con la implementación.
+- Antes de implementar, alinear la aclaración pendiente de FR-016 en `spec.md` con la referencia genérica descrita aquí. Esta edición no cambia los requisitos ni el modelo de datos: T043 deja explícita la actualización que falta.
+- El borrador anterior pedía ejemplos "con y sin vencimiento". Se corrige a facturas vencidas y vigentes, todas con fechas válidas, para respetar FR-007.
+- Coordinar con los responsables de HU1, HU2 y HU3 la edición de `src/module-config.js`, `src/components/entity-form.js` y `src/components/document-form.js`, porque son archivos compartidos.
+- Al terminar, ejecutar las pruebas de HU6 y las del módulo base. Revisar también T049 (recorrido completo), T051 (consistencia documental) y T052 (demostración final); son tareas de cierre del grupo y no se consideran completadas por actualizar esta sección.
+
+**Punto de control**: los cinco escenarios de aceptación de HU6 se pueden demostrar; los datos y referencias se conservan, la carga repetida no duplica registros y la demostración no altera datos existentes.
 
 ---
 
