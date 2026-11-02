@@ -89,6 +89,8 @@ Según la política del curso, cada consulta a un modelo de IA generativa se reg
 |---|---|---|---|---|
 | Completar | Jaime Rivera | Gemini (Google), completar versión | Primer avance: versión anterior de los specs | Completar |
 | 28-10-2026 y 29-10-2026 | Jaime Rivera | Claude (Anthropic); modelo configurado en la sesión: claude-sonnet-5-5 (el modelo que respondió puede variar, verificar) | Organización del repositorio, definición del alcance, README, spec, data-model, MER, plan y tasks | Completar |
+| 01-11-2026 | Mauro Aguayo | GPT-6.1 Sol (ChatGPT Work) | Apoyo para comprender y redactar la HU6, definir sus escenarios de aceptación y ajustar sus tareas al resto del proyecto. También se recibió orientación para resolver problemas de Git y mantener el trabajo en main. | Completar |
+| 02-11-2026 | Mauro Aguayo | GPT-6.1 Sol (OpenCode) | Revisión de la coherencia entre especificaciones, plan y tareas mediante speckit.analyze. Se analizaron los hallazgos y las propuestas de mejora para identificar ajustes pendientes antes de implementar el módulo. | Completar |
 
 ## Referencias
 
@@ -166,4 +168,3 @@ If the configuration is invalid (unknown types, bad keys, transitions referencin
 - Data is persisted to `localStorage` under the keys `erp_base_module:entities` and `erp_base_module:documents`.
 - Deleting an entity also deletes its documents (cascade).
 - This project intentionally uses vanilla HTML, CSS, and JavaScript for simplicity.
-
