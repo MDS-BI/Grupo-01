@@ -102,7 +102,7 @@ Antes de finalizar cualquier historia:
 
 | Clave | ¿Tiene tarea? | Tareas | Notas |
 |-------|----------------|--------|-------|
-| FR-001 | Sí | T013, T014 | Registrar terceros |
+| FR-001 | Sí | T013, T014, T015 | Registrar terceros |
 | FR-002 | Sí | T013 | Validación nombre/código |
 | FR-003 | Sí | T013, T016 | Límite de crédito |
 | FR-004 | Débil | T013, T014 | Búsqueda no es foco |
@@ -111,23 +111,23 @@ Antes de finalizar cualquier historia:
 | FR-007 | Sí | T020, T022, T025 | Campos/validación |
 | FR-008 | Sí | T020 | Descuento > subtotal |
 | FR-009 | Sí | T011 | Estado inicial Borrador |
-| FR-010 | Sí | T020, T024 | Transiciones |
-| FR-011 | Sí | T025, T031, T032, T034 | Pago y Pagada |
+| FR-010 | Sí | T021, T024, T031 | Transiciones |
+| FR-011 | Sí | T031, T032, T033, T034 | Pago y Pagada |
 | FR-012 | Sí | T035-T039 | Deuda por cobrar/pagar |
 | FR-013 | Sí | T035-T039 | Vencidas |
 | FR-014 | Sí | T035-T039 | Excluir Pagadas |
-| FR-015 | Sí | T041, T042, T049, T050 | Demo y persistencia |
-| FR-016 | Débil | T043 | Falta identificador compartido |
+| FR-015 | Sí | T040, T041, T042, T049 | Demo y persistencia |
+| FR-016 | Débil | T043, T044 | Falta identificador compartido |
 | FR-017 | Sí | T018 | Validar RUT |
 | FR-018 | Sí | T016, T026 | Avisa/bloquea por definir |
 | FR-019 | Sí | T019, T027 | Duplicados por definir |
 | SC-001 | Sí | T049 | < 3 min |
-| SC-002 | Sí | T050 | Pagadas no cuentan |
+| SC-002 | Sí | T035, T036 | Pagadas no cuentan |
 | SC-003 | Implícita | Pruebas | Rechazo con mensaje |
-| SC-004 | Sí | T050 | Persistencia |
+| SC-004 | Sí | T040, T041 | Persistencia |
 | SC-005 | Sí | T049 | Flujo < 5 min |
 
 **Total de requisitos**: 24 (19 FR + 5 SC)
 **Total de tareas**: 52 (T001 a T052)
 **Cobertura**: 96 % (23/24 requisitos tienen tareas; SC-003 con cobertura implícita)
-**Críticos**: 0 (D1 resuelto con gate de calidad)
+**Críticos**: 0
