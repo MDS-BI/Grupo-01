@@ -44,9 +44,9 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 
 **Propósito**: dejar el módulo base funcionando antes de modificarlo.
 
-- [ ] T001 Verificar que `src/` e `index.html` del módulo base estén en el repositorio; si faltan, obtenerlos desde el template `MDS-BI/Speckit_Template` (hoy no están; `package.json` y `vitest.config.mjs` sí)
-- [ ] T002 Ejecutar `npm install` y `npm run dev` en la raíz del repositorio, y comprobar que el módulo base abre en http://localhost:5173
-- [ ] T003 [P] Ejecutar `npx vitest run` y confirmar que las pruebas existentes de `tests/unit/` y `tests/integration/` pasan antes de modificar nada
+- [x] T001 Verificar que `src/` e `index.html` del módulo base estén en el repositorio; si faltan, obtenerlos desde el template `MDS-BI/Speckit_Template` (hecho el 03-11-2026: se copiaron `src/`, `index.html`, `tests/setup/` y las pruebas actuales del template, en un commit aparte)
+- [x] T002 Ejecutar `npm install` y `npm run dev` en la raíz del repositorio, y comprobar que el módulo base abre en http://localhost:5173 (comprobado el 03-11-2026)
+- [x] T003 [P] Ejecutar `npx vitest run` y confirmar que las pruebas existentes de `tests/unit/` y `tests/integration/` pasan antes de modificar nada (03-11-2026: 24 archivos y 73 pruebas pasan)
 - [ ] T004 Ejecutar `speckit.clarify` sobre `specs/001-erp-base-module/spec.md` para resolver los `[NEEDS CLARIFICATION]` (o resolverlos con el ayudante) y actualizar aquí las tareas marcadas "depende de aclaración"
 
 ---
@@ -64,7 +64,7 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 - [ ] T009 Configurar `statusLifecycle` con los estados Borrador, Emitida y Pagada, y las transiciones Borrador → Emitida → Pagada, sin salidas desde Pagada, en `src/module-config.js`
 - [ ] T010 [P] Escribir pruebas de la configuración (sin colisión de claves con los campos base, estados y transiciones válidos) en `tests/unit/module-config.test.js`
 - [ ] T011 Asegurar que toda factura nueva inicie en Borrador (FR-009) en `src/components/document-form.js` y `src/storage.js`
-- [ ] T012 Validar que una factura de venta solo se asocie a un tercero cliente, y una de compra a un proveedor, en `src/storage.js`
+- [ ] T012 Validar que una factura de venta solo se asocie a un tercero cliente, y una de compra a un proveedor, en `src/validation.js`
 
 **Punto de control**: la configuración carga sin errores y la base está lista; ya se pueden empezar las historias.
 
@@ -84,10 +84,10 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 ### Implementación de HU1
 
 - [ ] T015 [HU1] Adaptar el formulario de terceros para mostrar nombre, código, RUT, límite de crédito y tipo de tercero en `src/components/entity-form.js`
-- [ ] T016 [HU1] Aplicar el límite de crédito solo a terceros de tipo cliente en `src/components/entity-form.js` y `src/storage.js`
+- [ ] T016 [HU1] Aplicar el límite de crédito solo a terceros de tipo cliente en `src/components/entity-form.js` y `src/validation.js`
 - [ ] T017 [HU1] Pedir confirmación antes de eliminar un tercero que tiene facturas (FR-005) en `src/app.js`
-- [ ] T018 [HU1] Validar formato y dígito verificador del RUT, y definir si puede repetirse, en `src/storage.js` **(depende de aclaración, FR-017)**
-- [ ] T019 [HU1] Evitar códigos de tercero duplicados en `src/storage.js` **(depende de aclaración, FR-019)**
+- [ ] T018 [HU1] Validar formato y dígito verificador del RUT, y definir si puede repetirse, en `src/validation.js` **(depende de aclaración, FR-017)**
+- [ ] T019 [HU1] Confirmar que el módulo base ya rechaza códigos de tercero duplicados sin distinguir mayúsculas (`DUPLICATE_CODE` en `src/validation.js`, con prueba en `tests/unit/validation.test.js`). No requiere cambios en el código; el par serie-folio de las facturas se trata en T027
 
 **Punto de control**: la HU1 funciona y se puede probar sola.
 
@@ -109,9 +109,9 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 - [ ] T022 [HU2] Adaptar el formulario de facturas para mostrar tipo de factura, serie, folio, fecha de emisión (`startDate`), fecha de vencimiento (`endDate`), subtotal, descuento, impuesto, total y moneda (una sola en el MVP, por definir) en `src/components/document-form.js`
 - [ ] T023 [HU2] Rotular `startDate` como "Fecha de emisión" y `endDate` como "Fecha de vencimiento" en `src/module-config.js` **(depende de confirmar la equivalencia con el ayudante)**
 - [ ] T024 [HU2] Permitir la transición Borrador → Emitida y bloquear el retroceso en `src/components/document-form.js`
-- [ ] T025 [HU2] Exigir el monto total al emitir en `src/storage.js` **(depende de aclaración)**
+- [ ] T025 [HU2] Exigir el monto total al emitir en `src/validation.js` **(depende de aclaración)**
 - [ ] T026 [HU2] Avisar o bloquear cuando las facturas Emitidas de un cliente superan su límite de crédito en `src/components/document-form.js` **(depende de aclaración, FR-018)**
-- [ ] T027 [HU2] Evitar facturas duplicadas con la misma serie y folio en `src/storage.js` **(depende de aclaración, FR-019)**
+- [ ] T027 [HU2] Evitar facturas duplicadas con la misma serie y folio en `src/validation.js` **(depende de aclaración, FR-019)**
 
 **Punto de control**: las HU1 y HU2 funcionan juntas y por separado.
 
@@ -150,7 +150,7 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 ### Implementación de HU4
 
 - [ ] T033 [HU4] Mostrar los campos de monto pagado y fecha de pago al marcar una factura como Pagada en `src/components/document-form.js`
-- [ ] T034 [HU4] Rechazar el paso a Pagada si `montoPagado` es distinto de `totalAmount` o falta `fechaPago` (FR-011) en `src/storage.js`
+- [ ] T034 [HU4] Rechazar el paso a Pagada si `montoPagado` es distinto de `totalAmount` o falta `fechaPago` (FR-011) en `src/validation.js`
 
 **Punto de control**: el ciclo completo de la factura funciona (Borrador → Emitida → Pagada).
 
@@ -252,7 +252,7 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 ### Dentro de cada historia
 
 - Las pruebas se escriben primero y deben fallar antes de implementar.
-- Primero las reglas de `src/storage.js`, luego los formularios y vistas.
+- Primero las reglas de `src/validation.js` (y `src/storage.js` si hace falta), luego los formularios y vistas.
 - La historia se completa antes de pasar a la siguiente prioridad.
 
 ### Oportunidades de paralelismo
@@ -307,7 +307,7 @@ Tarea: "Prueba de integración de terceros en tests/integration/us1-create-entit
 - La etiqueta [HUn] relaciona cada tarea con su historia, para tener trazabilidad.
 - Cada historia debe poder completarse y probarse de forma independiente.
 - Verificar que las pruebas fallen antes de implementar.
-- Antes de dar por terminada cada historia, ejecutar `npm run check` (puertas de calidad de `plan.md`). Lint y formato ya pasan; las pruebas necesitan que exista `src/`.
+- Antes de dar por terminada cada historia, ejecutar `npm run check` (puertas de calidad de `plan.md`). Con el módulo base, `npm run check` ya pasa completo (lint, formato y 73 pruebas).
 - La búsqueda de terceros (FR-004) y los listados de terceros y facturas ya vienen en el módulo base (`src/search.js`, `src/components/entity-list.js` y `src/components/document-list.js`): T013, T014 y T030 comprueban o adaptan lo que ya existe.
 - Este archivo agrega tres archivos nuevos (`src/tracking.js`, `src/components/tracking.js` y `src/demo-data.js`). Figuran en la estructura de `plan.md` y son extensiones del módulo base.
 - Hacer un commit después de cada tarea o grupo lógico de tareas. Los commits los hace cada integrante a mano, no la IA, como pide el curso. Si un comando de Speckit ofrece hacer un commit automático, responder que no.
@@ -322,7 +322,7 @@ Tarea: "Prueba de integración de terceros en tests/integration/us1-create-entit
 
 Caro agregó estas tareas en `main` para la HU2 (Emisión y Registro de Facturas a Clientes). Se conservan como referencia: cubren lo mismo que T020 a T027 de la Fase 4, pero con más detalle en las validaciones. Al regenerar este archivo con `speckit.tasks`, hay que compararlas y consolidarlas en una sola lista. Las Tareas 1 a 8 de esa versión anterior (cambios en `module-config.js`, instalación y prueba local) corresponden a las Fases 1 y 2 de este archivo, y las Tareas 1 y 2 (MER y archivos iniciales de Speckit) ya están hechas.
 
-Depende de las Tareas 3 y 6 de esa versión (etiquetas Cliente/Factura y ciclo de vida Borrador, Emitida, Pagada), que aquí son T006 y T009. Reutilizar los campos base definidos en `data-model.md`: `entity_id`, `series`, `folio`, `startDate` (emisión), `endDate` (vencimiento), `totalAmount` y `status`; no crear campos duplicados.
+Depende de las Tareas 3 y 6 de esa versión (etiquetas Cliente/Factura y ciclo de vida Borrador, Emitida, Pagada), que aquí son T006 y T009. Reutilizar los campos base definidos en `data-model.md`: `entity_id`, `series`, `folio`, `startDate` (emisión), `endDate` (vencimiento), `totalAmount` y `status`; no crear campos duplicados. Varias de estas validaciones (tercero existente, folio entero positivo, fechas, descuento y monto no negativo) ya las hace el módulo base en `src/validation.js` y se cubren en `tests/unit/document-validation.test.js`; en las tareas 12 y 13 solo falta lo propio del módulo (total obligatorio al emitir y estado inicial Borrador).
 
 - [ ] **Tarea 9:** Escribir pruebas unitarias en `tests/unit/document-validation.test.js` para la validación de facturas: cliente existente obligatorio, `folio` entero positivo, `totalAmount` no negativo, `endDate` igual o posterior a `startDate` y estado inicial Borrador.
 - [ ] **Tarea 10:** Escribir pruebas de integración en `tests/integration/us10-documents.test.js` que cubran el registro de una factura desde el formulario, su asociación al `entity_id` del cliente y el rechazo de monto negativo, vencimiento anterior a la emisión y cliente inexistente.

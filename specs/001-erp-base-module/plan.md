@@ -127,7 +127,7 @@ Antes de finalizar cualquier historia:
 | FR-016 | Débil | T043, T044 | Falta identificador compartido |
 | FR-017 | Sí | T018 | Validar RUT |
 | FR-018 | Sí | T016, T026 | Avisa/bloquea por definir |
-| FR-019 | Sí | T019, T027 | Duplicados por definir |
+| FR-019 | Sí | T019, T027 | Código ya único en el template; serie-folio por definir |
 | SC-001 | Sí | T049 | < 3 min |
 | SC-002 | Sí | T035, T036 | Pagadas no cuentan |
 | SC-003 | Implícita | Pruebas | Rechazo con mensaje |

@@ -143,7 +143,7 @@ Como integrante del equipo, quiero cargar ejemplos ficticios de clientes, provee
 
 ### Casos Límite
 
-- ¿Qué pasa si se registran dos terceros con el mismo código? **[NEEDS CLARIFICATION: el template solo exige que el código no esté vacío; definir si debe ser único.]**
+- ¿Qué pasa si se registran dos terceros con el mismo código? El módulo base del template lo rechaza, sin distinguir mayúsculas.
 - ¿Qué pasa si se registran dos facturas con la misma serie y el mismo folio? **[NEEDS CLARIFICATION: definir si el número de factura debe ser único.]**
 - ¿Qué pasa si el RUT está mal escrito o repetido? **[NEEDS CLARIFICATION: el template no valida el formato ni el dígito verificador; definir las reglas.]**
 - ¿Qué pasa si una factura se emite sin monto total? **[NEEDS CLARIFICATION: definir si el monto es obligatorio.]**
@@ -192,7 +192,7 @@ Como integrante del equipo, quiero cargar ejemplos ficticios de clientes, provee
 - **FR-016**: El sistema DEBE permitir registrar en terceros y facturas su referencia a otros módulos del ERP **[NEEDS CLARIFICATION: falta acordar con los grupos de CRM, Ventas y Compras qué identificador se comparte.]**
 - **FR-017**: El sistema DEBE validar el RUT **[NEEDS CLARIFICATION: definir formato y dígito verificador.]**
 - **FR-018**: El sistema DEBE controlar el límite de crédito al emitir facturas **[NEEDS CLARIFICATION: definir si solo avisa o también bloquea.]**
-- **FR-019**: El sistema DEBE evitar duplicados **[NEEDS CLARIFICATION: definir si el código de tercero y el par serie-folio deben ser únicos.]**
+- **FR-019**: El sistema DEBE evitar duplicados. El código de tercero ya es único en el módulo base. **[NEEDS CLARIFICATION: definir si el par serie-folio de la factura debe ser único.]**
 
 ### Entidades Clave
 

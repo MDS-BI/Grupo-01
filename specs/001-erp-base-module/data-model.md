@@ -38,11 +38,11 @@ Representa al cliente o proveedor. Se muestran todos los campos base del templat
 
 | Campo | Tipo | Descripción | Restricciones | Uso en este módulo |
 |---|---|---|---|---|
-| id | string | Identificador interno único del registro | Obligatorio, generado automáticamente | Usado |
+| id | string | Identificador interno único del registro; el template le da el mismo valor que a `entity_id` | Obligatorio, generado automáticamente | Usado |
 | entity_id | string | Identificador público usado para vincular facturas a este tercero | Obligatorio, generado automáticamente, único | Usado |
 | name | string | Nombre o razón social | Obligatorio, no vacío | Usado |
-| code | string | Código interno del tercero | Obligatorio, no vacío | Usado |
-| taxId | string | Identificación fiscal; aquí, el RUT | Opcional; se almacena recortada | Usado |
+| code | string | Código interno del tercero | Obligatorio, no vacío, único (sin distinguir mayúsculas) | Usado |
+| taxId | string | Identificación fiscal; aquí, el RUT | Opcional | Usado |
 | email | string | Correo de contacto | Opcional; formato válido si se proporciona | Disponible, sin uso en el MVP |
 | phone | string | Teléfono de contacto | Opcional | Disponible, sin uso en el MVP |
 | address | string | Dirección | Opcional | Disponible, sin uso en el MVP |
@@ -66,7 +66,8 @@ Representa una factura de venta (por cobrar) o de compra (por pagar), vinculada 
 
 | Campo | Tipo | Descripción | Restricciones | Uso en este módulo |
 |---|---|---|---|---|
-| id | string | Identificador único de la factura | Obligatorio, generado automáticamente | Usado |
+| id | string | Identificador único de la factura; el template le da el mismo valor que a `document_id` | Obligatorio, generado automáticamente | Usado |
+| document_id | string | Identificador público de la factura | Obligatorio, generado automáticamente | Usado |
 | entity_id | string | `entity_id` del tercero al que pertenece | Obligatorio, debe existir | Usado |
 | series | string | Serie de la factura | Opcional | Usado |
 | folio | number | Folio que, junto con la serie, forma el número oficial | Obligatorio, entero positivo | Usado |
@@ -104,7 +105,7 @@ Así se adapta el template a este módulo, sin tocar el código central:
 | statusLifecycle | statuses: Borrador, Emitida, Pagada. Transiciones: Borrador → Emitida; Emitida → Pagada; Pagada → (ninguna) |
 | theme | Valor predeterminado |
 
-**Regla de colisión.** Las claves de los campos personalizados no deben chocar con los nombres de campos base (`id`, `entity_id`, `name`, `code`, `taxId`, `email`, `phone`, `address`, `category`, `description`, `targetDate`, `creditLimit`, `paymentTerms`, `series`, `folio`, `startDate`, `endDate`, `quantity`, `subtotal`, `discount`, `taxAmount`, `totalAmount`, `currency`, `notes`, `status`). Las cuatro claves de este módulo (`tipoTercero`, `tipoFactura`, `montoPagado`, `fechaPago`) no chocan con ninguno. Se usan claves distintas para tercero y factura, en vez de repetir `tipo`, para evitar ambigüedades.
+**Regla de colisión.** Las claves de los campos personalizados no deben chocar con los nombres de campos base (`id`, `entity_id`, `document_id`, `name`, `code`, `taxId`, `email`, `phone`, `address`, `category`, `description`, `targetDate`, `creditLimit`, `paymentTerms`, `series`, `folio`, `startDate`, `endDate`, `quantity`, `subtotal`, `discount`, `taxAmount`, `totalAmount`, `currency`, `notes`, `status`, `customFields`, `createdAt`, `updatedAt`). Las cuatro claves de este módulo (`tipoTercero`, `tipoFactura`, `montoPagado`, `fechaPago`) no chocan con ninguno. Se usan claves distintas para tercero y factura, en vez de repetir `tipo`, para evitar ambigüedades.
 
 ## 6. Relaciones
 
@@ -115,7 +116,7 @@ Así se adapta el template a este módulo, sin tocar el código central:
 
 **Del template (se mantienen):**
 
-- Un tercero debe tener `name` y `code` no vacíos. El límite de crédito, si existe, no puede ser negativo.
+- Un tercero debe tener `name` y `code` no vacíos, y el código no puede repetirse (sin distinguir mayúsculas). El límite de crédito, si existe, no puede ser negativo.
 - Una factura debe referenciar un tercero existente por `entity_id`.
 - Una factura debe tener `folio` entero positivo, y `endDate` igual o posterior a `startDate`.
 - Subtotal, descuento, impuesto y total no pueden ser negativos, y el descuento no puede superar el subtotal.
@@ -167,7 +168,7 @@ Este módulo simplifica las tablas de Finanzas del modelo ERP base. Esta tabla p
 
 ## 11. Almacenamiento
 
-Los datos se guardan en el navegador (`localStorage`) bajo las claves del template: `erp_base_module:entities` y `erp_base_module:documents`. Los valores de los campos personalizados se guardan junto a los campos base, sin cambios de esquema. La carga de datos de demostración (FR-015) usa solo datos ficticios.
+Los datos se guardan en el navegador (`localStorage`) bajo las claves del código del template: `erp.entities` y `erp.documents` (más `erp.schemaVersion`). Los valores de los campos personalizados se guardan dentro del objeto `customFields` de cada registro, sin cambios de esquema. La carga de datos de demostración (FR-015) usa solo datos ficticios.
 
 ## 12. Modelo Entidad-Relación (MER)
 

@@ -58,6 +58,19 @@ Líder del grupo: por definir.
 7. Si `plan.md` puede incluir las puertas de calidad (`npm run check`) y la tabla de cobertura que surgieron de `speckit.analyze`, o si solo debe editarse el resumen, como indicó la clase.
 8. Si el profesor acepta que `src/`, `index.html` y las pruebas del template actual se hayan copiado al repositorio (03-11-2026, en un commit aparte), o si prefiere que el código se genere con `speckit.implement`.
 9. Si se acepta que el MVP no tenga pruebas e2e (excepción al principio II de la Constitución), porque el template solo trae Vitest con jsdom.
+10. Si se actualizan la constitución y las herramientas de Speckit (`.specify/`, `.opencode/`) a la versión actual del template (Speckit 1.2.5, constitución «ERP Base Module»), porque el repositorio conserva la versión de agosto (Speckit 0.16.0, constitución genérica). La constitución actual exige que el código central no tenga términos del dominio y que se adapte solo desde `src/module-config.js`, lo que afectaría a varias tareas.
+
+## Cómo ejecutar
+
+Requisitos: Node.js 22.22 o superior (también sirven 24.15 o superior y 26) y npm. Con versiones anteriores, `npm test` puede fallar porque `jsdom` las exige.
+
+```bash
+npm install
+npm run dev      # abre la aplicación en http://localhost:5173/
+npm run check    # lint, formato y pruebas (24 archivos, 73 pruebas)
+```
+
+Por ahora la aplicación es el módulo base del template (Entidades y Documentos, sin datos). Las historias de usuario de facturación y pagos se implementan sobre ella; los datos de demostración (HU6) todavía no existen.
 
 ## Estado del proyecto
 
@@ -90,6 +103,7 @@ Líder del grupo: por definir.
 | 03-11-2026 | Elías Zavala asumió la HU5 (ver la deuda por tercero y las facturas vencidas), según sus commits del 02 y 03-11-2026. Con esto las seis historias tienen responsable; queda por definir el líder del grupo | Elías Zavala |
 | 03-11-2026 | Se corrigió la configuración de ESLint y Prettier (error de arranque de ESLint, globales del navegador, `.prettierignore` para documentos y formato de los archivos de `tests/`) y se actualizó `package-lock.json` | Jaime Rivera |
 | 03-11-2026 | Se copió al repositorio el módulo base del template (`src/`, `index.html`, `tests/setup/` y pruebas actuales) y se reemplazaron las pruebas antiguas. Se agregaron los globales de Node para `tests/` en ESLint y un almacenamiento en memoria en `tests/setup/dom.js` para Node 25 o superior. `npm run check` pasa | Jaime Rivera |
+| 03-11-2026 | Revisión de coherencia con el código del template: se corrigieron en `data-model.md` las claves de almacenamiento (`erp.entities`, `erp.documents`) y el campo `document_id`; se registró que el template ya rechaza códigos de tercero duplicados (FR-019 solo queda pendiente para serie-folio); en `tasks.md` se marcaron T001 a T003 y se corrigieron las rutas de validación (`src/validation.js`). Se agregó la sección Cómo ejecutar | Jaime Rivera |
 
 ## Uso de IA (anexo)
 
