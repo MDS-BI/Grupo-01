@@ -309,7 +309,7 @@ Tarea: "Prueba de integración de terceros en tests/integration/create-entity.te
 - Verificar que las pruebas fallen antes de implementar.
 - Este archivo agrega tres archivos nuevos (`src/tracking.js`, `src/components/tracking.js` y `src/demo-data.js`). Figuran en la estructura de `plan.md` y son extensiones del módulo base.
 - Hacer un commit después de cada tarea o grupo lógico de tareas. Los commits los hace cada integrante a mano, no la IA, como pide el curso. Si un comando de Speckit ofrece hacer un commit automático, responder que no.
-- Varias historias tocan los mismos archivos (`src/storage.js`, `src/components/document-form.js` y `tests/unit/storage.test.js`). Si dos integrantes los editan a la vez puede haber conflictos al unir las ramas: conviene avisar al grupo antes de editarlos y hacer `git pull` antes de empezar.
+- Varias historias tocan los mismos archivos (`src/storage.js`, `src/components/document-form.js` y `tests/unit/storage.test.js`). Si dos integrantes los editan a la vez puede haber conflictos al subir los cambios a `main`: conviene avisar al grupo antes de editarlos y hacer Fetch y Pull antes de empezar.
 - Las tareas marcadas **(depende de aclaración)** deben revisarse al resolver los `[NEEDS CLARIFICATION]` del `spec.md`.
 - Evitar tareas vagas, conflictos en el mismo archivo y dependencias entre historias que rompan su independencia.
 

@@ -84,6 +84,7 @@ Líder del grupo: por definir.
 | 01-11-2026 | Se detallaron las tareas T040–T044 para cubrir pruebas, datos ficticios, botón de carga y referencias a otros módulos. Se conservaron sus identificadores y las tareas de los demás integrantes. La implementación sigue pendiente; tener la historia redactada no implica marcar estas tareas como terminadas. | Mauro Aguayo |
 | 03-11-2026 | Feedback del profesor del 02-11: hacer la primera implementación, registrar lo modificado y lo incremental y volver al spec; dividir al grupo entre ajustes previos y funcionalidad nueva; integrar la nueva versión en 2 semanas | Grupo |
 | 03-11-2026 | Revisión de coherencia entre documentos: se corrigió el conteo de aclaraciones pendientes, se alinearon `plan.md` y `tasks.md` (estructura de archivos y número de tareas), se retiraron del `spec.md` las menciones a personas y se unificó el formato de la HU6 | Jaime Rivera |
+| 03-11-2026 | Elías Zavala asumió la HU5 (ver la deuda por tercero y las facturas vencidas), según sus commits del 02 y 03-11-2026. Con esto las seis historias tienen responsable; queda por definir el líder del grupo | Elías Zavala |
 
 ## Uso de IA (anexo)
 
