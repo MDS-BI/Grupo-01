@@ -3,17 +3,27 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
 import { normalizeConfig } from '../../src/module-config.js';
-import { addEntity, addDocument, loadEntities, loadDocuments } from '../../src/storage.js';
+import {
+  addEntity,
+  addDocument,
+  loadEntities,
+  loadDocuments,
+} from '../../src/storage.js';
 
-const html = fs.readFileSync(fileURLToPath(new URL('../../index.html', import.meta.url)), 'utf8');
+const html = fs.readFileSync(
+  fileURLToPath(new URL('../../index.html', import.meta.url)),
+  'utf8'
+);
 
 let dom;
 
-function qs(id){ return document.getElementById(id); }
+function qs(id) {
+  return document.getElementById(id);
+}
 
 const brandedConfig = {
   moduleName: 'Sales Suite',
-  theme: { accentColor: '#0f62fe' }
+  theme: { accentColor: '#0f62fe' },
 };
 
 beforeEach(async () => {
@@ -32,7 +42,7 @@ afterEach(() => {
   dom.window.close();
 });
 
-async function bootWith(configOverride){
+async function bootWith(configOverride) {
   vi.resetModules();
   const { initApp } = await import('../../src/app.js');
   await initApp(normalizeConfig(configOverride));
@@ -71,7 +81,12 @@ describe('User Story 13 - branded ERP workspace shell', () => {
   it('uses remapped terms on the sidebar for tailored modules', async () => {
     await bootWith({
       moduleName: 'Ventas',
-      labels: { entity: 'Cliente', entities: 'Clientes', document: 'Pedido de Venta', documents: 'Pedidos de Venta' }
+      labels: {
+        entity: 'Cliente',
+        entities: 'Clientes',
+        document: 'Pedido de Venta',
+        documents: 'Pedidos de Venta',
+      },
     });
     expect(qs('nav-entities-label').textContent).toBe('Clientes');
     expect(qs('nav-documents-label').textContent).toBe('Pedidos de Venta');
@@ -79,15 +94,18 @@ describe('User Story 13 - branded ERP workspace shell', () => {
 
   it('keeps every module button labeled for accessible icon-rail collapse', async () => {
     await bootWith(undefined);
-    document.querySelectorAll('.nav-module').forEach(btn => {
+    document.querySelectorAll('.nav-module').forEach((btn) => {
       expect(btn.querySelector('.nav-label')).not.toBeNull();
-      expect(btn.querySelector('.nav-label').textContent.length).toBeGreaterThan(0);
+      expect(
+        btn.querySelector('.nav-label').textContent.length
+      ).toBeGreaterThan(0);
     });
   });
 
   it('highlights the active module while navigating between all screens', async () => {
     await bootWith(undefined);
-    const activeModule = () => document.querySelector('.nav-module[aria-current="page"]').dataset.module;
+    const activeModule = () =>
+      document.querySelector('.nav-module[aria-current="page"]').dataset.module;
 
     expect(activeModule()).toBe('dashboard');
 
@@ -111,7 +129,12 @@ describe('User Story 13 - branded ERP workspace shell', () => {
   it('preserves all stored data while navigating between modules', async () => {
     await bootWith(undefined);
     const entity = addEntity({ name: 'Acme', code: 'AC-001' });
-    addDocument({ entityId: entity.entity_id, folio: 1001, startDate: '2026-08-01', endDate: '2026-08-05' });
+    addDocument({
+      entityId: entity.entity_id,
+      folio: 1001,
+      startDate: '2026-08-01',
+      endDate: '2026-08-05',
+    });
 
     qs('nav-entities').click();
     qs('nav-documents').click();
@@ -125,11 +148,15 @@ describe('User Story 13 - branded ERP workspace shell', () => {
 
   it('applies the configured accent color to the document root', async () => {
     await bootWith(brandedConfig);
-    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#0f62fe');
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe(
+      '#0f62fe'
+    );
   });
 
   it('falls back to the default accent when the color is invalid', async () => {
     await bootWith({ moduleName: 'X', theme: { accentColor: 'not-a-color' } });
-    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#2563eb');
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe(
+      '#2563eb'
+    );
   });
 });

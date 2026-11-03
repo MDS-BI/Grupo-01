@@ -1,15 +1,20 @@
 import js from '@eslint/js';
+import globals from 'globals';
 
 export default [
-  ...js.configs.recommended,
+  js.configs.recommended,
   {
-    files: ["**/*.js"],
+    files: ['**/*.js'],
     languageOptions: {
-      ecmaVersion: "latest",
-      sourceType: "module",
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: { ...globals.browser },
+    },
+    rules: {
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
     },
   },
   {
-    ignores: ["node_modules", "dist"],
+    ignores: ['node_modules', 'dist', 'coverage'],
   },
 ];
