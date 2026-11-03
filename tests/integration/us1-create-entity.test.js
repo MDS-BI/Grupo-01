@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { initApp } from '../../src/app.js';
+import { DEFAULT_CONFIG } from '../../src/module-config.js';
 import { loadEntities } from '../../src/storage.js';
 import { loadAppMarkup, submit } from '../setup/domFixture.js';
 
@@ -9,7 +10,7 @@ beforeEach(() => {
 
 describe('US1 - crear y organizar entidades', () => {
   it('persiste una entidad válida y la muestra en la lista', () => {
-    initApp();
+    initApp(DEFAULT_CONFIG);
     document.getElementById('name').value = 'Acme';
     document.getElementById('code').value = 'AC-1';
     submit('entity-form');
@@ -22,7 +23,7 @@ describe('US1 - crear y organizar entidades', () => {
   });
 
   it('muestra errores por campo y no persiste con obligatorios vacíos', () => {
-    initApp();
+    initApp(DEFAULT_CONFIG);
     submit('entity-form');
 
     expect(document.getElementById('error-name').textContent).not.toBe('');

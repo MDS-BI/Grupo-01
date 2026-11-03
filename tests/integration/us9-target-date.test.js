@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { initApp } from '../../src/app.js';
+import { DEFAULT_CONFIG } from '../../src/module-config.js';
 import {
   addEntity,
   loadEntities,
@@ -13,7 +14,7 @@ beforeEach(() => {
 
 describe('US9 - fecha objetivo', () => {
   it('persiste y muestra una fecha válida', () => {
-    initApp();
+    initApp(DEFAULT_CONFIG);
     document.getElementById('name').value = 'Acme';
     document.getElementById('code').value = 'AC-1';
     document.getElementById('targetDate').value = '2026-05-01';
@@ -27,7 +28,10 @@ describe('US9 - fecha objetivo', () => {
 
   it('rechaza una fecha con formato inválido', () => {
     expect(() =>
-      addEntity({ name: 'Acme', code: 'AC-1', targetDate: '2026-02-30' })
+      addEntity(
+        { name: 'Acme', code: 'AC-1', targetDate: '2026-02-30' },
+        DEFAULT_CONFIG
+      )
     ).toThrow(ValidationFailure);
     expect(loadEntities()).toHaveLength(0);
   });

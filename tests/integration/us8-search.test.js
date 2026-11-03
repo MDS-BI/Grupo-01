@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { initApp } from '../../src/app.js';
+import { DEFAULT_CONFIG } from '../../src/module-config.js';
 import { addEntity } from '../../src/storage.js';
 import { loadAppMarkup } from '../setup/domFixture.js';
 
@@ -15,18 +16,27 @@ function typeSearch(value) {
 
 describe('US8 - búsqueda de entidades', () => {
   it('filtra por nombre, código y descripción', () => {
-    addEntity({
-      name: 'Ana Pérez',
-      code: 'AP-1',
-      description: 'Cliente mayorista',
-    });
-    addEntity({
-      name: 'Bruno Díaz',
-      code: 'BD-2',
-      description: 'Proveedor local',
-    });
-    addEntity({ name: 'Carla Ruiz', code: 'CR-3', description: 'Transporte' });
-    initApp();
+    addEntity(
+      {
+        name: 'Ana Pérez',
+        code: 'AP-1',
+        description: 'Cliente mayorista',
+      },
+      DEFAULT_CONFIG
+    );
+    addEntity(
+      {
+        name: 'Bruno Díaz',
+        code: 'BD-2',
+        description: 'Proveedor local',
+      },
+      DEFAULT_CONFIG
+    );
+    addEntity(
+      { name: 'Carla Ruiz', code: 'CR-3', description: 'Transporte' },
+      DEFAULT_CONFIG
+    );
+    initApp(DEFAULT_CONFIG);
 
     typeSearch('ana');
     expect(document.getElementById('search-results').textContent).toContain(
@@ -48,9 +58,9 @@ describe('US8 - búsqueda de entidades', () => {
   });
 
   it('muestra el estado vacío sin coincidencias y restaura todo con término vacío', () => {
-    addEntity({ name: 'Ana Pérez', code: 'AP-1' });
-    addEntity({ name: 'Bruno Díaz', code: 'BD-2' });
-    initApp();
+    addEntity({ name: 'Ana Pérez', code: 'AP-1' }, DEFAULT_CONFIG);
+    addEntity({ name: 'Bruno Díaz', code: 'BD-2' }, DEFAULT_CONFIG);
+    initApp(DEFAULT_CONFIG);
 
     typeSearch('zzz');
     expect(document.getElementById('search-empty').hidden).toBe(false);

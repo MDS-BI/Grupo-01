@@ -161,6 +161,7 @@ export function validateDocument(
 ) {
   const errors = [];
   const entityId = document.entity_id;
+  const entity = entities.find((item) => item.entity_id === entityId);
 
   if (isBlank(entityId)) {
     errors.push(
@@ -170,7 +171,7 @@ export function validateDocument(
         'Debe seleccionar una entidad existente.'
       )
     );
-  } else if (!entities.some((entity) => entity.entity_id === entityId)) {
+  } else if (!entity) {
     errors.push(
       makeError(
         'entity_id',
@@ -178,6 +179,28 @@ export function validateDocument(
         'La entidad seleccionada no existe.'
       )
     );
+  }
+
+  const hasInvoiceType = (config.customFields || []).some(
+    (field) => field.target === 'document' && field.key === 'tipoFactura'
+  );
+  if (hasInvoiceType && entity) {
+    const tipoFactura = document.customFields?.tipoFactura;
+    const expectedType =
+      tipoFactura === 'venta'
+        ? 'cliente'
+        : tipoFactura === 'compra'
+          ? 'proveedor'
+          : null;
+    if (expectedType && entity.customFields?.tipoTercero !== expectedType) {
+      errors.push(
+        makeError(
+          'entity_id',
+          'INCOMPATIBLE_ENTITY_TYPE',
+          `Una factura de ${tipoFactura} solo puede asociarse a un tercero ${expectedType}.`
+        )
+      );
+    }
   }
 
   if (isBlank(document.folio)) {

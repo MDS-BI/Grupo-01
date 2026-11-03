@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { initApp } from '../../src/app.js';
+import { DEFAULT_CONFIG } from '../../src/module-config.js';
 import { addEntity, loadDocuments } from '../../src/storage.js';
 import { loadAppMarkup, submit } from '../setup/domFixture.js';
 
@@ -28,8 +29,8 @@ function fillDocument(entityId, overrides = {}) {
 
 describe('US10 - detalle de documentos', () => {
   it('normaliza importes y los muestra en la lista', () => {
-    const entity = addEntity({ name: 'Acme', code: 'AC-1' });
-    initApp();
+    const entity = addEntity({ name: 'Acme', code: 'AC-1' }, DEFAULT_CONFIG);
+    initApp(DEFAULT_CONFIG);
     fillDocument(entity.entity_id);
     submit('document-form');
 
@@ -48,8 +49,8 @@ describe('US10 - detalle de documentos', () => {
   });
 
   it('muestra el error cuando el descuento supera el subtotal', () => {
-    const entity = addEntity({ name: 'Acme', code: 'AC-1' });
-    initApp();
+    const entity = addEntity({ name: 'Acme', code: 'AC-1' }, DEFAULT_CONFIG);
+    initApp(DEFAULT_CONFIG);
     fillDocument(entity.entity_id, {
       folio: '8',
       subtotal: '10',

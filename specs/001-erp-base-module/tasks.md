@@ -57,14 +57,16 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 
 **CRÍTICO**: ninguna historia puede empezar hasta terminar esta fase.
 
-- [ ] T005 Conectar la configuración del módulo al arranque de la aplicación en `src/module-config.js` y `src/main.js` (el README del template describe `userConfig`; confirmar cómo se carga)
-- [ ] T006 Configurar `moduleName` ("Contabilidad y Finanzas: Facturación y Pagos") y `labels` (Tercero, Terceros, Factura, Facturas) en `src/module-config.js`
-- [ ] T007 Declarar el campo personalizado `tipoTercero` (entidad, selección, obligatorio, opciones `cliente` y `proveedor`) en `src/module-config.js`
-- [ ] T008 Declarar los campos personalizados `tipoFactura` (selección, obligatorio, opciones `venta` y `compra`), `montoPagado` (número) y `fechaPago` (fecha) para documentos en `src/module-config.js`
-- [ ] T009 Configurar `statusLifecycle` con los estados Borrador, Emitida y Pagada, y las transiciones Borrador → Emitida → Pagada, sin salidas desde Pagada, en `src/module-config.js`
-- [ ] T010 [P] Escribir pruebas de la configuración (sin colisión de claves con los campos base, estados y transiciones válidos) en `tests/unit/module-config.test.js`
-- [ ] T011 Asegurar que toda factura nueva inicie en Borrador (FR-009) en `src/components/document-form.js` y `src/storage.js`
-- [ ] T012 Validar que una factura de venta solo se asocie a un tercero cliente, y una de compra a un proveedor, en `src/validation.js`
+- [X] T005 Conectar la configuración del módulo al arranque de la aplicación en `src/module-config.js` y `src/main.js` (ya implementada: `main.js` llama `initApp(userConfig)`; comprobado con prueba de arranque el 03-11-2026)
+- [X] T006 Configurar `moduleName` ("Contabilidad y Finanzas: Facturación y Pagos") y `labels` (Tercero, Terceros, Factura, Facturas) en `src/module-config.js`
+- [X] T007 Declarar el campo personalizado `tipoTercero` (entidad, selección, obligatorio, opciones `cliente` y `proveedor`) en `src/module-config.js`
+- [X] T008 Declarar los campos personalizados `tipoFactura` (selección, obligatorio, opciones `venta` y `compra`), `montoPagado` (número) y `fechaPago` (fecha) para documentos en `src/module-config.js`
+- [X] T009 Configurar `statusLifecycle` con los estados Borrador, Emitida y Pagada, y las transiciones Borrador → Emitida → Pagada, sin salidas desde Pagada, en `src/module-config.js`
+- [X] T010 [P] Escribir pruebas de la configuración (sin colisión de claves con los campos base, estados y transiciones válidos) en `tests/unit/module-config.test.js`
+- [X] T011 Asegurar que toda factura nueva inicie en Borrador (FR-009) en `src/components/document-form.js` y `src/storage.js`
+- [X] T012 Validar que una factura de venta solo se asocie a un tercero cliente, y una de compra a un proveedor, en `src/validation.js`
+
+**Verificación del bloque (03-11-2026)**: se reutilizaron las 73 pruebas del template, haciendo explícita la configuración base en las pruebas genéricas. Se agregaron 21 casos para configuración financiera, arranque real desde `main.js`, creación en Borrador, persistencia y asociación venta/cliente y compra/proveedor en alta y edición, incluido el error en formulario. `npm run check` pasa con 25 archivos y 94 pruebas; `npm run build` pasa. La interacción se comprobó con Vitest/jsdom, no mediante un recorrido manual en navegador. Este cierre solo comprende T005–T012: T004, las confirmaciones documentales y las historias completas continúan pendientes. No se modificaron la constitución ni `plan.md`.
 
 **Punto de control**: la configuración carga sin errores y la base está lista; ya se pueden empezar las historias.
 

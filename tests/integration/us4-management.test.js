@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { initApp } from '../../src/app.js';
+import { DEFAULT_CONFIG } from '../../src/module-config.js';
 import { addEntity, loadDocuments } from '../../src/storage.js';
 import { loadAppMarkup, submit } from '../setup/domFixture.js';
 
@@ -19,8 +20,8 @@ function fillDocument(entityId) {
 
 describe('US4 - registrar documentos vinculados', () => {
   it('crea y edita un documento asociado a una entidad', () => {
-    const entity = addEntity({ name: 'Acme', code: 'AC-1' });
-    initApp();
+    const entity = addEntity({ name: 'Acme', code: 'AC-1' }, DEFAULT_CONFIG);
+    initApp(DEFAULT_CONFIG);
 
     fillDocument(entity.entity_id);
     submit('document-form');
@@ -47,8 +48,8 @@ describe('US4 - registrar documentos vinculados', () => {
   });
 
   it('elimina un documento sin afectar a la entidad', () => {
-    const entity = addEntity({ name: 'Acme', code: 'AC-1' });
-    initApp();
+    const entity = addEntity({ name: 'Acme', code: 'AC-1' }, DEFAULT_CONFIG);
+    initApp(DEFAULT_CONFIG);
     fillDocument(entity.entity_id);
     submit('document-form');
 

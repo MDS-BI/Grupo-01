@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { initApp } from '../../src/app.js';
+import { DEFAULT_CONFIG } from '../../src/module-config.js';
 import { loadAppMarkup, submit } from '../setup/domFixture.js';
 
 beforeEach(() => {
@@ -8,7 +9,7 @@ beforeEach(() => {
 
 describe('US1 - validación de entidad', () => {
   it('asocia los errores a los campos y mantiene el foco accesible', () => {
-    initApp();
+    initApp(DEFAULT_CONFIG);
     submit('entity-form');
 
     const nameError = document.getElementById('error-name');

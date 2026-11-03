@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { initApp } from '../../src/app.js';
-import { normalizeConfig } from '../../src/module-config.js';
+import { DEFAULT_CONFIG, normalizeConfig } from '../../src/module-config.js';
 import {
   addEntity,
   loadDocuments,
@@ -31,7 +31,7 @@ function createDocument(entityId) {
 
 describe('US12 - ciclo de vida de estados', () => {
   it('limita las transiciones y rechaza saltos no permitidos', () => {
-    const entity = addEntity({ name: 'Acme', code: 'AC-1' });
+    const entity = addEntity({ name: 'Acme', code: 'AC-1' }, lifecycleConfig);
     initApp(lifecycleConfig);
     createDocument(entity.entity_id);
 
@@ -41,7 +41,7 @@ describe('US12 - ciclo de vida de estados', () => {
     const options = Array.from(document.getElementById('status').options).map(
       (option) => option.value
     );
-    expect(options).toEqual(['Borrador', 'Aprobado', 'Pagado']);
+    expect(options).toEqual(['Borrador']);
 
     document.getElementById('edit-document').value = created.document_id;
     document.getElementById('load-document').click();
@@ -71,8 +71,8 @@ describe('US12 - ciclo de vida de estados', () => {
   });
 
   it('usa estado de texto libre cuando no hay ciclo configurado', () => {
-    const entity = addEntity({ name: 'Acme', code: 'AC-1' });
-    initApp();
+    const entity = addEntity({ name: 'Acme', code: 'AC-1' }, DEFAULT_CONFIG);
+    initApp(DEFAULT_CONFIG);
 
     expect(document.getElementById('status').hidden).toBe(true);
     expect(document.getElementById('status-free').hidden).toBe(false);

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { validateDocument } from '../../src/validation.js';
+import { getConfig } from '../../src/module-config.js';
 
 const config = { customFields: [], statusLifecycle: null };
 const entities = [{ entity_id: 'ent_1' }];
@@ -9,6 +10,35 @@ const base = {
   startDate: '2026-01-01',
   endDate: '2026-01-31',
 };
+
+describe('asociación de facturas y terceros', () => {
+  it.each([
+    ['venta', 'cliente', true],
+    ['venta', 'proveedor', false],
+    ['compra', 'cliente', false],
+    ['compra', 'proveedor', true],
+    ['venta', undefined, false],
+    ['compra', undefined, false],
+  ])('valida %s con tercero %s', (tipoFactura, tipoTercero, valid) => {
+    const errors = validateDocument(
+      { ...base, status: 'Borrador', customFields: { tipoFactura } },
+      {
+        config: getConfig(),
+        entities: [{ entity_id: 'ent_1', customFields: { tipoTercero } }],
+      }
+    );
+    if (valid) {
+      expect(errors).toEqual([]);
+    } else {
+      expect(errors).toContainEqual(
+        expect.objectContaining({
+          field: 'entity_id',
+          code: 'INCOMPATIBLE_ENTITY_TYPE',
+        })
+      );
+    }
+  });
+});
 
 describe('validación detallada de documentos', () => {
   it('acepta un documento válido', () => {

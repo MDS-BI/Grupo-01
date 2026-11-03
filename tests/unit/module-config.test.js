@@ -1,5 +1,80 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeConfig, validateConfig } from '../../src/module-config.js';
+import {
+  BASE_FIELD_KEYS,
+  getConfig,
+  normalizeConfig,
+  userConfig,
+  validateConfig,
+} from '../../src/module-config.js';
+import { allowedNextStatuses } from '../../src/validation.js';
+
+describe('configuración fundacional de facturación', () => {
+  it('carga las etiquetas del módulo sin errores ni colisiones', () => {
+    expect(validateConfig(userConfig)).toEqual([]);
+    const config = getConfig();
+    expect(config.moduleName).toBe(
+      'Contabilidad y Finanzas: Facturación y Pagos'
+    );
+    expect(config.labels).toMatchObject({
+      entity: 'Tercero',
+      entities: 'Terceros',
+      document: 'Factura',
+      documents: 'Facturas',
+    });
+    expect(config.customFields).toEqual([
+      {
+        target: 'entity',
+        key: 'tipoTercero',
+        label: 'Tipo de tercero',
+        type: 'select',
+        required: true,
+        options: ['cliente', 'proveedor'],
+      },
+      {
+        target: 'document',
+        key: 'tipoFactura',
+        label: 'Tipo de factura',
+        type: 'select',
+        required: true,
+        options: ['venta', 'compra'],
+      },
+      {
+        target: 'document',
+        key: 'montoPagado',
+        label: 'Monto pagado',
+        type: 'number',
+        required: false,
+      },
+      {
+        target: 'document',
+        key: 'fechaPago',
+        label: 'Fecha de pago',
+        type: 'date',
+        required: false,
+      },
+    ]);
+    for (const field of config.customFields) {
+      expect(BASE_FIELD_KEYS).not.toContain(field.key);
+    }
+  });
+
+  it('declara solamente Borrador → Emitida → Pagada, sin salidas desde Pagada', () => {
+    const { statusLifecycle } = getConfig();
+    expect(statusLifecycle).toEqual({
+      statuses: ['Borrador', 'Emitida', 'Pagada'],
+      transitions: { Borrador: ['Emitida'], Emitida: ['Pagada'], Pagada: [] },
+    });
+    expect(allowedNextStatuses(statusLifecycle, 'Borrador')).toEqual([
+      'Borrador',
+      'Emitida',
+    ]);
+    expect(allowedNextStatuses(statusLifecycle, 'Emitida')).toEqual([
+      'Emitida',
+      'Pagada',
+    ]);
+    expect(allowedNextStatuses(statusLifecycle, 'Pagada')).toEqual(['Pagada']);
+  });
+});
 
 describe('normalización de configuración', () => {
   it('aplica una configuración completa válida', () => {

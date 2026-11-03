@@ -173,12 +173,18 @@ export function addDocument(document, config = getConfig()) {
   ]);
 
   let status = normalized.status;
-  if (
-    isBlank(status) &&
-    config.statusLifecycle &&
-    config.statusLifecycle.statuses.length > 0
-  ) {
-    status = config.statusLifecycle.statuses[0];
+  if (config.statusLifecycle && config.statusLifecycle.statuses.length > 0) {
+    const initialStatus = config.statusLifecycle.statuses[0];
+    if (!isBlank(status) && status !== initialStatus) {
+      throw new ValidationFailure([
+        {
+          field: 'status',
+          code: 'INVALID_INITIAL_STATUS',
+          message: `Toda factura nueva debe iniciar en ${initialStatus}.`,
+        },
+      ]);
+    }
+    status = initialStatus;
   }
 
   const record = {

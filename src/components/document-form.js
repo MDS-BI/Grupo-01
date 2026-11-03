@@ -90,7 +90,9 @@ function configureStatus(previousStatus) {
     if (select) {
       select.hidden = false;
       select.textContent = '';
-      const statuses = allowedNextStatuses(lifecycle, previousStatus);
+      const statuses = editingId
+        ? allowedNextStatuses(lifecycle, previousStatus)
+        : lifecycle.statuses.slice(0, 1);
       for (const status of statuses) {
         const option = document.createElement('option');
         option.value = status;

@@ -60,17 +60,49 @@ export const DEFAULT_CONFIG = Object.freeze({
 export const DEFAULT_ACCENT_COLOR = '#0f62fe';
 
 export const userConfig = {
-  moduleName: 'ERP Base',
+  moduleName: 'Contabilidad y Finanzas: Facturación y Pagos',
   labels: {
-    entity: 'Entidad',
-    entities: 'Entidades',
-    document: 'Documento',
-    documents: 'Documentos',
+    entity: 'Tercero',
+    entities: 'Terceros',
+    document: 'Factura',
+    documents: 'Facturas',
     dashboard: 'Panel',
     search: 'Buscar',
   },
-  customFields: [],
-  statusLifecycle: null,
+  customFields: [
+    {
+      target: 'entity',
+      key: 'tipoTercero',
+      label: 'Tipo de tercero',
+      type: 'select',
+      required: true,
+      options: ['cliente', 'proveedor'],
+    },
+    {
+      target: 'document',
+      key: 'tipoFactura',
+      label: 'Tipo de factura',
+      type: 'select',
+      required: true,
+      options: ['venta', 'compra'],
+    },
+    {
+      target: 'document',
+      key: 'montoPagado',
+      label: 'Monto pagado',
+      type: 'number',
+    },
+    {
+      target: 'document',
+      key: 'fechaPago',
+      label: 'Fecha de pago',
+      type: 'date',
+    },
+  ],
+  statusLifecycle: {
+    statuses: ['Borrador', 'Emitida', 'Pagada'],
+    transitions: { Borrador: ['Emitida'], Emitida: ['Pagada'], Pagada: [] },
+  },
   theme: {
     accentColor: '#0f62fe',
   },

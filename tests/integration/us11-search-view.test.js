@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { initApp } from '../../src/app.js';
+import { DEFAULT_CONFIG } from '../../src/module-config.js';
 import { addEntity, loadEntities } from '../../src/storage.js';
 import { loadAppMarkup } from '../setup/domFixture.js';
 
@@ -15,8 +16,11 @@ function typeSearch(value) {
 
 describe('US11 - vista de búsqueda y navegación', () => {
   it('mantiene el término y los resultados al navegar', () => {
-    addEntity({ name: 'Apple', code: 'AP-1', description: 'Cliente clave' });
-    initApp();
+    addEntity(
+      { name: 'Apple', code: 'AP-1', description: 'Cliente clave' },
+      DEFAULT_CONFIG
+    );
+    initApp(DEFAULT_CONFIG);
 
     document.getElementById('qa-search').click();
     expect(document.getElementById('view-search').hidden).toBe(false);

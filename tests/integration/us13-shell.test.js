@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { initApp } from '../../src/app.js';
+import { DEFAULT_CONFIG } from '../../src/module-config.js';
 import { addEntity } from '../../src/storage.js';
 import { loadAppMarkup } from '../setup/domFixture.js';
 
@@ -9,7 +10,7 @@ beforeEach(() => {
 
 describe('US13 - shell persistente', () => {
   it('muestra marca, logotipo y navegación activa', () => {
-    initApp();
+    initApp(DEFAULT_CONFIG);
 
     expect(document.getElementById('brand-name').textContent).toBe('ERP Base');
     expect(
@@ -32,8 +33,8 @@ describe('US13 - shell persistente', () => {
   });
 
   it('conserva los datos al navegar entre módulos', () => {
-    addEntity({ name: 'Acme', code: 'AC-1' });
-    initApp();
+    addEntity({ name: 'Acme', code: 'AC-1' }, DEFAULT_CONFIG);
+    initApp(DEFAULT_CONFIG);
 
     document.getElementById('nav-entities').click();
     expect(document.getElementById('entity-list').textContent).toContain(
