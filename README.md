@@ -21,7 +21,7 @@ Líder del grupo: por definir.
 
 **Problema.** Muchas pequeñas y medianas empresas llevan sus facturas en planillas sueltas. Eso les hace perder de vista cuánto les deben, cuánto deben y qué está vencido, y su flujo de caja se resiente.
 
-**Usuarios.** Encargado de cobranzas, encargado de pagos a proveedores, contador y gerencia.
+**Usuarios.** Encargado de cobranzas, encargado de pagos a proveedores, contador y gerencia. Para la demostración, también el equipo del proyecto, que carga los datos de ejemplo.
 
 **Qué incluye el MVP.**
 
@@ -55,14 +55,14 @@ Líder del grupo: por definir.
 4. Si las líneas de detalle de la factura (ítems) son necesarias en el MVP, o basta con subtotal y total.
 5. A qué se refiere la "nomenclatura que dejó el profesor": los nombres del template (Entity, Document) o los del modelo ERP base (`ar_invoices`, `ap_invoices`).
 6. Cómo se coordina con los grupos de CRM, Ventas y Compras el identificador que se comparte para relacionar terceros y facturas. Por ahora se deja de forma universal, enfocados en este departamento, y el ayudante lo confirmará con el profesor.
+7. Si `plan.md` puede incluir las puertas de calidad (`npm run check`) y la tabla de cobertura que surgieron de `speckit.analyze`, o si solo debe editarse el resumen, como indicó la clase.
 
 ## Estado del proyecto
 
 - Las especificaciones están en `specs/001-erp-base-module/`.
-- `spec.md` y `data-model.md` están rehechos con este alcance, y en `plan.md` se editó solo el resumen, como pide el curso. `mer.png` es el diagrama entidad-relación. `tasks.md` tiene las tareas por historia de usuario, armadas siguiendo las reglas de `speckit.tasks`. `quickstart.md` y `research.md` son los del template.
+- `spec.md` y `data-model.md` están rehechos con este alcance, y en `plan.md` se editó el resumen; después se agregaron las puertas de calidad y una tabla de cobertura a partir de `speckit.analyze` (por confirmar con el profesor). `mer.png` es el diagrama entidad-relación. `tasks.md` tiene las tareas por historia de usuario, armadas siguiendo las reglas de `speckit.tasks`. `quickstart.md` y `research.md` son los del template.
 - Al 30-10-2026 el repositorio no incluye las carpetas `src/` ni `index.html`, por lo que las instrucciones de *Setup* del template todavía no se pueden ejecutar. Según el ayudante, el código se genera con `speckit.implement`, fuera de las carpetas de Speckit. Eliminar esta línea cuando estén.
-
-El 02-11-2026 Mauro ejecutó `speckit.analyze` desde OpenCode. El informe identificó decisiones pendientes y diferencias entre los documentos, además de mejoras en pruebas, calidad, accesibilidad y rendimiento. Se solicitaron propuestas de corrección para revisarlas antes de aplicarlas. Sigue pendiente resolver las aclaraciones y validar los ajustes con el grupo.
+- El 02-11-2026 Mauro ejecutó `speckit.analyze` desde OpenCode. El informe identificó decisiones pendientes y diferencias entre los documentos, además de mejoras en pruebas, calidad, accesibilidad y rendimiento. Se solicitaron propuestas de corrección para revisarlas antes de aplicarlas. Sigue pendiente resolver las aclaraciones y validar los ajustes con el grupo.
 
 ## Registro de decisiones
 
@@ -82,6 +82,8 @@ El 02-11-2026 Mauro ejecutó `speckit.analyze` desde OpenCode. El informe identi
 | 01-11-2026 | Se precisó la HU6 para cargar clientes, proveedores y facturas ficticias, probar los procesos de cobro y pago y guardar referencias manuales a otros módulos. Se mantiene el alcance genérico indicado por el ayudante, pendiente de confirmación con el profesor y de alinear los demás documentos. | Mauro Aguayo |
 | 01-11-2026 | Para la carga de demostración se definió que el módulo debe estar vacío. Repetir la carga no debe generar duplicados y, si existen registros propios, deben conservarse sin agregar los ejemplos. Estas condiciones quedaron incorporadas en los escenarios de aceptación de HU6. | Mauro Aguayo |
 | 01-11-2026 | Se detallaron las tareas T040–T044 para cubrir pruebas, datos ficticios, botón de carga y referencias a otros módulos. Se conservaron sus identificadores y las tareas de los demás integrantes. La implementación sigue pendiente; tener la historia redactada no implica marcar estas tareas como terminadas. | Mauro Aguayo |
+| 03-11-2026 | Feedback del profesor del 02-11: hacer la primera implementación, registrar lo modificado y lo incremental y volver al spec; dividir al grupo entre ajustes previos y funcionalidad nueva; integrar la nueva versión en 2 semanas | Grupo |
+| 03-11-2026 | Revisión de coherencia entre documentos: se corrigió el conteo de aclaraciones pendientes, se alinearon `plan.md` y `tasks.md` (estructura de archivos y número de tareas), se retiraron del `spec.md` las menciones a personas y se unificó el formato de la HU6 | Jaime Rivera |
 
 ## Uso de IA (anexo)
 
@@ -90,7 +92,7 @@ Según la política del curso, cada consulta a un modelo de IA generativa se reg
 | Fecha | Integrante | Modelo (versión) | Para qué | Prompts |
 |---|---|---|---|---|
 | Completar | Jaime Rivera | Gemini (Google), completar versión | Primer avance: versión anterior de los specs | Completar |
-| 28-10-2026 y 29-10-2026 | Jaime Rivera | Claude (Anthropic); modelo configurado en la sesión: claude-sonnet-5-5 (el modelo que respondió puede variar, verificar) | Organización del repositorio, definición del alcance, README, spec, data-model, MER, plan y tasks | Completar |
+| 28-10-2026 al 03-11-2026 | Jaime Rivera | Claude (Anthropic); modelo configurado en la sesión: claude-sonnet-5-5 (el modelo que respondió puede variar) | Organización del repositorio, definición del alcance, README, spec, data-model, MER, plan y tasks; resolución de conflictos del PR; revisión del repositorio contra el enunciado, la rúbrica y el feedback; corrección de incoherencias entre documentos | Secuencia resumida: (1) reorganizar el repositorio según el feedback del profesor; (2) definir el alcance del módulo (facturación y pagos, por cobrar y por pagar); (3) rehacer `spec.md` y `data-model.md` y generar el MER; (4) editar solo el resumen de `plan.md` y armar `tasks.md`; (5) resolver los conflictos del PR y repartir las historias; (6) revisar el repositorio contra el enunciado, la rúbrica y el feedback; (7) corregir incoherencias entre documentos |
 | 01-11-2026 | Mauro Aguayo | GPT-6.1 Sol (ChatGPT Work) | Apoyo para comprender y redactar la HU6, definir sus escenarios de aceptación y ajustar sus tareas al resto del proyecto. También se recibió orientación para resolver problemas de Git y mantener el trabajo en main. | Completar |
 | 02-11-2026 | Mauro Aguayo | GPT-6.1 Sol (OpenCode) | Revisión de la coherencia entre especificaciones, plan y tareas mediante speckit.analyze. Se analizaron los hallazgos y las propuestas de mejora para identificar ajustes pendientes antes de implementar el módulo. | Completar |
 

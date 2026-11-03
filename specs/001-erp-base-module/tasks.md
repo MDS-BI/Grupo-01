@@ -13,7 +13,7 @@ description: "Lista de tareas para el módulo de Contabilidad y Finanzas: Factur
 
 **Organización**: Las tareas están agrupadas por historia de usuario (HU1 a HU6 del `spec.md`) para poder implementar y probar cada una de forma independiente.
 
-> **Nota sobre cómo se generó.** Este archivo se armó siguiendo las reglas de `speckit.tasks` (formato, fases y orden), a partir del `spec.md`, el `plan.md` y el `data-model.md` actuales. Debe revisarse con `speckit.clarify` y `speckit.analyze` cuando se puedan ejecutar. Las tareas marcadas con **(depende de aclaración)** quedan provisionales hasta resolver los `[NEEDS CLARIFICATION]` del spec.
+> **Nota sobre cómo se generó.** Este archivo se armó siguiendo las reglas de `speckit.tasks` (formato, fases y orden), a partir del `spec.md`, el `plan.md` y el `data-model.md` actuales. `speckit.analyze` se ejecutó el 02-11-2026 (Mauro) y sus propuestas siguen pendientes de revisar; falta además revisarlo con `speckit.clarify`. Las tareas marcadas con **(depende de aclaración)** quedan provisionales hasta resolver los `[NEEDS CLARIFICATION]` del spec.
 
 ## Formato: `[ID] [P?] [Historia] Descripción`
 
@@ -35,7 +35,7 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 | HU2 Emitir facturas de venta | P1 | Carolina |
 | HU3 Registrar facturas de compra | P1 | Matías |
 | HU4 Registrar el pago y marcar Pagada | P2 | Javier |
-| HU5 Ver deuda por tercero y vencidas | P2 | Elias |
+| HU5 Ver deuda por tercero y vencidas | P2 | Elías |
 | HU6 Datos de demostración y otros módulos | P3 | Mauro |
 
 ---
@@ -307,7 +307,7 @@ Tarea: "Prueba de integración de terceros en tests/integration/create-entity.te
 - La etiqueta [HUn] relaciona cada tarea con su historia, para tener trazabilidad.
 - Cada historia debe poder completarse y probarse de forma independiente.
 - Verificar que las pruebas fallen antes de implementar.
-- Este archivo agrega tres archivos nuevos (`src/tracking.js`, `src/components/tracking.js` y `src/demo-data.js`) que `plan.md` no lista en su estructura: son extensiones del módulo base.
+- Este archivo agrega tres archivos nuevos (`src/tracking.js`, `src/components/tracking.js` y `src/demo-data.js`). Figuran en la estructura de `plan.md` y son extensiones del módulo base.
 - Hacer un commit después de cada tarea o grupo lógico de tareas. Los commits los hace cada integrante a mano, no la IA, como pide el curso. Si un comando de Speckit ofrece hacer un commit automático, responder que no.
 - Varias historias tocan los mismos archivos (`src/storage.js`, `src/components/document-form.js` y `tests/unit/storage.test.js`). Si dos integrantes los editan a la vez puede haber conflictos al unir las ramas: conviene avisar al grupo antes de editarlos y hacer `git pull` antes de empezar.
 - Las tareas marcadas **(depende de aclaración)** deben revisarse al resolver los `[NEEDS CLARIFICATION]` del `spec.md`.

@@ -24,6 +24,7 @@
 - **Encargado de pagos a proveedores:** registra facturas de compra.
 - **Contador:** registra los pagos y cierra las facturas.
 - **Gerencia:** revisa la deuda por tercero y las facturas vencidas.
+- **Integrante del equipo (demostración):** carga los datos de ejemplo y guarda referencias a otros módulos (HU6).
 
 ## Manejo de riesgos de datos y sesgos
 
@@ -66,8 +67,8 @@ Como encargado de cobranzas, quiero registrar una factura de venta a un cliente,
 3. **Dada** una fecha de vencimiento anterior a la de emisión, **cuando** intento guardar la factura, **entonces** el sistema la rechaza.
 4. **Dado** que intento crear una factura sin elegir un tercero existente, **cuando** intento guardarla, **entonces** el sistema la rechaza.
 5. **Dada** una factura Emitida, **cuando** intento devolverla a Borrador, **entonces** el sistema lo impide.
-6. **Dada** una factura Emitida, **cuando** consulto al cliente, **entonces** veo la factura con su monto total y su fecha de vencimiento. *(Escenario propuesto por Caro.)*
-7. **Dado** un monto total negativo, **cuando** intento guardar la factura, **entonces** el sistema la rechaza e informa el error. *(Escenario propuesto por Caro.)*
+6. **Dada** una factura Emitida, **cuando** consulto al cliente, **entonces** veo la factura con su monto total y su fecha de vencimiento.
+7. **Dado** un monto total negativo, **cuando** intento guardar la factura, **entonces** el sistema la rechaza e informa el error.
 
 ---
 
@@ -126,17 +127,17 @@ Como gerente, quiero ver cuánto me deben mis clientes, cuánto debo a mis prove
 
 Como integrante del equipo, quiero cargar ejemplos ficticios de clientes, proveedores y facturas, y guardar sus referencias a otros módulos del ERP, para probar los procesos de cobro y pago y mostrar cómo se relacionan los registros.
 
-**Por qué esta prioridad**: Para presentar el módulo necesitamos ejemplos que permitan recorrer sus funciones sin ingresar todos los datos a mano. Estos ejemplos también nos servirán para comprobar que las facturas se asocian al tercero correcto, que los pagos actualizan las deudas y que se identifican las facturas vencidas.
+**Por qué esta prioridad**: para presentar el módulo necesitamos ejemplos que permitan recorrer sus funciones sin ingresar todos los datos a mano. Estos ejemplos también nos servirán para comprobar que las facturas se asocian al tercero correcto, que los pagos actualizan las deudas y que se identifican las facturas vencidas.
 
-**Prueba independiente**: Abrir el módulo sin datos, cargar los ejemplos y comprobar que aparecen clientes, proveedores y facturas en distintos estados. Recargar la página y verificar que los registros y sus relaciones se mantienen.
+**Prueba independiente**: abrir el módulo sin datos, cargar los ejemplos y comprobar que aparecen clientes, proveedores y facturas en distintos estados. Recargar la página y verificar que los registros y sus relaciones se mantienen.
 
 **Escenarios de aceptación**:
 
-1. **Dado** que el módulo está vacío, cuando cargo los datos de demostración, entonces aparecen clientes, proveedores y facturas ficticias de venta y compra, incluyendo casos pendientes, pagados y vencidos.
-2. **Dados** los ejemplos cargados, cuando recargo la página, entonces los registros conservan sus datos, estados y relaciones.
-3. **Dados** los ejemplos ya cargados, cuando intento cargarlos nuevamente, entonces el sistema informa que ya existen datos y no genera duplicados.
-4. **Dado** que ya ingresé mis propios registros, cuando intento cargar la demostración, entonces el sistema informa que la carga requiere un módulo vacío y conserva mis registros.
-5. **Dado** un tercero o una factura, cuando guardo una referencia a otro módulo, entonces puedo volver a consultarla después de cerrar y abrir el registro.
+1. **Dado** que el módulo está vacío, **cuando** cargo los datos de demostración, **entonces** aparecen clientes, proveedores y facturas ficticias de venta y compra, incluyendo casos pendientes, pagados y vencidos.
+2. **Dados** los ejemplos cargados, **cuando** recargo la página, **entonces** los registros conservan sus datos, estados y relaciones.
+3. **Dados** los ejemplos ya cargados, **cuando** intento cargarlos nuevamente, **entonces** el sistema informa que ya existen datos y no genera duplicados.
+4. **Dado** que ya ingresé mis propios registros, **cuando** intento cargar la demostración, **entonces** el sistema informa que la carga requiere un módulo vacío y conserva mis registros.
+5. **Dado** un tercero o una factura, **cuando** guardo una referencia a otro módulo, **entonces** puedo volver a consultarla después de cerrar y abrir el registro.
 
 ---
 
@@ -149,7 +150,7 @@ Como integrante del equipo, quiero cargar ejemplos ficticios de clientes, provee
 - ¿Qué pasa si las facturas Emitidas de un cliente superan su límite de crédito? **[NEEDS CLARIFICATION: definir si el sistema solo avisa o también bloquea la emisión.]**
 - ¿Qué pasa si se mezclan facturas en pesos y en dólares en un mismo total? **[NEEDS CLARIFICATION: definir la moneda del MVP.]**
 - ¿Qué pasa si el descuento es mayor que el subtotal? El sistema rechaza la factura.
-- ¿Qué pasa si el monto total es cero? Caro propone aceptarlo, por ser un valor no negativo, aunque no representa una deuda activa. **[NEEDS CLARIFICATION: confirmar junto con la regla de monto obligatorio.]**
+- ¿Qué pasa si el monto total es cero? Se propone aceptarlo, por ser un valor no negativo, aunque no representa una deuda activa. **[NEEDS CLARIFICATION: confirmar junto con la regla de monto obligatorio.]**
 - ¿Qué pasa si el cliente se elimina antes de emitir la factura? La factura no puede registrarse, porque debe asociarse a un tercero existente.
 - ¿Qué pasa si la fecha de vencimiento es igual a la de emisión? Se acepta, porque la regla exige que sea igual o posterior.
 - ¿Qué pasa al eliminar un tercero con facturas pendientes de pago? Se eliminan también sus facturas, por lo que el sistema debería pedir confirmación antes.
