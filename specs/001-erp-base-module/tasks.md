@@ -35,7 +35,7 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 | HU2 Emitir facturas de venta | P1 | Carolina |
 | HU3 Registrar facturas de compra | P1 | Matías |
 | HU4 Registrar el pago y marcar Pagada | P2 | Javier |
-| HU5 Ver deuda por tercero y vencidas | P2 | Por asignar |
+| HU5 Ver deuda por tercero y vencidas | P2 | Elias |
 | HU6 Datos de demostración y otros módulos | P3 | Mauro |
 
 ---
