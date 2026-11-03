@@ -1,4 +1,4 @@
-function documentSummary(document, config) {
+function documentSummary(document, _config) {
   const parts = [];
   if (document.series) parts.push(document.series);
   if (document.folio !== undefined && document.folio !== '')

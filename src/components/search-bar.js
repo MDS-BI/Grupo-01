@@ -1,4 +1,4 @@
-export function initSearchBar({ config, onSearch }) {
+export function initSearchBar({ onSearch }) {
   const input = document.getElementById('search-input');
   if (input) {
     input.oninput = () => onSearch(input.value);

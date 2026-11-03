@@ -1,6 +1,6 @@
 import { getSearchableValues, normalizeText } from './utils.js';
 
-export function searchEntities(entities, term, config = {}) {
+export function searchEntities(entities, term, _config = {}) {
   const list = Array.isArray(entities) ? entities : [];
   const query = normalizeText(term);
   if (!query) return list.slice();
