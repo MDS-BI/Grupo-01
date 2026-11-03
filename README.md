@@ -56,16 +56,16 @@ Líder del grupo: por definir.
 5. A qué se refiere la "nomenclatura que dejó el profesor": los nombres del template (Entity, Document) o los del modelo ERP base (`ar_invoices`, `ap_invoices`).
 6. Cómo se coordina con los grupos de CRM, Ventas y Compras el identificador que se comparte para relacionar terceros y facturas. Por ahora se deja de forma universal, enfocados en este departamento, y el ayudante lo confirmará con el profesor.
 7. Si `plan.md` puede incluir las puertas de calidad (`npm run check`) y la tabla de cobertura que surgieron de `speckit.analyze`, o si solo debe editarse el resumen, como indicó la clase.
-8. Si `src/` e `index.html`, que el template actual sí incluye, se copian al repositorio o se generan con `speckit.implement`.
+8. Si el profesor acepta que `src/`, `index.html` y las pruebas del template actual se hayan copiado al repositorio (03-11-2026, en un commit aparte), o si prefiere que el código se genere con `speckit.implement`.
 9. Si se acepta que el MVP no tenga pruebas e2e (excepción al principio II de la Constitución), porque el template solo trae Vitest con jsdom.
 
 ## Estado del proyecto
 
 - Las especificaciones están en `specs/001-erp-base-module/`.
 - `spec.md` y `data-model.md` están rehechos con este alcance, y en `plan.md` se editó el resumen; después se agregaron las puertas de calidad y una tabla de cobertura a partir de `speckit.analyze` (por confirmar con el profesor). `mer.png` es el diagrama entidad-relación. `tasks.md` tiene las tareas por historia de usuario, armadas siguiendo las reglas de `speckit.tasks`. `quickstart.md` y `research.md` son los del template.
-- Al 30-10-2026 el repositorio no incluye las carpetas `src/` ni `index.html`, por lo que las instrucciones de *Setup* del template todavía no se pueden ejecutar. El template actual sí las trae, junto con `tests/setup/`. Según el ayudante, el código se genera con `speckit.implement`, fuera de las carpetas de Speckit. Eliminar esta línea cuando estén.
+- El 03-11-2026 se copiaron al repositorio `src/`, `index.html`, `tests/setup/` y las pruebas del template actual (30-10-2026), y se reemplazaron las pruebas antiguas, que venían de una versión anterior del template y no calzaban con el código nuevo. Si el profesor prefiere que el código se genere con `speckit.implement`, se revierte ese commit. Las historias de usuario del módulo (facturación y pagos) todavía no están implementadas.
 - El 02-11-2026 Mauro ejecutó `speckit.analyze` desde OpenCode. El informe identificó decisiones pendientes y diferencias entre los documentos, además de mejoras en pruebas, calidad, accesibilidad y rendimiento. Se solicitaron propuestas de corrección para revisarlas antes de aplicarlas. Sigue pendiente resolver las aclaraciones y validar los ajustes con el grupo.
-- El 03-11-2026 se corrigió la configuración de ESLint y Prettier: `npm run lint` y `npm run format:check` pasan. `npm run check` completo todavía falla en las pruebas, porque falta `src/`. Prettier no revisa `specs/` ni los `.md` (ver `.prettierignore`).
+- El 03-11-2026 se corrigió la configuración de ESLint y Prettier: `npm run lint` y `npm run format:check` pasan. Con el módulo base, `npm run check` completo también pasa (24 archivos y 73 pruebas). Prettier no revisa `specs/` ni los `.md` (ver `.prettierignore`).
 
 ## Registro de decisiones
 
@@ -89,6 +89,7 @@ Líder del grupo: por definir.
 | 03-11-2026 | Revisión de coherencia entre documentos: se corrigió el conteo de aclaraciones pendientes, se alinearon `plan.md` y `tasks.md` (estructura de archivos y número de tareas), se retiraron del `spec.md` las menciones a personas y se unificó el formato de la HU6 | Jaime Rivera |
 | 03-11-2026 | Elías Zavala asumió la HU5 (ver la deuda por tercero y las facturas vencidas), según sus commits del 02 y 03-11-2026. Con esto las seis historias tienen responsable; queda por definir el líder del grupo | Elías Zavala |
 | 03-11-2026 | Se corrigió la configuración de ESLint y Prettier (error de arranque de ESLint, globales del navegador, `.prettierignore` para documentos y formato de los archivos de `tests/`) y se actualizó `package-lock.json` | Jaime Rivera |
+| 03-11-2026 | Se copió al repositorio el módulo base del template (`src/`, `index.html`, `tests/setup/` y pruebas actuales) y se reemplazaron las pruebas antiguas. Se agregaron los globales de Node para `tests/` en ESLint y un almacenamiento en memoria en `tests/setup/dom.js` para Node 25 o superior. `npm run check` pasa | Jaime Rivera |
 
 ## Uso de IA (anexo)
 

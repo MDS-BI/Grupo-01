@@ -78,8 +78,8 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 
 ### Pruebas de HU1
 
-- [ ] T013 [P] [HU1] Prueba de validación de terceros (nombre y código obligatorios, límite de crédito no negativo, `tipoTercero` obligatorio) en `tests/unit/storage.test.js`
-- [ ] T014 [P] [HU1] Prueba de integración: registrar cliente y proveedor, buscarlos y eliminar uno con facturas (borrado en cascada) en `tests/integration/create-entity.test.js`
+- [ ] T013 [P] [HU1] Prueba de validación de terceros (nombre y código obligatorios, límite de crédito no negativo, `tipoTercero` obligatorio) en `tests/unit/validation.test.js`
+- [ ] T014 [P] [HU1] Prueba de integración: registrar cliente y proveedor, buscarlos y eliminar uno con facturas (borrado en cascada) en `tests/integration/us1-create-entity.test.js`
 
 ### Implementación de HU1
 
@@ -101,8 +101,8 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 
 ### Pruebas de HU2
 
-- [ ] T020 [P] [HU2] Prueba de validación de facturas (folio entero positivo, vencimiento igual o posterior a la emisión, descuento no mayor al subtotal, tercero existente) en `tests/unit/storage.test.js`
-- [ ] T021 [P] [HU2] Prueba de integración: crear factura de venta en Borrador, emitirla y comprobar que no se puede volver a Borrador en `tests/integration/manage-document.test.js`
+- [ ] T020 [P] [HU2] Prueba de validación de facturas (folio entero positivo, vencimiento igual o posterior a la emisión, descuento no mayor al subtotal, tercero existente) en `tests/unit/document-validation.test.js`
+- [ ] T021 [P] [HU2] Prueba de integración: crear factura de venta en Borrador, emitirla y comprobar que no se puede volver a Borrador en `tests/integration/us12-lifecycle.test.js`
 
 ### Implementación de HU2
 
@@ -125,7 +125,7 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 
 ### Pruebas de HU3
 
-- [ ] T028 [P] [HU3] Prueba de integración: crear factura de compra, emitirla, rechazar un monto negativo y distinguirla de las de venta en `tests/integration/add-document.test.js`
+- [ ] T028 [P] [HU3] Prueba de integración: crear factura de compra, emitirla, rechazar un monto negativo y distinguirla de las de venta en `tests/integration/us10-documents.test.js`
 
 ### Implementación de HU3
 
@@ -144,8 +144,8 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 
 ### Pruebas de HU4
 
-- [ ] T031 [P] [HU4] Prueba de validación del pago (monto pagado igual al total, fecha de pago obligatoria, factura en Borrador no se puede pagar, Pagada no admite cambios) en `tests/unit/storage.test.js`
-- [ ] T032 [P] [HU4] Prueba de integración: emitir, registrar el pago y marcar Pagada en `tests/integration/manage-document.test.js`
+- [ ] T031 [P] [HU4] Prueba de validación del pago (monto pagado igual al total, fecha de pago obligatoria, factura en Borrador no se puede pagar, Pagada no admite cambios) en `tests/unit/document-validation.test.js`
+- [ ] T032 [P] [HU4] Prueba de integración: emitir, registrar el pago y marcar Pagada en `tests/integration/us12-lifecycle.test.js`
 
 ### Implementación de HU4
 
@@ -267,8 +267,8 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 
 ```text
 # Pruebas de la HU1 juntas:
-Tarea: "Prueba de validación de terceros en tests/unit/storage.test.js"
-Tarea: "Prueba de integración de terceros en tests/integration/create-entity.test.js"
+Tarea: "Prueba de validación de terceros en tests/unit/validation.test.js"
+Tarea: "Prueba de integración de terceros en tests/integration/us1-create-entity.test.js"
 ```
 
 ---
@@ -311,7 +311,7 @@ Tarea: "Prueba de integración de terceros en tests/integration/create-entity.te
 - La búsqueda de terceros (FR-004) y los listados de terceros y facturas ya vienen en el módulo base (`src/search.js`, `src/components/entity-list.js` y `src/components/document-list.js`): T013, T014 y T030 comprueban o adaptan lo que ya existe.
 - Este archivo agrega tres archivos nuevos (`src/tracking.js`, `src/components/tracking.js` y `src/demo-data.js`). Figuran en la estructura de `plan.md` y son extensiones del módulo base.
 - Hacer un commit después de cada tarea o grupo lógico de tareas. Los commits los hace cada integrante a mano, no la IA, como pide el curso. Si un comando de Speckit ofrece hacer un commit automático, responder que no.
-- Varias historias tocan los mismos archivos (`src/storage.js`, `src/components/document-form.js` y `tests/unit/storage.test.js`). Si dos integrantes los editan a la vez puede haber conflictos al subir los cambios a `main`: conviene avisar al grupo antes de editarlos y hacer Fetch y Pull antes de empezar.
+- Varias historias tocan los mismos archivos (`src/storage.js`, `src/components/document-form.js` y `tests/unit/document-validation.test.js`). Si dos integrantes los editan a la vez puede haber conflictos al subir los cambios a `main`: conviene avisar al grupo antes de editarlos y hacer Fetch y Pull antes de empezar.
 - Las tareas marcadas **(depende de aclaración)** deben revisarse al resolver los `[NEEDS CLARIFICATION]` del `spec.md`.
 - Evitar tareas vagas, conflictos en el mismo archivo y dependencias entre historias que rompan su independencia.
 
@@ -324,8 +324,8 @@ Caro agregó estas tareas en `main` para la HU2 (Emisión y Registro de Facturas
 
 Depende de las Tareas 3 y 6 de esa versión (etiquetas Cliente/Factura y ciclo de vida Borrador, Emitida, Pagada), que aquí son T006 y T009. Reutilizar los campos base definidos en `data-model.md`: `entity_id`, `series`, `folio`, `startDate` (emisión), `endDate` (vencimiento), `totalAmount` y `status`; no crear campos duplicados.
 
-- [ ] **Tarea 9:** Escribir pruebas unitarias en `tests/unit/storage.test.js` para la validación de facturas: cliente existente obligatorio, `folio` entero positivo, `totalAmount` no negativo, `endDate` igual o posterior a `startDate` y estado inicial Borrador.
-- [ ] **Tarea 10:** Escribir pruebas de integración en `tests/integration/add-document.test.js` que cubran el registro de una factura desde el formulario, su asociación al `entity_id` del cliente y el rechazo de monto negativo, vencimiento anterior a la emisión y cliente inexistente.
+- [ ] **Tarea 9:** Escribir pruebas unitarias en `tests/unit/document-validation.test.js` para la validación de facturas: cliente existente obligatorio, `folio` entero positivo, `totalAmount` no negativo, `endDate` igual o posterior a `startDate` y estado inicial Borrador.
+- [ ] **Tarea 10:** Escribir pruebas de integración en `tests/integration/us10-documents.test.js` que cubran el registro de una factura desde el formulario, su asociación al `entity_id` del cliente y el rechazo de monto negativo, vencimiento anterior a la emisión y cliente inexistente.
 - [ ] **Tarea 11:** Ajustar `index.html` y `src/components/document-form.js` para capturar cliente, `series` opcional, `folio`, fecha de emisión (`startDate`), fecha de vencimiento (`endDate`) y monto total (`totalAmount`), mostrando mensajes de error por campo.
 - [ ] **Tarea 12:** Implementar en `src/storage.js` la validación de factura: `entity_id` debe coincidir con un `Entity.entity_id` existente, `folio` entero positivo, `totalAmount` requerido y no negativo, `startDate`/`endDate` requeridas y `endDate >= startDate`.
 - [ ] **Tarea 13:** Implementar en `src/storage.js` el alta de facturas mediante `addDocument`, persistiendo `entity_id`, `folio`, `series`, fechas, `totalAmount`, estado inicial Borrador e identificadores/timestamps automáticos; aplicar las mismas validaciones en `updateDocument`.
