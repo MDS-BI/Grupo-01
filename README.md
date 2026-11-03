@@ -56,13 +56,16 @@ Líder del grupo: por definir.
 5. A qué se refiere la "nomenclatura que dejó el profesor": los nombres del template (Entity, Document) o los del modelo ERP base (`ar_invoices`, `ap_invoices`).
 6. Cómo se coordina con los grupos de CRM, Ventas y Compras el identificador que se comparte para relacionar terceros y facturas. Por ahora se deja de forma universal, enfocados en este departamento, y el ayudante lo confirmará con el profesor.
 7. Si `plan.md` puede incluir las puertas de calidad (`npm run check`) y la tabla de cobertura que surgieron de `speckit.analyze`, o si solo debe editarse el resumen, como indicó la clase.
+8. Si `src/` e `index.html`, que el template actual sí incluye, se copian al repositorio o se generan con `speckit.implement`.
+9. Si se acepta que el MVP no tenga pruebas e2e (excepción al principio II de la Constitución), porque el template solo trae Vitest con jsdom.
 
 ## Estado del proyecto
 
 - Las especificaciones están en `specs/001-erp-base-module/`.
 - `spec.md` y `data-model.md` están rehechos con este alcance, y en `plan.md` se editó el resumen; después se agregaron las puertas de calidad y una tabla de cobertura a partir de `speckit.analyze` (por confirmar con el profesor). `mer.png` es el diagrama entidad-relación. `tasks.md` tiene las tareas por historia de usuario, armadas siguiendo las reglas de `speckit.tasks`. `quickstart.md` y `research.md` son los del template.
-- Al 30-10-2026 el repositorio no incluye las carpetas `src/` ni `index.html`, por lo que las instrucciones de *Setup* del template todavía no se pueden ejecutar. Según el ayudante, el código se genera con `speckit.implement`, fuera de las carpetas de Speckit. Eliminar esta línea cuando estén.
+- Al 30-10-2026 el repositorio no incluye las carpetas `src/` ni `index.html`, por lo que las instrucciones de *Setup* del template todavía no se pueden ejecutar. El template actual sí las trae, junto con `tests/setup/`. Según el ayudante, el código se genera con `speckit.implement`, fuera de las carpetas de Speckit. Eliminar esta línea cuando estén.
 - El 02-11-2026 Mauro ejecutó `speckit.analyze` desde OpenCode. El informe identificó decisiones pendientes y diferencias entre los documentos, además de mejoras en pruebas, calidad, accesibilidad y rendimiento. Se solicitaron propuestas de corrección para revisarlas antes de aplicarlas. Sigue pendiente resolver las aclaraciones y validar los ajustes con el grupo.
+- El 03-11-2026 se corrigió la configuración de ESLint y Prettier: `npm run lint` y `npm run format:check` pasan. `npm run check` completo todavía falla en las pruebas, porque falta `src/`. Prettier no revisa `specs/` ni los `.md` (ver `.prettierignore`).
 
 ## Registro de decisiones
 
@@ -85,6 +88,7 @@ Líder del grupo: por definir.
 | 03-11-2026 | Feedback del profesor del 02-11: hacer la primera implementación, registrar lo modificado y lo incremental y volver al spec; dividir al grupo entre ajustes previos y funcionalidad nueva; integrar la nueva versión en 2 semanas | Grupo |
 | 03-11-2026 | Revisión de coherencia entre documentos: se corrigió el conteo de aclaraciones pendientes, se alinearon `plan.md` y `tasks.md` (estructura de archivos y número de tareas), se retiraron del `spec.md` las menciones a personas y se unificó el formato de la HU6 | Jaime Rivera |
 | 03-11-2026 | Elías Zavala asumió la HU5 (ver la deuda por tercero y las facturas vencidas), según sus commits del 02 y 03-11-2026. Con esto las seis historias tienen responsable; queda por definir el líder del grupo | Elías Zavala |
+| 03-11-2026 | Se corrigió la configuración de ESLint y Prettier (error de arranque de ESLint, globales del navegador, `.prettierignore` para documentos y formato de los archivos de `tests/`) y se actualizó `package-lock.json` | Jaime Rivera |
 
 ## Uso de IA (anexo)
 
@@ -93,7 +97,8 @@ Según la política del curso, cada consulta a un modelo de IA generativa se reg
 | Fecha | Integrante | Modelo (versión) | Para qué | Prompts |
 |---|---|---|---|---|
 | Completar | Jaime Rivera | Gemini (Google), completar versión | Primer avance: versión anterior de los specs | Completar |
-| 28-10-2026 al 03-11-2026 | Jaime Rivera | Claude (Anthropic); modelo configurado en la sesión: claude-sonnet-5-5 (el modelo que respondió puede variar) | Organización del repositorio, definición del alcance, README, spec, data-model, MER, plan y tasks; resolución de conflictos del PR; revisión del repositorio contra el enunciado, la rúbrica y el feedback; corrección de incoherencias entre documentos | Secuencia resumida: (1) reorganizar el repositorio según el feedback del profesor; (2) definir el alcance del módulo (facturación y pagos, por cobrar y por pagar); (3) rehacer `spec.md` y `data-model.md` y generar el MER; (4) editar solo el resumen de `plan.md` y armar `tasks.md`; (5) resolver los conflictos del PR y repartir las historias; (6) revisar el repositorio contra el enunciado, la rúbrica y el feedback; (7) corregir incoherencias entre documentos |
+| 28-10-2026 al 03-11-2026 | Jaime Rivera | Claude (Anthropic); modelo configurado en la sesión: claude-sonnet-5-5 (el modelo que respondió puede variar) | Organización del repositorio, definición del alcance, README, spec, data-model, MER, plan y tasks; resolución de conflictos del PR; revisión del repositorio contra el enunciado, la rúbrica y el feedback; corrección de incoherencias entre documentos; preparación del computador para el taller y corrección de ESLint y Prettier | Secuencia resumida: (1) reorganizar el repositorio según el feedback del profesor; (2) definir el alcance del módulo (facturación y pagos, por cobrar y por pagar); (3) rehacer `spec.md` y `data-model.md` y generar el MER; (4) editar solo el resumen de `plan.md` y armar `tasks.md`; (5) resolver los conflictos del PR y repartir las historias; (6) revisar el repositorio contra el enunciado, la rúbrica y el feedback; (7) corregir incoherencias entre documentos; (8) preparar el computador para el taller de OpenCode y Speckit; (9) probar y corregir la configuración de ESLint y Prettier |
+| 03-11-2026 | Jaime Rivera | Big Pickle (modelo por defecto de OpenCode 1.19.5) | Pruebas de la instalación de OpenCode en el repositorio: lectura de archivos y `/speckit.analyze`, con el agente Plan, sin editar archivos | (1) "Responde solo con la palabra OK"; (2) "Lee specs/001-erp-base-module/tasks.md y spec.md. Dime cuántas tareas con identificador T### hay en tasks.md, cuántas historias de usuario tiene spec.md y cuántos marcadores [NEEDS CLARIFICATION] hay en spec.md."; (3) `/speckit.analyze` |
 | 01-11-2026 | Mauro Aguayo | GPT-6.1 Sol (ChatGPT Work) | Apoyo para comprender y redactar la HU6, definir sus escenarios de aceptación y ajustar sus tareas al resto del proyecto. También se recibió orientación para resolver problemas de Git y mantener el trabajo en main. | Completar |
 | 02-11-2026 | Mauro Aguayo | GPT-6.1 Sol (OpenCode) | Revisión de la coherencia entre especificaciones, plan y tareas mediante speckit.analyze. Se analizaron los hallazgos y las propuestas de mejora para identificar ajustes pendientes antes de implementar el módulo. | Completar |
 

@@ -13,7 +13,7 @@ description: "Lista de tareas para el módulo de Contabilidad y Finanzas: Factur
 
 **Organización**: Las tareas están agrupadas por historia de usuario (HU1 a HU6 del `spec.md`) para poder implementar y probar cada una de forma independiente.
 
-> **Nota sobre cómo se generó.** Este archivo se armó siguiendo las reglas de `speckit.tasks` (formato, fases y orden), a partir del `spec.md`, el `plan.md` y el `data-model.md` actuales. `speckit.analyze` se ejecutó el 02-11-2026 (Mauro) y sus propuestas siguen pendientes de revisar; falta además revisarlo con `speckit.clarify`. Las tareas marcadas con **(depende de aclaración)** quedan provisionales hasta resolver los `[NEEDS CLARIFICATION]` del spec.
+> **Nota sobre cómo se generó.** Este archivo se armó siguiendo las reglas de `speckit.tasks` (formato, fases y orden), a partir del `spec.md`, el `plan.md` y el `data-model.md` actuales. `speckit.analyze` se ejecutó el 02-11-2026 (Mauro) y otra vez el 03-11-2026 (Jaime). Sus propuestas siguen pendientes de revisar y falta revisarlo con `speckit.clarify`. Las tareas marcadas con **(depende de aclaración)** quedan provisionales hasta resolver los `[NEEDS CLARIFICATION]` del spec.
 
 ## Formato: `[ID] [P?] [Historia] Descripción`
 
@@ -130,7 +130,7 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 ### Implementación de HU3
 
 - [ ] T029 [HU3] Mostrar en el selector de tercero solo proveedores cuando el tipo de factura es compra, y solo clientes cuando es venta, en `src/components/document-form.js`
-- [ ] T030 [HU3] Mostrar el tipo de factura (venta o compra) en el listado de facturas en `src/components/document-form.js`
+- [ ] T030 [HU3] Mostrar el tipo de factura (venta o compra), el monto total y la fecha de vencimiento en el listado de facturas en `src/components/document-list.js`
 
 **Punto de control**: las HU1, HU2 y HU3 funcionan de forma independiente.
 
@@ -223,7 +223,7 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 - [ ] T045 Actualizar las instrucciones de uso (instalación, ejecución y pruebas) en `README.md`
 - [ ] T046 Completar el anexo de uso de IA (modelo, fecha y prompts) en `README.md`
 - [ ] T047 Mantener el registro de decisiones en `README.md` (o en issues de GitHub), como sugiere el enunciado
-- [ ] T048 Ejecutar `npx vitest run` y corregir las pruebas que fallen
+- [ ] T048 Ejecutar `npm run check` (lint, formato y pruebas) y corregir lo que falle
 - [ ] T049 Recorrer el flujo completo con los datos de demostración (tercero, factura, emisión, pago y seguimiento) en la aplicación local (`npm run dev`), y confirmar que se hace en menos de 5 minutos (SC-005) y que una persona nueva registra un tercero y emite su primera factura en menos de 3 minutos (SC-001), siguiendo también las verificaciones de `specs/001-erp-base-module/quickstart.md`
 - [ ] T050 Comprobar que la interfaz solo usa datos ficticios y que `README.md` advierte que `localStorage` no es seguro (riesgos de datos)
 - [ ] T051 Ejecutar `speckit.analyze` para verificar la consistencia entre `specs/001-erp-base-module/spec.md`, `plan.md`, `data-model.md` y `tasks.md`
@@ -307,6 +307,8 @@ Tarea: "Prueba de integración de terceros en tests/integration/create-entity.te
 - La etiqueta [HUn] relaciona cada tarea con su historia, para tener trazabilidad.
 - Cada historia debe poder completarse y probarse de forma independiente.
 - Verificar que las pruebas fallen antes de implementar.
+- Antes de dar por terminada cada historia, ejecutar `npm run check` (puertas de calidad de `plan.md`). Lint y formato ya pasan; las pruebas necesitan que exista `src/`.
+- La búsqueda de terceros (FR-004) y los listados de terceros y facturas ya vienen en el módulo base (`src/search.js`, `src/components/entity-list.js` y `src/components/document-list.js`): T013, T014 y T030 comprueban o adaptan lo que ya existe.
 - Este archivo agrega tres archivos nuevos (`src/tracking.js`, `src/components/tracking.js` y `src/demo-data.js`). Figuran en la estructura de `plan.md` y son extensiones del módulo base.
 - Hacer un commit después de cada tarea o grupo lógico de tareas. Los commits los hace cada integrante a mano, no la IA, como pide el curso. Si un comando de Speckit ofrece hacer un commit automático, responder que no.
 - Varias historias tocan los mismos archivos (`src/storage.js`, `src/components/document-form.js` y `tests/unit/storage.test.js`). Si dos integrantes los editan a la vez puede haber conflictos al subir los cambios a `main`: conviene avisar al grupo antes de editarlos y hacer Fetch y Pull antes de empezar.

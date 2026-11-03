@@ -35,7 +35,7 @@ Muchas pequeñas y medianas empresas llevan sus facturas en planillas sueltas. A
 
 - Calidad: La implementación usará una estructura JavaScript pequeña y modular con límites de función claros y nomenclatura consistente, manteniendo las preocupaciones base (almacenamiento, identidad, integridad referencial) separadas de la lógica específica del dominio para que los módulos personalizados puedan extenderlas.
 - **Puertas de Calidad**: Se ejecutará `npm run check` (lint + format + tests) antes de considerar completada cada historia. El cumplimiento de estos gates es obligatorio (Constitución, Quality Standards).
-- Pruebas: Los flujos centrales de crear, editar, eliminar y buscar estarán cubiertos por pruebas automatizadas **antes o junto con** la implementación (Constitución, Test-First). La cobertura e2e de los recorridos críticos queda por definir: hoy no hay tareas ni herramientas para ello.
+- Pruebas: Los flujos centrales de crear, editar, eliminar y buscar estarán cubiertos por pruebas automatizadas **antes o junto con** la implementación (Constitución, Test-First). Las pruebas e2e quedan fuera del MVP: el template solo trae Vitest con jsdom, y las pruebas de integración cubren los recorridos críticos. Es una excepción a la Constitución (principio II), por confirmar con el profesor.
 - Experiencia de Usuario: La interfaz proporcionará mensajes de validación claros, estados vacíos y comportamiento de formulario consistente, presentados dentro de un marco de espacio de trabajo ERP con marca (barra superior + barra lateral) que se ve y se comporta idénticamente en todas las pantallas.
 - **Rendimiento**: La búsqueda y el renderizado de listas se optimizarán para colecciones de hasta 500 registros usando actualizaciones ligeras del DOM, con presupuesto < 100 ms.
 
@@ -60,10 +60,14 @@ specs/001-erp-base-module/
 ### Código Fuente (raíz del repositorio)
 
 ```text
+index.html
 src/
 ├── main.js
 ├── styles.css
 ├── storage.js
+├── validation.js
+├── search.js
+├── utils.js
 ├── app.js
 ├── module-config.js
 ├── tracking.js         (cálculos de deuda y vencimiento, FR-012 a FR-014)
@@ -72,7 +76,10 @@ src/
     ├── shell.js        (marco del espacio de trabajo: barra superior, logotipo SVG, barra lateral, estado de módulo activo)
     ├── dashboard.js    (vista de inicio: cuadrícula de acciones rápidas + tarjetas de estadísticas en vivo)
     ├── entity-form.js  (formulario de creación/edición de entidades con campos personalizados)
+    ├── entity-list.js  (listado de entidades)
     ├── document-form.js (formulario de creación/edición de documentos con campos personalizados y ciclo de vida de estados)
+    ├── document-list.js (listado de documentos)
+    ├── search-bar.js   (barra de búsqueda)
     └── tracking.js     (vista de seguimiento de deuda y vencimientos)
 
 tests/
@@ -130,4 +137,4 @@ Antes de finalizar cualquier historia:
 **Total de requisitos**: 24 (19 FR + 5 SC)
 **Total de tareas**: 52 (T001 a T052)
 **Cobertura**: 96 % (23/24 requisitos tienen tareas; SC-003 con cobertura implícita)
-**Críticos**: 0
+**Críticos**: 1 en el análisis del 03-11-2026 (C1: puertas de calidad ausentes en las tareas). Se atendió en T048 y en las Notas de `tasks.md`; falta volver a ejecutar `speckit.analyze` para confirmarlo.
