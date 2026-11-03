@@ -144,13 +144,13 @@ Como integrante del equipo, quiero cargar ejemplos ficticios de clientes, provee
 ### Casos Límite
 
 - ¿Qué pasa si se registran dos terceros con el mismo código? El módulo base del template lo rechaza, sin distinguir mayúsculas.
-- ¿Qué pasa si se registran dos facturas con la misma serie y el mismo folio? **[NEEDS CLARIFICATION: definir si el número de factura debe ser único.]**
-- ¿Qué pasa si el RUT está mal escrito o repetido? **[NEEDS CLARIFICATION: el template no valida el formato ni el dígito verificador; definir las reglas.]**
-- ¿Qué pasa si una factura se emite sin monto total? **[NEEDS CLARIFICATION: definir si el monto es obligatorio.]**
-- ¿Qué pasa si las facturas Emitidas de un cliente superan su límite de crédito? **[NEEDS CLARIFICATION: definir si el sistema solo avisa o también bloquea la emisión.]**
-- ¿Qué pasa si se mezclan facturas en pesos y en dólares en un mismo total? **[NEEDS CLARIFICATION: definir la moneda del MVP.]**
+- ¿Qué pasa si se registran dos facturas con la misma serie y el mismo folio? El sistema lo rechaza: la combinación (tipo, serie y folio) debe ser única.
+- ¿Qué pasa si el RUT está mal escrito o repetido? El sistema valida el formato y el dígito verificador (módulo 11) y rechaza los RUT inválidos; no exige que el RUT sea único entre terceros.
+- ¿Qué pasa si una factura se emite sin monto total? El sistema lo rechaza: el monto total debe ser mayor que cero al emitir.
+- ¿Qué pasa si las facturas Emitidas de un cliente superan su límite de crédito? El sistema avisa y exige una confirmación explícita, pero no bloquea la emisión.
+- ¿Qué pasa si se mezclan facturas en pesos y en dólares en un mismo total? No puede ocurrir: el MVP usa una única moneda (Chile: CLP).
 - ¿Qué pasa si el descuento es mayor que el subtotal? El sistema rechaza la factura.
-- ¿Qué pasa si el monto total es cero? Se propone aceptarlo, por ser un valor no negativo, aunque no representa una deuda activa. **[NEEDS CLARIFICATION: confirmar junto con la regla de monto obligatorio.]**
+- ¿Qué pasa si el monto total es cero? Se admite solo en Borrador, como valor no negativo que no representa una deuda activa; al emitir, el sistema exige un monto mayor que cero.
 - ¿Qué pasa si el cliente se elimina antes de emitir la factura? La factura no puede registrarse, porque debe asociarse a un tercero existente.
 - ¿Qué pasa si la fecha de vencimiento es igual a la de emisión? Se acepta, porque la regla exige que sea igual o posterior.
 - ¿Qué pasa al eliminar un tercero con facturas pendientes de pago? Se eliminan también sus facturas, por lo que el sistema debería pedir confirmación antes.
@@ -171,14 +171,14 @@ Como integrante del equipo, quiero cargar ejemplos ficticios de clientes, provee
 **Facturas**
 
 - **FR-006**: El sistema DEBE permitir registrar facturas de venta y de compra, cada una asociada a un tercero existente, indicando su tipo. Una factura de venta solo puede asociarse a un cliente, y una de compra a un proveedor.
-- **FR-007**: Cada factura DEBE tener folio (entero positivo), serie opcional, fecha de emisión, fecha de vencimiento (igual o posterior a la de emisión) y monto total no negativo.
+- **FR-007**: Cada factura DEBE tener folio (entero positivo), serie opcional, moneda (única en el MVP: CLP), fecha de emisión, fecha de vencimiento (igual o posterior a la de emisión) y monto total. El monto total puede ser cero en Borrador; para emitir DEBE ser mayor que cero.
 - **FR-008**: El sistema DEBE rechazar una factura cuyo descuento sea mayor que su subtotal.
 - **FR-009**: Toda factura nueva DEBE iniciar en estado Borrador.
 - **FR-010**: El sistema DEBE permitir solo las transiciones Borrador → Emitida → Pagada. No se puede retroceder y Pagada es el estado final.
 
 **Pagos**
 
-- **FR-011**: El sistema DEBE permitir registrar el monto pagado y la fecha de pago de una factura Emitida, y marcarla como Pagada solo si el monto pagado es igual al monto total.
+- **FR-011**: El sistema DEBE permitir registrar el monto pagado y la fecha de pago de una factura Emitida, y marcarla como Pagada solo si el monto pagado es igual al monto total (que, al estar Emitida, es mayor que cero).
 
 **Seguimiento**
 
@@ -189,10 +189,10 @@ Como integrante del equipo, quiero cargar ejemplos ficticios de clientes, provee
 **Datos**
 
 - **FR-015**: El sistema DEBE conservar los datos al recargar la página y ofrecer una carga de datos de demostración.
-- **FR-016**: El sistema DEBE permitir registrar en terceros y facturas su referencia a otros módulos del ERP **[NEEDS CLARIFICATION: falta acordar con los grupos de CRM, Ventas y Compras qué identificador se comparte.]**
-- **FR-017**: El sistema DEBE validar el RUT **[NEEDS CLARIFICATION: definir formato y dígito verificador.]**
-- **FR-018**: El sistema DEBE controlar el límite de crédito al emitir facturas **[NEEDS CLARIFICATION: definir si solo avisa o también bloquea.]**
-- **FR-019**: El sistema DEBE evitar duplicados. El código de tercero ya es único en el módulo base. **[NEEDS CLARIFICATION: definir si el par serie-folio de la factura debe ser único.]**
+- **FR-016**: El sistema DEBE permitir registrar en terceros y facturas una referencia a otros módulos del ERP (mientras CRM, Ventas y Compras no definan un identificador compartido, la referencia es un campo de texto libre obligatorio solo cuando se ingresa; nada obligatorio por defecto).
+- **FR-017**: El sistema DEBE validar el RUT: debe cumplir el formato chileno (partes numéricas + dígito verificador, posible K) con dígito verificador correcto según módulo 11. No se exige unicidad del RUT entre terceros.
+- **FR-018**: Al emitir una factura que supera el límite de crédito del cliente, el sistema DEBE avisar y exigir una confirmación explícita antes de emitir; no bloquea la emisión.
+- **FR-019**: El sistema DEBE evitar duplicados: el código de tercero ya es único en el módulo base, y la combinación (tipo de factura, serie, folio) DEBE ser única.
 
 ### Entidades Clave
 
@@ -215,8 +215,11 @@ Como integrante del equipo, quiero cargar ejemplos ficticios de clientes, provee
 - Hay un solo tipo de entidad (Tercero, con tipo) y un solo tipo de documento (Factura, con tipo). *(Por confirmar con el profesor; el ayudante recomendó documentos separados.)*
 - Los pagos son campos de la factura. Los pagos parciales quedan fuera del MVP.
 - La fecha de inicio y la de fin del template se usan como fecha de emisión y de vencimiento. *(Por confirmar.)*
-- El MVP usa una sola moneda, y el monto total es obligatorio al emitir una factura. *(Por confirmar.)*
+- El MVP usa una sola moneda (CLP), y el monto total debe ser mayor que cero al emitir una factura (cero se admite solo en Borrador). Decidido 2026-11-03 (Q1).
 - La interfaz está en español.
 - No se usan datos reales, porque el almacenamiento del navegador no es seguro.
-- La integración con otros módulos es solo por referencias, sin conexión en vivo.
+- La integración con otros módulos es solo por referencias, sin conexión en vivo. Se acordó usar una referencia de texto libre hasta que CRM, Ventas y Compras definan un identificador compartido.
+- El RUT se valida con formato chileno y dígito verificador módulo 11 (decidido 2026-11-03, Q2). No se exige unicidad del RUT.
+- El límite de crédito genera un aviso con confirmación explícita al emitir, sin bloqueo (decidido 2026-11-03, Q3).
+- La unicidad de factura se define por (tipo, serie, folio).
 - Quedan fuera del MVP: pagos como registro propio, plan de cuentas y asientos, activos fijos, presupuestos y conciliación bancaria.
