@@ -1,6 +1,6 @@
-# Plan de Implementación: Módulo Base de Software de Planificación de Recursos Empresariales (ERP)
+# Plan de Implementación: Facturación y Pagos (Módulo de Contabilidad y Finanzas)
 
-**Rama**: `001-erp-base-module` | **Fecha**: 2026-07-08 | **Especificación**: [spec.md](spec.md)
+**Rama**: `001-erp-base-module` | **Fecha**: 2026-11-02 | **Especificación**: [spec.md](spec.md)
 **Entrada**: Especificación de la funcionalidad desde `/specs/001-erp-base-module/spec.md`
 
 ## Resumen
@@ -24,7 +24,7 @@ Muchas pequeñas y medianas empresas llevan sus facturas en planillas sueltas. A
 **Pruebas**: Vitest con jsdom para pruebas unitarias y de interacción  
 **Plataforma Objetivo**: Navegadores modernos de escritorio y móviles  
 **Tipo de Proyecto**: Aplicación web  
-**Objetivos de Rendimiento**: Interacciones responsivas para listas de hasta 500 registros; la búsqueda y las actualizaciones de la interfaz deben sentirse instantáneas  
+**Objetivos de Rendimiento**: Interacciones responsivas para listas de hasta 500 registros; presupuesto: búsqueda y render < 100 ms en hardware objetivo; la búsqueda y las actualizaciones de la interfaz deben sentirse instantáneas  
 **Restricciones**: Huella mínima de librerías, despliegue simple, sin backend requerido; la estructura debe mantenerse extensible para módulos personalizados  
 **Escala/Alcance**: Módulo base con CRUD de datos maestros (Entidad) y documentos transaccionales (Documento), búsqueda y capacidades de navegación
 
@@ -33,9 +33,10 @@ Muchas pequeñas y medianas empresas llevan sus facturas en planillas sueltas. A
 *COMPROBACIÓN: Debe pasar antes de la investigación de la Fase 0. Reverificar tras el diseño de la Fase 1.*
 
 - Calidad: La implementación usará una estructura JavaScript pequeña y modular con límites de función claros y nomenclatura consistente, manteniendo las preocupaciones base (almacenamiento, identidad, integridad referencial) separadas de la lógica específica del dominio para que los módulos personalizados puedan extenderlas.
-- Pruebas: Los flujos centrales de crear, editar, eliminar y buscar estarán cubiertos por pruebas automatizadas antes de completar.
+- **Puertas de Calidad**: Se ejecutará `npm run check` (lint + format + tests) antes de considerar completada cada historia. El cumplimiento de estos gates es obligatorio (Constitución, Quality Standards).
+- Pruebas: Los flujos centrales de crear, editar, eliminar y buscar estarán cubiertos por pruebas automatizadas **antes o junto con** la implementación (Constitución, Test-First). Se incluye cobertura e2e de los recorridos críticos HU1→HU5.
 - Experiencia de Usuario: La interfaz proporcionará mensajes de validación claros, estados vacíos y comportamiento de formulario consistente, presentados dentro de un marco de espacio de trabajo ERP con marca (barra superior + barra lateral) que se ve y se comporta idénticamente en todas las pantallas.
-- Rendimiento: La búsqueda y el renderizado de listas se optimizarán para colecciones de hasta 500 registros usando actualizaciones ligeras del DOM.
+- **Rendimiento**: La búsqueda y el renderizado de listas se optimizarán para colecciones de hasta 500 registros usando actualizaciones ligeras del DOM, con presupuesto < 100 ms.
 
 ## Estructura del Proyecto
 
@@ -47,7 +48,11 @@ specs/001-erp-base-module/
 ├── research.md
 ├── data-model.md
 ├── quickstart.md
+├── mer.png
 ├── contracts/
+│   └── entity-storage.md
+├── checklists/
+│   └── requirements.md
 └── tasks.md
 ```
 
@@ -64,7 +69,9 @@ src/
     ├── shell.js        (marco del espacio de trabajo: barra superior, logotipo SVG, barra lateral, estado de módulo activo)
     ├── dashboard.js    (vista de inicio: cuadrícula de acciones rápidas + tarjetas de estadísticas en vivo)
     ├── entity-form.js  (formulario de creación/edición de entidades con campos personalizados)
-    └── document-form.js (formulario de creación/edición de documentos con campos personalizados y ciclo de vida de estados)
+    ├── document-form.js (formulario de creación/edición de documentos con campos personalizados y ciclo de vida de estados)
+    └── tracking.js     (cálculos de deuda y vencimiento, FR-012 a FR-014)
+    └── demo-data.js    (cargador de datos de demostración, HU6/FR-015)
 
 tests/
 ├── unit/
@@ -72,8 +79,53 @@ tests/
 └── setup/
 ```
 
-**Decisión de Estructura**: Una aplicación Vite simple con un único punto de entrada HTML, un pequeño conjunto de módulos JavaScript y CSS en un archivo separado. Se usará localStorage para la persistencia de modo que la aplicación permanezca ligera y autónoma. Los componentes se dividen en pares de entidad (datos maestros) y documento (transaccional) que reflejan los dos conceptos centrales del módulo base, de modo que un módulo personalizado pueda renombrar o extender cada par de forma independiente. `shell.js` posee el marco del espacio de trabajo ERP — un logotipo monograma SVG en línea derivado del nombre del módulo, la barra superior y la barra lateral de módulos — envolviendo todas las vistas para que la marca y la navegación permanezcan consistentes sin duplicar marcado. `dashboard.js` renderiza los botones de acción rápida y las tarjetas de estadísticas de la pantalla de entrada, leyendo los recuentos del almacenamiento cada vez que se vuelve visible. `module-config.js` centraliza todos los puntos de adaptación — nombre del módulo, etiquetas de términos, definiciones de campos personalizados, ciclo de vida de estados y color de acento — manteniendo la personalización del dominio fuera del código central; el estilo se controla mediante propiedades personalizadas de CSS (tokens de diseño) en `styles.css` para que el color de acento configurado se aplique globalmente.
+**Decisión de Estructura**: Una aplicación Vite simple con un único punto de entrada HTML, un pequeño conjunto de módulos JavaScript y CSS en un archivo separado. Se usará localStorage para la persistencia de modo que la aplicación permanezca ligera y autónoma. Los componentes se dividen en pares de entidad (datos maestros) y documento (transaccional) que reflejan los dos conceptos centrales del módulo base, de modo que un módulo personalizado pueda renombrar o extender cada par de forma independiente. `shell.js` posee el marco del espacio de trabajo ERP — un logotipo monograma SVG en línea derivado del nombre del módulo, la barra superior y la barra lateral de módulos — envolviendo todas las vistas para que la marca y la navegación permanezcan consistentes sin duplicar marcado. `dashboard.js` renderiza los botones de acción rápida y las tarjetas de estadísticas de la pantalla de entrada, leyendo los recuentos del almacenamiento cada vez que se vuelve visible. `module-config.js` centraliza todos los puntos de adaptación — nombre del módulo, etiquetas de términos, definiciones de campos personalizados, ciclo de vida de estados y color de acento — manteniendo la personalización del dominio fuera del código central; el estilo se controla mediante propiedades personalizadas de CSS (`styles.css`) para que el color de acento configurado se aplique globalmente. Los archivos `tracking.js` y `demo-data.js` son nuevos en esta versión y quedan sujetos a la tarea T037/T041 respectivamente.
 
 ## Seguimiento de Complejidad
 
 Este plan no introdujo violaciones de la constitución.
+
+## Puertas de Calidad
+
+Antes de finalizar cualquier historia:
+
+1. Ejecutar `npm run lint` y corregir todos los warnings.
+2. Ejecutar `npm run format:check` y aplicar `npm run format` si es necesario.
+3. Ejecutar `npm run check` que ejecuta lint + format:check + tests `--run`.
+4. Verificar que las pruebas correspondientes pasen y la cobertura de requisitos (FR/SC) esté cumplida.
+
+---
+
+# Tabla de cobertura (requisitos → tareas)
+
+| Clave | ¿Tiene tarea? | Tareas | Notas |
+|-------|----------------|--------|-------|
+| FR-001 | Sí | T013, T014 | Registrar terceros |
+| FR-002 | Sí | T013 | Validación nombre/código |
+| FR-003 | Sí | T013, T016 | Límite de crédito |
+| FR-004 | Débil | T013, T014 | Búsqueda no es foco |
+| FR-005 | Sí | T014, T017 | Cascada con confirmación |
+| FR-006 | Sí | T012, T021, T028, T029 | Asociación factura-tercero |
+| FR-007 | Sí | T020, T022, T025 | Campos/validación |
+| FR-008 | Sí | T020 | Descuento > subtotal |
+| FR-009 | Sí | T011 | Estado inicial Borrador |
+| FR-010 | Sí | T020, T024 | Transiciones |
+| FR-011 | Sí | T025, T031, T032, T034 | Pago y Pagada |
+| FR-012 | Sí | T035-T039 | Deuda por cobrar/pagar |
+| FR-013 | Sí | T035-T039 | Vencidas |
+| FR-014 | Sí | T035-T039 | Excluir Pagadas |
+| FR-015 | Sí | T041, T042, T049, T050 | Demo y persistencia |
+| FR-016 | Débil | T043 | Falta identificador compartido |
+| FR-017 | Sí | T018 | Validar RUT |
+| FR-018 | Sí | T016, T026 | Avisa/bloquea por definir |
+| FR-019 | Sí | T019, T027 | Duplicados por definir |
+| SC-001 | Sí | T049 | < 3 min |
+| SC-002 | Sí | T050 | Pagadas no cuentan |
+| SC-003 | Implícita | Pruebas | Rechazo con mensaje |
+| SC-004 | Sí | T050 | Persistencia |
+| SC-005 | Sí | T049 | Flujo < 5 min |
+
+**Total de requisitos**: 24 (19 FR + 5 SC)
+**Total de tareas**: 55 (52 originales + T053, T054, T055)
+**Cobertura**: 96 % (23/24 requisitos tienen tareas; SC-003 con cobertura implícita)
+**Críticos**: 0 (D1 resuelto con gate de calidad)
