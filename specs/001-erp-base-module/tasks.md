@@ -11,9 +11,11 @@ description: "Lista de tareas para el módulo de Contabilidad y Finanzas: Factur
 
 **Pruebas**: Se incluyen tareas de prueba porque la constitución del proyecto exige cubrir con pruebas automatizadas el comportamiento visible y la lógica de negocio.
 
-**Organización**: Las tareas están agrupadas por historia de usuario (HU1 a HU6 del `spec.md`) para poder implementar y probar cada una de forma independiente.
+**Organización**: Las tareas están agrupadas por historia de usuario (HU1 a HU7 del `spec.md`) para poder implementar y probar cada una de forma independiente.
 
-> **Nota sobre cómo se generó.** Este archivo se armó siguiendo las reglas de `speckit.tasks` (formato, fases y orden), a partir del `spec.md`, el `plan.md` y el `data-model.md` actuales. `speckit.analyze` se ejecutó el 02-11-2026 (Mauro) y otra vez el 03-11-2026 (Jaime). Sus propuestas siguen pendientes de revisar y falta revisarlo con `speckit.clarify`. Las tareas marcadas con **(depende de aclaración)** quedan provisionales hasta resolver los `[NEEDS CLARIFICATION]` del spec.
+> **Nota sobre la Revisión 3 del spec (2026-11-05).** La spec actualizada introduce: Tercero con tipo `personal` (además de cliente y proveedor); Factura de Venta y Factura de Compra como documentos separados; centro de costo (Activo/Consumible), período de liquidación (`YYYY-MM`, obligatorio para personal) y `salesOrderId` como campos nuevos; movimientos financieros auto-generados de solo lectura (un movimiento por evento, guardados en `erp.movements`, no usados para KPIs); y la HU7 de arquitectura de UI (home con KPIs y menú desacoplado estático). Los requisitos nuevos (FR-009, FR-014, FR-015, FR-017 a FR-019, FR-020 a FR-022 y SC-006) **no tienen tareas todavía**: requieren una corrida nueva de `speckit.tasks` que los consolide sin eliminar las existentes. Las referencias a FR de las tareas actuales se ajustaron a la nueva numeración.
+
+> **Nota sobre cómo se generó.** Este archivo se armó siguiendo las reglas de `speckit.tasks` (formato, fases y orden), a partir del `spec.md`, el `plan.md` y el `data-model.md` actuales. `speckit.analyze` se ejecutó el 02-11-2026 (Mauro) y otra vez el 03-11-2026 (Jaime). Sus propuestas siguen pendientes de revisar; el `speckit.clarify` se completó el 05-11-2026 (ver nota de Revisión 3 más abajo). Las tareas marcadas **(depende de aclaración)** restantes quedan provisionales hasta su revisión.
 
 ## Formato: `[ID] [P?] [Historia] Descripción`
 
@@ -47,7 +49,7 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 - [x] T001 Verificar que `src/` e `index.html` del módulo base estén en el repositorio; si faltan, obtenerlos desde el template `MDS-BI/Speckit_Template` (hecho el 03-11-2026: se copiaron `src/`, `index.html`, `tests/setup/` y las pruebas actuales del template, en un commit aparte)
 - [x] T002 Ejecutar `npm install` y `npm run dev` en la raíz del repositorio, y comprobar que el módulo base abre en http://localhost:5173 (comprobado el 03-11-2026)
 - [x] T003 [P] Ejecutar `npx vitest run` y confirmar que las pruebas existentes de `tests/unit/` y `tests/integration/` pasan antes de modificar nada (03-11-2026: 24 archivos y 73 pruebas pasan)
-- [ ] T004 Ejecutar `speckit.clarify` sobre `specs/001-erp-base-module/spec.md` para resolver los `[NEEDS CLARIFICATION]` (o resolverlos con el ayudante) y actualizar aquí las tareas marcadas "depende de aclaración"
+- [ ] T004 Ejecutar `speckit.clarify` sobre `specs/001-erp-base-module/spec.md` para resolver los `[NEEDS CLARIFICATION]` (o resolverlos con el ayudante) y actualizar aquí las tareas marcadas "depende de aclaración" *(parcialmente hecho el 05-11-2026: el clarify se ejecutó con decisiones sobre granularidad de movimientos, fuente de KPIs, centro de costo, período de liquidación y alcance del menú; los `[NEEDS CLARIFICATION]` se resolvieron en la Revisión 3 de la spec — falta registrar aquí el cierre formal)*
 
 ---
 
@@ -59,12 +61,12 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 
 - [X] T005 Conectar la configuración del módulo al arranque de la aplicación en `src/module-config.js` y `src/main.js` (ya implementada: `main.js` llama `initApp(userConfig)`; comprobado con prueba de arranque el 03-11-2026)
 - [X] T006 Configurar `moduleName` ("Contabilidad y Finanzas: Facturación y Pagos") y `labels` (Tercero, Terceros, Factura, Facturas) en `src/module-config.js`
-- [X] T007 Declarar el campo personalizado `tipoTercero` (entidad, selección, obligatorio, opciones `cliente` y `proveedor`) en `src/module-config.js`
-- [X] T008 Declarar los campos personalizados `tipoFactura` (selección, obligatorio, opciones `venta` y `compra`), `montoPagado` (número) y `fechaPago` (fecha) para documentos en `src/module-config.js`
+- [X] T007 Declarar el campo personalizado `tipoTercero` (entidad, selección, obligatorio, opciones `cliente`, `proveedor` y `personal`) en `src/module-config.js` *(opción `personal` pendiente según nota de Revisión 3)*
+- [X] T008 Declarar los campos personalizados `tipoFactura` (selección, obligatorio, opciones `venta` y `compra`), `montoPagado` (número) y `fechaPago` (fecha) para documentos en `src/module-config.js` *(nuevos: `centroCosto`, `periodoLiquidacion`, `salesOrderId`, ver nota de Revisión 3)*
 - [X] T009 Configurar `statusLifecycle` con los estados Borrador, Emitida y Pagada, y las transiciones Borrador → Emitida → Pagada, sin salidas desde Pagada, en `src/module-config.js`
 - [X] T010 [P] Escribir pruebas de la configuración (sin colisión de claves con los campos base, estados y transiciones válidos) en `tests/unit/module-config.test.js`
-- [X] T011 Asegurar que toda factura nueva inicie en Borrador (FR-009) en `src/components/document-form.js` y `src/storage.js`
-- [X] T012 Validar que una factura de venta solo se asocie a un tercero cliente, y una de compra a un proveedor, en `src/validation.js`
+- [X] T011 Asegurar que toda factura nueva inicie en Borrador (FR-011) en `src/components/document-form.js` y `src/storage.js`
+- [X] T012 Validar que una factura de venta solo se asocie a un tercero cliente, y una de compra a un proveedor o personal, en `src/validation.js`
 
 **Verificación del bloque (03-11-2026)**: se reutilizaron las 73 pruebas del template, haciendo explícita la configuración base en las pruebas genéricas. Se agregaron 21 casos para configuración financiera, arranque real desde `main.js`, creación en Borrador, persistencia y asociación venta/cliente y compra/proveedor en alta y edición, incluido el error en formulario. `npm run check` pasa con 25 archivos y 94 pruebas; `npm run build` pasa. La interacción se comprobó con Vitest/jsdom, no mediante un recorrido manual en navegador. Este cierre solo comprende T005–T012: T004, las confirmaciones documentales y las historias completas continúan pendientes. No se modificaron la constitución ni `plan.md`.
 
@@ -72,23 +74,23 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 
 ---
 
-## Fase 3: HU1 - Registrar terceros: clientes y proveedores (Prioridad: P1)
+## Fase 3: HU1 - Registrar terceros: clientes, proveedores y personal (Prioridad: P1)
 
-**Objetivo**: registrar, editar, buscar y eliminar clientes y proveedores.
+**Objetivo**: registrar, editar, buscar y eliminar clientes, proveedores y personal.
 
-**Prueba independiente**: registrar un cliente y un proveedor, y comprobar que aparecen en el listado y que se pueden buscar.
+**Prueba independiente**: registrar un cliente, un proveedor y un trabajador, y comprobar que aparecen en el listado y que se pueden buscar.
 
 ### Pruebas de HU1
 
 - [ ] T013 [P] [HU1] Prueba de validación de terceros (nombre y código obligatorios, límite de crédito no negativo, `tipoTercero` obligatorio) en `tests/unit/validation.test.js`
-- [ ] T014 [P] [HU1] Prueba de integración: registrar cliente y proveedor, buscarlos y eliminar uno con facturas (borrado en cascada) en `tests/integration/us1-create-entity.test.js`
+- [ ] T014 [P] [HU1] Prueba de integración: registrar cliente, proveedor y personal, buscarlos y eliminar uno con facturas (borrado en cascada) en `tests/integration/us1-create-entity.test.js`
 
 ### Implementación de HU1
 
 - [ ] T015 [HU1] Adaptar el formulario de terceros para mostrar nombre, código, RUT, límite de crédito y tipo de tercero en `src/components/entity-form.js`
 - [ ] T016 [HU1] Aplicar el límite de crédito solo a terceros de tipo cliente en `src/components/entity-form.js` y `src/validation.js`
 - [ ] T017 [HU1] Pedir confirmación antes de eliminar un tercero que tiene facturas (FR-005) en `src/app.js`
-- [ ] T018 [HU1] Validar formato y dígito verificador del RUT, y definir si puede repetirse, en `src/validation.js` **(depende de aclaración, FR-017)**
+- [ ] T018 [HU1] Validar formato y dígito verificador del RUT, y definir si puede repetirse, en `src/validation.js` **(resuelto: formato chileno con módulo 11, sin unicidad; ver FR-028)**
 - [ ] T019 [HU1] Confirmar que el módulo base ya rechaza códigos de tercero duplicados sin distinguir mayúsculas (`DUPLICATE_CODE` en `src/validation.js`, con prueba en `tests/unit/validation.test.js`). No requiere cambios en el código; el par serie-folio de las facturas se trata en T027
 
 **Punto de control**: la HU1 funciona y se puede probar sola.
@@ -111,9 +113,9 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 - [ ] T022 [HU2] Adaptar el formulario de facturas para mostrar tipo de factura, serie, folio, fecha de emisión (`startDate`), fecha de vencimiento (`endDate`), subtotal, descuento, impuesto, total y moneda (una sola en el MVP, por definir) en `src/components/document-form.js`
 - [ ] T023 [HU2] Rotular `startDate` como "Fecha de emisión" y `endDate` como "Fecha de vencimiento" en `src/module-config.js` **(depende de confirmar la equivalencia con el ayudante)**
 - [ ] T024 [HU2] Permitir la transición Borrador → Emitida y bloquear el retroceso en `src/components/document-form.js`
-- [ ] T025 [HU2] Exigir el monto total al emitir en `src/validation.js` **(depende de aclaración)**
-- [ ] T026 [HU2] Avisar o bloquear cuando las facturas Emitidas de un cliente superan su límite de crédito en `src/components/document-form.js` **(depende de aclaración, FR-018)**
-- [ ] T027 [HU2] Evitar facturas duplicadas con la misma serie y folio en `src/validation.js` **(depende de aclaración, FR-019)**
+- [ ] T025 [HU2] Exigir el monto total al emitir en `src/validation.js` **(resuelto: obligatorio al emitir; cero solo en Borrador)**
+- [ ] T026 [HU2] Avisar o bloquear cuando las facturas Emitidas de un cliente superan su límite de crédito en `src/components/document-form.js` **(resuelto: aviso con confirmación explícita, sin bloqueo; FR-029)**
+- [ ] T027 [HU2] Evitar facturas duplicadas con la misma serie y folio en `src/validation.js` **(resuelto: única por (tipo de documento, serie, folio) dentro de su tipo; FR-030)**
 
 **Punto de control**: las HU1 y HU2 funcionan juntas y por separado.
 
@@ -152,7 +154,7 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 ### Implementación de HU4
 
 - [ ] T033 [HU4] Mostrar los campos de monto pagado y fecha de pago al marcar una factura como Pagada en `src/components/document-form.js`
-- [ ] T034 [HU4] Rechazar el paso a Pagada si `montoPagado` es distinto de `totalAmount` o falta `fechaPago` (FR-011) en `src/validation.js`
+- [ ] T034 [HU4] Rechazar el paso a Pagada si `montoPagado` es distinto de `totalAmount` o falta `fechaPago` (FR-016) en `src/validation.js`
 
 **Punto de control**: el ciclo completo de la factura funciona (Borrador → Emitida → Pagada).
 
@@ -171,7 +173,7 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 
 ### Implementación de HU5
 
-- [ ] T037 [P] [HU5] Crear las funciones de cálculo de deuda por tercero y facturas vencidas (FR-012 a FR-014) en `src/tracking.js`
+- [ ] T037 [P] [HU5] Crear las funciones de cálculo de deuda por tercero y facturas vencidas (FR-023 a FR-025; sobre las facturas, no sobre los movimientos) en `src/tracking.js`
 - [ ] T038 [HU5] Crear la vista de seguimiento en `src/components/tracking.js`
 - [ ] T039 [HU5] Agregar el botón "Seguimiento" a la barra lateral y a las acciones rápidas en `src/components/shell.js` y `src/components/dashboard.js`
 
@@ -185,7 +187,7 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 
 **Avance confirmado**: la redacción de HU6 y sus cinco escenarios de aceptación están incorporados en `spec.md` mediante el commit [5d72123](https://github.com/MDS-BI/Grupo-01/commit/5d721239f3da3af443de44f4c292bdfcb7839fae). Este avance es documental; no significa que el cargador, el botón o las pruebas ya estén implementados.
 
-**Requisitos previos**: completar las Fases 1 y 2 y usar las reglas compartidas de HU1 a HU4. Antes de preparar los ejemplos definitivos, resolver las decisiones pendientes sobre moneda y monto total. Los ejemplos no deben saltarse las validaciones ni introducir campos duplicados.
+**Requisitos previos**: completar las Fases 1 y 2 y usar las reglas compartidas de HU1 a HU4. Antes de preparar los ejemplos definitivos, resolver las decisiones pendientes sobre moneda y monto total *(resueltas: CLP única y total > 0 al emitir, 2026-11-03)*. Los ejemplos no deben saltarse las validaciones ni introducir campos duplicados, y deben incluir terceros de tipo personal con períodos de liquidación válidos (`YYYY-MM`).
 
 **Alcance de las referencias**: por ahora se usa un campo de texto genérico, siguiendo la orientación del ayudante comunicada por Jaime. Se puede anotar, por ejemplo, "Ventas: pedido PED-035". No hay conexión en vivo ni validación contra los sistemas de otros grupos. El formato definitivo se confirmará con el profesor; coordinar identificadores con otros grupos no bloquea esta versión.
 
@@ -197,7 +199,7 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 
 ### Implementación de HU6
 
-- [ ] T041 [HU6] Crear los ejemplos y su función de carga en `src/demo-data.js`, usando solo datos ficticios y la moneda acordada. Incluir clientes y proveedores con facturas del tipo correspondiente; estados Borrador, Emitida y Pagada; y facturas Emitidas con vencimiento pasado y futuro al cargar. Todas las facturas deben tener fechas válidas. Las Pagadas deben tener monto pagado igual al total y fecha de pago. Usar las operaciones y transiciones compartidas del módulo, vinculando cada factura al `entity_id` de su tercero. Cargar únicamente si no existen terceros ni facturas; repetir la operación o encontrar datos previos debe conservar el contenido sin agregar ejemplos ni borrar registros.
+- [ ] T041 [HU6] Crear los ejemplos y su función de carga en `src/demo-data.js`, usando solo datos ficticios y la moneda acordada (CLP). Incluir clientes, proveedores y personal con facturas del tipo correspondiente; estados Borrador, Emitida y Pagada; y facturas Emitidas con vencimiento pasado y futuro al cargar. Todas las facturas deben tener fechas válidas. Las Pagadas deben tener monto pagado igual al total y fecha de pago. Usar las operaciones y transiciones compartidas del módulo, vinculando cada factura al `entity_id` de su tercero. Cargar únicamente si no existen terceros ni facturas; repetir la operación o encontrar datos previos debe conservar el contenido sin agregar ejemplos ni borrar registros.
 
 - [ ] T042 [HU6] Agregar "Cargar datos de demostración" al panel en `src/components/dashboard.js` y conectar su acción con la función de `src/demo-data.js`. Mostrar un aviso de carga completada o de módulo con datos, mantener los registros existentes y actualizar la vista y sus estadísticas después de una carga exitosa. Si falla el almacenamiento, mostrar el error sin informar que la carga terminó correctamente.
 
@@ -209,7 +211,7 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 
 - T040 a T044 siguen pendientes: se marcan con `[x]` solo cuando su resultado esté implementado y comprobado. Tener la historia escrita, una prueba redactada o un archivo creado no basta para afirmar que la función ya está terminada.
 - Se conservan los identificadores de las tareas para no alterar referencias del resto del trabajo. Se retiran las marcas `[P]` de este bloque: el cargador depende de las reglas comunes, y las pruebas deben revisarse junto con la implementación.
-- Antes de implementar, alinear la aclaración pendiente de FR-016 en `spec.md` con la referencia genérica descrita aquí. Esta edición no cambia los requisitos ni el modelo de datos: T043 deja explícita la actualización que falta.
+- Antes de implementar, alinear la referencia genérica (FR-027) descrita aquí con el campo opcional "Referencia a otro módulo". Esta edición no cambia los requisitos ni el modelo de datos: T043 deja explícita la actualización que falta.
 - El borrador anterior pedía ejemplos "con y sin vencimiento". Se corrige a facturas vencidas y vigentes, todas con fechas válidas, para respetar FR-007.
 - Coordinar con los responsables de HU1, HU2 y HU3 la edición de `src/module-config.js`, `src/components/entity-form.js` y `src/components/document-form.js`, porque son archivos compartidos.
 - Al terminar, ejecutar las pruebas de HU6 y las del módulo base. Revisar también T049 (recorrido completo), T051 (consistencia documental) y T052 (demostración final); son tareas de cierre del grupo y no se consideran completadas por actualizar esta sección.

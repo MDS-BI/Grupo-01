@@ -7,7 +7,7 @@
 
 Muchas pequeñas y medianas empresas llevan sus facturas en planillas sueltas. Así pierden de vista cuánto les deben, cuánto deben y qué está vencido, y su flujo de caja se resiente. Este plan define la estrategia para construir el MVP del módulo de Contabilidad y Finanzas del ERP con Spec Driven Development, sobre el módulo base del template (Vite, JavaScript vanilla y `localStorage`), adaptado mediante el archivo de configuración `src/module-config.js`.
 
-**Alcance:** solo frontend. El módulo administra Terceros (clientes o proveedores) y Facturas (de venta o de compra), con los estados Borrador, Emitida y Pagada. El pago se registra como campos de la factura. Los datos se guardan en el navegador (`localStorage`), sin backend ni base de datos remota. Las historias de usuario están en `spec.md` y el modelo de datos en `data-model.md`.
+**Alcance:** solo frontend. El módulo administra Terceros (clientes, proveedores o personal) y dos documentos separados, Factura de Venta y Factura de Compra, con los estados Borrador, Emitida y Pagada. La compra lleva centro de costo (Activo/Consumible) y, si el tercero es personal, el período de liquidación (`YYYY-MM`); la venta lleva la trazabilidad `salesOrderId`. Cada emisión y pago genera un movimiento financiero de solo lectura (un movimiento por evento); los KPIs se calculan sobre las facturas. La HU7 define el marco de UI: home con KPIs y accesos directos y menú desacoplado (componente estático con vistas fijas). El pago se registra como campos de la factura. Los datos se guardan en el navegador (`localStorage`), sin backend ni base de datos remota. Las historias de usuario están en `spec.md` y el modelo de datos en `data-model.md`.
 
 **Usuarios objetivo:**
 
@@ -70,8 +70,9 @@ src/
 ├── utils.js
 ├── app.js
 ├── module-config.js
-├── tracking.js         (cálculos de deuda y vencimiento, FR-012 a FR-014)
-├── demo-data.js        (cargador de datos de demostración, HU6/FR-015)
+├── tracking.js         (cálculos de deuda y vencimiento, FR-023 a FR-025, sobre las facturas)
+├── demo-data.js        (cargador de datos de demostración, HU6/FR-026)
+├── movements.js        (generación de movimientos financieros por evento, FR-017 a FR-019, sin tareas aún)
 └── components/
     ├── shell.js        (marco del espacio de trabajo: barra superior, logotipo SVG, barra lateral, estado de módulo activo)
     ├── dashboard.js    (vista de inicio: cuadrícula de acciones rápidas + tarjetas de estadísticas en vivo)
@@ -111,30 +112,42 @@ Antes de finalizar cualquier historia:
 |-------|----------------|--------|-------|
 | FR-001 | Sí | T013, T014, T015 | Registrar terceros |
 | FR-002 | Sí | T013 | Validación nombre/código |
-| FR-003 | Sí | T013, T016 | Límite de crédito |
+| FR-003 | Sí | T013, T016 | Límite de crédito solo clientes |
 | FR-004 | Débil | T013, T014 | Búsqueda no es foco |
-| FR-005 | Sí | T014, T017 | Cascada con confirmación |
+| FR-005 | Sí | T014, T017 | Cascada con confirmación (incluye movimientos) |
 | FR-006 | Sí | T012, T021, T028, T029 | Asociación factura-tercero |
 | FR-007 | Sí | T020, T022, T025 | Campos/validación |
 | FR-008 | Sí | T020 | Descuento > subtotal |
-| FR-009 | Sí | T011 | Estado inicial Borrador |
-| FR-010 | Sí | T021, T024, T031 | Transiciones |
-| FR-011 | Sí | T031, T032, T033, T034 | Pago y Pagada |
-| FR-012 | Sí | T035-T039 | Deuda por cobrar/pagar |
-| FR-013 | Sí | T035-T039 | Vencidas |
-| FR-014 | Sí | T035-T039 | Excluir Pagadas |
-| FR-015 | Sí | T040, T041, T042, T049 | Demo y persistencia |
-| FR-016 | Débil | T043, T044 | Falta identificador compartido |
-| FR-017 | Sí | T018 | Validar RUT |
-| FR-018 | Sí | T016, T026 | Avisa/bloquea por definir |
-| FR-019 | Sí | T019, T027 | Código ya único en el template; serie-folio por definir |
+| FR-009 | No | — | `salesOrderId` (HU2, sin tarea aún; ver nota) |
+| FR-010 | Sí | T020 | Descuento > subtotal |
+| FR-011 | Sí | T011 | Estado inicial Borrador y transiciones (antes FR-009/FR-010) |
+| FR-012 | Sí | T020, T022, T029 | Compra → proveedor/personal |
+| FR-013 | Sí | T020, T022 | Reglas compartidas con venta |
+| FR-014 | No | — | Centro de costo (HU3, sin tarea aún) |
+| FR-015 | No | — | Período liquidación YYYY-MM (HU3, sin tarea aún) |
+| FR-016 | Sí | T031, T032, T033, T034 | Pago y Pagada |
+| FR-017 | No | — | Movimientos financieros (FUENTE de verdad: facturas; sin tarea aún) |
+| FR-018 | No | — | Contenido de movimientos (sin tarea aún) |
+| FR-019 | No | — | Listado y solo-lectura de movimientos (sin tarea aún) |
+| FR-020 | Parcial | T039 | Menú desacoplado: `shell.js` ya lo es; falta precisión de vistas |
+| FR-021 | Parcial | T039 | Home con KPIs: `dashboard.js` existe; KPIs por facturas |
+| FR-022 | Parcial | T039 | Navegación sin recarga: base en el template |
+| FR-023 | Sí | T035-T039 | Deuda por cobrar/pagar |
+| FR-024 | Sí | T035-T039 | Vencidas (estrictamente anterior a hoy) |
+| FR-025 | Sí | T035-T039 | Excluir Pagadas |
+| FR-026 | Sí | T040, T041, T042, T049 | Demo y persistencia |
+| FR-027 | Débil | T043, T044 | `sales_order_id` sigue la regla de referencias |
+| FR-028 | Sí | T018 | Validar RUT |
+| FR-029 | Sí | T016, T026 | Aviso con confirmación explícita |
+| FR-030 | Sí | T019, T027 | Código ya único en el template; serie-folio dentro de cada tipo |
 | SC-001 | Sí | T049 | < 3 min |
 | SC-002 | Sí | T035, T036 | Pagadas no cuentan |
 | SC-003 | Implícita | Pruebas | Rechazo con mensaje |
 | SC-004 | Sí | T040, T041 | Persistencia |
 | SC-005 | Sí | T049 | Flujo < 5 min |
+| SC-006 | No | — | Movimientos conciliados (sin tarea aún) |
 
-**Total de requisitos**: 24 (19 FR + 5 SC)
+**Total de requisitos**: 36 (30 FR + 6 SC) tras la Revisión 3 del spec (2026-11-05)
 **Total de tareas**: 52 (T001 a T052)
-**Cobertura**: 96 % (23/24 requisitos tienen tareas; SC-003 con cobertura implícita)
+**Cobertura**: 78 % (28/36 requisitos con tareas o parciales; SC-003 implícita). Los FR-009, FR-014, FR-015, FR-017, FR-018, FR-019 y SC-006 provienen de la separación de documentos, los movimientos financieros, los campos nuevos y la HU7 de la Revisión 2/3 del spec y **no tienen tareas aún**: requieren una nueva corrida de `speckit.tasks` sin eliminarse. Los FR-020/021/022 se cubren parcialmente con el marco `shell.js`/`dashboard.js` ya planificado.
 **Críticos**: 1 en el análisis del 03-11-2026 (C1: puertas de calidad ausentes en las tareas). Se atendió en T048 y en las Notas de `tasks.md`; falta volver a ejecutar `speckit.analyze` para confirmarlo.
