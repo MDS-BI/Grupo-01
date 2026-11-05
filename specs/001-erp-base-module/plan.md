@@ -35,7 +35,7 @@ Muchas pequeñas y medianas empresas llevan sus facturas en planillas sueltas. A
 
 - Calidad: La implementación usará una estructura JavaScript pequeña y modular con límites de función claros y nomenclatura consistente, manteniendo las preocupaciones base (almacenamiento, identidad, integridad referencial) separadas de la lógica específica del dominio para que los módulos personalizados puedan extenderlas.
 - **Puertas de Calidad**: Se ejecutará `npm run check` (lint + format + tests) antes de considerar completada cada historia. El cumplimiento de estos gates es obligatorio (Constitución, Quality Standards).
-- Pruebas: Los flujos centrales de crear, editar, eliminar y buscar estarán cubiertos por pruebas automatizadas **antes o junto con** la implementación (Constitución, Test-First). Las pruebas e2e quedan fuera del MVP: el template solo trae Vitest con jsdom, y las pruebas de integración cubren los recorridos críticos. Es una excepción a la Constitución (principio II), por confirmar con el profesor.
+- Pruebas: Los flujos centrales de crear, editar, eliminar y buscar estarán cubiertos por pruebas automatizadas **antes o junto con** la implementación (Constitución, Test-First). Las pruebas e2e quedan fuera del MVP: el template solo trae Vitest con jsdom, y las pruebas de integración cubren los recorridos críticos. Es una excepción a la Constitución (principio II), por confirmar con el profesor. **Estado del seguimiento**: registrada como desviación explícita el 05-11-2026 (análisis `/speckit.analyze`, hallazgo C1): confirmación del profesor pendiente en T004; la cobertura crítica de recorridos recae en 25 archivos de pruebas de integración Vitest/jsdom (94+ casos).
 - Experiencia de Usuario: La interfaz proporcionará mensajes de validación claros, estados vacíos y comportamiento de formulario consistente, presentados dentro de un marco de espacio de trabajo ERP con marca (barra superior + barra lateral) que se ve y se comporta idénticamente en todas las pantallas.
 - **Rendimiento**: La búsqueda y el renderizado de listas se optimizarán para colecciones de hasta 500 registros usando actualizaciones ligeras del DOM, con presupuesto < 100 ms.
 
@@ -117,21 +117,21 @@ Antes de finalizar cualquier historia:
 | FR-005 | Sí | T014, T017 | Cascada con confirmación (incluye movimientos) |
 | FR-006 | Sí | T012, T021, T028, T029 | Asociación factura-tercero |
 | FR-007 | Sí | T020, T022, T025 | Campos/validación |
-| FR-008 | Sí | T020 | Descuento > subtotal |
-| FR-009 | No | — | `salesOrderId` (HU2, sin tarea aún; ver nota) |
+| FR-008 | Sí | T020, T022, T025 | Fechas, folio, total > 0 al emitir |
+| FR-009 | Sí | T053, T055, T056, T062 | `salesOrderId` (Revisión 3, consolidado 05-11) |
 | FR-010 | Sí | T020 | Descuento > subtotal |
-| FR-011 | Sí | T011 | Estado inicial Borrador y transiciones (antes FR-009/FR-010) |
+| FR-011 | Sí | T009, T011, T021, T024 | Borrador inicial y transiciones únicas |
 | FR-012 | Sí | T020, T022, T029 | Compra → proveedor/personal |
 | FR-013 | Sí | T020, T022 | Reglas compartidas con venta |
-| FR-014 | No | — | Centro de costo (HU3, sin tarea aún) |
-| FR-015 | No | — | Período liquidación YYYY-MM (HU3, sin tarea aún) |
+| FR-014 | Sí | T053, T057, T058 | Centro de costo (Revisión 3, consolidado 05-11) |
+| FR-015 | Sí | T053, T057, T059, T041 | Período liquidación YYYY-MM (Revisión 3) |
 | FR-016 | Sí | T031, T032, T033, T034 | Pago y Pagada |
-| FR-017 | No | — | Movimientos financieros (FUENTE de verdad: facturas; sin tarea aún) |
-| FR-018 | No | — | Contenido de movimientos (sin tarea aún) |
-| FR-019 | No | — | Listado y solo-lectura de movimientos (sin tarea aún) |
-| FR-020 | Parcial | T039 | Menú desacoplado: `shell.js` ya lo es; falta precisión de vistas |
-| FR-021 | Parcial | T039 | Home con KPIs: `dashboard.js` existe; KPIs por facturas |
-| FR-022 | Parcial | T039 | Navegación sin recarga: base en el template |
+| FR-017 | Sí | T060, T061, T062 | Movimientos por evento (Revisión 3, consolidado 05-11) |
+| FR-018 | Sí | T060, T062 | Contenido de movimientos |
+| FR-019 | Sí | T061, T063 | Listado y solo-lectura de movimientos |
+| FR-020 | Sí | T064, T065 | Menú desacoplado con vistas fijas |
+| FR-021 | Sí | T064, T066 | Home con KPIs sobre las facturas |
+| FR-022 | Sí | T064, T067 | Navegación sin recarga |
 | FR-023 | Sí | T035-T039 | Deuda por cobrar/pagar |
 | FR-024 | Sí | T035-T039 | Vencidas (estrictamente anterior a hoy) |
 | FR-025 | Sí | T035-T039 | Excluir Pagadas |
@@ -148,6 +148,6 @@ Antes de finalizar cualquier historia:
 | SC-006 | No | — | Movimientos conciliados (sin tarea aún) |
 
 **Total de requisitos**: 36 (30 FR + 6 SC) tras la Revisión 3 del spec (2026-11-05)
-**Total de tareas**: 52 (T001 a T052)
-**Cobertura**: 78 % (28/36 requisitos con tareas o parciales; SC-003 implícita). Los FR-009, FR-014, FR-015, FR-017, FR-018, FR-019 y SC-006 provienen de la separación de documentos, los movimientos financieros, los campos nuevos y la HU7 de la Revisión 2/3 del spec y **no tienen tareas aún**: requieren una nueva corrida de `speckit.tasks` sin eliminarse. Los FR-020/021/022 se cubren parcialmente con el marco `shell.js`/`dashboard.js` ya planificado.
-**Críticos**: 1 en el análisis del 03-11-2026 (C1: puertas de calidad ausentes en las tareas). Se atendió en T048 y en las Notas de `tasks.md`; falta volver a ejecutar `speckit.analyze` para confirmarlo.
+**Total de tareas**: 70 (T001 a T070)
+**Cobertura**: ~97 % (35/36 con tarea directa; FR-004 débil: búsqueda viene del template y falta el filtro por tipo; SC-003 implícita en las pruebas de validación). Los FR-009, FR-014, FR-015, FR-017 a FR-019 y SC-006 quedaron cubiertos en la corrida de `speckit.tasks` del 05-11-2026 (T053–T063). Los FR-020/021/022 de la HU7 quedaron cubiertos con T064–T067.
+**Críticos**: 0. El crítico C1 del análisis del 03-11 (puertas de calidad ausentes en las tareas) se atendió en T048 y en las Notas de `tasks.md`. Los dos MEDIUM del análisis del 05-11 (excepción e2e sin confirmar, hallazgo C1; presupuesto de rendimiento sin tarea, hallazgo C2) se atienden en el registro de desviación de esta sección y en la tarea T070.

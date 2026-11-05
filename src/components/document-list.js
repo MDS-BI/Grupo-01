@@ -10,14 +10,18 @@ export function renderDocumentList(
   container,
   documents,
   entities,
-  { config, onEdit, onDelete, filterEntityId } = {}
+  { config, onEdit, onDelete, filterEntityId, filterTipoFactura } = {}
 ) {
   if (!container) return;
   container.textContent = '';
   const labels = config.labels || {};
   const filtered = Array.isArray(documents)
     ? documents.filter(
-        (document) => !filterEntityId || document.entity_id === filterEntityId
+        (document) =>
+          (!filterEntityId || document.entity_id === filterEntityId) &&
+          (!filterTipoFactura ||
+            (document.customFields &&
+              document.customFields.tipoFactura === filterTipoFactura))
       )
     : [];
 

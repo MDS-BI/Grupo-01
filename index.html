@@ -25,6 +25,26 @@
           <button id="nav-documents" class="nav-item" data-module="documents">
             Documentos
           </button>
+          <button
+            id="nav-invoice-sale"
+            class="nav-item"
+            data-module="invoice-sale"
+          >
+            Facturas de venta
+          </button>
+          <button
+            id="nav-invoice-purchase"
+            class="nav-item"
+            data-module="invoice-purchase"
+          >
+            Facturas de compra
+          </button>
+          <button id="nav-movements" class="nav-item" data-module="movements">
+            Movimientos financieros
+          </button>
+          <button id="nav-tracking" class="nav-item" data-module="tracking">
+            Seguimiento
+          </button>
           <button id="nav-search" class="nav-item" data-module="search">
             Buscar
           </button>
@@ -34,10 +54,15 @@
             <h1 id="dashboard-title">Panel</h1>
             <div class="quick-actions">
               <button id="qa-new-entity">Nueva entidad</button>
+              <button id="qa-new-invoice-sale">Nueva factura de venta</button>
+              <button id="qa-new-invoice-purchase">
+                Nueva factura de compra
+              </button>
               <button id="qa-new-document">Nuevo documento</button>
               <button id="qa-manage-entities">
                 Abrir gestión de entidades
               </button>
+              <button id="qa-tracking">Abrir seguimiento</button>
               <button id="qa-search">Buscar registros</button>
             </div>
             <div class="stats">
@@ -49,7 +74,25 @@
                 <span id="stat-documents">0</span>
                 <span id="stat-documents-label">Documentos</span>
               </div>
+              <div class="stat-card">
+                <span id="kpi-por-cobrar">0</span>
+                <span id="kpi-por-cobrar-label">Total por cobrar</span>
+              </div>
+              <div class="stat-card">
+                <span id="kpi-por-pagar">0</span>
+                <span id="kpi-por-pagar-label">Total por pagar</span>
+              </div>
+              <div class="stat-card">
+                <span id="kpi-vencidas">0</span>
+                <span id="kpi-vencidas-label">Facturas vencidas</span>
+              </div>
             </div>
+            <p>
+              <button id="qa-load-demo" hidden>
+                Cargar datos de demostración
+              </button>
+            </p>
+            <p id="demo-status" role="status" hidden></p>
           </section>
 
           <section id="view-entities" class="view" hidden>
@@ -134,12 +177,12 @@
                 <div id="error-folio" class="error"></div>
               </div>
               <div>
-                <label for="startDate">Fecha de inicio</label>
+                <label for="startDate">Fecha de emisión</label>
                 <input id="startDate" name="startDate" type="date" />
                 <div id="error-startDate" class="error"></div>
               </div>
               <div>
-                <label for="endDate">Fecha de fin</label>
+                <label for="endDate">Fecha de vencimiento</label>
                 <input id="endDate" name="endDate" type="date" />
                 <div id="error-endDate" class="error"></div>
               </div>
@@ -203,6 +246,36 @@
             <input id="search-input" placeholder="Buscar..." />
             <div id="search-results"></div>
             <div id="search-empty" hidden>No hay resultados</div>
+          </section>
+
+          <section id="view-movements" class="view" hidden>
+            <h1 id="movements-title">Movimientos financieros</h1>
+            <p>
+              Registro solo lectura generado automáticamente por las emisiones y
+              los pagos de facturas.
+            </p>
+            <div id="movements-list"></div>
+            <div id="movements-empty" hidden>No hay movimientos todavía</div>
+          </section>
+
+          <section id="view-tracking" class="view" hidden>
+            <h1 id="tracking-title">Seguimiento</h1>
+            <div class="stats">
+              <div class="stat-card">
+                <span id="tracking-cobrar">0</span>
+                <span>Total por cobrar</span>
+              </div>
+              <div class="stat-card">
+                <span id="tracking-pagar">0</span>
+                <span>Total por pagar</span>
+              </div>
+              <div class="stat-card">
+                <span id="tracking-vencidas">0</span>
+                <span>Facturas vencidas</span>
+              </div>
+            </div>
+            <div id="tracking-by-entity"></div>
+            <div id="tracking-empty" hidden>Sin deuda registrada</div>
           </section>
         </main>
       </div>

@@ -1,10 +1,19 @@
 import { getConfig } from './module-config.js';
 import { generateId, isBlank } from './utils.js';
 import { validateDocument, validateEntity } from './validation.js';
+import {
+  MOVEMENTS_KEY,
+  clearMovements,
+  deleteMovementsForDocument,
+  deleteMovementsForEntity,
+  movementsForTransition,
+  saveMovements,
+} from './movements.js';
 
 export const STORAGE_KEYS = {
   entities: 'erp.entities',
   documents: 'erp.documents',
+  movements: MOVEMENTS_KEY,
   schemaVersion: 'erp.schemaVersion',
 };
 
@@ -201,8 +210,11 @@ export function addDocument(document, config = getConfig()) {
   record.id = record.document_id;
 
   const entities = loadEntities();
-  assertValid(validateDocument(record, { config, entities }));
+  assertValid(
+    validateDocument(record, { config, entities, documents: loadDocuments() })
+  );
   saveDocuments([...loadDocuments(), record]);
+  applyMovementsForTransition(null, record);
   return record;
 }
 
@@ -248,6 +260,7 @@ export function updateDocument(id, updates, config = getConfig()) {
     validateDocument(merged, {
       config,
       entities: loadEntities(),
+      documents: loadDocuments(),
       previousStatus: previous.status,
     })
   );
@@ -255,7 +268,27 @@ export function updateDocument(id, updates, config = getConfig()) {
   const next = [...documents];
   next[index] = merged;
   saveDocuments(next);
+  applyMovementsForTransition(previous, merged);
   return merged;
+}
+
+function applyMovementsForTransition(previous, next) {
+  const created = movementsForTransition(previous, next);
+  if (created.length > 0) {
+    saveMovements([...loadMovements(), ...created]);
+  }
+}
+
+function loadMovements() {
+  if (typeof localStorage === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.movements);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 export function deleteDocument(id) {
@@ -263,6 +296,7 @@ export function deleteDocument(id) {
     (document) => document.document_id !== id && document.id !== id
   );
   saveDocuments(next);
+  deleteMovementsForDocument(id);
   return next;
 }
 
@@ -271,6 +305,7 @@ export function deleteDocumentsForEntity(entityId) {
     (document) => document.entity_id !== entityId
   );
   saveDocuments(next);
+  deleteMovementsForEntity(entityId);
   return next;
 }
 
@@ -278,5 +313,6 @@ export function clearAll() {
   if (typeof localStorage === 'undefined') return;
   localStorage.removeItem(STORAGE_KEYS.entities);
   localStorage.removeItem(STORAGE_KEYS.documents);
+  localStorage.removeItem(STORAGE_KEYS.movements);
   localStorage.removeItem(STORAGE_KEYS.schemaVersion);
 }

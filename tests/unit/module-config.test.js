@@ -28,7 +28,14 @@ describe('configuración fundacional de facturación', () => {
         label: 'Tipo de tercero',
         type: 'select',
         required: true,
-        options: ['cliente', 'proveedor'],
+        options: ['cliente', 'proveedor', 'personal'],
+      },
+      {
+        target: 'entity',
+        key: 'referenciaOtroModulo',
+        label: 'Referencia a otro módulo',
+        type: 'text',
+        required: false,
       },
       {
         target: 'document',
@@ -52,6 +59,35 @@ describe('configuración fundacional de facturación', () => {
         type: 'date',
         required: false,
       },
+      {
+        target: 'document',
+        key: 'centroCosto',
+        label: 'Centro de costo',
+        type: 'select',
+        required: false,
+        options: ['Activo', 'Consumible'],
+      },
+      {
+        target: 'document',
+        key: 'periodoLiquidacion',
+        label: 'Período de liquidación',
+        type: 'text',
+        required: false,
+      },
+      {
+        target: 'document',
+        key: 'salesOrderId',
+        label: 'Referencia de orden de venta',
+        type: 'text',
+        required: false,
+      },
+      {
+        target: 'document',
+        key: 'referenciaOtroModulo',
+        label: 'Referencia a otro módulo',
+        type: 'text',
+        required: false,
+      },
     ]);
     for (const field of config.customFields) {
       expect(BASE_FIELD_KEYS).not.toContain(field.key);
@@ -73,6 +109,37 @@ describe('configuración fundacional de facturación', () => {
       'Pagada',
     ]);
     expect(allowedNextStatuses(statusLifecycle, 'Pagada')).toEqual(['Pagada']);
+  });
+});
+
+describe('configuración de la Revisión 3', () => {
+  it('declara personal como tipo de tercero disponible', () => {
+    const tipoTercero = getConfig().customFields.find(
+      (field) => field.key === 'tipoTercero'
+    );
+    expect(tipoTercero.options).toEqual(['cliente', 'proveedor', 'personal']);
+  });
+
+  it('declara centro costo, período de liquidación y salesOrderId sin colisión', () => {
+    const keys = getConfig().customFields.map((field) => field.key);
+    expect(keys).toEqual([
+      'tipoTercero',
+      'referenciaOtroModulo',
+      'tipoFactura',
+      'montoPagado',
+      'fechaPago',
+      'centroCosto',
+      'periodoLiquidacion',
+      'salesOrderId',
+      'referenciaOtroModulo',
+    ]);
+    for (const key of keys) {
+      expect(BASE_FIELD_KEYS).not.toContain(key);
+    }
+    const centroCosto = getConfig().customFields.find(
+      (field) => field.key === 'centroCosto'
+    );
+    expect(centroCosto.options).toEqual(['Activo', 'Consumible']);
   });
 });
 

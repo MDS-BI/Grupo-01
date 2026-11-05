@@ -35,13 +35,28 @@ import {
 } from './components/document-form.js';
 import { renderEntityList } from './components/entity-list.js';
 import { renderDocumentList } from './components/document-list.js';
+import { renderMovementsList } from './components/movements-list.js';
+import { renderTrackingView } from './components/tracking.js';
+import { loadMovements } from './movements.js';
+import { loadDemoData } from './demo-data.js';
+import { computeDebtSummary } from './tracking.js';
+import { presetDocumentTipoFactura } from './components/document-form.js';
 import {
   focusSearchInput,
   initSearchBar,
   renderSearchResults,
 } from './components/search-bar.js';
 
-const VIEWS = ['dashboard', 'entities', 'documents', 'search'];
+const VIEWS = [
+  'dashboard',
+  'entities',
+  'documents',
+  'invoice-sale',
+  'invoice-purchase',
+  'movements',
+  'tracking',
+  'search',
+];
 
 const state = {
   config: null,
@@ -142,12 +157,45 @@ function renderDocuments(entities, documents) {
   const filterEntityId = byId('document-entity')
     ? byId('document-entity').value
     : '';
+  const filterTipoFactura =
+    state.currentModule === 'invoice-sale'
+      ? 'venta'
+      : state.currentModule === 'invoice-purchase'
+        ? 'compra'
+        : '';
   renderDocumentList(byId('document-list'), documents, entities, {
     config: state.config,
     filterEntityId,
+    filterTipoFactura,
     onEdit: editDocument,
     onDelete: requestDeleteDocument,
   });
+}
+
+function refreshMovements() {
+  renderMovementsList(byId('movements-list'), loadMovements(), loadEntities());
+  const empty = byId('movements-empty');
+  if (empty) {
+    empty.hidden = loadMovements().length > 0;
+  }
+  setText('movements-title', 'Movimientos financieros');
+}
+
+function refreshTracking() {
+  const entities = loadEntities();
+  const documents = loadDocuments();
+  const { totalPorCobrar, totalPorPagar, vencidas } = computeDebtSummary(
+    entities,
+    documents
+  );
+  setText('tracking-cobrar', String(totalPorCobrar));
+  setText('tracking-pagar', String(totalPorPagar));
+  setText('tracking-vencidas', String(vencidas.length));
+  renderTrackingView(byId('tracking-by-entity'), entities, documents);
+  const empty = byId('tracking-empty');
+  if (empty) {
+    empty.hidden = totalPorCobrar + totalPorPagar > 0 || vencidas.length > 0;
+  }
 }
 
 function refresh() {
@@ -165,6 +213,8 @@ function refresh() {
   setDocumentFormOptions(documents, entities);
   renderDocuments(entities, documents);
   refreshDashboard();
+  refreshMovements();
+  refreshTracking();
   updateSearchResults();
 }
 
@@ -180,17 +230,39 @@ function updateSearchResults() {
   );
 }
 
+const VIEW_ELEMENTS = {
+  dashboard: 'dashboard',
+  entities: 'entities',
+  documents: 'documents',
+  'invoice-sale': 'documents',
+  'invoice-purchase': 'documents',
+  movements: 'movements',
+  tracking: 'tracking',
+  search: 'search',
+};
+
 function showModule(name) {
   if (!VIEWS.includes(name)) return;
   state.currentModule = name;
-  for (const view of VIEWS) {
+  const activeView = VIEW_ELEMENTS[name];
+  for (const view of [
+    'dashboard',
+    'entities',
+    'documents',
+    'search',
+    'movements',
+    'tracking',
+  ]) {
     const element = byId(`view-${view}`);
-    if (element) element.hidden = view !== name;
+    if (element) element.hidden = view !== activeView;
   }
   if (state.shell) state.shell.setActive(name);
 
   if (name === 'dashboard') refreshDashboard();
   if (name === 'entities' || name === 'documents') refresh();
+  if (name === 'invoice-sale' || name === 'invoice-purchase') refresh();
+  if (name === 'movements') refreshMovements();
+  if (name === 'tracking') refreshTracking();
   if (name === 'search') updateSearchResults();
 }
 
@@ -289,6 +361,18 @@ function handleQuickAction(action) {
     showModule('documents');
     resetDocumentForm();
     focusDocumentForm();
+  } else if (action === 'new-invoice-sale') {
+    showModule('documents');
+    resetDocumentForm();
+    presetDocumentTipoFactura('venta');
+    focusDocumentForm();
+  } else if (action === 'new-invoice-purchase') {
+    showModule('documents');
+    resetDocumentForm();
+    presetDocumentTipoFactura('compra');
+    focusDocumentForm();
+  } else if (action === 'tracking') {
+    showModule('tracking');
   } else if (action === 'manage-entities') {
     showModule('entities');
   } else if (action === 'search') {
@@ -300,6 +384,26 @@ function handleQuickAction(action) {
 function handleSearch(term) {
   state.searchTerm = term;
   updateSearchResults();
+}
+
+function handleLoadDemoData() {
+  if (
+    !confirmAction(
+      '¿Cargar los datos de demostración ficticios? El módulo debe estar vacío; si ya tiene registros, no se modificará nada.'
+    )
+  ) {
+    return;
+  }
+  const result = loadDemoData(state.config);
+  const status = byId('demo-status');
+  if (status) {
+    status.textContent = result.ok
+      ? 'Datos de demostración cargados correctamente.'
+      : result.message;
+    status.hidden = false;
+  }
+  refresh();
+  showModule('dashboard');
 }
 
 function bindManagementControls() {
@@ -353,7 +457,11 @@ export function initApp(rawConfig = userConfig) {
   applyLabels(config);
 
   state.shell = createShell({ config, onNavigate: showModule });
-  initDashboard({ config, onAction: handleQuickAction });
+  initDashboard({
+    config,
+    onAction: handleQuickAction,
+    onLoadDemoData: handleLoadDemoData,
+  });
   initEntityForm({ config, onSubmit: handleEntitySubmit });
   initDocumentForm({ config, onSubmit: handleDocumentSubmit });
   initSearchBar({ config, onSearch: handleSearch });

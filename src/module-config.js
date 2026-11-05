@@ -76,7 +76,13 @@ export const userConfig = {
       label: 'Tipo de tercero',
       type: 'select',
       required: true,
-      options: ['cliente', 'proveedor'],
+      options: ['cliente', 'proveedor', 'personal'],
+    },
+    {
+      target: 'entity',
+      key: 'referenciaOtroModulo',
+      label: 'Referencia a otro módulo',
+      type: 'text',
     },
     {
       target: 'document',
@@ -97,6 +103,31 @@ export const userConfig = {
       key: 'fechaPago',
       label: 'Fecha de pago',
       type: 'date',
+    },
+    {
+      target: 'document',
+      key: 'centroCosto',
+      label: 'Centro de costo',
+      type: 'select',
+      options: ['Activo', 'Consumible'],
+    },
+    {
+      target: 'document',
+      key: 'periodoLiquidacion',
+      label: 'Período de liquidación',
+      type: 'text',
+    },
+    {
+      target: 'document',
+      key: 'salesOrderId',
+      label: 'Referencia de orden de venta',
+      type: 'text',
+    },
+    {
+      target: 'document',
+      key: 'referenciaOtroModulo',
+      label: 'Referencia a otro módulo',
+      type: 'text',
     },
   ],
   statusLifecycle: {

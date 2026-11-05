@@ -1,6 +1,25 @@
 import { isBlank, isValidDate, normalizeText } from './utils.js';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const RUT_PATTERN = /^\d{1,2}\.\d{3}(?:\.\d{3})?-(?:\d|k|K)$/;
+const PERIODO_PATTERN = /^\d{4}-(?:0[1-9]|1[0-2])$/;
+
+export function isValidRutChileno(value) {
+  if (typeof value !== 'string') return false;
+  const rut = value.trim().replace(/\./g, '').toUpperCase();
+  if (!/^\d{7,8}-[\dK]$/.test(rut)) return false;
+  const [cuerpo, dv] = rut.split('-');
+  let sum = 0;
+  let multiplier = 2;
+  for (let i = cuerpo.length - 1; i >= 0; i -= 1) {
+    sum += Number(cuerpo[i]) * multiplier;
+    multiplier = multiplier === 7 ? 2 : multiplier + 1;
+  }
+  const remainder = 11 - (sum % 11);
+  const expected =
+    remainder === 11 ? '0' : remainder === 10 ? 'K' : String(remainder);
+  return dv === expected;
+}
 
 export function makeError(field, code, message, context) {
   const result = { field, code, message };
@@ -150,6 +169,40 @@ export function validateEntity(entity, { config = {}, existing = [] } = {}) {
     );
   }
 
+  const declaresTipoTercero = (config.customFields || []).some(
+    (field) => field.target === 'entity' && field.key === 'tipoTercero'
+  );
+  const tipoTercero = entity.customFields
+    ? entity.customFields.tipoTercero
+    : undefined;
+
+  if (declaresTipoTercero && !isBlank(entity.taxId)) {
+    if (!isValidRutChileno(String(entity.taxId))) {
+      errors.push(
+        makeError(
+          'taxId',
+          'INVALID_FORMAT',
+          'El RUT no tiene formato chileno válido o su dígito verificador es incorrecto (módulo 11).'
+        )
+      );
+    }
+  }
+
+  if (
+    declaresTipoTercero &&
+    !isBlank(tipoTercero) &&
+    String(tipoTercero) !== 'cliente' &&
+    !isBlank(entity.creditLimit)
+  ) {
+    errors.push(
+      makeError(
+        'creditLimit',
+        'CREDIT_LIMIT_NOT_ALLOWED',
+        'El límite de crédito solo aplica a terceros de tipo cliente.'
+      )
+    );
+  }
+
   errors.push(...validateCustomFields(entity, 'entity', config));
 
   return errors;
@@ -157,11 +210,18 @@ export function validateEntity(entity, { config = {}, existing = [] } = {}) {
 
 export function validateDocument(
   document,
-  { config = {}, entities = [], previousStatus } = {}
+  { config = {}, entities = [], documents = [], previousStatus } = {}
 ) {
   const errors = [];
   const entityId = document.entity_id;
   const entity = entities.find((item) => item.entity_id === entityId);
+  const tipoTercero =
+    entity && entity.customFields ? entity.customFields.tipoTercero : undefined;
+  const tipoFactura = document.customFields
+    ? document.customFields.tipoFactura
+    : undefined;
+  const custom = document.customFields || {};
+  const status = String(document.status || '');
 
   if (isBlank(entityId)) {
     errors.push(
@@ -185,19 +245,25 @@ export function validateDocument(
     (field) => field.target === 'document' && field.key === 'tipoFactura'
   );
   if (hasInvoiceType && entity) {
-    const tipoFactura = document.customFields?.tipoFactura;
-    const expectedType =
+    const allowedTypes =
       tipoFactura === 'venta'
-        ? 'cliente'
+        ? ['cliente']
         : tipoFactura === 'compra'
-          ? 'proveedor'
-          : null;
-    if (expectedType && entity.customFields?.tipoTercero !== expectedType) {
+          ? ['proveedor', 'personal']
+          : [];
+    if (
+      allowedTypes.length > 0 &&
+      !allowedTypes.includes(String(tipoTercero))
+    ) {
+      const detalle =
+        tipoFactura === 'venta'
+          ? 'cliente'
+          : 'tercero de tipo proveedor o personal';
       errors.push(
         makeError(
           'entity_id',
           'INCOMPATIBLE_ENTITY_TYPE',
-          `Una factura de ${tipoFactura} solo puede asociarse a un tercero ${expectedType}.`
+          `Una factura de ${tipoFactura} solo puede asociarse a un ${detalle}.`
         )
       );
     }
@@ -313,7 +379,6 @@ export function validateDocument(
 
   const lifecycle = config.statusLifecycle;
   if (lifecycle && !isBlank(document.status)) {
-    const status = String(document.status);
     if (!lifecycle.statuses.includes(status)) {
       errors.push(
         makeError(
@@ -336,9 +401,195 @@ export function validateDocument(
     }
   }
 
+  const duplicated = hasInvoiceType
+    ? isDuplicateInvoice(documents, document)
+    : false;
+  if (duplicated) {
+    errors.push(
+      makeError(
+        'folio',
+        'DUPLICATE_FOLIO',
+        'La combinación de tipo de factura, serie y folio ya existe.'
+      )
+    );
+  }
+
+  applyModuleRules(errors, {
+    document,
+    custom,
+    status,
+    tipoFactura,
+    tipoTercero,
+    hasInvoiceType,
+    startValid,
+  });
+
   errors.push(...validateCustomFields(document, 'document', config));
 
   return errors;
+}
+
+function applyModuleRules(
+  errors,
+  {
+    document,
+    custom,
+    status,
+    tipoFactura,
+    tipoTercero,
+    hasInvoiceType,
+    startValid,
+  }
+) {
+  const isEmitted = status === 'Emitida' || status === 'Pagada';
+
+  if (hasInvoiceType && isEmitted) {
+    const total = toNumber(document.totalAmount);
+    if (isBlank(document.totalAmount)) {
+      errors.push(
+        makeError(
+          'totalAmount',
+          'REQUIRED',
+          'El monto total es obligatorio para emitir la factura.'
+        )
+      );
+    } else if (Number.isFinite(total) && total <= 0) {
+      errors.push(
+        makeError(
+          'totalAmount',
+          'TOTAL_NOT_POSITIVE',
+          'El monto total debe ser mayor que cero para emitir la factura.'
+        )
+      );
+    }
+  }
+
+  if (hasInvoiceType && tipoFactura === 'venta') {
+    if (
+      custom.salesOrderId !== undefined &&
+      String(custom.salesOrderId).trim() === ''
+    ) {
+      errors.push(
+        makeError(
+          'customFields.salesOrderId',
+          'INVALID_FORMAT',
+          'La referencia de orden de venta no puede estar vacía cuando se ingresa.'
+        )
+      );
+    }
+  }
+
+  if (hasInvoiceType && tipoFactura === 'compra') {
+    if (isEmitted && isBlank(custom.centroCosto)) {
+      errors.push(
+        makeError(
+          'customFields.centroCosto',
+          'REQUIRED',
+          'El centro de costo es obligatorio para emitir una factura de compra: elija Activo o Consumible.'
+        )
+      );
+    }
+
+    if (tipoTercero === 'personal') {
+      if (isBlank(custom.periodoLiquidacion)) {
+        errors.push(
+          makeError(
+            'customFields.periodoLiquidacion',
+            'REQUIRED',
+            'El período de liquidación es obligatorio cuando el tercero es de tipo personal.'
+          )
+        );
+      } else if (!PERIODO_PATTERN.test(String(custom.periodoLiquidacion))) {
+        errors.push(
+          makeError(
+            'customFields.periodoLiquidacion',
+            'INVALID_FORMAT',
+            'El período de liquidación debe usar el formato AAAA-MM.'
+          )
+        );
+      } else if (
+        startValid &&
+        String(document.startDate).slice(0, 7) <
+          String(custom.periodoLiquidacion)
+      ) {
+        errors.push(
+          makeError(
+            'customFields.periodoLiquidacion',
+            'PERIODO_AFTER_START',
+            'El período de liquidación no puede ser posterior a la fecha de emisión.'
+          )
+        );
+      }
+    } else if (
+      tipoTercero === 'proveedor' &&
+      !isBlank(custom.periodoLiquidacion)
+    ) {
+      errors.push(
+        makeError(
+          'customFields.periodoLiquidacion',
+          'NOT_APPLICABLE',
+          'El período de liquidación no aplica a facturas de compra dirigidas a proveedores.'
+        )
+      );
+    }
+  }
+
+  if (status === 'Pagada') {
+    const total = toNumber(document.totalAmount);
+    if (isBlank(custom.montoPagado)) {
+      errors.push(
+        makeError(
+          'customFields.montoPagado',
+          'REQUIRED',
+          'El monto pagado es obligatorio para marcar la factura como Pagada.'
+        )
+      );
+    } else {
+      const montoPagado = Number(custom.montoPagado);
+      if (!Number.isFinite(montoPagado)) {
+        errors.push(
+          makeError(
+            'customFields.montoPagado',
+            'INVALID_NUMBER',
+            'El monto pagado debe ser un número válido.'
+          )
+        );
+      } else if (Number.isFinite(total) && montoPagado !== total) {
+        errors.push(
+          makeError(
+            'customFields.montoPagado',
+            'PAYMENT_AMOUNT_MISMATCH',
+            'El monto pagado debe ser igual al monto total; los pagos parciales quedan fuera de esta versión.'
+          )
+        );
+      }
+    }
+    if (isBlank(custom.fechaPago)) {
+      errors.push(
+        makeError(
+          'customFields.fechaPago',
+          'REQUIRED',
+          'La fecha de pago es obligatoria para marcar la factura como Pagada.'
+        )
+      );
+    }
+  }
+}
+
+export function isDuplicateInvoice(documents, document) {
+  const tipoFactura = document.customFields
+    ? document.customFields.tipoFactura
+    : undefined;
+  if (!tipoFactura || !isPositiveInteger(document.folio)) return false;
+  return (documents || []).some(
+    (other) =>
+      other &&
+      other.document_id !== document.document_id &&
+      other.customFields &&
+      String(other.customFields.tipoFactura) === String(tipoFactura) &&
+      Number(other.folio) === Number(document.folio) &&
+      String(other.series ?? '') === String(document.series ?? '')
+  );
 }
 
 export function allowedNextStatuses(lifecycle, previousStatus) {

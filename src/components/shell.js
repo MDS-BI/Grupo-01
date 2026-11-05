@@ -1,6 +1,15 @@
 import { monogram } from '../utils.js';
 
-const NAV_MODULES = ['dashboard', 'entities', 'documents', 'search'];
+const NAV_MODULES = [
+  'dashboard',
+  'entities',
+  'documents',
+  'invoice-sale',
+  'invoice-purchase',
+  'movements',
+  'tracking',
+  'search',
+];
 
 function renderLogo(container, moduleName) {
   if (!container) return;
@@ -37,6 +46,10 @@ function navLabel(config, module) {
   if (module === 'dashboard') return labels.dashboard || 'Panel';
   if (module === 'entities') return labels.entities || 'Entidades';
   if (module === 'documents') return labels.documents || 'Documentos';
+  if (module === 'invoice-sale') return 'Facturas de venta';
+  if (module === 'invoice-purchase') return 'Facturas de compra';
+  if (module === 'movements') return 'Movimientos financieros';
+  if (module === 'tracking') return 'Seguimiento';
   return labels.search || 'Buscar';
 }
 

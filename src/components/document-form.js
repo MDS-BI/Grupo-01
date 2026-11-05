@@ -16,9 +16,15 @@ const BASE_FIELDS = [
   'docPaymentTerms',
 ];
 
+const TYPE_DEPENDENT_FIELDS = {
+  venta: ['salesOrderId'],
+  compra: ['centroCosto', 'periodoLiquidacion'],
+};
+
 let config = null;
 let onSubmit = null;
 let editingId = null;
+let cachedEntities = [];
 
 function formElement() {
   return document.getElementById('document-form');
@@ -39,6 +45,7 @@ function renderCustomFields() {
   for (const field of fields) {
     const wrapper = document.createElement('div');
     wrapper.className = 'form-field';
+    wrapper.dataset.customField = field.key;
 
     const label = document.createElement('label');
     label.htmlFor = `custom-document-${field.key}`;
@@ -155,8 +162,10 @@ export function initDocumentForm({ config: nextConfig, onSubmit: handler }) {
   config = nextConfig;
   onSubmit = handler;
   editingId = null;
+  cachedEntities = [];
   renderCustomFields();
   configureStatus();
+  bindDocumentFormEvents();
   clearErrors();
 
   const form = formElement();
@@ -168,10 +177,34 @@ export function initDocumentForm({ config: nextConfig, onSubmit: handler }) {
   }
 }
 
-export function setDocumentFormEntities(entities) {
+function selectedTipoFactura() {
+  const select = document.getElementById('custom-document-tipoFactura');
+  return select ? select.value : '';
+}
+
+function selectedTerceroTipo() {
+  const select = document.getElementById('document-entity');
+  if (!select || !select.value) return '';
+  const entity = cachedEntities.find((item) => item.entity_id === select.value);
+  return entity && entity.customFields
+    ? String(entity.customFields.tipoTercero || '')
+    : '';
+}
+
+function allowedTerceroTipos(tipoFactura) {
+  if (tipoFactura === 'venta') return ['cliente'];
+  if (tipoFactura === 'compra') return ['proveedor', 'personal'];
+  return null;
+}
+
+export function filterDocumentEntityOptions() {
   const select = document.getElementById('document-entity');
   if (!select) return;
+  const tipos = allowedTerceroTipos(selectedTipoFactura());
   const current = select.value;
+  const currentEntity = cachedEntities.find(
+    (item) => item.entity_id === current
+  );
   select.textContent = '';
 
   const placeholder = document.createElement('option');
@@ -179,16 +212,78 @@ export function setDocumentFormEntities(entities) {
   placeholder.textContent = 'Seleccione...';
   select.append(placeholder);
 
-  for (const entity of entities) {
+  for (const entity of cachedEntities) {
+    const tipo =
+      entity.customFields && entity.customFields.tipoTercero
+        ? String(entity.customFields.tipoTercero)
+        : '';
+    const visible =
+      tipos === null
+        ? true
+        : tipos.includes(tipo) || entity.entity_id === current;
+    if (!visible) continue;
     const option = document.createElement('option');
     option.value = entity.entity_id;
     option.textContent = `${entity.name} (${entity.code})`;
     select.append(option);
   }
 
-  if (current && entities.some((entity) => entity.entity_id === current)) {
+  if (current && select.value !== current && currentEntity) {
+    const option = document.createElement('option');
+    option.value = currentEntity.entity_id;
+    option.textContent = `${currentEntity.name} (${currentEntity.code})`;
+    select.append(option);
+  }
+  if (current && Array.from(select.options).some((o) => o.value === current)) {
     select.value = current;
   }
+}
+
+function updateFieldVisibility() {
+  const tipo = selectedTipoFactura();
+  const terceroTipo = selectedTerceroTipo();
+  const container = customContainer();
+  if (!container) return;
+  const allowed = tipo ? TYPE_DEPENDENT_FIELDS[tipo] || [] : null;
+  for (const wrapper of container.querySelectorAll('[data-custom-field]')) {
+    const key = wrapper.dataset.customField;
+    let visible = allowed === null ? true : allowed.includes(key);
+    if (visible && tipo === 'compra' && key === 'periodoLiquidacion') {
+      visible = selectedTerceroTipo() !== '' && terceroTipo === 'personal';
+    }
+    wrapper.hidden = !visible;
+  }
+}
+
+function bindDocumentFormEvents() {
+  const tipoSelect = document.getElementById('custom-document-tipoFactura');
+  if (tipoSelect) {
+    tipoSelect.onchange = () => {
+      filterDocumentEntityOptions();
+      updateFieldVisibility();
+    };
+  }
+  const entitySelect = document.getElementById('document-entity');
+  if (entitySelect) {
+    const previous = entitySelect.onchange;
+    entitySelect.onchange = (event) => {
+      if (previous) previous(event);
+      updateFieldVisibility();
+    };
+  }
+}
+
+export function presetDocumentTipoFactura(tipoFactura) {
+  const select = document.getElementById('custom-document-tipoFactura');
+  if (!select) return;
+  select.value = tipoFactura;
+  filterDocumentEntityOptions();
+  updateFieldVisibility();
+}
+
+export function setDocumentFormEntities(entities) {
+  cachedEntities = Array.isArray(entities) ? [...entities] : [];
+  filterDocumentEntityOptions();
 }
 
 export function setDocumentFormOptions(documents, entities) {
@@ -284,6 +379,8 @@ export function setDocumentFormDocument(documentRecord) {
       element.value = values[element.dataset.customKey] ?? '';
     }
   }
+  filterDocumentEntityOptions();
+  updateFieldVisibility();
 }
 
 export function resetDocumentForm() {
