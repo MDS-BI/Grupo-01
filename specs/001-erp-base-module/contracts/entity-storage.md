@@ -103,6 +103,15 @@ Reglas:
 - NO existen operaciones para editar o eliminar movimientos manualmente.
 - El almacenamiento de KPIs y seguimiento usa las facturas, no los movimientos.
 
+## Vistas de factura (Revisión 4)
+
+El almacenamiento de documentos sigue siendo único: `erp.documents` guarda facturas de venta y de compra, distinguidas por `customFields.tipoFactura`. La separación visual y funcional se define en `contracts/invoice-views.md`:
+
+- `tipoFactura` se fija por la vista (`venta` o `compra`); el formulario no lo expone.
+- Cada vista tiene su propio formulario, listado y columnas.
+- Un documento solo se muestra y se edita en la vista de su tipo.
+- No se agregan claves de almacenamiento ni cambios de esquema.
+
 ## Expectativas de Extensibilidad
 
 - Los campos adicionales añadidos por módulos personalizados deben persistirse junto a los campos base sin manejo especial en la capa de almacenamiento.

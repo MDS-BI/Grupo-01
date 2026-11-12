@@ -4,7 +4,7 @@
 
 **Creada**: 2026-10-29
 
-**Estado**: Borrador (Revisión 3 — 2026-11-05, clarify aplicado)
+**Estado**: Borrador (Revisión 4 — 2026-11-11, clarify de separación aplicado)
 
 **Entrada**: Módulo de facturación y pagos, por cobrar y por pagar, para un sistema ERP (solo frontend), construido sobre el template `Speckit_Template`.
 
@@ -13,6 +13,12 @@
 **Problema.** Muchas pequeñas y medianas empresas llevan sus facturas en planillas sueltas. Eso genera errores en los montos, pérdida de información y falta de seguimiento de los vencimientos, lo que afecta su flujo de caja.
 
 **Solución (MVP).** Un módulo de facturación y pagos con una base de terceros (clientes, proveedores y personal), que emite facturas de venta y facturas de compra como documentos separados, con un ciclo de estados (Borrador, Emitida y Pagada), centro de costo en las compras (Activos/Consumible), trazabilidad hacia las órdenes de venta, una tabla de movimientos financieros generada automáticamente, la factura de compra como instrumento para liquidaciones de sueldo, registro del pago y una vista de home con KPIs para ver cuánto se debe y qué está vencido.
+
+## Clarifications
+
+### Session 2026-11-11
+
+- Q: ¿La separación entre facturas de venta y facturas de compra debe ser solo visual o también de almacenamiento? → A: Debe ser visual y funcional: dos vistas independientes, dos formularios independientes y dos listados con columnas propias; el almacenamiento sigue siendo un único documento con `tipoFactura`, pero la UI no reutiliza la vista genérica. La factura de venta muestra `sales_order_id`; la de compra muestra `centroCosto` y `periodoLiquidacion`.
 
 ## Usuarios
 
@@ -174,6 +180,7 @@ Como usuario del módulo (cobranzas, pagos, contabilidad o gerencia), quiero una
 - ¿Qué pasa si las facturas de venta Emitidas de un cliente superan su límite de crédito? El sistema avisa y exige una confirmación explícita, pero no bloquea la emisión.
 - ¿Qué pasa si se intenta emitir una factura de compra sin centro de costo? El sistema lo rechaza y exige elegir Activo o Consumible.
 - ¿Qué pasa si se intenta asignar centro de costo a una factura de venta? El centro de costo es propio de las compras; el sistema no lo ofrece ni lo almacena en las ventas.
+- ¿Qué pasa si se intenta abrir o editar una factura de compra desde la vista de facturas de venta (o una de venta desde la de compra)? Cada vista filtra por su `tipoFactura` y no muestra ni permite editar documentos del otro tipo; el documento solo se abre desde su vista correspondiente.
 - ¿Qué pasa si se intenta editar o eliminar un movimiento financiero? El sistema lo impide: los movimientos se generan automáticamente por las emisiones y los pagos, y son de solo lectura.
 - ¿Qué pasa si se elimina una factura que tiene movimientos financieros? Se eliminan también sus movimientos asociados, manteniendo la consistencia de la tabla.
 - ¿Qué pasa si se ingresa un `sales_order_id` que no sigue la referencia del módulo de Ventas? El MVP valida solo que no esté vacío cuando se ingresa; la validación contra la entidad de Ventas llega cuando ese módulo defina su identificador compartido.
@@ -200,7 +207,7 @@ Como usuario del módulo (cobranzas, pagos, contabilidad o gerencia), quiero una
 
 **Facturas de venta**
 
-- **FR-006**: El sistema DEBE manejar la factura de venta y la factura de compra como documentos separados, cada uno con su listado y sus reglas propias.
+- **FR-006**: El sistema DEBE separar de forma visual y funcional la factura de venta y la factura de compra: cada tipo DEBE tener su propia vista, su propio formulario y su propio listado con columnas propias. La UI NO DEBE reutilizar una vista genérica de documentos para ninguno de los dos tipos: el tipo de factura queda fijado por la vista desde la que se crea y no se elige en el formulario. El almacenamiento continúa siendo un único documento con `tipoFactura`; la separación es de interfaz y de flujo, no de almacenamiento. El listado de facturas de venta DEBE mostrar `sales_order_id`; el de facturas de compra DEBE mostrar `centroCosto` y `periodoLiquidacion`.
 - **FR-007**: Una factura de venta solo puede asociarse a un tercero de tipo cliente.
 - **FR-008**: Cada factura de venta DEBE tener folio (entero positivo), serie opcional, moneda (única en el MVP: CLP), fecha de emisión, fecha de vencimiento (igual o posterior a la de emisión), monto total y campo `sales_order_id` opcional para trazabilidad hacia el módulo de Ventas. El monto total puede ser cero en Borrador; para emitir DEBE ser mayor que cero.
 - **FR-009**: El `sales_order_id` es texto libre no vacío cuando se ingresa; toda factura de venta que lo lleve DEBE poder rastrear esa referencia desde el documento y desde sus movimientos financieros.
@@ -226,7 +233,7 @@ Como usuario del módulo (cobranzas, pagos, contabilidad o gerencia), quiero una
 
 **UI y navegación**
 
-- **FR-020**: El sistema DEBE tener un marco general de UI (layout) con un menú de navegación desacoplado del contenido de los módulos, que no cambie según la vista activa. El "desacoplado" significa que el menú es un componente constante e independiente del contenido: sus vistas son fijas del módulo (home, terceros, facturas de venta, facturas de compra, movimientos financieros y seguimiento). Un upgrade a menú configurable por módulo queda fuera del MVP.
+- **FR-020**: El sistema DEBE tener un marco general de UI (layout) con un menú de navegación desacoplado del contenido de los módulos, que no cambie según la vista activa. El "desacoplado" significa que el menú es un componente constante e independiente del contenido: sus vistas son fijas del módulo (home, terceros, facturas de venta, facturas de compra, movimientos financieros y seguimiento). El menú NO DEBE incluir una vista genérica de documentos: las facturas se abren únicamente desde la vista de facturas de venta o desde la de facturas de compra, según corresponda. Un upgrade a menú configurable por módulo queda fuera del MVP.
 - **FR-021**: El sistema DEBE tener un home con KPIs (total por cobrar, total por pagar, facturas vencidas) y accesos directos a crear tercero, crear factura de venta, crear factura de compra y abrir el seguimiento. Los KPIs se calculan sobre las facturas (ver FR-023), no sobre la tabla de movimientos.
 - **FR-022**: El menú DEBE permitir navegar entre home, terceros, facturas de venta, facturas de compra, movimientos financieros y seguimiento, reemplazando el contenido central sin recargar la página completa.
 
@@ -247,8 +254,8 @@ Como usuario del módulo (cobranzas, pagos, contabilidad o gerencia), quiero una
 ### Entidades Clave
 
 - **Tercero**: cliente, proveedor o personal. Tiene nombre, código, RUT, tipo y, si es cliente, límite de crédito. Un tercero tiene cero o muchas facturas.
-- **Factura de venta**: documento separado de cuentas por cobrar. Tiene serie, folio, fecha de emisión, fecha de vencimiento, montos, moneda, estado, monto pagado, fecha de pago y `sales_order_id` opcional. Pertenece a un solo tercero de tipo cliente.
-- **Factura de compra**: documento separado de cuentas por pagar. Tiene serie, folio, fecha de emisión, fecha de vencimiento, montos, moneda, estado, monto pagado, fecha de pago, centro de costo (Activo/Consumible, solo atributo de reporte) y, si el tercero es de tipo personal, un período obligatorio de liquidación en formato `YYYY-MM`. Pertenece a un solo tercero de tipo proveedor o personal. Ambos tipos de factura comparten el ciclo Borrador → Emitida → Pagada.
+- **Factura de venta**: documento separado de cuentas por cobrar. Tiene su propia vista, su propio formulario y su propio listado, con columna `sales_order_id`. Tiene serie, folio, fecha de emisión, fecha de vencimiento, montos, moneda, estado, monto pagado, fecha de pago y `sales_order_id` opcional. Pertenece a un solo tercero de tipo cliente.
+- **Factura de compra**: documento separado de cuentas por pagar. Tiene su propia vista, su propio formulario y su propio listado, con columnas `centroCosto` y `periodoLiquidacion`. Tiene serie, folio, fecha de emisión, fecha de vencimiento, montos, moneda, estado, monto pagado, fecha de pago, centro de costo (Activo/Consumible, solo atributo de reporte) y, si el tercero es de tipo personal, un período obligatorio de liquidación en formato `YYYY-MM`. Pertenece a un solo tercero de tipo proveedor o personal. Ambos tipos de factura comparten el ciclo Borrador → Emitida → Pagada.
 - **Movimiento financiero**: registro de solo lectura, generado automáticamente por emisiones y pagos. Tiene fecha, tipo (cargo/abono/pago), referencia al documento y al tercero, monto, centro de costo o `sales_order_id` según corresponda. Pertenece a una sola factura.
 - **Vistas del marco de UI**: home (KPIs y accesos directos), terceros, facturas de venta, facturas de compra, movimientos financieros y seguimiento, todas viviendo en un layout común con menú desacoplado.
 
@@ -267,6 +274,7 @@ Como usuario del módulo (cobranzas, pagos, contabilidad o gerencia), quiero una
 
 - El MVP es solo frontend: los datos se guardan en el navegador, hay un solo usuario por navegador y no hay inicio de sesión ni perfiles.
 - Hay un solo tipo de entidad base (Tercero, con tipo cliente/proveedor/personal) y dos tipos de documento separados: Factura de Venta y Factura de Compra, cada uno con su listado y reglas propias. Decidido 2026-11-05: la separación formal de documentos reemplaza el debate "documento único con tipo" (el ayudante lo había recomendado).
+- La separación entre facturas de venta y de compra es visual y funcional, no de almacenamiento: dos vistas, dos formularios y dos listados independientes con columnas propias, sobre un único documento con `tipoFactura`. La vista de venta muestra `sales_order_id`; la de compra muestra `centroCosto` y `periodoLiquidacion`. La UI no reutiliza la vista genérica de documentos. Decidido 2026-11-11 (clarify).
 - Las facturas de compra llevan centro de costo con valores Activos/Consumible, obligatorio al emitir y usado solo como atributo de reporte (sin desglose en KPIs). Decidido 2026-11-05 y reafirmado en el clarify del mismo día.
 - La trazabilidad de las facturas de venta hacia Ventas se implementa con el campo `sales_order_id` (texto libre no vacío cuando se ingresa, consistente con FR-027). Decidido 2026-11-05.
 - La tabla de movimientos financieros es de solo lectura, se genera automáticamente por emisiones y pagos con granularidad de un movimiento por evento, y es un registro trazable: los KPIs del home y el seguimiento se calculan sobre las facturas, no sobre la tabla. Decidido 2026-11-05 (clarify).

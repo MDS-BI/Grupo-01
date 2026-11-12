@@ -1,6 +1,6 @@
 # Modelo de Datos: Facturación y Pagos (Módulo de Contabilidad y Finanzas)
 
-**Rama**: `001-erp-base-module` · **Fecha**: 2026-10-29 · **Estado**: Borrador (actualizado al 2026-11-05 con la Revisión 3 de `spec.md`)
+**Rama**: `001-erp-base-module` · **Fecha**: 2026-10-29 · **Estado**: Borrador (actualizado al 2026-11-11 con la Revisión 4 de `spec.md`)
 **Relacionado con**: `spec.md` (historias de usuario y requisitos FR-001 a FR-030) y `contracts/entity-storage.md`
 
 ## 1. Descripción y justificación de los datos
@@ -16,6 +16,8 @@ El módulo debe responder tres preguntas: ¿cuánto me deben mis clientes?, ¿cu
 **Por qué solo tres.** Cada dato guardado debe servir a una historia de usuario. Todo lo demás (plan de cuentas, asientos, pagos como registro propio) queda para etapas futuras.
 
 **Por qué un solo tipo de entidad y documentos separados.** El template ofrece una entidad y un documento por módulo. Cliente, proveedor y personal comparten los mismos datos base (nombre, código, RUT), así que el Tercero es una sola entidad con un campo de tipo. En cambio, Factura de Venta y Factura de Compra son documentos separados, cada uno con su listado y sus reglas propias (decidido 2026-11-05; el ayudante lo había recomendado): la compra agrega centro de costo y período de liquidación, campos que la venta no tiene.
+
+**Separación lógica y de UI, no de almacenamiento (2026-11-11).** La separación entre venta y compra es visual y funcional: dos vistas, dos formularios y dos listados independientes con columnas propias. El almacenamiento sigue siendo un único `Document` en `erp.documents`, con `customFields.tipoFactura` como discriminante. La vista fija el tipo y el formulario no permite cambiarlo; un documento de venta nunca se muestra en el listado de compra ni viceversa. La separación física en dos colecciones queda fuera del MVP.
 
 **Por qué los pagos son campos de la factura.** En el MVP una factura se paga completa y una sola vez. Un registro de pagos separado solo se justifica cuando existan pagos parciales (etapa futura).
 
@@ -67,7 +69,7 @@ Representa al cliente, proveedor o personal. Se muestran todos los campos base d
 
 ## 4. Entidad: Document (Factura de venta y Factura de compra)
 
-Representa una factura de venta (por cobrar) o de compra (por pagar) como documentos separados, vinculadas a un tercero del tipo correspondiente.
+Representa una factura de venta (por cobrar) o de compra (por pagar) como documentos separados, vinculadas a un tercero del tipo correspondiente. **En almacenamiento es un único registro `Document`**; la separación es lógica y de interfaz, y se materializa en dos vistas independientes que fijan `tipoFactura`.
 
 | Campo | Tipo | Descripción | Restricciones | Uso en este módulo |
 |---|---|---|---|---|
@@ -100,6 +102,27 @@ Representa una factura de venta (por cobrar) o de compra (por pagar) como docume
 | centroCosto | select | Centro de costo de la compra | Solo facturas de compra. Valores: `Activo`, `Consumible`. Obligatorio al emitir; indefinido solo en Borrador |
 | periodoLiquidacion | string | Período de la liquidación de sueldo (YYYY-MM) | Solo facturas de compra a tercero de tipo personal; obligatorio, mes válido no posterior a la fecha de emisión |
 | salesOrderId | string | Referencia a la orden de venta (trazabilidad) | Solo facturas de venta; opcional, texto libre no vacío cuando se ingresa |
+
+### 4a. Vistas y columnas por tipo (Revisión 4)
+
+La misma entidad `Document` se proyecta en dos vistas independientes. El tipo no se elige en el formulario: lo fija la vista.
+
+| Elemento | Factura de venta | Factura de compra |
+|---|---|---|
+| Ruta / vista | `invoice-sale` / `#view-invoice-sale` | `invoice-purchase` / `#view-invoice-purchase` |
+| Formulario | `#invoice-sale-form` (`invoice-sale-form.js`) | `#invoice-purchase-form` (`invoice-purchase-form.js`) |
+| Listado | `#invoice-sale-list` (`invoice-sale-list.js`) | `#invoice-purchase-list` (`invoice-purchase-list.js`) |
+| `tipoFactura` | Fijo en `venta` | Fijo en `compra` |
+| Terceros admitidos | `cliente` | `proveedor` o `personal` |
+| Campos propios visibles | `salesOrderId` | `centroCosto` y `periodoLiquidacion` (este último solo si el tercero es `personal`) |
+| Columnas del listado | Folio, Estado, Emisión, Vencimiento, Total, Orden de venta (`salesOrderId`) | Folio, Estado, Emisión, Vencimiento, Total, Centro de costo, Período de liquidación |
+| Estilo distintivo | `.invoice-view--sale`, `.invoice-badge--sale` | `.invoice-view--purchase`, `.invoice-badge--purchase` |
+
+**Invariantes de la proyección:**
+- Un documento solo se muestra y se edita en la vista de su `tipoFactura`.
+- El formulario inyecta `customFields.tipoFactura` al guardar; no hay control de usuario para cambiarlo.
+- Al editar o eliminar desde un listado, la aplicación navega a la vista del tipo del documento.
+- La vista genérica de documentos no existe en el menú ni en el HTML.
 
 ## 4b. Registro: Movimiento financiero
 
@@ -134,7 +157,7 @@ Así se adapta el template a este módulo, sin tocar el código central:
 
 - Un Tercero tiene cero o muchas Facturas. Cada Factura pertenece exactamente a un Tercero, vinculada por `entity_id` (no por `id`; el tipo de factura determina el tipo de tercero admitido: venta → cliente; compra → proveedor o personal).
 - Al eliminar un Tercero se eliminan en cascada sus Facturas y, con ellas, sus Movimientos financieros, previa confirmación (FR-005). Es una regla de la aplicación, no de una base de datos.
-- Cada Factura tiene uno o dos Movimientos financieros (uno por emisión; uno más por pago), generados automáticamente (FR-017) y vinculados por `document_id`.
+- Cada Factura tiene cero, uno o dos Movimientos financieros (cero en Borrador; uno por emisión; uno más por pago), generados automáticamente (FR-017) y vinculados por `document_id`.
 
 ## 7. Reglas de validación
 
@@ -156,6 +179,8 @@ Así se adapta el template a este módulo, sin tocar el código central:
 - El `centroCosto` de la compra es obligatorio al emitir (FR-014).
 - El `periodoLiquidacion` es obligatorio (`YYYY-MM`, no posterior a la emisión) solo cuando el tercero es de tipo personal (FR-015).
 - El `salesOrderId`, si se ingresa, no puede estar vacío (FR-009).
+- El `tipoFactura` lo fija la vista desde la que se crea la factura; el formulario no lo expone y no se puede cambiar después (FR-006).
+- Un documento solo se muestra y se edita en la vista de su `tipoFactura`; el listado del otro tipo lo excluye (FR-006).
 - La combinación (tipo de documento, serie, folio) es única dentro de su tipo (FR-030).
 - Los movimientos financieros se generan automáticamente y no admiten edición ni eliminación manual (FR-019).
 
@@ -200,7 +225,7 @@ Este módulo simplifica las tablas de Finanzas del modelo ERP base. Esta tabla p
 
 ## 11. Almacenamiento
 
-Los datos se guardan en el navegador (`localStorage`) bajo las claves del código del template: `erp.entities` y `erp.documents` (más `erp.schemaVersion`). Los movimientos financieros se guardan en `erp.movements` como registros derivados, regenerables desde las facturas. Los valores de los campos personalizados se guardan dentro del objeto `customFields` de cada registro, sin cambios de esquema. La carga de datos de demostración (FR-026) usa solo datos ficticios.
+Los datos se guardan en el navegador (`localStorage`) bajo las claves del código del template: `erp.entities` y `erp.documents` (más `erp.schemaVersion`). Los movimientos financieros se guardan en `erp.movements` como registros derivados, regenerables desde las facturas. Los valores de los campos personalizados se guardan dentro del objeto `customFields` de cada registro, sin cambios de esquema. La separación de vistas de la Revisión 4 **no cambia las claves ni el esquema**: venta y compra siguen conviviendo en `erp.documents` y se distinguen por `customFields.tipoFactura`. La carga de datos de demostración (FR-026) usa solo datos ficticios.
 
 ## 12. Modelo Entidad-Relación (MER)
 
@@ -258,12 +283,15 @@ erDiagram
     }
 ```
 
+**Nota:** este MER representa el almacenamiento. La separación de la Revisión 4 es una proyección de UI sobre `FACTURA`: dos vistas, dos formularios y dos listados que fijan `tipoFactura`. No hay tablas nuevas ni relaciones nuevas.
+
 ## 13. Notas de extensibilidad y desarrollo futuro
 
 - Los campos base mantienen sus nombres y semántica, para que el almacenamiento, la validación y la integridad referencial sigan intactos.
 - **Etapa 2:** el pago pasa a ser un registro propio (`PAGO`) ligado a la factura, para permitir pagos parciales y varios pagos por factura.
 - **Etapa 3:** plan de cuentas y asientos contables alimentados por las facturas, además de activos fijos y presupuestos.
 - **Etapa 4:** referencias a otros módulos (`customers`, `vendors`, `sales_orders`, `purchase_orders`), backend real, roles y permisos.
+- **Etapa 5:** si el volumen o los permisos lo justifican, separar el almacenamiento en dos colecciones (`salesInvoices` y `purchaseInvoices`) o en dos tablas con reglas propias. En el MVP la separación es visual y funcional, no física.
 
 ## Fuentes
 

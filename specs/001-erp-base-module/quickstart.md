@@ -11,13 +11,25 @@
 1. Cargue los datos de demostración desde el home cuando el módulo esté vacío (HU6).
 2. En el home revise los KPIs: total por cobrar, total por pagar y facturas vencidas, y use los accesos directos.
 3. Cree un tercero (cliente, proveedor o personal) con nombre, código, RUT, tipo y, si es cliente, límite de crédito.
-4. Cree una factura de venta a un cliente (con `salesOrderId` opcional) o una factura de compra a un proveedor (con centro de costo Activo/Consumible, o período de liquidación `YYYY-MM` si es personal); la factura nace en Borrador.
-5. Emita la factura y compruebe que aparece en su listado (venta y compra son listados separados) y que generó un movimiento financiero.
-6. Registre el pago (monto igual al total + fecha) y márquela Pagada; verifique el movimiento de contrapartida.
-7. Abra el seguimiento para ver la deuda por tercero y las facturas vencidas (vencida = vencimiento anterior a hoy).
-8. Elimine un tercero con facturas y compruebe la confirmación y el borrado en cascada de facturas y movimientos.
+4. Abra **Facturas de venta** y cree una factura de venta a un cliente (con `salesOrderId` opcional); la factura nace en Borrador. El formulario no muestra centro de costo ni período de liquidación.
+5. Abra **Facturas de compra** y cree una factura de compra a un proveedor o a un personal (con centro de costo Activo/Consumible y, si es personal, período de liquidación `YYYY-MM`); la factura nace en Borrador. El formulario no muestra orden de venta.
+6. Emita cada factura y compruebe que cada una aparece solo en su listado, con sus columnas propias, y que generó un movimiento financiero.
+7. Registre el pago (monto igual al total + fecha) y márquela Pagada; verifique el movimiento de contrapartida.
+8. Abra el seguimiento para ver la deuda por tercero y las facturas vencidas (vencida = vencimiento anterior a hoy).
+9. Elimine un tercero con facturas y compruebe la confirmación y el borrado en cascada de facturas y movimientos.
 
 ## Validación
+
+### Separación de facturas (Revisión 4)
+
+- Verifique que el menú no muestra una entrada genérica "Documentos" y que las facturas se abren solo desde "Facturas de venta" o "Facturas de compra".
+- Verifique que una factura de venta no aparece en el listado de compra ni una de compra en el de venta.
+- Verifique que el listado de venta muestra la columna Orden de venta (`salesOrderId`) y que el de compra muestra Centro de costo y Período de liquidación.
+- Verifique que el formulario de venta no ofrece centro de costo ni período de liquidación, y que el de compra no ofrece orden de venta.
+- Verifique que el tipo de factura no se puede cambiar desde el formulario y que se guarda según la vista de origen.
+- Verifique que editar o eliminar desde un listado opera sobre el documento correcto y refresca la vista de su tipo.
+
+### Reglas generales
 
 - Verifique que los campos obligatorios muestran errores de validación.
 - Verifique que un documento exige folio entero positivo y que el descuento no puede superar el subtotal.
