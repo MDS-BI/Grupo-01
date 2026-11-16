@@ -8,6 +8,7 @@
 
 ## Flujo de Usuario Principal
 
+0. Si es su primera vez, abra la **Guía de uso** (botón del marco general o acceso del home) y siga sus 8 pasos; usa los mismos pasos que esta lista y no modifica datos (HU8, pendiente de implementar: ver T079 a T088 de `tasks.md`).
 1. Cargue los datos de demostración desde el home cuando el módulo esté vacío (HU6).
 2. En el home revise los KPIs: total por cobrar, total por pagar y facturas vencidas, y use los accesos directos.
 3. Cree un tercero (cliente, proveedor o personal) con nombre, código, RUT, tipo y, si es cliente, límite de crédito.

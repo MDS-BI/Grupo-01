@@ -11,7 +11,7 @@ description: "Lista de tareas para el módulo de Contabilidad y Finanzas: Factur
 
 **Pruebas**: Se incluyen tareas de prueba porque la constitución del proyecto exige cubrir con pruebas automatizadas el comportamiento visible y la lógica de negocio.
 
-**Organización**: Las tareas están agrupadas por historia de usuario (HU1 a HU7 del `spec.md`) para poder implementar y probar cada una de forma independiente. La Fase 11 agrupa la separación visual y funcional de facturas de la Revisión 4, transversal a HU2, HU3 y HU7.
+**Organización**: Las tareas están agrupadas por historia de usuario (HU1 a HU8 del `spec.md`) para poder implementar y probar cada una de forma independiente. La Fase 11 agrupa la separación visual y funcional de facturas de la Revisión 4, transversal a HU2, HU3 y HU7.
 
 > **Nota sobre la consolidación de la Revisión 3 (2026-11-05).** Esta corrida de `speckit.tasks` consolida los requisitos de la Revisión 3 del spec sin eliminar las tareas existentes ni renumerarlas (T001 a T052 conservan su ID porque están referenciados desde `plan.md` y tienen estado registrado). Las tareas nuevas se numeran T053 a T070 y se insertan en su fase correspondiente, aunque su número sea mayor que el de tareas posteriores. Lo incorporado: `personal` en `tipoTercero`; facturas de venta y de compra como documentos separados con listados propios (FR-006); `salesOrderId` (FR-009); centro de costo (FR-014); período de liquidación (FR-015); movimientos financieros auto-generados de solo lectura con granularidad de un movimiento por evento (FR-017 a FR-019, SC-006); y la HU7 de arquitectura de UI (FR-020 a FR-022). Además, el análisis `/speckit.analyze` del 05-11-2026 remedió sus hallazgos: T068 (tabla de cobertura de plan.md, hallazgo I1), T070 (medición del presupuesto de rendimiento, hallazgo C2) y el registro de la desviación e2e en plan.md (hallazgo C1); el total es 70 tareas (T001 a T070).
 
@@ -19,10 +19,12 @@ description: "Lista de tareas para el módulo de Contabilidad y Finanzas: Factur
 
 > **Nota sobre cómo se generó.** Este archivo se armó siguiendo las reglas de `speckit.tasks` (formato, fases y orden), a partir del `spec.md`, el `plan.md` y el `data-model.md` actuales. `speckit.analyze` se ejecutó el 02-11-2026 (Mauro) y otra vez el 03-11-2026 (Jaime). Sus propuestas siguen pendientes de revisar; el `speckit.clarify` se completó el 05-11-2026 (ver nota de Revisión 3 más abajo). Las tareas marcadas **(depende de aclaración)** restantes quedan provisionales hasta su revisión.
 
+> **Nota sobre la guía de uso de la Revisión 5 (2026-11-16).** Se agrega la HU8 (guía de uso y tutorial, tarea 6 de la minuta de cambios) como Fase 12, sin renumerar las tareas existentes. Las tareas nuevas se numeran T079 a T088. T081 y T087 son de documentación y ya están hechas; el resto está pendiente de implementar.
+
 ## Formato: `[ID] [P?] [Historia] Descripción`
 
 - **[P]**: se puede ejecutar en paralelo (archivos distintos, sin dependencias)
-- **[HUn]**: historia de usuario a la que pertenece la tarea (HU1 a HU7)
+- **[HUn]**: historia de usuario a la que pertenece la tarea (HU1 a HU8)
 - Cada tarea incluye la ruta exacta del archivo
 
 ## Convención de rutas
@@ -42,6 +44,7 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 | HU5 Ver deuda por tercero y vencidas | P2 | Elías |
 | HU6 Datos de demostración y otros módulos | P3 | Mauro |
 | HU7 Arquitectura de UI: home con KPIs y menú desacoplado | P1 (transversal) | Por asignar (coordinación: equipo) |
+| HU8 Guía de uso y tutorial: navegación y accesos | P2 (transversal) | Jaime |
 
 **Revisión 4 (separación de facturas)**: transversal a HU2 (formulario y listado de venta), HU3 (formulario y listado de compra) y HU7 (vistas, menú y estilos). Responsable por asignar entre Carolina, Matías y quien coordine HU7; conviene que una sola persona ejecute T071–T077 para evitar conflictos en `index.html`, `src/app.js` y `src/module-config.js`.
 
@@ -327,6 +330,34 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 
 ---
 
+## Fase 12: HU8 - Guía de uso y tutorial: navegación, accesos y primer recorrido (Prioridad: P2, transversal)
+
+**Objetivo**: documentar la navegación y los accesos del módulo y ofrecer una guía paso a paso (panel no modal) que enseñe el primer flujo completo, sin guardar datos ni agregar entradas al menú.
+
+**Prueba independiente**: con el módulo vacío y luego con los datos de demostración, abrir la guía desde el botón del marco y desde el home, recorrer sus 8 pasos con "Siguiente", "Anterior" e "Ir a", cerrar con el botón y con Esc, y comprobar que `erp.entities`, `erp.documents` y `erp.movements` no cambian.
+
+**Requisitos previos**: Fases 9 y 11 completas (menú, home y vistas de factura separadas). No cambia el modelo de datos ni `src/storage.js`. El diseño de referencia es `specs/001-erp-base-module/contracts/navigation-and-access.md`.
+
+### Pruebas de HU8
+
+- [ ] T079 [P] [HU8] Escribir primero `tests/integration/tutorial.test.js`: el botón "Guía de uso" está en todas las vistas y abre el primer paso; el acceso del home abre lo mismo; "Siguiente", "Anterior" y "Finalizar" funcionan con el indicador "Paso n de 8"; "Ir a" navega a la vista correcta sin recargar y la guía sigue abierta; Esc y "Cerrar" cierran y devuelven el foco a `#open-guide`; con el módulo vacío y con datos de demostración, `erp.entities`, `erp.documents` y `erp.movements` quedan idénticos antes y después (FR-031 a FR-035, SC-007)
+- [ ] T080 [P] [HU8] Escribir `tests/unit/tutorial-steps.test.js`: cada paso de `GUIDE_STEPS` apunta a un módulo que existe en el menú (`NAV_MODULES` de `src/components/shell.js`), los textos usan los términos de `config.labels` y los módulos del mapa de `contracts/navigation-and-access.md` coinciden con los del menú (FR-032, FR-036, SC-008)
+
+### Implementación de HU8
+
+- [X] T081 [HU8] Documentar la navegación y los accesos en `specs/001-erp-base-module/contracts/navigation-and-access.md`: mapa de vistas, accesos rápidos del home, reglas de acceso del MVP y contrato de la guía de uso con sus 8 pasos (FR-036)
+- [ ] T082 [HU8] Agregar en `index.html` el botón "Guía de uso" (`#open-guide`) en el marco general, el acceso "¿Primera vez? Ver la guía" (`#qa-guide`) en el home y el contenedor del panel de la guía (`#guide-panel`, `role="dialog"`, `aria-modal="false"`, título asociado con `aria-labelledby`), sin agregar ninguna entrada al menú (FR-031, FR-035)
+- [ ] T083 [HU8] Crear `src/components/tutorial.js` con `GUIDE_STEPS` (8 pasos: panel, terceros, facturas de venta, facturas de compra, emitir y pagar, movimientos, seguimiento y datos de demostración) y la fábrica `createTutorial({ config, root, openButton, onNavigate })` con `open`, `close`, `next`, `prev`, `goTo` e `isOpen`; los términos Tercero y Factura salen de `config.labels` y los nombres de las vistas de `navLabel` (FR-032, FR-033, FR-034)
+- [ ] T084 [HU8] Conectar la guía en `src/app.js` y `src/components/shell.js`: abrirla desde `#open-guide` y `#qa-guide`, usar la navegación existente para "Ir a", cerrar con Esc y devolver el foco; la guía no llama a `src/storage.js` ni crea claves `erp.*` (FR-033, FR-034, FR-035)
+- [ ] T085 [P] [HU8] Agregar estilos del panel en `src/styles.css`: tarjeta fija no modal, foco visible, contraste suficiente y adaptación a pantallas pequeñas sin tapar el menú (FR-035)
+- [ ] T086 [HU8] Actualizar `specs/001-erp-base-module/quickstart.md` (paso inicial: abrir la guía de uso) y `README.md` (sección "Guía de uso", coordinada con T045) para que las instrucciones mencionen la guía (FR-031)
+- [X] T087 [HU8] Actualizar `specs/001-erp-base-module/plan.md`: agregar `tutorial.js` y `navigation-and-access.md` a la estructura del proyecto y las filas FR-031 a FR-036, SC-007 y SC-008 a la tabla de cobertura
+- [ ] T088 [HU8] Ejecutar `npm run check` y recorrer la guía en `npm run dev` con el módulo vacío y con la demostración; medir que una persona nueva la completa en menos de 5 minutos y registra su primer tercero y factura en menos de 3 (SC-007)
+
+**Punto de control**: la guía se abre, avanza, navega y se cierra igual en todas las vistas, no modifica datos, y el mapa de accesos coincide con el menú real.
+
+---
+
 ## Dependencias y orden de ejecución
 
 ### Dependencias entre fases
@@ -337,6 +368,7 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 - **Movimientos financieros (Fase 6b)**: depende de Fases 2, 4 y 6 (se genera al emitir y al pagar); habilita la vista de movimientos de HU7 y completa SC-006.
 - **HU7 (Fase 9)**: transversal; su prueba (T064) implica las vistas de T063 y T069 para el menú completo, pero el menú con las vistas base puede probarse antes.
 - **Separación de facturas (Fase 11)**: depende de las Fases 1 y 2 y del ciclo de vida de facturas de HU2–HU4. T071 bloquea a T072, T073 y T074; T076 se escribe primero y se cierra al final; T078 (Fase 10) documenta el resultado.
+- **Guía de uso (Fase 12)**: depende de las Fases 9 y 11 (menú, home y vistas de factura). T079 y T080 se escriben primero; T082, T083 y T085 pueden avanzar en paralelo y T084 las conecta. Toca `index.html`, `src/app.js` y `src/components/shell.js`: avisar al grupo antes de editarlos. T081 y T087 (documentación) ya están hechas.
 - **Cierre (Fase 10)**: depende de las historias que se quieran entregar.
 
 ### Dependencias entre historias
@@ -350,6 +382,7 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 - **HU6 (P3)**: puede empezar tras la fase Fundacional; los datos de demostración usan los campos de las demás historias (incluido `personal` y `periodoLiquidacion` de T053).
 - **HU7 (P1)**: puede empezar tras la fase Fundacional; las vistas que navega llegan de las demás historias (KPIs de T037, movimientos de T063, listados separados de T069).
 - **Revisión 4 (Fase 11)**: transversal a HU2, HU3 y HU7; no agrega una historia nueva ni cambia el modelo de datos, y reemplaza la presentación de T069 por dos vistas independientes.
+- **HU8 (P2)**: puede empezar cuando existen el menú y las vistas (HU7 y Revisión 4); no depende de la lógica de facturas, terceros ni movimientos y no cambia el modelo de datos.
 
 ### Dentro de cada historia
 
@@ -411,7 +444,7 @@ Tarea: "Prueba de integración de terceros en tests/integration/us1-create-entit
 ## Notas
 
 - [P] = archivos distintos, sin dependencias.
-- [Story] = [HUn], historia del spec (HU1 a HU7) para trazabilidad.
+- [Story] = [HUn], historia del spec (HU1 a HU8) para trazabilidad.
 - Cada historia debe poder completarse y probarse de forma independiente.
 - Verificar que las pruebas fallen antes de implementar.
 - Antes de dar por terminada cada historia, ejecutar `npm run check` (puertas de calidad de `plan.md`). Con el módulo base, `npm run check` ya pasa completo (lint, formato y 73 pruebas).

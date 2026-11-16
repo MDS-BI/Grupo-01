@@ -4,7 +4,7 @@
 
 **Creada**: 2026-10-29
 
-**Estado**: Borrador (Revisión 4 — 2026-11-11, clarify de separación aplicado)
+**Estado**: Borrador (Revisión 5 — 2026-11-16, se agrega la HU8 de guía de uso y tutorial; Revisión 4 — 2026-11-11, clarify de separación aplicado)
 
 **Entrada**: Módulo de facturación y pagos, por cobrar y por pagar, para un sistema ERP (solo frontend), construido sobre el template `Speckit_Template`.
 
@@ -171,6 +171,27 @@ Como usuario del módulo (cobranzas, pagos, contabilidad o gerencia), quiero una
 
 ---
 
+### Historia de Usuario 8 - Guía de uso y tutorial: navegación, accesos y primer recorrido (Prioridad: P2)
+
+Como persona que usa el módulo por primera vez (encargado de cobranzas, encargado de pagos, contador, gerencia o un integrante del equipo que lo muestra en una demostración), quiero una guía paso a paso y un mapa de accesos que me indiquen por dónde se navega y cómo se hace el primer flujo (tercero, factura, emisión, pago, movimientos y seguimiento), para empezar a usar el módulo sin ayuda y sin leer la especificación.
+
+**Por qué esta prioridad**: el módulo funciona sin la guía, por eso no es P1. Pero reduce el tiempo de aprendizaje (SC-001 y SC-005) y permite que cualquier integrante del grupo muestre el flujo completo en la presentación sin depender de quien lo construyó. Va como historia independiente de la HU7: la HU7 define el marco y el menú; la HU8 explica cómo usarlos.
+
+**Prueba independiente**: abrir la aplicación con el módulo vacío, abrir la guía, recorrer los pasos con "Siguiente" y con "Ir a la vista", cerrarla y comprobar que los datos no cambiaron. Repetir con los datos de demostración cargados. Aparte, comparar el mapa de accesos documentado en `contracts/navigation-and-access.md` con el menú real de la aplicación.
+
+**Escenarios de aceptación**:
+
+1. **Dada** cualquier vista del módulo, **cuando** miro el marco general, **entonces** veo el botón "Guía de uso" y, al usarlo, se abre la guía en el primer paso.
+2. **Dado** el home, **cuando** reviso sus accesos, **entonces** hay un acceso "¿Primera vez? Ver la guía" que abre la misma guía.
+3. **Dada** la guía abierta, **cuando** uso "Siguiente" y "Anterior", **entonces** avanzo y retrocedo por los pasos y veo en qué paso estoy (por ejemplo, "Paso 3 de 8"); en el primer paso no hay "Anterior" y en el último "Siguiente" pasa a ser "Finalizar".
+4. **Dado** un paso que explica una vista, **cuando** elijo "Ir a" esa vista, **entonces** la aplicación navega a ella sin recargar la página y la guía sigue abierta en el mismo paso.
+5. **Dado** el módulo vacío, **cuando** llego al paso de datos de demostración, **entonces** la guía explica cómo cargarlos y avisa que son ficticios y que `localStorage` no es seguro, por lo que no deben usarse datos reales.
+6. **Dada** la guía abierta, **cuando** la cierro con el botón "Cerrar" o con la tecla Esc, **entonces** desaparece, el foco vuelve al botón "Guía de uso" y me quedo en la vista donde estaba.
+7. **Dado** cualquier estado de los datos (vacío o con demostración), **cuando** recorro la guía completa, **entonces** no se crea, modifica ni elimina ningún tercero, factura ni movimiento.
+8. **Dado** el mapa de accesos documentado, **cuando** lo comparo con el menú de la aplicación, **entonces** cada vista del menú aparece en el mapa y cada vista del mapa existe en el menú.
+
+---
+
 ### Casos Límite
 
 - ¿Qué pasa si se registran dos terceros con el mismo código? El módulo base del template lo rechaza, sin distinguir mayúsculas.
@@ -192,6 +213,10 @@ Como usuario del módulo (cobranzas, pagos, contabilidad o gerencia), quiero una
 - ¿Qué pasa si la fecha de vencimiento es igual a la de emisión? Se acepta, porque la regla exige que sea igual o posterior.
 - ¿Qué pasa al eliminar un tercero con facturas pendientes de pago? Se eliminan también sus facturas, por lo que el sistema debería pedir confirmación antes.
 - ¿Qué pasa si el usuario borra los datos del navegador? Se pierden todos los registros, porque se guardan en `localStorage`.
+- ¿Qué pasa si se abre la guía y la persona navega por el menú por su cuenta? La guía no bloquea el menú ni la vista: sigue abierta en su paso actual y se puede cerrar cuando se quiera.
+- ¿Qué pasa si se abre la guía con un formulario a medio llenar? Abrir, avanzar o cerrar la guía no modifica lo escrito. "Ir a" una vista se comporta igual que navegar por el menú.
+- ¿Qué pasa si el módulo cambia sus etiquetas en `module-config.js` (por ejemplo, Tercero o Factura)? Los textos de la guía toman esos términos de la configuración y no los repiten escritos a mano.
+- ¿Qué pasa si se integra el inicio de sesión por rol propuesto en `specs/002-payroll-access-control`? El mapa de accesos de la HU8 describe el MVP de la 001 (sin perfiles, todas las vistas disponibles). Si ese cambio se incorpora, el mapa debe sumar qué rol accede a cada vista y la guía debe revisarse.
 
 ## Requisitos *(obligatorio)*
 
@@ -251,6 +276,15 @@ Como usuario del módulo (cobranzas, pagos, contabilidad o gerencia), quiero una
 - **FR-029**: Al emitir una factura de venta que supera el límite de crédito del cliente, el sistema DEBE avisar y exigir una confirmación explícita antes de emitir; no bloquea la emisión.
 - **FR-030**: El sistema DEBE evitar duplicados: el código de tercero ya es único en el módulo base, y la combinación (tipo de documento, serie, folio) DEBE ser única dentro de su tipo.
 
+**Guía de uso y tutorial**
+
+- **FR-031**: El sistema DEBE ofrecer una guía de uso accesible desde el marco general en cualquier vista (botón "Guía de uso") y desde el home (acceso "¿Primera vez? Ver la guía"). La guía NO es una vista del menú: las vistas fijas de FR-020 no cambian.
+- **FR-032**: La guía DEBE ser un recorrido paso a paso en español, con "Anterior", "Siguiente" (en el último paso, "Finalizar") e indicador del paso actual, que cubra: home y KPIs, terceros, facturas de venta, facturas de compra, emisión y pago, movimientos financieros, seguimiento y datos de demostración. Los términos del módulo (Tercero, Factura) se toman de la configuración, no se escriben a mano.
+- **FR-033**: Cada paso que explica una vista DEBE ofrecer un acceso directo "Ir a" esa vista, que navega sin recargar la página (FR-022). La guía DEBE poder cerrarse en cualquier momento con un botón o con la tecla Esc, sin cambiar la vista en que se encuentra la persona.
+- **FR-034**: La guía NO DEBE crear, modificar ni eliminar datos ni agregar claves de almacenamiento: es solo orientación. Funciona igual con el módulo vacío y con los datos de demostración.
+- **FR-035**: La guía DEBE poder usarse con teclado y ser legible por un lector de pantalla: panel con rol de diálogo y título asociado, foco que pasa a la guía al abrirla y vuelve al botón "Guía de uso" al cerrarla.
+- **FR-036**: La navegación y los accesos del módulo DEBEN estar documentados en `specs/001-erp-base-module/contracts/navigation-and-access.md`, con cada vista, cómo se llega a ella, qué se puede hacer y qué usuario del spec la usa. Mientras el MVP no tenga perfiles, todas las vistas están disponibles para cualquier persona que abra la aplicación.
+
 ### Entidades Clave
 
 - **Tercero**: cliente, proveedor o personal. Tiene nombre, código, RUT, tipo y, si es cliente, límite de crédito. Un tercero tiene cero o muchas facturas.
@@ -258,6 +292,7 @@ Como usuario del módulo (cobranzas, pagos, contabilidad o gerencia), quiero una
 - **Factura de compra**: documento separado de cuentas por pagar. Tiene su propia vista, su propio formulario y su propio listado, con columnas `centroCosto` y `periodoLiquidacion`. Tiene serie, folio, fecha de emisión, fecha de vencimiento, montos, moneda, estado, monto pagado, fecha de pago, centro de costo (Activo/Consumible, solo atributo de reporte) y, si el tercero es de tipo personal, un período obligatorio de liquidación en formato `YYYY-MM`. Pertenece a un solo tercero de tipo proveedor o personal. Ambos tipos de factura comparten el ciclo Borrador → Emitida → Pagada.
 - **Movimiento financiero**: registro de solo lectura, generado automáticamente por emisiones y pagos. Tiene fecha, tipo (cargo/abono/pago), referencia al documento y al tercero, monto, centro de costo o `sales_order_id` según corresponda. Pertenece a una sola factura.
 - **Vistas del marco de UI**: home (KPIs y accesos directos), terceros, facturas de venta, facturas de compra, movimientos financieros y seguimiento, todas viviendo en un layout común con menú desacoplado.
+- **Guía de uso**: componente de orientación del marco general (HU8). No es una vista del menú, no guarda datos y no agrega entidades ni claves de almacenamiento.
 
 ## Criterios de Éxito *(obligatorio)*
 
@@ -269,6 +304,8 @@ Como usuario del módulo (cobranzas, pagos, contabilidad o gerencia), quiero una
 - **SC-004**: Los datos siguen disponibles después de recargar la página.
 - **SC-005**: Con los datos de demostración, el flujo completo (tercero, factura, emisión, pago, movimiento financiero y seguimiento) se puede mostrar en menos de 5 minutos, navegando desde el home y el menú.
 - **SC-006**: El 100% de las emisiones y pagos registrados tiene su movimiento financiero correspondiente, conciliado en monto.
+- **SC-007**: Una persona nueva que sigue la guía puede recorrerla completa en menos de 5 minutos y, con sus indicaciones, registrar un tercero y emitir su primera factura en menos de 3 minutos (complementa SC-001).
+- **SC-008**: El 100% de los pasos de la guía lleva a una vista que existe en el menú, y el mapa de accesos documentado coincide con las vistas reales del menú (verificable con una prueba automatizada).
 
 ## Supuestos
 
@@ -290,4 +327,7 @@ Como usuario del módulo (cobranzas, pagos, contabilidad o gerencia), quiero una
 - El RUT se valida con formato chileno y dígito verificador módulo 11 (decidido 2026-11-03, Q2). No se exige unicidad del RUT.
 - El límite de crédito genera un aviso con confirmación explícita al emitir, sin bloqueo (decidido 2026-11-03, Q3).
 - La unicidad de factura se define por (tipo de documento, serie, folio), dentro de cada tipo.
+- La guía de uso (HU8) es transversal al marco general (HU7): se abre desde un botón del marco y desde el home, no es una entrada del menú, no guarda datos y no registra si la persona ya la vio (no agrega claves de `localStorage`). Decidido 2026-11-16 (Jaime, tarea 6 de la minuta de cambios).
+- El mapa de accesos (`contracts/navigation-and-access.md`) describe el MVP de la 001: un solo usuario por navegador y todas las vistas disponibles. La propuesta de inicio de sesión por rol de `specs/002-payroll-access-control` no se asume aquí.
+- La vista "Buscar" existe en el menú desde el template, pero FR-020 y FR-022 listan solo seis vistas. El mapa de accesos la incluye porque existe; falta que el grupo decida si se agrega a FR-020 y FR-022 o se retira del menú. *(Por confirmar.)*
 - Quedan fuera del MVP: pagos como registro propio, plan de cuentas y asientos, activos fijos, presupuestos, conciliación bancaria y cálculo de remuneraciones (haberes y descuentos legales).

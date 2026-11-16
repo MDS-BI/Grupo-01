@@ -57,7 +57,9 @@ specs/001-erp-base-module/
 ├── quickstart.md
 ├── mer.png
 ├── contracts/
-│   └── entity-storage.md
+│   ├── entity-storage.md
+│   ├── invoice-views.md
+│   └── navigation-and-access.md  (mapa de navegación y accesos; guía de uso, HU8)
 ├── checklists/
 │   └── requirements.md
 └── tasks.md
@@ -91,6 +93,7 @@ src/
     ├── invoice-sale-list.js (listado de factura de venta y sus columnas)
     ├── invoice-purchase-list.js (listado de factura de compra y sus columnas)
     ├── search-bar.js   (barra de búsqueda)
+    ├── tutorial.js     (guía de uso paso a paso, panel no modal, HU8/FR-031 a FR-035)
     └── tracking.js     (vista de seguimiento de deuda y vencimientos)
 
 tests/
@@ -202,14 +205,24 @@ Antes de finalizar cualquier historia:
 | FR-028 | Sí | T018 | Validar RUT |
 | FR-029 | Sí | T016, T026 | Aviso con confirmación explícita |
 | FR-030 | Sí | T019, T027 | Código ya único en el template; serie-folio dentro de cada tipo |
+| FR-031 | Sí | T079, T082, T084 | Botón "Guía de uso" en el marco y acceso en el home; no es entrada del menú |
+| FR-032 | Sí | T079, T080, T083 | Recorrido de 8 pasos con términos de la configuración |
+| FR-033 | Sí | T079, T083, T084 | "Ir a" la vista y cierre con botón o Esc |
+| FR-034 | Sí | T079, T083, T084 | La guía no escribe datos ni claves `erp.*` |
+| FR-035 | Sí | T079, T082, T085 | Teclado, rol de diálogo y foco |
+| FR-036 | Sí | T080, T081 | `contracts/navigation-and-access.md` (hecho) |
 | SC-001 | Sí | T049 | < 3 min |
 | SC-002 | Sí | T035, T036 | Pagadas no cuentan |
 | SC-003 | Implícita | Pruebas | Rechazo con mensaje |
 | SC-004 | Sí | T040, T041 | Persistencia |
 | SC-005 | Sí | T049 | Flujo < 5 min |
 | SC-006 | Sí | T060–T063 | Movimientos conciliados (cubierto en la corrida del 05-11) |
+| SC-007 | Sí | T088 | Guía completada en < 5 min; primer tercero y factura en < 3 min |
+| SC-008 | Sí | T080 | Pasos y mapa coinciden con el menú real |
 
 **Total de requisitos**: 36 (30 FR + 6 SC) tras la Revisión 4 del spec (2026-11-11)
 **Total de tareas**: 78 (T001 a T078): 70 existentes (T001 a T070) + 8 de la separación de facturas (T071 a T078)
-**Cobertura**: ~97 % (35/36 con tarea directa; FR-004 débil: búsqueda viene del template y falta el filtro por tipo; SC-003 implícita en las pruebas de validación). Los FR-009, FR-014, FR-015, FR-017 a FR-019 y SC-006 quedaron cubiertos en la corrida de `speckit.tasks` del 05-11-2026 (T053–T063). Los FR-020/021/022 de la HU7 quedaron cubiertos con T064–T067. La Revisión 4 agrega la separación visual y funcional de facturas: FR-006 y las columnas de FR-009/FR-014/FR-015 se cubren con T071–T078, ya generadas en `tasks.md`.
+**Cobertura de la HU8 (Revisión 5, 2026-11-16)**: FR-031 a FR-036, SC-007 y SC-008 tienen tarea directa (T079 a T088); T081 y T087 están hechas y el resto está pendiente de implementar.
+
+**Cobertura hasta la Revisión 4**: ~97 % (35/36 con tarea directa; FR-004 débil: búsqueda viene del template y falta el filtro por tipo; SC-003 implícita en las pruebas de validación). Los FR-009, FR-014, FR-015, FR-017 a FR-019 y SC-006 quedaron cubiertos en la corrida de `speckit.tasks` del 05-11-2026 (T053–T063). Los FR-020/021/022 de la HU7 quedaron cubiertos con T064–T067. La Revisión 4 agrega la separación visual y funcional de facturas: FR-006 y las columnas de FR-009/FR-014/FR-015 se cubren con T071–T078, ya generadas en `tasks.md`.
 **Críticos**: 0. El crítico C1 del análisis del 03-11 (puertas de calidad ausentes en las tareas) se atendió en T048 y en las Notas de `tasks.md`. Los dos MEDIUM del análisis del 05-11 (excepción e2e sin confirmar, hallazgo C1; presupuesto de rendimiento sin tarea, hallazgo C2) se atienden en el registro de desviación de esta sección y en la tarea T070.
