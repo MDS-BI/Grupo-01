@@ -1,5 +1,6 @@
 import { loadDocuments, loadEntities } from '../storage.js';
-import { computeDebtSummary } from '../tracking.js';
+import { loadMovements } from '../movements.js';
+import { computeDashboardSummary } from '../summary.js';
 
 function setText(id, value) {
   const element = document.getElementById(id);
@@ -24,6 +25,9 @@ export function initDashboard({ config, onAction, onLoadDemoData }) {
     ['qa-new-entity', 'new-entity'],
     ['qa-new-invoice-sale', 'new-invoice-sale'],
     ['qa-new-invoice-purchase', 'new-invoice-purchase'],
+    ['qa-new-payroll', 'new-payroll'],
+    ['qa-cashflow', 'cashflow'],
+    ['qa-movements', 'movements'],
     ['qa-tracking', 'tracking'],
     ['qa-manage-entities', 'manage-entities'],
     ['qa-search', 'search'],
@@ -41,20 +45,22 @@ export function initDashboard({ config, onAction, onLoadDemoData }) {
 }
 
 export function refreshDashboard({ onDemoAvailable } = {}) {
-  setText('stat-entities', String(loadEntities().length));
-  setText('stat-documents', String(loadDocuments().length));
+  const entities = loadEntities();
+  const documents = loadDocuments();
+  const summary = computeDashboardSummary(entities, documents, loadMovements());
 
-  const { totalPorCobrar, totalPorPagar, vencidas } = computeDebtSummary(
-    loadEntities(),
-    loadDocuments()
-  );
-  setText('kpi-por-cobrar', String(totalPorCobrar));
-  setText('kpi-por-pagar', String(totalPorPagar));
-  setText('kpi-vencidas', String(vencidas.length));
+  setText('stat-entities', String(entities.length));
+  setText('stat-documents', String(documents.length));
+  setText('summary-saldo', String(summary.saldo));
+  setText('summary-deuda', String(summary.deuda));
+  setText('summary-caja', String(summary.caja));
+  setText('kpi-por-cobrar', String(summary.totalPorCobrar));
+  setText('kpi-por-pagar', String(summary.totalPorPagar));
+  setText('kpi-vencidas', String(summary.vencidas.length));
 
   const loadDemoButton = document.getElementById('qa-load-demo');
   if (loadDemoButton) {
-    const empty = loadEntities().length === 0 && loadDocuments().length === 0;
+    const empty = entities.length === 0 && documents.length === 0;
     loadDemoButton.hidden = !empty;
     if (empty && onDemoAvailable) onDemoAvailable();
   }

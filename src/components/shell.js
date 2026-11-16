@@ -1,4 +1,4 @@
-import { INVOICE_VIEWS } from '../module-config.js';
+﻿import { INVOICE_VIEWS } from '../module-config.js';
 import { monogram } from '../utils.js';
 
 const NAV_MODULES = [
@@ -6,6 +6,7 @@ const NAV_MODULES = [
   'entities',
   ...Object.values(INVOICE_VIEWS).map(({ module }) => module),
   'movements',
+  'cashflow',
   'tracking',
   'search',
 ];
@@ -49,6 +50,7 @@ function navLabel(config, module) {
   );
   if (view) return `${labels.documents} de ${view.label}`;
   if (module === 'movements') return 'Movimientos financieros';
+  if (module === 'cashflow') return 'Flujo de caja';
   if (module === 'tracking') return 'Seguimiento';
   return labels.search || 'Buscar';
 }

@@ -19,7 +19,7 @@ Líder del grupo: por definir.
 
 ## Visión de producto
 
-**Problema.** Muchas pequeñas y medianas empresas llevan sus facturas en planillas sueltas. Eso les hace perder de vista cuánto les deben, cuánto deben y qué está vencido, y su flujo de caja se resiente.
+**Problema.** Muchas pequeñas y medianas empresas llevan sus facturas en planillas sueltas. Eso les hace perder de vista cuánto les deben, cuánto deben y qué está vencido, y su flujo de caja se <resiente.
 
 **Usuarios.** Encargado de cobranzas, encargado de pagos a proveedores, contador y gerencia. Para la demostración, también el equipo del proyecto, que carga los datos de ejemplo.
 

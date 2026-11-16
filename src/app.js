@@ -33,6 +33,7 @@ import { renderSaleList } from './components/invoice-sale-list.js';
 import { renderPurchaseList } from './components/invoice-purchase-list.js';
 import { renderMovementsList } from './components/movements-list.js';
 import { renderTrackingView } from './components/tracking.js';
+import { renderCashflowView } from './components/cashflow.js';
 import { loadMovements } from './movements.js';
 import { loadDemoData } from './demo-data.js';
 import { computeDebtSummary } from './tracking.js';
@@ -47,6 +48,7 @@ const VIEWS = [
   'entities',
   ...Object.values(INVOICE_VIEWS).map(({ module }) => module),
   'movements',
+  'cashflow',
   'tracking',
   'search',
 ];
@@ -188,6 +190,10 @@ function refreshTracking() {
   }
 }
 
+function refreshCashflow() {
+  renderCashflowView(byId('cashflow-content'));
+}
+
 function refresh() {
   const entities = loadEntities();
   const documents = loadDocuments();
@@ -210,6 +216,7 @@ function refresh() {
   }
   refreshDashboard();
   refreshMovements();
+  refreshCashflow();
   refreshTracking();
   updateSearchResults();
 }
@@ -238,6 +245,7 @@ function showModule(name) {
   if (name === 'dashboard') refreshDashboard();
   if (name === 'entities' || name.startsWith('invoice-')) refresh();
   if (name === 'movements') refreshMovements();
+  if (name === 'cashflow') refreshCashflow();
   if (name === 'tracking') refreshTracking();
   if (name === 'search') updateSearchResults();
 }
@@ -343,7 +351,8 @@ function handleQuickAction(action) {
     focusEntityForm();
   } else if (
     action === 'new-invoice-sale' ||
-    action === 'new-invoice-purchase'
+    action === 'new-invoice-purchase' ||
+    action === 'new-payroll'
   ) {
     const tipoFactura = action === 'new-invoice-sale' ? 'venta' : 'compra';
     const form = state.invoiceForms[tipoFactura];
@@ -351,6 +360,10 @@ function handleQuickAction(action) {
     form.reset();
     renderInvoices(tipoFactura, loadEntities(), loadDocuments());
     form.focus();
+  } else if (action === 'cashflow') {
+    showModule('cashflow');
+  } else if (action === 'movements') {
+    showModule('movements');
   } else if (action === 'tracking') {
     showModule('tracking');
   } else if (action === 'manage-entities') {

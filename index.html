@@ -48,6 +48,9 @@
           <button id="nav-movements" class="nav-item" data-module="movements">
             Movimientos financieros
           </button>
+          <button id="nav-cashflow" class="nav-item" data-module="cashflow">
+            Flujo de caja
+          </button>
           <button id="nav-tracking" class="nav-item" data-module="tracking">
             Seguimiento
           </button>
@@ -69,6 +72,24 @@
               </button>
               <button id="qa-tracking">Abrir seguimiento</button>
               <button id="qa-search">Buscar registros</button>
+              <button id="qa-new-payroll">Nueva liquidación de sueldo</button>
+              <button id="qa-cashflow">Ver flujo de caja</button>
+              <button id="qa-movements">Ver movimientos financieros</button>
+            </div>
+            <h2>Resumen financiero</h2>
+            <div class="stats summary-stats">
+              <div class="stat-card">
+                <span id="summary-saldo">0</span>
+                <span>Saldo neto (por cobrar - por pagar)</span>
+              </div>
+              <div class="stat-card">
+                <span id="summary-deuda">0</span>
+                <span>Deuda pendiente (por cobrar + por pagar)</span>
+              </div>
+              <div class="stat-card">
+                <span id="summary-caja">0</span>
+                <span>Caja neta (cobros - pagos)</span>
+              </div>
             </div>
             <div class="stats">
               <div class="stat-card">
@@ -262,6 +283,16 @@
             </p>
             <div id="movements-list"></div>
             <div id="movements-empty" hidden>No hay movimientos todavía</div>
+          </section>
+
+          <section id="view-cashflow" class="view" hidden>
+            <h1 id="cashflow-title">Flujo de caja</h1>
+            <p>
+              Consolida como ingresos los cobros de facturas de venta pagadas y
+              como egresos las facturas de compra y las liquidaciones de sueldo
+              pagadas.
+            </p>
+            <div id="cashflow-content"></div>
           </section>
 
           <section id="view-tracking" class="view" hidden>

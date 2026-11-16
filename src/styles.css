@@ -250,6 +250,26 @@ select[aria-invalid='true'] {
   margin-bottom: 16px;
 }
 
+.cashflow-summary {
+  margin-bottom: 16px;
+}
+
+.cashflow-table td:last-child,
+.cashflow-table th:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.cashflow-table tr[data-tipo='ingreso'] td:last-child {
+  color: #0f7a3d;
+  font-weight: 600;
+}
+
+.cashflow-table tr[data-tipo='egreso'] td:last-child {
+  color: var(--danger);
+  font-weight: 600;
+}
+
 .config-banner {
   background: #fff4e5;
   border-bottom: 1px solid #f3c98b;
