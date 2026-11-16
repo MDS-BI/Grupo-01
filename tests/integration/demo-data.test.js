@@ -58,6 +58,11 @@ describe('HU6 - carga de datos de demostración', () => {
         document.customFields.centroCosto !== undefined
     );
     expect(comprasConCentro.length).toBeGreaterThan(0);
+    expect(
+      comprasConCentro.every(
+        ({ customFields }) => customFields.referenciaOtroModulo
+      )
+    ).toBe(true);
 
     const personalFactura = compras.find(
       (document) =>

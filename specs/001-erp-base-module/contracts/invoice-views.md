@@ -32,7 +32,7 @@ Cada formulario se crea con `createInvoiceForm({ tipoFactura, root, config, onSu
 - `showErrors(errors)`: muestra errores por campo.
 - `getEditingId()`: devuelve el `document_id` en edición o `null`.
 
-Campos comunes: entidad, serie, folio, fecha de emisión, fecha de vencimiento, cantidad, subtotal, descuento, impuesto, total, moneda, condiciones de pago, notas y estado.
+Campos comunes: tercero, serie, folio, fecha de emisión, fecha de vencimiento, cantidad, subtotal, descuento, impuesto, total, moneda, condiciones de pago, notas y estado. El folio y las fechas de emisión y vencimiento se ingresan al crear la factura y quedan de solo lectura al editarla. Los controles de monto y fecha de pago se muestran al seleccionar Pagada.
 
 Campos propios:
 
@@ -44,7 +44,7 @@ Campos propios:
 Reglas de aislamiento:
 
 - El formulario no muestra el campo `tipoFactura`.
-- Al leer los valores, el formulario inyecta `customFields.tipoFactura = tipoFactura`; cualquier valor previo distinto se sobrescribe.
+- El formulario asigna `customFields.tipoFactura` según la vista. Al actualizar, el almacenamiento conserva el tipo guardado y rechaza un cambio explícito de tipo.
 - Al editar, si el documento cargado no coincide con el tipo de la vista, la operación se rechaza y no se muestra el formulario.
 - Los controles usan `data-field`, `data-error` y `data-custom-fields` dentro del `root`; no se usan IDs globales que colisionen entre vistas.
 
@@ -64,13 +64,13 @@ Columnas:
 Reglas:
 
 - Un documento del otro tipo no se muestra, ni siquiera si comparte tercero.
-- El listado se agrupa por tercero y muestra un estado vacío claro cuando no hay documentos del tipo.
+- El listado se agrupa por tercero. Cada vista mantiene su filtro por tercero y muestra un estado vacío cuando la consulta queda sin facturas.
 - Las acciones `Editar` y `Eliminar` envían el `document_id`; la aplicación resuelve el tipo del documento y navega a su vista antes de operar.
 - El contenedor expone `data-tipo-factura` con el valor `venta` o `compra` para pruebas y estilos.
 
 ## Contrato de navegación
 
-- `VIEW_ELEMENTS` mapea `invoice-sale` → `invoice-sale` y `invoice-purchase` → `invoice-purchase`; no existe un mapeo a `documents`.
+- La navegación utiliza `view-invoice-sale` y `view-invoice-purchase` a partir del identificador del módulo.
 - `showModule(name)` oculta todas las vistas y muestra solo la activa, sin recargar la página.
 - `editDocument(id)` y `requestDeleteDocument(id)` determinan el tipo del documento y operan sobre la vista correspondiente.
 - `handleInvoiceSubmit(tipoFactura, values, editingId)` fuerza el tipo antes de llamar a `addDocument`/`updateDocument`.

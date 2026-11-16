@@ -56,7 +56,6 @@ describe('US13 - shell persistente', () => {
     const modulos = [
       'dashboard',
       'entities',
-      'documents',
       'invoice-sale',
       'invoice-purchase',
       'movements',
@@ -64,23 +63,11 @@ describe('US13 - shell persistente', () => {
       'search',
     ];
     for (const modulo of modulos) {
-      const vistaDestino =
-        modulo === 'invoice-sale' || modulo === 'invoice-purchase'
-          ? 'documents'
-          : modulo;
       document.getElementById(`nav-${modulo}`).click();
-      expect(document.getElementById(`view-${vistaDestino}`).hidden).toBe(
-        false
-      );
-      for (const view of [
-        'dashboard',
-        'entities',
-        'search',
-        'movements',
-        'tracking',
-      ]) {
-        if (view === vistaDestino) continue;
-        expect(document.getElementById(`view-${view}`).hidden).toBe(true);
+      for (const view of modulos) {
+        expect(document.getElementById(`view-${view}`).hidden).toBe(
+          view !== modulo
+        );
       }
       expect(
         document.getElementById(`nav-${modulo}`).getAttribute('aria-current')
@@ -131,20 +118,20 @@ describe('US13 - shell persistente', () => {
     );
 
     document.getElementById('nav-invoice-sale').click();
-    expect(document.getElementById('view-documents').hidden).toBe(false);
-    expect(document.getElementById('document-list').textContent).toContain(
+    expect(document.getElementById('view-invoice-sale').hidden).toBe(false);
+    expect(document.getElementById('invoice-sale-list').textContent).toContain(
       '#1'
     );
-    expect(document.getElementById('document-list').textContent).not.toContain(
-      '#2'
-    );
+    expect(
+      document.getElementById('invoice-sale-list').textContent
+    ).not.toContain('#2');
 
     document.getElementById('nav-invoice-purchase').click();
-    expect(document.getElementById('document-list').textContent).toContain(
-      '#2'
-    );
-    expect(document.getElementById('document-list').textContent).not.toContain(
-      '#1'
-    );
+    expect(
+      document.getElementById('invoice-purchase-list').textContent
+    ).toContain('#2');
+    expect(
+      document.getElementById('invoice-purchase-list').textContent
+    ).not.toContain('#1');
   });
 });

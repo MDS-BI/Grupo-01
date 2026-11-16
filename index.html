@@ -22,23 +22,29 @@
           <button id="nav-entities" class="nav-item" data-module="entities">
             Entidades
           </button>
-          <button id="nav-documents" class="nav-item" data-module="documents">
-            Documentos
-          </button>
-          <button
-            id="nav-invoice-sale"
-            class="nav-item"
-            data-module="invoice-sale"
+          <div
+            class="nav-group"
+            role="group"
+            aria-labelledby="nav-invoices-label"
           >
-            Facturas de venta
-          </button>
-          <button
-            id="nav-invoice-purchase"
-            class="nav-item"
-            data-module="invoice-purchase"
-          >
-            Facturas de compra
-          </button>
+            <span id="nav-invoices-label" class="nav-group-label"
+              >Facturación</span
+            >
+            <button
+              id="nav-invoice-sale"
+              class="nav-item"
+              data-module="invoice-sale"
+            >
+              Facturas de venta
+            </button>
+            <button
+              id="nav-invoice-purchase"
+              class="nav-item"
+              data-module="invoice-purchase"
+            >
+              Facturas de compra
+            </button>
+          </div>
           <button id="nav-movements" class="nav-item" data-module="movements">
             Movimientos financieros
           </button>
@@ -58,7 +64,6 @@
               <button id="qa-new-invoice-purchase">
                 Nueva factura de compra
               </button>
-              <button id="qa-new-document">Nuevo documento</button>
               <button id="qa-manage-entities">
                 Abrir gestión de entidades
               </button>
@@ -159,86 +164,87 @@
             <div id="entity-list"></div>
           </section>
 
-          <section id="view-documents" class="view" hidden>
-            <h1 id="documents-title">Documentos</h1>
-            <form id="document-form" novalidate>
-              <div>
-                <label for="document-entity">Entidad</label>
-                <select id="document-entity"></select>
-                <div id="error-document-entity" class="error"></div>
-              </div>
-              <div>
-                <label for="series">Serie</label>
-                <input id="series" name="series" />
-              </div>
-              <div>
-                <label for="folio">Folio</label>
-                <input id="folio" name="folio" />
-                <div id="error-folio" class="error"></div>
-              </div>
-              <div>
-                <label for="startDate">Fecha de emisión</label>
-                <input id="startDate" name="startDate" type="date" />
-                <div id="error-startDate" class="error"></div>
-              </div>
-              <div>
-                <label for="endDate">Fecha de vencimiento</label>
-                <input id="endDate" name="endDate" type="date" />
-                <div id="error-endDate" class="error"></div>
-              </div>
-              <div>
-                <label for="quantity">Cantidad</label>
-                <input id="quantity" name="quantity" />
-                <div id="error-quantity" class="error"></div>
-              </div>
-              <div>
-                <label for="subtotal">Subtotal</label>
-                <input id="subtotal" name="subtotal" />
-                <div id="error-subtotal" class="error"></div>
-              </div>
-              <div>
-                <label for="discount">Descuento</label>
-                <input id="discount" name="discount" />
-                <div id="error-discount" class="error"></div>
-              </div>
-              <div>
-                <label for="taxAmount">Impuesto</label>
-                <input id="taxAmount" name="taxAmount" />
-                <div id="error-taxAmount" class="error"></div>
-              </div>
-              <div>
-                <label for="totalAmount">Total</label>
-                <input id="totalAmount" name="totalAmount" />
-                <div id="error-totalAmount" class="error"></div>
-              </div>
-              <div>
-                <label for="currency">Moneda</label>
-                <input id="currency" name="currency" />
-              </div>
-              <div>
-                <label for="docPaymentTerms">Condiciones de pago</label>
-                <input id="docPaymentTerms" name="docPaymentTerms" />
-              </div>
-              <div>
-                <label for="notes">Notas</label>
-                <input id="notes" name="notes" />
-              </div>
-              <div>
-                <label for="status">Estado</label>
-                <select id="status"></select>
-                <input id="status-free" name="status-free" />
-                <div id="error-status" class="error"></div>
-              </div>
-              <div id="custom-document-fields"></div>
-              <button type="submit">Guardar documento</button>
-            </form>
-            <div>
-              <label for="edit-document">Editar documento</label>
-              <select id="edit-document"></select>
-              <button id="load-document">Cargar</button>
-              <button id="delete-document">Eliminar</button>
+          <section
+            id="view-invoice-sale"
+            class="view invoice-view invoice-view--sale"
+            hidden
+          >
+            <h1 id="invoice-sale-title">Facturas de venta</h1>
+            <div class="invoice-actions">
+              <h2 id="invoice-sale-form-title" data-form-title>
+                Nueva factura de venta
+              </h2>
+              <button type="button" data-new-invoice>Nueva factura</button>
             </div>
-            <div id="document-list"></div>
+            <form
+              id="invoice-sale-form"
+              aria-labelledby="invoice-sale-form-title"
+              novalidate
+            ></form>
+            <p class="invoice-feedback" role="status" data-invoice-feedback></p>
+            <h2 id="invoice-sale-list-title">Facturas registradas</h2>
+            <div class="invoice-controls">
+              <div class="form-field">
+                <label for="invoice-sale-filter">Filtrar por tercero</label>
+                <select id="invoice-sale-filter" data-invoice-filter></select>
+              </div>
+              <div class="form-field">
+                <label for="invoice-sale-edit" data-edit-label
+                  >Editar factura</label
+                >
+                <select id="invoice-sale-edit" data-invoice-edit></select>
+              </div>
+              <button type="button" data-load-invoice>Cargar</button>
+              <button type="button" data-delete-invoice>Eliminar</button>
+            </div>
+            <div
+              id="invoice-sale-list"
+              aria-labelledby="invoice-sale-list-title"
+              data-tipo-factura="venta"
+            ></div>
+          </section>
+
+          <section
+            id="view-invoice-purchase"
+            class="view invoice-view invoice-view--purchase"
+            hidden
+          >
+            <h1 id="invoice-purchase-title">Facturas de compra</h1>
+            <div class="invoice-actions">
+              <h2 id="invoice-purchase-form-title" data-form-title>
+                Nueva factura de compra
+              </h2>
+              <button type="button" data-new-invoice>Nueva factura</button>
+            </div>
+            <form
+              id="invoice-purchase-form"
+              aria-labelledby="invoice-purchase-form-title"
+              novalidate
+            ></form>
+            <p class="invoice-feedback" role="status" data-invoice-feedback></p>
+            <h2 id="invoice-purchase-list-title">Facturas registradas</h2>
+            <div class="invoice-controls">
+              <div class="form-field">
+                <label for="invoice-purchase-filter">Filtrar por tercero</label>
+                <select
+                  id="invoice-purchase-filter"
+                  data-invoice-filter
+                ></select>
+              </div>
+              <div class="form-field">
+                <label for="invoice-purchase-edit" data-edit-label
+                  >Editar factura</label
+                >
+                <select id="invoice-purchase-edit" data-invoice-edit></select>
+              </div>
+              <button type="button" data-load-invoice>Cargar</button>
+              <button type="button" data-delete-invoice>Eliminar</button>
+            </div>
+            <div
+              id="invoice-purchase-list"
+              aria-labelledby="invoice-purchase-list-title"
+              data-tipo-factura="compra"
+            ></div>
           </section>
 
           <section id="view-search" class="view" hidden>
@@ -280,6 +286,85 @@
         </main>
       </div>
     </div>
+    <template id="invoice-fields">
+      <div class="form-field">
+        <label data-label="entity_id">Tercero</label>
+        <select name="entity_id" data-field="entity_id"></select>
+        <div data-error="entity_id" class="error"></div>
+      </div>
+      <div class="form-field">
+        <label data-label="series">Serie</label>
+        <input name="series" data-field="series" />
+        <div data-error="series" class="error"></div>
+      </div>
+      <div class="form-field">
+        <label data-label="folio">Folio</label>
+        <input name="folio" data-field="folio" inputmode="numeric" />
+        <div data-error="folio" class="error"></div>
+      </div>
+      <div class="form-field">
+        <label data-label="startDate">Fecha de emisión</label>
+        <input name="startDate" data-field="startDate" type="date" />
+        <div data-error="startDate" class="error"></div>
+      </div>
+      <div class="form-field">
+        <label data-label="endDate">Fecha de vencimiento</label>
+        <input name="endDate" data-field="endDate" type="date" />
+        <div data-error="endDate" class="error"></div>
+      </div>
+      <div class="form-field">
+        <label data-label="quantity">Cantidad</label>
+        <input name="quantity" data-field="quantity" inputmode="decimal" />
+        <div data-error="quantity" class="error"></div>
+      </div>
+      <div class="form-field">
+        <label data-label="subtotal">Subtotal</label>
+        <input name="subtotal" data-field="subtotal" inputmode="decimal" />
+        <div data-error="subtotal" class="error"></div>
+      </div>
+      <div class="form-field">
+        <label data-label="discount">Descuento</label>
+        <input name="discount" data-field="discount" inputmode="decimal" />
+        <div data-error="discount" class="error"></div>
+      </div>
+      <div class="form-field">
+        <label data-label="taxAmount">Impuesto</label>
+        <input name="taxAmount" data-field="taxAmount" inputmode="decimal" />
+        <div data-error="taxAmount" class="error"></div>
+      </div>
+      <div class="form-field">
+        <label data-label="totalAmount">Total</label>
+        <input
+          name="totalAmount"
+          data-field="totalAmount"
+          inputmode="decimal"
+        />
+        <div data-error="totalAmount" class="error"></div>
+      </div>
+      <div class="form-field">
+        <label data-label="currency">Moneda</label>
+        <input name="currency" data-field="currency" />
+        <div data-error="currency" class="error"></div>
+      </div>
+      <div class="form-field">
+        <label data-label="paymentTerms">Condiciones de pago</label>
+        <input name="paymentTerms" data-field="paymentTerms" />
+        <div data-error="paymentTerms" class="error"></div>
+      </div>
+      <div class="form-field">
+        <label data-label="notes">Notas</label>
+        <textarea name="notes" data-field="notes" rows="2"></textarea>
+        <div data-error="notes" class="error"></div>
+      </div>
+      <div class="form-field">
+        <label data-label="status">Estado</label>
+        <select name="status" data-field="status"></select>
+        <div data-error="status" class="error"></div>
+      </div>
+      <div class="invoice-custom-fields" data-custom-fields></div>
+      <p data-form-error class="error" role="alert"></p>
+      <button type="submit">Guardar factura</button>
+    </template>
     <script type="module" src="./src/main.js"></script>
   </body>
 </html>

@@ -27,10 +27,11 @@ describe('US6 - etiquetas de dominio', () => {
     expect(text).toContain('Clientes');
     expect(text).toContain('Pedidos');
     expect(
-      document.querySelector('label[for="document-entity"]').textContent
+      document.querySelector('#invoice-sale-form [data-label="entity_id"]')
+        .textContent
     ).toBe('Cliente');
     expect(
-      document.querySelector('label[for="edit-document"]').textContent
+      document.querySelector('label[for="invoice-sale-edit"]').textContent
     ).toBe('Editar pedido');
   });
 
@@ -40,11 +41,12 @@ describe('US6 - etiquetas de dominio', () => {
     expect(document.getElementById('nav-entities').textContent).toBe(
       'Entidades'
     );
-    expect(document.getElementById('nav-documents').textContent).toBe(
-      'Documentos'
+    expect(document.getElementById('nav-invoice-purchase').textContent).toBe(
+      'Documentos de compra'
     );
     expect(
-      document.querySelector('label[for="document-entity"]').textContent
+      document.querySelector('#invoice-sale-form [data-label="entity_id"]')
+        .textContent
     ).toBe('Cliente');
   });
 });

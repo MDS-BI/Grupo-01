@@ -6,6 +6,7 @@ package-lock.json
 uv.lock
 .specify
 .opencode
+.claude
 specs
 README.md
 feedback.md

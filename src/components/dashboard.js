@@ -12,22 +12,16 @@ export function initDashboard({ config, onAction, onLoadDemoData }) {
   setText('stat-documents-label', config.labels.documents || 'Documentos');
 
   const newEntity = document.getElementById('qa-new-entity');
-  const newDocument = document.getElementById('qa-new-document');
   const manageEntities = document.getElementById('qa-manage-entities');
-  const newInvoiceSale = document.getElementById('qa-new-invoice-sale');
-  const newInvoicePurchase = document.getElementById('qa-new-invoice-purchase');
 
   if (newEntity)
     newEntity.textContent = `Nueva ${(config.labels.entity || 'Entidad').toLowerCase()}`;
-  if (newDocument)
-    newDocument.textContent = `Nuevo ${(config.labels.document || 'Documento').toLowerCase()}`;
   if (manageEntities) {
     manageEntities.textContent = `Abrir gestión de ${(config.labels.entities || 'Entidades').toLowerCase()}`;
   }
 
   const bindings = [
     ['qa-new-entity', 'new-entity'],
-    ['qa-new-document', 'new-document'],
     ['qa-new-invoice-sale', 'new-invoice-sale'],
     ['qa-new-invoice-purchase', 'new-invoice-purchase'],
     ['qa-tracking', 'tracking'],

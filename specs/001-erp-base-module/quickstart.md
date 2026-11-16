@@ -13,8 +13,8 @@
 3. Cree un tercero (cliente, proveedor o personal) con nombre, código, RUT, tipo y, si es cliente, límite de crédito.
 4. Abra **Facturas de venta** y cree una factura de venta a un cliente (con `salesOrderId` opcional); la factura nace en Borrador. El formulario no muestra centro de costo ni período de liquidación.
 5. Abra **Facturas de compra** y cree una factura de compra a un proveedor o a un personal (con centro de costo Activo/Consumible y, si es personal, período de liquidación `YYYY-MM`); la factura nace en Borrador. El formulario no muestra orden de venta.
-6. Emita cada factura y compruebe que cada una aparece solo en su listado, con sus columnas propias, y que generó un movimiento financiero.
-7. Registre el pago (monto igual al total + fecha) y márquela Pagada; verifique el movimiento de contrapartida.
+6. Use **Editar** en cada listado. Compruebe que el folio y las fechas son de solo lectura. Seleccione **Emitida** y guarde. En compras, pruebe guardar sin centro de costo para comprobar la validación y luego emita con **Activo** o **Consumible**.
+7. Vuelva a **Editar**, seleccione **Pagada** e ingrese el monto igual al total y la fecha de pago. En **Movimientos financieros**, compruebe la emisión y el pago, con la orden de venta o el centro de costo según el tipo de factura.
 8. Abra el seguimiento para ver la deuda por tercero y las facturas vencidas (vencida = vencimiento anterior a hoy).
 9. Elimine un tercero con facturas y compruebe la confirmación y el borrado en cascada de facturas y movimientos.
 
@@ -37,7 +37,7 @@
 - Verifique que una compra no se puede emitir sin centro de costo y que el período de liquidación a personal debe ser `YYYY-MM` no posterior a la emisión.
 - Verifique que no se puede pagar con un monto distinto del total ni pasar una factura Pagada a otro estado.
 - Verifique que los movimientos financieros aparecen y no se pueden editar ni eliminar a mano.
-- Verifique que emitir una factura que supera el límite de crédito avisa y exige confirmación, sin bloquear.
+- El aviso al superar el límite de crédito forma parte de T026 de `tasks.md` y sigue pendiente.
 - Verifique que los resultados de búsqueda se actualizan a medida que el usuario escribe.
 - Verifique que la lista permanece consistente tras las acciones de edición y eliminación.
 - Verifique que las estadísticas del panel coinciden con el número de registros almacenados.
@@ -47,7 +47,7 @@
 Los módulos ERP personalizados adaptan la base mediante un único archivo de configuración (`src/module-config.js`) en lugar de editar el código central:
 
 1. Establezca el nombre del módulo y los mapeos de términos (p. ej., Entidad → Cliente, Documento → Pedido de Venta); cada pantalla se reetiqueta, incluida la barra lateral y el logotipo.
-2. Declare campos personalizados por tipo de registro (texto, número, fecha, selección) — aparecen automáticamente en formularios, listas, validación y búsqueda.
+2. Declare campos personalizados por tipo de registro para usarlos en los formularios y la validación. Las columnas de las tablas de facturas se definen en `INVOICE_VIEWS`.
 3. Defina el ciclo de vida de estados de documentos y las transiciones permitidas (p. ej., cotización → pedido → facturado).
 4. Opcionalmente establezca `theme.accentColor` para remarcar los resaltados y controles principales de todo el espacio de trabajo.
 5. Añada reglas de validación específicas del módulo junto a las reglas base donde sea necesario.

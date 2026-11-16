@@ -25,8 +25,8 @@ describe('US5 - configuración del módulo', () => {
     expect(document.getElementById('nav-entities').textContent).toBe(
       'Clientes'
     );
-    expect(document.getElementById('nav-documents').textContent).toBe(
-      'Pedidos'
+    expect(document.getElementById('nav-invoice-sale').textContent).toBe(
+      'Pedidos de venta'
     );
     expect(document.title).toBe('Ventas');
     expect(

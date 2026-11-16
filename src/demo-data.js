@@ -248,27 +248,17 @@ function buildDemoData(_config) {
     },
   });
 
-  const emitirCompra = (id, customFields) =>
-    updateDocument(id, { status: 'Emitida', customFields });
-
-  emitirCompra(c1.document_id, {
-    tipoFactura: 'compra',
-    centroCosto: 'Activo',
-  });
-  emitirCompra(c2.document_id, {
-    tipoFactura: 'compra',
-    centroCosto: 'Consumible',
-    periodoLiquidacion: addDays(-15).slice(0, 7),
-  });
-  emitirCompra(c3.document_id, {
-    tipoFactura: 'compra',
-    centroCosto: 'Consumible',
-  });
-  emitirCompra(c4.document_id, {
-    tipoFactura: 'compra',
-    centroCosto: 'Consumible',
-    periodoLiquidacion: addDays(-45).slice(0, 7),
-  });
+  for (const [factura, centroCosto] of [
+    [c1, 'Activo'],
+    [c2, 'Consumible'],
+    [c3, 'Consumible'],
+    [c4, 'Consumible'],
+  ]) {
+    updateDocument(factura.document_id, {
+      status: 'Emitida',
+      customFields: { ...factura.customFields, centroCosto },
+    });
+  }
 
   updateDocument(c3.document_id, {
     status: 'Pagada',

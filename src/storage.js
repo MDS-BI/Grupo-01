@@ -1,4 +1,8 @@
-import { getConfig } from './module-config.js';
+import {
+  getConfig,
+  getInvoiceView,
+  INVOICE_READ_ONLY_FIELDS,
+} from './module-config.js';
 import { generateId, isBlank } from './utils.js';
 import { validateDocument, validateEntity } from './validation.js';
 import {
@@ -255,6 +259,26 @@ export function updateDocument(id, updates, config = getConfig()) {
         ? { ...updates.customFields }
         : { ...(previous.customFields || {}) },
   };
+
+  const previousType = previous.customFields?.tipoFactura;
+  if (getInvoiceView(previousType)) {
+    if (
+      Object.hasOwn(merged.customFields, 'tipoFactura') &&
+      merged.customFields.tipoFactura !== previousType
+    ) {
+      throw new ValidationFailure([
+        {
+          field: 'customFields.tipoFactura',
+          code: 'READ_ONLY',
+          message: 'El tipo de una factura guardada no se puede cambiar.',
+        },
+      ]);
+    }
+    merged.customFields.tipoFactura = previousType;
+    for (const field of INVOICE_READ_ONLY_FIELDS) {
+      merged[field] = previous[field];
+    }
+  }
 
   assertValid(
     validateDocument(merged, {

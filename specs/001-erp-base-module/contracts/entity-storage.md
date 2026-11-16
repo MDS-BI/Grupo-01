@@ -107,7 +107,7 @@ Reglas:
 
 El almacenamiento de documentos sigue siendo único: `erp.documents` guarda facturas de venta y de compra, distinguidas por `customFields.tipoFactura`. La separación visual y funcional se define en `contracts/invoice-views.md`:
 
-- `tipoFactura` se fija por la vista (`venta` o `compra`); el formulario no lo expone.
+- La vista asigna `tipoFactura` (`venta` o `compra`). Las actualizaciones conservan el tipo, el identificador de documento, el folio y las fechas de emisión y vencimiento de las facturas clasificadas.
 - Cada vista tiene su propio formulario, listado y columnas.
 - Un documento solo se muestra y se edita en la vista de su tipo.
 - No se agregan claves de almacenamiento ni cambios de esquema.

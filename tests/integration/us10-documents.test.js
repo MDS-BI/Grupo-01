@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { initApp } from '../../src/app.js';
 import { DEFAULT_CONFIG } from '../../src/module-config.js';
 import { addEntity, loadDocuments } from '../../src/storage.js';
-import { loadAppMarkup, submit } from '../setup/domFixture.js';
+import { invoiceField, loadAppMarkup, submit } from '../setup/domFixture.js';
 
 beforeEach(() => {
   loadAppMarkup();
@@ -21,9 +21,9 @@ function fillDocument(entityId, overrides = {}) {
     currency: 'EUR',
     ...overrides,
   };
-  document.getElementById('document-entity').value = entityId;
+  invoiceField('invoice-sale', 'entity_id').value = entityId;
   for (const [key, value] of Object.entries(values)) {
-    document.getElementById(key).value = value;
+    invoiceField('invoice-sale', key).value = value;
   }
 }
 
@@ -31,8 +31,9 @@ describe('US10 - detalle de documentos', () => {
   it('normaliza importes y los muestra en la lista', () => {
     const entity = addEntity({ name: 'Acme', code: 'AC-1' }, DEFAULT_CONFIG);
     initApp(DEFAULT_CONFIG);
+    document.getElementById('nav-invoice-sale').click();
     fillDocument(entity.entity_id);
-    submit('document-form');
+    submit('invoice-sale-form');
 
     const record = loadDocuments()[0];
     expect(record.folio).toBe(7);
@@ -43,24 +44,26 @@ describe('US10 - detalle de documentos', () => {
     expect(record.totalAmount).toBe(95);
     expect(record.currency).toBe('EUR');
 
-    const list = document.getElementById('document-list').textContent;
+    const list = document.getElementById('invoice-sale-list').textContent;
     expect(list).toContain('#7');
-    expect(list).toContain('Total: 95 EUR');
+    expect(list).toContain('95 EUR');
   });
 
   it('muestra el error cuando el descuento supera el subtotal', () => {
     const entity = addEntity({ name: 'Acme', code: 'AC-1' }, DEFAULT_CONFIG);
     initApp(DEFAULT_CONFIG);
+    document.getElementById('nav-invoice-sale').click();
     fillDocument(entity.entity_id, {
       folio: '8',
       subtotal: '10',
       discount: '20',
     });
-    submit('document-form');
+    submit('invoice-sale-form');
 
-    expect(document.getElementById('error-discount').textContent).toMatch(
-      /descuento/i
-    );
+    expect(
+      document.querySelector('#invoice-sale-form [data-error="discount"]')
+        .textContent
+    ).toMatch(/descuento/i);
     expect(loadDocuments()).toHaveLength(0);
   });
 });

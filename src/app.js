@@ -1,5 +1,7 @@
 import {
   DEFAULT_ACCENT_COLOR,
+  getInvoiceView,
+  INVOICE_VIEWS,
   normalizeConfig,
   userConfig,
 } from './module-config.js';
@@ -24,23 +26,16 @@ import {
   setEntityFormEntity,
   showEntityErrors,
 } from './components/entity-form.js';
-import {
-  focusDocumentForm,
-  initDocumentForm,
-  resetDocumentForm,
-  setDocumentFormDocument,
-  setDocumentFormEntities,
-  setDocumentFormOptions,
-  showDocumentErrors,
-} from './components/document-form.js';
+import { createSaleForm } from './components/invoice-sale-form.js';
+import { createPurchaseForm } from './components/invoice-purchase-form.js';
 import { renderEntityList } from './components/entity-list.js';
-import { renderDocumentList } from './components/document-list.js';
+import { renderSaleList } from './components/invoice-sale-list.js';
+import { renderPurchaseList } from './components/invoice-purchase-list.js';
 import { renderMovementsList } from './components/movements-list.js';
 import { renderTrackingView } from './components/tracking.js';
 import { loadMovements } from './movements.js';
 import { loadDemoData } from './demo-data.js';
 import { computeDebtSummary } from './tracking.js';
-import { presetDocumentTipoFactura } from './components/document-form.js';
 import {
   focusSearchInput,
   initSearchBar,
@@ -50,13 +45,16 @@ import {
 const VIEWS = [
   'dashboard',
   'entities',
-  'documents',
-  'invoice-sale',
-  'invoice-purchase',
+  ...Object.values(INVOICE_VIEWS).map(({ module }) => module),
   'movements',
   'tracking',
   'search',
 ];
+
+const invoiceComponents = {
+  venta: { createForm: createSaleForm, renderList: renderSaleList },
+  compra: { createForm: createPurchaseForm, renderList: renderPurchaseList },
+};
 
 const state = {
   config: null,
@@ -64,6 +62,7 @@ const state = {
   currentModule: 'dashboard',
   searchTerm: '',
   shell: null,
+  invoiceForms: {},
 };
 
 function byId(id) {
@@ -85,29 +84,19 @@ function applyLabels(config) {
   document.title = config.moduleName;
 
   setText('entities-title', labels.entities);
-  setText('documents-title', labels.documents);
   setText('search-title', labels.search);
 
-  const documentEntityLabel = document.querySelector(
-    'label[for="document-entity"]'
-  );
-  if (documentEntityLabel) documentEntityLabel.textContent = labels.entity;
+  for (const { module, label } of Object.values(INVOICE_VIEWS)) {
+    setText(`${module}-title`, `${labels.documents} de ${label}`);
+    setText(
+      `${module}-list-title`,
+      `Registro de ${labels.documents.toLowerCase()}`
+    );
+  }
 
   const editEntityLabel = document.querySelector('label[for="edit-entity"]');
   if (editEntityLabel)
     editEntityLabel.textContent = `Editar ${labels.entity.toLowerCase()}`;
-
-  const editDocumentLabel = document.querySelector(
-    'label[for="edit-document"]'
-  );
-  if (editDocumentLabel)
-    editDocumentLabel.textContent = `Editar ${labels.document.toLowerCase()}`;
-
-  const documentSubmit = document.querySelector(
-    '#document-form button[type="submit"]'
-  );
-  if (documentSubmit)
-    documentSubmit.textContent = `Guardar ${labels.document.toLowerCase()}`;
 }
 
 function renderConfigBanner(errors) {
@@ -153,23 +142,24 @@ function populateEntitySelect(entities) {
   }
 }
 
-function renderDocuments(entities, documents) {
-  const filterEntityId = byId('document-entity')
-    ? byId('document-entity').value
-    : '';
-  const filterTipoFactura =
-    state.currentModule === 'invoice-sale'
-      ? 'venta'
-      : state.currentModule === 'invoice-purchase'
-        ? 'compra'
-        : '';
-  renderDocumentList(byId('document-list'), documents, entities, {
-    config: state.config,
-    filterEntityId,
-    filterTipoFactura,
-    onEdit: editDocument,
-    onDelete: requestDeleteDocument,
-  });
+function renderInvoices(tipoFactura, entities, documents) {
+  const { module } = getInvoiceView(tipoFactura);
+  const names = new Map(
+    entities.map(({ entity_id, name }) => [entity_id, name])
+  );
+  const form = state.invoiceForms[tipoFactura];
+  if (!form) return;
+  form.setOptions(documents, names);
+  invoiceComponents[tipoFactura].renderList(
+    byId(`${module}-list`),
+    documents,
+    names,
+    {
+      filterEntityId: form.getFilter(),
+      onEdit: editDocument,
+      onDelete: requestDeleteDocument,
+    }
+  );
 }
 
 function refreshMovements() {
@@ -209,9 +199,15 @@ function refresh() {
   });
 
   populateEntitySelect(entities);
-  setDocumentFormEntities(entities);
-  setDocumentFormOptions(documents, entities);
-  renderDocuments(entities, documents);
+  for (const [tipoFactura, form] of Object.entries(state.invoiceForms)) {
+    if (
+      form.getEditingId() &&
+      !documents.some(({ document_id }) => document_id === form.getEditingId())
+    )
+      form.reset();
+    form.setEntities(entities);
+    renderInvoices(tipoFactura, entities, documents);
+  }
   refreshDashboard();
   refreshMovements();
   refreshTracking();
@@ -230,37 +226,17 @@ function updateSearchResults() {
   );
 }
 
-const VIEW_ELEMENTS = {
-  dashboard: 'dashboard',
-  entities: 'entities',
-  documents: 'documents',
-  'invoice-sale': 'documents',
-  'invoice-purchase': 'documents',
-  movements: 'movements',
-  tracking: 'tracking',
-  search: 'search',
-};
-
 function showModule(name) {
   if (!VIEWS.includes(name)) return;
   state.currentModule = name;
-  const activeView = VIEW_ELEMENTS[name];
-  for (const view of [
-    'dashboard',
-    'entities',
-    'documents',
-    'search',
-    'movements',
-    'tracking',
-  ]) {
+  for (const view of VIEWS) {
     const element = byId(`view-${view}`);
-    if (element) element.hidden = view !== activeView;
+    if (element) element.hidden = view !== name;
   }
   if (state.shell) state.shell.setActive(name);
 
   if (name === 'dashboard') refreshDashboard();
-  if (name === 'entities' || name === 'documents') refresh();
-  if (name === 'invoice-sale' || name === 'invoice-purchase') refresh();
+  if (name === 'entities' || name.startsWith('invoice-')) refresh();
   if (name === 'movements') refreshMovements();
   if (name === 'tracking') refreshTracking();
   if (name === 'search') updateSearchResults();
@@ -296,11 +272,14 @@ function editDocument(id) {
   const documentRecord = loadDocuments().find(
     (item) => item.document_id === id || item.id === id
   );
-  if (!documentRecord) return;
-  showModule('documents');
-  setDocumentFormEntities(loadEntities());
-  setDocumentFormDocument(documentRecord);
-  focusDocumentForm();
+  const tipoFactura = documentRecord?.customFields?.tipoFactura;
+  const view = getInvoiceView(tipoFactura);
+  const form = state.invoiceForms[tipoFactura];
+  if (!view || !form) return;
+  showModule(view.module);
+  form.setDocument(documentRecord);
+  renderInvoices(tipoFactura, loadEntities(), loadDocuments());
+  form.focus();
 }
 
 function requestDeleteDocument(id) {
@@ -312,8 +291,10 @@ function requestDeleteDocument(id) {
   const message = `¿Eliminar ${labels.document.toLowerCase()} "#${documentRecord.folio ?? ''}"?`;
   if (!confirmAction(message)) return;
   deleteDocument(id);
-  resetDocumentForm();
+  const form = state.invoiceForms[documentRecord.customFields?.tipoFactura];
+  if (form?.getEditingId() === documentRecord.document_id) form.reset();
   refresh();
+  form?.setFeedback('Factura eliminada.');
 }
 
 function handleEntitySubmit(values, editingId) {
@@ -334,18 +315,21 @@ function handleEntitySubmit(values, editingId) {
   }
 }
 
-function handleDocumentSubmit(values, editingId) {
+function handleInvoiceSubmit(tipoFactura, values, editingId) {
+  const form = state.invoiceForms[tipoFactura];
+  values.customFields.tipoFactura = tipoFactura;
   try {
     if (editingId) {
       updateDocument(editingId, values, state.config);
     } else {
       addDocument(values, state.config);
     }
-    resetDocumentForm();
+    form.reset();
     refresh();
+    form.setFeedback(editingId ? 'Cambios guardados.' : 'Factura guardada.');
   } catch (error) {
     if (error instanceof ValidationFailure) {
-      showDocumentErrors(error.errors);
+      form.showErrors(error.errors);
     } else {
       throw error;
     }
@@ -357,20 +341,16 @@ function handleQuickAction(action) {
     showModule('entities');
     resetEntityForm();
     focusEntityForm();
-  } else if (action === 'new-document') {
-    showModule('documents');
-    resetDocumentForm();
-    focusDocumentForm();
-  } else if (action === 'new-invoice-sale') {
-    showModule('documents');
-    resetDocumentForm();
-    presetDocumentTipoFactura('venta');
-    focusDocumentForm();
-  } else if (action === 'new-invoice-purchase') {
-    showModule('documents');
-    resetDocumentForm();
-    presetDocumentTipoFactura('compra');
-    focusDocumentForm();
+  } else if (
+    action === 'new-invoice-sale' ||
+    action === 'new-invoice-purchase'
+  ) {
+    const tipoFactura = action === 'new-invoice-sale' ? 'venta' : 'compra';
+    const form = state.invoiceForms[tipoFactura];
+    showModule(getInvoiceView(tipoFactura).module);
+    form.reset();
+    renderInvoices(tipoFactura, loadEntities(), loadDocuments());
+    form.focus();
   } else if (action === 'tracking') {
     showModule('tracking');
   } else if (action === 'manage-entities') {
@@ -422,27 +402,24 @@ function bindManagementControls() {
       if (id) requestDeleteEntity(id);
     };
   }
+}
 
-  const loadDocument = byId('load-document');
-  if (loadDocument) {
-    loadDocument.onclick = () => {
-      const id = byId('edit-document') ? byId('edit-document').value : '';
-      if (id) editDocument(id);
-    };
-  }
-
-  const deleteDocumentButton = byId('delete-document');
-  if (deleteDocumentButton) {
-    deleteDocumentButton.onclick = () => {
-      const id = byId('edit-document') ? byId('edit-document').value : '';
-      if (id) requestDeleteDocument(id);
-    };
-  }
-
-  const documentEntity = byId('document-entity');
-  if (documentEntity) {
-    documentEntity.onchange = () =>
-      renderDocuments(loadEntities(), loadDocuments());
+function initInvoiceForms(config) {
+  state.invoiceForms = {};
+  for (const [tipoFactura, { createForm }] of Object.entries(
+    invoiceComponents
+  )) {
+    const root = byId(`view-${getInvoiceView(tipoFactura).module}`);
+    if (!root) continue;
+    state.invoiceForms[tipoFactura] = createForm({
+      config,
+      root,
+      onSubmit: (values, id) => handleInvoiceSubmit(tipoFactura, values, id),
+      onEdit: editDocument,
+      onDelete: requestDeleteDocument,
+      onFilter: () =>
+        renderInvoices(tipoFactura, loadEntities(), loadDocuments()),
+    });
   }
 }
 
@@ -463,13 +440,12 @@ export function initApp(rawConfig = userConfig) {
     onLoadDemoData: handleLoadDemoData,
   });
   initEntityForm({ config, onSubmit: handleEntitySubmit });
-  initDocumentForm({ config, onSubmit: handleDocumentSubmit });
+  initInvoiceForms(config);
   initSearchBar({ config, onSearch: handleSearch });
   bindManagementControls();
 
   renderConfigBanner(errors);
   resetEntityForm();
-  resetDocumentForm();
   refresh();
   showModule('dashboard');
 

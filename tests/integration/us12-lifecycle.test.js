@@ -7,7 +7,7 @@ import {
   updateDocument,
   ValidationFailure,
 } from '../../src/storage.js';
-import { loadAppMarkup, submit } from '../setup/domFixture.js';
+import { invoiceField, loadAppMarkup, submit } from '../setup/domFixture.js';
 
 beforeEach(() => {
   loadAppMarkup();
@@ -22,31 +22,35 @@ const { config: lifecycleConfig } = normalizeConfig({
 });
 
 function createDocument(entityId) {
-  document.getElementById('document-entity').value = entityId;
-  document.getElementById('folio').value = '1';
-  document.getElementById('startDate').value = '2026-01-01';
-  document.getElementById('endDate').value = '2026-01-02';
-  submit('document-form');
+  invoiceField('invoice-sale', 'entity_id').value = entityId;
+  invoiceField('invoice-sale', 'folio').value = '1';
+  invoiceField('invoice-sale', 'startDate').value = '2026-01-01';
+  invoiceField('invoice-sale', 'endDate').value = '2026-01-02';
+  submit('invoice-sale-form');
 }
 
 describe('US12 - ciclo de vida de estados', () => {
   it('limita las transiciones y rechaza saltos no permitidos', () => {
     const entity = addEntity({ name: 'Acme', code: 'AC-1' }, lifecycleConfig);
     initApp(lifecycleConfig);
+    document.getElementById('nav-invoice-sale').click();
     createDocument(entity.entity_id);
 
     const created = loadDocuments()[0];
     expect(created.status).toBe('Borrador');
 
-    const options = Array.from(document.getElementById('status').options).map(
-      (option) => option.value
-    );
+    const options = Array.from(
+      invoiceField('invoice-sale', 'status').options
+    ).map((option) => option.value);
     expect(options).toEqual(['Borrador']);
 
-    document.getElementById('edit-document').value = created.document_id;
-    document.getElementById('load-document').click();
+    document.getElementById('invoice-sale-edit').value = created.document_id;
+    document
+      .getElementById('invoice-sale-edit')
+      .dispatchEvent(new Event('change'));
+    document.querySelector('#view-invoice-sale [data-load-invoice]').click();
     const editingOptions = Array.from(
-      document.getElementById('status').options
+      invoiceField('invoice-sale', 'status').options
     ).map((option) => option.value);
     expect(editingOptions).toEqual(['Borrador', 'Aprobado']);
 
@@ -61,11 +65,14 @@ describe('US12 - ciclo de vida de estados', () => {
     );
     expect(promoted.status).toBe('Aprobado');
 
-    document.getElementById('nav-documents').click();
-    document.getElementById('edit-document').value = created.document_id;
-    document.getElementById('load-document').click();
+    document.getElementById('nav-invoice-sale').click();
+    document.getElementById('invoice-sale-edit').value = created.document_id;
+    document
+      .getElementById('invoice-sale-edit')
+      .dispatchEvent(new Event('change'));
+    document.querySelector('#view-invoice-sale [data-load-invoice]').click();
     const promotedOptions = Array.from(
-      document.getElementById('status').options
+      invoiceField('invoice-sale', 'status').options
     ).map((option) => option.value);
     expect(promotedOptions).toEqual(['Aprobado', 'Pagado']);
   });
@@ -73,16 +80,16 @@ describe('US12 - ciclo de vida de estados', () => {
   it('usa estado de texto libre cuando no hay ciclo configurado', () => {
     const entity = addEntity({ name: 'Acme', code: 'AC-1' }, DEFAULT_CONFIG);
     initApp(DEFAULT_CONFIG);
+    document.getElementById('nav-invoice-sale').click();
 
-    expect(document.getElementById('status').hidden).toBe(true);
-    expect(document.getElementById('status-free').hidden).toBe(false);
+    expect(invoiceField('invoice-sale', 'status').tagName).toBe('INPUT');
 
-    document.getElementById('document-entity').value = entity.entity_id;
-    document.getElementById('folio').value = '1';
-    document.getElementById('startDate').value = '2026-01-01';
-    document.getElementById('endDate').value = '2026-01-02';
-    document.getElementById('status-free').value = 'En revisión';
-    submit('document-form');
+    invoiceField('invoice-sale', 'entity_id').value = entity.entity_id;
+    invoiceField('invoice-sale', 'folio').value = '1';
+    invoiceField('invoice-sale', 'startDate').value = '2026-01-01';
+    invoiceField('invoice-sale', 'endDate').value = '2026-01-02';
+    invoiceField('invoice-sale', 'status').value = 'En revisión';
+    submit('invoice-sale-form');
 
     expect(loadDocuments()[0].status).toBe('En revisión');
   });

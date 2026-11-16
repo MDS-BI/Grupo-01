@@ -9,7 +9,7 @@ import {
   updateDocument,
   ValidationFailure,
 } from '../../src/storage.js';
-import { loadAppMarkup, submit } from '../setup/domFixture.js';
+import { invoiceField, loadAppMarkup, submit } from '../setup/domFixture.js';
 
 function tercero(tipoTercero) {
   return addEntity({
@@ -39,20 +39,14 @@ describe('fase fundacional de facturación', () => {
     expect(document.getElementById('entities-title').textContent).toBe(
       'Terceros'
     );
-    expect(document.getElementById('documents-title').textContent).toBe(
-      'Facturas'
+    expect(document.getElementById('invoice-sale-title').textContent).toBe(
+      'Facturas de venta'
     );
     expect(document.getElementById('config-banner').hidden).toBe(true);
     expect(document.getElementById('custom-entity-tipoTercero')).not.toBeNull();
-    expect(
-      document.getElementById('custom-document-tipoFactura')
-    ).not.toBeNull();
-    expect(document.getElementById('custom-document-montoPagado').type).toBe(
-      'number'
-    );
-    expect(document.getElementById('custom-document-fechaPago').type).toBe(
-      'date'
-    );
+    expect(invoiceField('invoice-sale', 'tipoFactura')).toBeNull();
+    expect(invoiceField('invoice-sale', 'montoPagado').type).toBe('number');
+    expect(invoiceField('invoice-purchase', 'fechaPago').type).toBe('date');
   });
 
   it.each([
@@ -64,19 +58,20 @@ describe('fase fundacional de facturación', () => {
       const entity = tercero(tipoTercero);
       loadAppMarkup();
       initApp(userConfig);
+      const view =
+        tipoFactura === 'venta' ? 'invoice-sale' : 'invoice-purchase';
+      document.getElementById(`nav-${view}`).click();
       expect(
         Array.from(
-          document.getElementById('status').options,
+          invoiceField(view, 'status').options,
           (option) => option.value
         )
       ).toEqual(['Borrador']);
-      document.getElementById('document-entity').value = entity.entity_id;
-      document.getElementById('folio').value = '1';
-      document.getElementById('startDate').value = '2026-11-01';
-      document.getElementById('endDate').value = '2026-11-30';
-      document.getElementById('custom-document-tipoFactura').value =
-        tipoFactura;
-      submit('document-form');
+      invoiceField(view, 'entity_id').value = entity.entity_id;
+      invoiceField(view, 'folio').value = '1';
+      invoiceField(view, 'startDate').value = '2026-11-01';
+      invoiceField(view, 'endDate').value = '2026-11-30';
+      submit(`${view}-form`);
       expect(loadDocuments()).toHaveLength(1);
       expect(loadDocuments()[0]).toMatchObject({
         entity_id: entity.entity_id,
@@ -86,7 +81,7 @@ describe('fase fundacional de facturación', () => {
       loadAppMarkup();
       initApp(userConfig);
       expect(loadDocuments()[0].status).toBe('Borrador');
-      expect(document.getElementById('document-list').textContent).toContain(
+      expect(document.getElementById(`${view}-list`).textContent).toContain(
         'Borrador'
       );
     }
@@ -149,18 +144,22 @@ describe('fase fundacional de facturación', () => {
     const entity = tercero('proveedor');
     loadAppMarkup();
     initApp(userConfig);
-    document.getElementById('document-entity').value = entity.entity_id;
-    document.getElementById('folio').value = '1';
-    document.getElementById('startDate').value = '2026-11-01';
-    document.getElementById('endDate').value = '2026-11-30';
-    document.getElementById('custom-document-tipoFactura').value = 'venta';
-    submit('document-form');
+    document.getElementById('nav-invoice-sale').click();
+    const select = invoiceField('invoice-sale', 'entity_id');
+    expect(Array.from(select.options, ({ value }) => value)).not.toContain(
+      entity.entity_id
+    );
+    select.append(new Option(entity.name, entity.entity_id));
+    select.value = entity.entity_id;
+    invoiceField('invoice-sale', 'folio').value = '1';
+    invoiceField('invoice-sale', 'startDate').value = '2026-11-01';
+    invoiceField('invoice-sale', 'endDate').value = '2026-11-30';
+    submit('invoice-sale-form');
     expect(
-      document.getElementById('error-document-entity').textContent
+      document.querySelector('#invoice-sale-form [data-error="entity_id"]')
+        .textContent
     ).toContain('cliente');
-    expect(
-      document.getElementById('document-entity').getAttribute('aria-invalid')
-    ).toBe('true');
+    expect(select.getAttribute('aria-invalid')).toBe('true');
     expect(loadDocuments()).toEqual([]);
   });
 

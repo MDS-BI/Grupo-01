@@ -15,3 +15,7 @@ export function submit(formId) {
   const form = document.getElementById(formId);
   form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 }
+
+export function invoiceField(view, key) {
+  return document.querySelector(`#${view}-form [data-field="${key}"]`);
+}

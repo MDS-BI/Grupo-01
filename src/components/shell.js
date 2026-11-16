@@ -1,11 +1,10 @@
+import { INVOICE_VIEWS } from '../module-config.js';
 import { monogram } from '../utils.js';
 
 const NAV_MODULES = [
   'dashboard',
   'entities',
-  'documents',
-  'invoice-sale',
-  'invoice-purchase',
+  ...Object.values(INVOICE_VIEWS).map(({ module }) => module),
   'movements',
   'tracking',
   'search',
@@ -45,9 +44,10 @@ function navLabel(config, module) {
   const labels = config.labels || {};
   if (module === 'dashboard') return labels.dashboard || 'Panel';
   if (module === 'entities') return labels.entities || 'Entidades';
-  if (module === 'documents') return labels.documents || 'Documentos';
-  if (module === 'invoice-sale') return 'Facturas de venta';
-  if (module === 'invoice-purchase') return 'Facturas de compra';
+  const view = Object.values(INVOICE_VIEWS).find(
+    (view) => view.module === module
+  );
+  if (view) return `${labels.documents} de ${view.label}`;
   if (module === 'movements') return 'Movimientos financieros';
   if (module === 'tracking') return 'Seguimiento';
   return labels.search || 'Buscar';

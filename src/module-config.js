@@ -59,6 +59,43 @@ export const DEFAULT_CONFIG = Object.freeze({
 
 export const DEFAULT_ACCENT_COLOR = '#0f62fe';
 
+const COMMON_INVOICE_COLUMNS = [
+  ['folio', 'Folio'],
+  ['status', 'Estado'],
+  ['startDate', 'Emisión'],
+  ['endDate', 'Vencimiento'],
+  ['totalAmount', 'Total'],
+];
+
+export const INVOICE_VIEWS = {
+  venta: {
+    module: 'invoice-sale',
+    label: 'venta',
+    thirdPartyTypes: ['cliente'],
+    fields: ['salesOrderId'],
+    columns: [...COMMON_INVOICE_COLUMNS, ['salesOrderId', 'Orden de venta']],
+  },
+  compra: {
+    module: 'invoice-purchase',
+    label: 'compra',
+    thirdPartyTypes: ['proveedor', 'personal'],
+    fields: ['centroCosto', 'periodoLiquidacion'],
+    columns: [
+      ...COMMON_INVOICE_COLUMNS,
+      ['centroCosto', 'Centro de costo'],
+      ['periodoLiquidacion', 'Período de liquidación'],
+    ],
+  },
+};
+
+export function getInvoiceView(tipoFactura) {
+  return Object.hasOwn(INVOICE_VIEWS, tipoFactura)
+    ? INVOICE_VIEWS[tipoFactura]
+    : undefined;
+}
+
+export const INVOICE_READ_ONLY_FIELDS = ['folio', 'startDate', 'endDate'];
+
 export const userConfig = {
   moduleName: 'Contabilidad y Finanzas: Facturación y Pagos',
   labels: {

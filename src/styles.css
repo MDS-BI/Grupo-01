@@ -258,26 +258,186 @@ select[aria-invalid='true'] {
   font-size: 0.9rem;
 }
 
+.invoice-view .form-field[hidden] {
+  display: none;
+}
+
+.nav-group {
+  display: grid;
+  gap: 6px;
+  padding-block: 8px;
+  border-block: 1px solid var(--border);
+}
+
+.nav-group-label {
+  padding: 4px 12px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.invoice-view--sale {
+  --invoice-accent: #125b86;
+  --invoice-tint: #e7f3fb;
+}
+
+.invoice-view--purchase {
+  --invoice-accent: #6b4084;
+  --invoice-tint: #f3eafa;
+}
+
+.invoice-view {
+  min-width: 0;
+  border-top: 4px solid var(--invoice-accent);
+  padding-top: 16px;
+}
+
+.invoice-view h2 {
+  font-size: 1.1rem;
+}
+
+.invoice-actions,
+.invoice-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.invoice-actions {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.invoice-actions h2 {
+  margin: 0;
+}
+
+.invoice-controls .form-field {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.invoice-view form {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+
+.invoice-view form :is(select, input, textarea) {
+  min-width: 0;
+}
+
+.invoice-view form input[readonly] {
+  background: var(--bg);
+}
+
+.invoice-custom-fields {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: inherit;
+  gap: inherit;
+}
+
+.invoice-custom-fields:empty,
+.invoice-feedback:empty {
+  display: none;
+}
+
+.invoice-view [data-form-error] {
+  grid-column: 1 / -1;
+}
+
+.invoice-view [type='submit'] {
+  justify-self: start;
+  background: var(--invoice-accent);
+  border-color: var(--invoice-accent);
+}
+
+.invoice-feedback {
+  color: var(--invoice-accent);
+}
+
+.invoice-table-scroll {
+  overflow: auto;
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.invoice-table caption {
+  caption-side: top;
+  padding: 12px;
+  color: var(--invoice-accent);
+  font-weight: 700;
+  text-align: left;
+}
+
+.invoice-table :is(th, td) {
+  padding: 9px 12px;
+  border-top: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.invoice-table th {
+  background: var(--bg);
+}
+
+.invoice-total {
+  font-variant-numeric: tabular-nums;
+}
+
+.invoice-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.invoice-badge--sale,
+.invoice-badge--purchase {
+  color: var(--invoice-accent);
+  background: var(--invoice-tint);
+}
+
+.invoice-table-actions button {
+  padding: 5px 8px;
+}
+
+.invoice-table-actions button + button {
+  margin-left: 6px;
+}
+
+.invoice-controls button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
 @media (max-width: 760px) {
-  :root {
-    --sidebar-width: 64px;
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .sidebar {
-    padding: 12px 8px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
   }
 
-  .nav-item {
-    font-size: 0;
-    text-align: center;
-    padding: 12px 4px;
-  }
-
-  .nav-item::before {
-    content: attr(data-module);
-    display: block;
-    font-size: 0.62rem;
-    text-transform: uppercase;
+  .nav-group {
+    display: flex;
+    flex: 1 0 100%;
+    flex-wrap: wrap;
+    align-items: center;
   }
 
   .content {
