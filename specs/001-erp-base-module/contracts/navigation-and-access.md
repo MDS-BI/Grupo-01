@@ -58,10 +58,12 @@ Notas:
 | 2 | Terceros | `entities` | Crear un cliente, proveedor o personal; el RUT se valida; el límite de crédito es solo de clientes |
 | 3 | Facturas de venta | `invoice-sale` | La factura nace en Borrador, solo para clientes, con orden de venta opcional |
 | 4 | Facturas de compra | `invoice-purchase` | Solo para proveedores o personal; el centro de costo se exige al emitir; el período `YYYY-MM` se exige si el tercero es personal (liquidación de sueldo) |
-| 5 | Emitir y pagar | `invoice-sale` | Borrador → Emitida → Pagada; el monto pagado debe ser igual al total; si una venta supera el límite de crédito, el sistema avisa y pide confirmación |
+| 5 | Emitir y pagar | `invoice-sale` | Borrador → Emitida → Pagada; el monto pagado debe ser igual al total |
 | 6 | Movimientos financieros | `movements` | Un movimiento por emisión y por pago; son de solo lectura |
 | 7 | Seguimiento | `tracking` | Deuda por tercero y facturas vencidas (vencimiento anterior a hoy) |
 | 8 | Datos de demostración y cuidados | `dashboard` | Cargar la demostración (solo con el módulo vacío); los datos son ficticios; `localStorage` no es seguro |
+
+**Nota sobre el paso 5.** El aviso por límite de crédito al emitir una venta (FR-029) todavía no está implementado (T026 sigue pendiente). La guía no lo menciona hasta que exista, para no describir algo que la aplicación no hace; cuando se implemente, se suma a este paso.
 
 **Controles.** "Anterior" (no aparece en el primer paso), "Siguiente" (en el último paso, "Finalizar"), "Ir a" la vista del paso y "Cerrar". Indicador "Paso n de 8". La tecla Esc cierra la guía y el foco vuelve a `#open-guide`.
 
@@ -73,6 +75,7 @@ Notas:
 
 - `GUIDE_STEPS`: lista de pasos (`id`, `module`, título y texto).
 - `createTutorial({ config, root, openButton, onNavigate })`: devuelve `open(index = 0)`, `close()`, `next()`, `prev()`, `goTo(index)` e `isOpen()`.
+- Requiere exportar `NAV_MODULES` y `navLabel` desde `src/components/shell.js`, que hoy son privados (T084).
 
 ## Pruebas asociadas
 
