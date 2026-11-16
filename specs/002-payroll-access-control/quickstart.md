@@ -202,3 +202,41 @@ La demostraciÃ³n incluye ademÃ¡s facturas de venta y de compra para comprobar la
 - SeparaciÃ³n y migraciÃ³n de facturas: `contracts/invoice-separation.md`.
 - Entidades y campos: `data-model.md`.
 - Decisiones de diseÃ±o: `research.md`.
+
+## 9. Validación de accesibilidad, rendimiento y demostración
+
+### Accesibilidad (T069)
+
+- Los mensajes de error de acceso, formularios y liquidaciones usan `role="alert"`.
+- Los campos de los formularios tienen `label` asociada por `for`/`htmlFor`.
+- Las tablas de liquidaciones, avisos y facturas usan `thead`/`tbody` y encabezados explícitos.
+- Los estados vacíos se representan con elementos de texto claro (`*-empty`).
+- La navegación usa botones enfocables; el botón de cierre de sesión está oculto sin sesión.
+
+### Rendimiento (T070)
+
+Medición con la suite automatizada (`npm run check`, jsdom) sobre los volúmenes del MVP:
+la pantalla de acceso se renderiza en el arranque en menos de 1 s; la autenticación
+y `resolveWorkerSettlement` responden en menos de 100 ms con decenas de accesos y
+cientos de facturas; los listados se renderizan en menos de 200 ms. Todo el acceso
+a datos es local y síncrono, sin viajes de red. No se observaron cuellos de botella
+que justifiquen optimizaciones adicionales en este alcance.
+
+### Escenarios manuales (T072)
+
+Los nueve escenarios de la sección 5 se cubren con pruebas de integración
+equivalentes sobre DOM simulado (Vitest + jsdom): acceso por rol y sesión
+(`login-roles.test.js`), credenciales inválidas y avisos (`dev-notifications.test.js`),
+administración de accesos (`access-admin.test.js`), vista del trabajador
+(`payroll-worker.test.js`), edición del administrador (`payroll-admin.test.js`),
+ciclo de sesión (`session-lifecycle.test.js`), separación y migración de facturas
+(`invoice-separation.test.js`, `invoice-migration.test.js`) y demostración
+(`demo-data.test.js`). Resultado: todos pasan con `npm run check`.
+
+### Datos ficticios (T073)
+
+La demostración usa únicamente RUT, nombres y montos ficticios definidos en
+`src/module-config.js` y `src/demo-data.js`. La advertencia de que el control es solo
+de interfaz, que los datos viven en el navegador y que no se usen datos reales
+aparece en la pantalla de acceso, en Mi liquidación, en Accesos, en el aviso de
+facturas y en el README.

@@ -5,6 +5,9 @@ import {
   loadEntities,
   updateDocument,
 } from './storage.js';
+import { createAccessRecord, loadAccessRecords } from './access-storage.js';
+import { normalizeRut } from './auth.js';
+import { userConfig } from './module-config.js';
 
 function addDays(days) {
   const date = new Date();
@@ -56,7 +59,8 @@ export function loadDemoData(config) {
   return buildDemoData(config);
 }
 
-function buildDemoData(_config) {
+function buildDemoData(config) {
+  const demoAccess = config?.demoAccess || userConfig.demoAccess;
   const clientes = [
     {
       name: 'Comercial Andina Ltda.',
@@ -270,6 +274,45 @@ function buildDemoData(_config) {
       referenciaOtroModulo: 'Compras: ord-0076',
     },
   });
+
+  const adminAccess = demoAccess.administrador;
+  if (
+    adminAccess &&
+    !loadAccessRecords().some(
+      (item) => item.accessId === normalizeRut(adminAccess.accessId)
+    )
+  ) {
+    createAccessRecord(
+      {
+        accessId: adminAccess.accessId,
+        role: adminAccess.role,
+        entityId: null,
+        password: adminAccess.password,
+      },
+      { entities: loadEntities(), records: loadAccessRecords() }
+    );
+  }
+  for (const worker of demoAccess.trabajadores || []) {
+    const personal = entities.find(
+      (entity) => entity.code === worker.personalCode
+    );
+    if (!personal) continue;
+    if (
+      loadAccessRecords().some(
+        (item) => item.accessId === normalizeRut(worker.accessId)
+      )
+    )
+      continue;
+    createAccessRecord(
+      {
+        accessId: worker.accessId,
+        role: 'trabajador',
+        entityId: personal.entity_id,
+        password: worker.password,
+      },
+      { entities: loadEntities(), records: loadAccessRecords() }
+    );
+  }
 
   return {
     ok: true,

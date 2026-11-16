@@ -17,11 +17,15 @@ import {
 export const STORAGE_KEYS = {
   entities: 'erp.entities',
   documents: 'erp.documents',
+  salesInvoices: 'erp.salesInvoices',
+  purchaseInvoices: 'erp.purchaseInvoices',
+  unclassifiedDocuments: 'erp.unclassifiedDocuments',
   movements: MOVEMENTS_KEY,
   schemaVersion: 'erp.schemaVersion',
+  migrationInvoiceSplit: 'erp.migration.invoiceSplit',
 };
 
-export const SCHEMA_VERSION = '1.0.0';
+export const SCHEMA_VERSION = '2.0.0';
 
 export class ValidationFailure extends Error {
   constructor(errors) {
@@ -89,7 +93,60 @@ export function saveEntities(entities) {
 }
 
 export function loadDocuments() {
-  return readCollection(STORAGE_KEYS.documents);
+  // Vista unificada de solo lectura: facturas de venta + compras.
+  // No incluye los documentos sin tipo (erp.unclassifiedDocuments).
+  return [...loadSaleInvoices(), ...loadPurchaseInvoices()];
+}
+
+export function loadSaleInvoices() {
+  return readCollection(STORAGE_KEYS.salesInvoices);
+}
+
+export function saveSaleInvoices(documents) {
+  if (!Array.isArray(documents)) {
+    throw new ValidationFailure([
+      {
+        field: 'salesInvoices',
+        code: 'INVALID_FORMAT',
+        message: 'La lista de facturas de venta debe ser un array.',
+      },
+    ]);
+  }
+  writeCollection(STORAGE_KEYS.salesInvoices, documents);
+}
+
+export function loadPurchaseInvoices() {
+  return readCollection(STORAGE_KEYS.purchaseInvoices);
+}
+
+export function savePurchaseInvoices(documents) {
+  if (!Array.isArray(documents)) {
+    throw new ValidationFailure([
+      {
+        field: 'purchaseInvoices',
+        code: 'INVALID_FORMAT',
+        message: 'La lista de facturas de compra debe ser un array.',
+      },
+    ]);
+  }
+  writeCollection(STORAGE_KEYS.purchaseInvoices, documents);
+}
+
+export function loadUnclassifiedDocuments() {
+  return readCollection(STORAGE_KEYS.unclassifiedDocuments);
+}
+
+export function saveUnclassifiedDocuments(documents) {
+  if (!Array.isArray(documents)) {
+    throw new ValidationFailure([
+      {
+        field: 'unclassifiedDocuments',
+        code: 'INVALID_FORMAT',
+        message: 'La lista de documentos no clasificados debe ser un array.',
+      },
+    ]);
+  }
+  writeCollection(STORAGE_KEYS.unclassifiedDocuments, documents);
 }
 
 export function saveDocuments(documents) {
@@ -102,7 +159,88 @@ export function saveDocuments(documents) {
       },
     ]);
   }
-  writeCollection(STORAGE_KEYS.documents, documents);
+  const ventas = [];
+  const compras = [];
+  const sinTipo = [];
+  for (const document of documents) {
+    const tipo = document?.customFields?.tipoFactura;
+    if (tipo === 'venta') ventas.push(document);
+    else if (tipo === 'compra') compras.push(document);
+    else sinTipo.push(document);
+  }
+  saveSaleInvoices(ventas);
+  savePurchaseInvoices(compras);
+  saveUnclassifiedDocuments(sinTipo);
+}
+
+export function migrateLegacyDocuments() {
+  const migrationKey = STORAGE_KEYS.migrationInvoiceSplit;
+  if (typeof localStorage !== 'undefined') {
+    if (localStorage.getItem(migrationKey) === 'done') {
+      return {
+        ok: true,
+        migrated: { sales: 0, purchases: 0, unclassified: 0 },
+        legacyRemoved: false,
+      };
+    }
+  }
+
+  const legacy = readCollection(STORAGE_KEYS.documents);
+  if (legacy.length === 0) {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(STORAGE_KEYS.migrationInvoiceSplit, 'done');
+    }
+    return {
+      ok: true,
+      migrated: { sales: 0, purchases: 0, unclassified: 0 },
+      legacyRemoved: false,
+    };
+  }
+
+  const ventas = [];
+  const compras = [];
+  const sinTipo = [];
+  for (const document of legacy) {
+    const tipo = document?.customFields?.tipoFactura;
+    if (tipo === 'venta') ventas.push(document);
+    else if (tipo === 'compra') compras.push(document);
+    else sinTipo.push(document);
+  }
+
+  const sales = dedupeByDocumentId(ventas);
+  const purchases = dedupeByDocumentId(compras);
+  const unclassified = dedupeByDocumentId(sinTipo);
+
+  saveSaleInvoices(sales);
+  savePurchaseInvoices(purchases);
+  saveUnclassifiedDocuments(unclassified);
+
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem(STORAGE_KEYS.migrationInvoiceSplit, 'done');
+    localStorage.removeItem('erp.documents');
+  }
+
+  return {
+    ok: true,
+    migrated: {
+      sales: sales.length,
+      purchases: purchases.length,
+      unclassified: unclassified.length,
+    },
+    legacyRemoved: true,
+  };
+}
+
+function dedupeByDocumentId(documents) {
+  const seen = new Set();
+  const result = [];
+  for (const document of documents) {
+    const key = document?.document_id ?? document?.id;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(document);
+  }
+  return result;
 }
 
 export function addEntity(entity, config = getConfig()) {
@@ -217,7 +355,15 @@ export function addDocument(document, config = getConfig()) {
   assertValid(
     validateDocument(record, { config, entities, documents: loadDocuments() })
   );
-  saveDocuments([...loadDocuments(), record]);
+  const collection =
+    record.customFields?.tipoFactura === 'compra'
+      ? savePurchaseInvoices
+      : saveSaleInvoices;
+  const current =
+    record.customFields?.tipoFactura === 'compra'
+      ? loadPurchaseInvoices()
+      : loadSaleInvoices();
+  collection([...current, record]);
   applyMovementsForTransition(null, record);
   return record;
 }
@@ -291,7 +437,17 @@ export function updateDocument(id, updates, config = getConfig()) {
 
   const next = [...documents];
   next[index] = merged;
-  saveDocuments(next);
+  const tipoFactura = previous.customFields?.tipoFactura;
+  const collection =
+    tipoFactura === 'compra' ? loadPurchaseInvoices() : loadSaleInvoices();
+  const persisted = collection.map((item) =>
+    item.document_id === merged.document_id ? merged : item
+  );
+  if (tipoFactura === 'compra') {
+    savePurchaseInvoices(persisted);
+  } else {
+    saveSaleInvoices(persisted);
+  }
   applyMovementsForTransition(previous, merged);
   return merged;
 }
@@ -316,27 +472,38 @@ function loadMovements() {
 }
 
 export function deleteDocument(id) {
-  const next = loadDocuments().filter(
+  const sales = loadSaleInvoices().filter(
     (document) => document.document_id !== id && document.id !== id
   );
-  saveDocuments(next);
+  const purchases = loadPurchaseInvoices().filter(
+    (document) => document.document_id !== id && document.id !== id
+  );
+  saveSaleInvoices(sales);
+  savePurchaseInvoices(purchases);
   deleteMovementsForDocument(id);
-  return next;
+  return loadDocuments();
 }
 
 export function deleteDocumentsForEntity(entityId) {
-  const next = loadDocuments().filter(
+  const sales = loadSaleInvoices().filter(
     (document) => document.entity_id !== entityId
   );
-  saveDocuments(next);
+  const purchases = loadPurchaseInvoices().filter(
+    (document) => document.entity_id !== entityId
+  );
+  saveSaleInvoices(sales);
+  savePurchaseInvoices(purchases);
   deleteMovementsForEntity(entityId);
-  return next;
+  return loadDocuments();
 }
 
 export function clearAll() {
   if (typeof localStorage === 'undefined') return;
   localStorage.removeItem(STORAGE_KEYS.entities);
-  localStorage.removeItem(STORAGE_KEYS.documents);
+  localStorage.removeItem(STORAGE_KEYS.salesInvoices);
+  localStorage.removeItem(STORAGE_KEYS.purchaseInvoices);
+  localStorage.removeItem(STORAGE_KEYS.unclassifiedDocuments);
   localStorage.removeItem(STORAGE_KEYS.movements);
   localStorage.removeItem(STORAGE_KEYS.schemaVersion);
+  localStorage.removeItem(STORAGE_KEYS.migrationInvoiceSplit);
 }

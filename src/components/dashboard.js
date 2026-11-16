@@ -1,6 +1,7 @@
 import { loadDocuments, loadEntities } from '../storage.js';
 import { loadMovements } from '../movements.js';
 import { computeDashboardSummary } from '../summary.js';
+import { isGuestSession } from '../session.js';
 
 function setText(id, value) {
   const element = document.getElementById(id);
@@ -12,17 +13,13 @@ export function initDashboard({ config, onAction, onLoadDemoData }) {
   setText('stat-entities-label', config.labels.entities || 'Entidades');
   setText('stat-documents-label', config.labels.documents || 'Documentos');
 
-  const newEntity = document.getElementById('qa-new-entity');
   const manageEntities = document.getElementById('qa-manage-entities');
 
-  if (newEntity)
-    newEntity.textContent = `Nueva ${(config.labels.entity || 'Entidad').toLowerCase()}`;
   if (manageEntities) {
     manageEntities.textContent = `Abrir gestión de ${(config.labels.entities || 'Entidades').toLowerCase()}`;
   }
 
   const bindings = [
-    ['qa-new-entity', 'new-entity'],
     ['qa-new-invoice-sale', 'new-invoice-sale'],
     ['qa-new-invoice-purchase', 'new-invoice-purchase'],
     ['qa-new-payroll', 'new-payroll'],
@@ -42,6 +39,15 @@ export function initDashboard({ config, onAction, onLoadDemoData }) {
   if (loadDemoButton) {
     loadDemoButton.onclick = () => onLoadDemoData && onLoadDemoData();
   }
+}
+
+// Las liquidaciones de sueldo requieren un rol: el invitado no ve el acceso
+// rápido y recibe una explicación de cómo habilitarlo.
+export function setDashboardSession(session) {
+  const payrollAction = document.getElementById('qa-new-payroll');
+  if (payrollAction) payrollAction.hidden = session?.role !== 'administrador';
+  const guestNote = document.getElementById('dashboard-guest-note');
+  if (guestNote) guestNote.hidden = !isGuestSession(session);
 }
 
 export function refreshDashboard({ onDemoAvailable } = {}) {

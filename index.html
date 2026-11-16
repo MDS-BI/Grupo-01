@@ -45,6 +45,32 @@
               Facturas de compra
             </button>
           </div>
+          <button
+            id="nav-payroll-admin"
+            class="nav-item"
+            data-module="payroll-admin"
+          >
+            Liquidaciones de sueldo
+          </button>
+          <button id="nav-access" class="nav-item" data-module="access">
+            Accesos
+          </button>
+          <button
+            id="nav-dev-notifications"
+            class="nav-item"
+            data-module="dev-notifications"
+          >
+            Avisos para el desarrollador
+          </button>
+          <button
+            id="nav-payroll-worker"
+            class="nav-item"
+            data-module="payroll-worker"
+          >
+            Mi liquidación
+          </button>
+          <button id="nav-login" class="nav-item" hidden>Iniciar sesión</button>
+          <button id="nav-logout" class="nav-item" hidden>Cerrar sesión</button>
           <button id="nav-movements" class="nav-item" data-module="movements">
             Movimientos financieros
           </button>
@@ -59,10 +85,56 @@
           </button>
         </aside>
         <main class="content">
+          <section id="view-login" class="view" hidden>
+            <h1 id="login-title">Acceso</h1>
+            <form id="login-form" novalidate>
+              <div class="form-field">
+                <label for="login-role">Rol</label>
+                <select id="login-role" name="role">
+                  <option value="trabajador">Trabajador</option>
+                  <option value="administrador">Administrador</option>
+                </select>
+                <div data-error="role" class="error"></div>
+              </div>
+              <div class="form-field">
+                <label for="login-rut">RUT</label>
+                <input id="login-rut" name="rut" autocomplete="off" />
+                <div data-error="rut" class="error"></div>
+              </div>
+              <div class="form-field">
+                <label for="login-password">Contraseña</label>
+                <input
+                  id="login-password"
+                  name="password"
+                  type="password"
+                  autocomplete="new-password"
+                />
+                <div data-error="password" class="error"></div>
+              </div>
+              <button type="submit" id="login-submit">Ingresar</button>
+              <p id="login-error" class="error" role="alert" hidden></p>
+              <p id="login-hint" role="status">
+                El ingreso es opcional: puedes continuar sin rol para usar la
+                facturación. Solo con acceso de trabajador o administrador se
+                muestran las liquidaciones de sueldo.
+              </p>
+              <p id="login-warning">
+                El control de acceso es una restricción de interfaz sobre datos
+                que viven en el navegador. No es seguridad real, no está cifrada
+                y no debe usarse con datos reales.
+              </p>
+              <button type="button" id="login-guest">
+                Continuar sin iniciar sesión
+              </button>
+              <button type="button" id="login-load-demo" hidden>
+                Cargar datos de demostración
+              </button>
+            </form>
+          </section>
+
           <section id="view-dashboard" class="view">
             <h1 id="dashboard-title">Panel</h1>
             <div class="quick-actions">
-              <button id="qa-new-entity">Nueva entidad</button>
               <button id="qa-new-invoice-sale">Nueva factura de venta</button>
               <button id="qa-new-invoice-purchase">
                 Nueva factura de compra
@@ -76,6 +148,15 @@
               <button id="qa-cashflow">Ver flujo de caja</button>
               <button id="qa-movements">Ver movimientos financieros</button>
             </div>
+            <p
+              id="dashboard-guest-note"
+              class="dashboard-note"
+              role="status"
+              hidden
+            >
+              Estás navegando sin iniciar sesión. Para consultar tu liquidación
+              o editar las liquidaciones de sueldo, usa «Iniciar sesión».
+            </p>
             <h2>Resumen financiero</h2>
             <div class="stats summary-stats">
               <div class="stat-card">
@@ -231,6 +312,7 @@
             hidden
           >
             <h1 id="invoice-purchase-title">Facturas de compra</h1>
+            <div id="invoice-status-notice" role="status"></div>
             <div class="invoice-actions">
               <h2 id="invoice-purchase-form-title" data-form-title>
                 Nueva factura de compra
@@ -266,6 +348,111 @@
               aria-labelledby="invoice-purchase-list-title"
               data-tipo-factura="compra"
             ></div>
+          </section>
+
+          <section id="view-payroll-worker" class="view" hidden>
+            <h1 id="payroll-worker-title">Mi liquidación</h1>
+            <div id="payroll-worker-card">
+              <h2 id="payroll-worker-period">Sin período asignado</h2>
+              <p id="payroll-worker-name"></p>
+              <p id="payroll-worker-rut"></p>
+              <p id="payroll-worker-amount"></p>
+              <p id="payroll-worker-status"></p>
+              <p id="payroll-worker-paid-at"></p>
+            </div>
+            <div id="payroll-worker-empty" hidden>
+              <p>
+                Aún no tienes una liquidación registrada. Pídela al
+                administrador o registra la compra de la que eres parte.
+              </p>
+            </div>
+            <div id="payroll-worker-warning" hidden>
+              <p id="payroll-worker-warning-message"></p>
+            </div>
+          </section>
+
+          <section id="view-payroll-admin" class="view" hidden>
+            <h1 id="payroll-admin-title">Liquidaciones de sueldo</h1>
+            <div class="invoice-controls">
+              <div class="form-field">
+                <label for="payroll-filter-worker"
+                  >Filtrar por trabajador</label
+                >
+                <input
+                  id="payroll-filter-worker"
+                  data-invoice-filter
+                  type="text"
+                />
+              </div>
+              <div class="form-field">
+                <label for="payroll-filter-period">Filtrar por período</label>
+                <input
+                  id="payroll-filter-period"
+                  data-invoice-filter
+                  type="text"
+                  placeholder="AAAA-MM"
+                />
+              </div>
+            </div>
+            <div
+              id="payroll-admin-list"
+              aria-labelledby="payroll-admin-list-title"
+            ></div>
+            <div id="payroll-admin-empty" hidden>
+              <p>No hay liquidaciones registradas.</p>
+            </div>
+            <form id="payroll-form" novalidate>
+              <h2 id="payroll-form-title">Editar liquidación</h2>
+              <div id="payroll-form-fields"></div>
+              <p
+                class="invoice-feedback"
+                role="status"
+                data-invoice-feedback
+              ></p>
+              <div id="payroll-form-errors" class="error" role="alert"></div>
+              <button type="submit">Guardar liquidación</button>
+            </form>
+          </section>
+
+          <section id="view-access" class="view" hidden>
+            <h1 id="access-title">Accesos</h1>
+            <p id="access-empty" hidden>No hay accesos registrados.</p>
+            <form id="access-form" novalidate>
+              <h2 id="access-form-title">Crear acceso</h2>
+              <div class="form-field">
+                <label for="access-role">Rol</label>
+                <select id="access-role" name="role">
+                  <option value="trabajador">Trabajador</option>
+                  <option value="administrador">Administrador</option>
+                </select>
+                <div data-error="role" class="error"></div>
+              </div>
+              <div class="form-field">
+                <label for="access-rut">RUT</label>
+                <input id="access-rut" name="accessId" autocomplete="off" />
+                <div data-error="accessId" class="error"></div>
+              </div>
+              <div class="form-field">
+                <label for="access-entity">Tercero personal</label>
+                <select id="access-entity" name="entityId"></select>
+                <div data-error="entityId" class="error"></div>
+              </div>
+              <div class="form-field">
+                <label for="access-password">Contraseña inicial</label>
+                <input id="access-password" name="password" readonly />
+                <div data-error="password" class="error"></div>
+              </div>
+              <button type="submit" id="access-submit">Crear acceso</button>
+              <div id="access-list"></div>
+            </form>
+          </section>
+
+          <section id="view-dev-notifications" class="view" hidden>
+            <h1 id="dev-notifications-title">Avisos para el desarrollador</h1>
+            <div id="dev-notifications-list"></div>
+            <button type="button" id="dev-notifications-clear">
+              Limpiar avisos
+            </button>
           </section>
 
           <section id="view-search" class="view" hidden>

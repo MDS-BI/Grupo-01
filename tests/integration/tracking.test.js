@@ -7,13 +7,14 @@ import {
   clearAll,
   updateDocument,
 } from '../../src/storage.js';
-import { loadAppMarkup } from '../setup/domFixture.js';
+import { loadAppMarkup, setupAdminSession } from '../setup/domFixture.js';
 import { clearMovements } from '../../src/movements.js';
 
 beforeEach(() => {
   loadAppMarkup();
   clearAll();
   clearMovements();
+  setupAdminSession();
 });
 
 const config = getConfig();

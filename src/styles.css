@@ -282,6 +282,22 @@ select[aria-invalid='true'] {
   display: none;
 }
 
+.dashboard-note,
+.login-hint {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent-color);
+  border-radius: var(--radius);
+  padding: 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.dashboard-note[hidden],
+.login-hint[hidden] {
+  display: none;
+}
+
 .nav-group {
   display: grid;
   gap: 6px;
@@ -467,4 +483,70 @@ select[aria-invalid='true'] {
   form {
     grid-template-columns: 1fr;
   }
+}
+
+/* Acceso y pantallas de seguridad (002) */
+.login-form,
+.access-form {
+  max-width: 460px;
+}
+
+.login-warning {
+  grid-column: 1 / -1;
+  background: var(--bg);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.login-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.payroll-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent-color);
+  border-radius: var(--radius);
+  padding: 18px;
+  max-width: 640px;
+}
+
+.payroll-card h2 {
+  margin-top: 0;
+}
+
+.payroll-card dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  margin: 0;
+}
+
+.payroll-card dt {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.payroll-card dd {
+  margin: 0;
+}
+
+.payroll-warning {
+  max-width: 640px;
+}
+
+.access-list {
+  margin-top: 18px;
+}
+
+.dev-notifications-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
 }

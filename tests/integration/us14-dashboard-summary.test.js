@@ -2,7 +2,7 @@
 import { initApp } from '../../src/app.js';
 import { getConfig } from '../../src/module-config.js';
 import { addDocument, addEntity, updateDocument } from '../../src/storage.js';
-import { loadAppMarkup } from '../setup/domFixture.js';
+import { loadAppMarkup, setupAdminSession } from '../setup/domFixture.js';
 
 const config = getConfig();
 
@@ -64,6 +64,7 @@ function text(id) {
 beforeEach(() => {
   loadAppMarkup();
   localStorage.clear();
+  setupAdminSession();
 });
 
 describe('Panel - resumen financiero y accesos rapidos', () => {
@@ -139,10 +140,10 @@ describe('Panel - resumen financiero y accesos rapidos', () => {
     initApp(config);
 
     const accesos = [
-      ['qa-new-entity', 'entities'],
+      ['qa-manage-entities', 'entities'],
       ['qa-new-invoice-sale', 'invoice-sale'],
       ['qa-new-invoice-purchase', 'invoice-purchase'],
-      ['qa-new-payroll', 'invoice-purchase'],
+      ['qa-new-payroll', 'payroll-admin'],
       ['qa-cashflow', 'cashflow'],
       ['qa-movements', 'movements'],
       ['qa-tracking', 'tracking'],
@@ -153,7 +154,7 @@ describe('Panel - resumen financiero y accesos rapidos', () => {
       expect(document.getElementById(`view-${view}`).hidden).toBe(false);
     }
 
-    document.getElementById('qa-new-entity').click();
+    document.getElementById('qa-manage-entities').click();
     expect(document.getElementById('entity-form')).toBeTruthy();
     document.getElementById('qa-new-invoice-sale').click();
     expect(document.getElementById('invoice-sale-form')).toBeTruthy();

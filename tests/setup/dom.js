@@ -49,6 +49,7 @@ if (!localStorageWorks()) {
 
 beforeEach(() => {
   if (typeof localStorage !== 'undefined') localStorage.clear();
+  if (typeof sessionStorage !== 'undefined') sessionStorage.clear();
   if (typeof document !== 'undefined') {
     document.body.innerHTML = '';
     document.documentElement.removeAttribute('style');

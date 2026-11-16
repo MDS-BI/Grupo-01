@@ -3,12 +3,14 @@ import { initApp } from '../../src/app.js';
 import { userConfig, getConfig } from '../../src/module-config.js';
 import {
   addEntity,
-  loadEntities,
   loadDocuments,
+  loadEntities,
+  loadPurchaseInvoices,
   updateEntity,
 } from '../../src/storage.js';
 import { loadMovements } from '../../src/movements.js';
 import { loadDemoData, hasStoredRecords } from '../../src/demo-data.js';
+import { loadAccessRecords } from '../../src/access-storage.js';
 import { loadAppMarkup } from '../setup/domFixture.js';
 
 beforeEach(() => {
@@ -141,5 +143,49 @@ describe('HU6 - carga de datos de demostración', () => {
     expect(after.customFields.referenciaOtroModulo).toBe(
       entity.customFields.referenciaOtroModulo
     );
+  });
+
+  it('carga accesos de demostración con credenciales documentadas y liquidaciones', () => {
+    const result = loadDemoData(userConfig);
+    expect(result.ok).toBe(true);
+
+    const records = loadAccessRecords();
+    expect(records).toHaveLength(3);
+    expect(
+      records.find((item) => item.accessId === '11111111-1')
+    ).toMatchObject({
+      role: 'administrador',
+      password: '1111',
+    });
+    expect(
+      records.find((item) => item.accessId === '22222222-2')
+    ).toMatchObject({
+      role: 'trabajador',
+      password: '2222',
+    });
+    expect(
+      records.find((item) => item.accessId === '45000000-0')
+    ).toMatchObject({
+      role: 'trabajador',
+      password: '4500',
+    });
+    const personales = loadEntities().filter(
+      (entity) => entity.customFields.tipoTercero === 'personal'
+    );
+    expect(personales).toHaveLength(2);
+    for (const personal of personales) {
+      expect(
+        loadPurchaseInvoices().some(
+          (item) => item.entity_id === personal.entity_id
+        )
+      ).toBe(true);
+    }
+  });
+
+  it('no duplica accesos de demostración al cargar dos veces', () => {
+    loadDemoData(userConfig);
+    const result = loadDemoData(userConfig);
+    expect(result.ok).toBe(false);
+    expect(loadAccessRecords()).toHaveLength(3);
   });
 });

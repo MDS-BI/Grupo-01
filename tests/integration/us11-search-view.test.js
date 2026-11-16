@@ -2,10 +2,11 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { initApp } from '../../src/app.js';
 import { DEFAULT_CONFIG } from '../../src/module-config.js';
 import { addEntity, loadEntities } from '../../src/storage.js';
-import { loadAppMarkup } from '../setup/domFixture.js';
+import { loadAppMarkup, setupAdminSession } from '../setup/domFixture.js';
 
 beforeEach(() => {
   loadAppMarkup();
+  setupAdminSession();
 });
 
 function typeSearch(value) {

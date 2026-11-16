@@ -7,11 +7,12 @@ import {
 } from '../../src/module-config.js';
 import { addDocument, addEntity } from '../../src/storage.js';
 import { loadDemoData } from '../../src/demo-data.js';
-import { loadAppMarkup } from '../setup/domFixture.js';
+import { loadAppMarkup, setupAdminSession } from '../setup/domFixture.js';
 
 beforeEach(() => {
   loadAppMarkup();
   localStorage.clear();
+  setupAdminSession();
 });
 
 describe('US3 - panel de inicio', () => {
@@ -35,7 +36,7 @@ describe('US3 - panel de inicio', () => {
   it('las acciones rápidas navegan a la vista correcta', () => {
     initApp(DEFAULT_CONFIG);
 
-    document.getElementById('qa-new-entity').click();
+    document.getElementById('qa-manage-entities').click();
     expect(document.getElementById('view-entities').hidden).toBe(false);
     expect(document.getElementById('name').value).toBe('');
 

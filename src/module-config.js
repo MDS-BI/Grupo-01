@@ -40,6 +40,11 @@ export const LABEL_KEYS = [
   'documents',
   'dashboard',
   'search',
+  'login',
+  'payrollWorker',
+  'payrollAdmin',
+  'access',
+  'devNotifications',
 ];
 
 export const DEFAULT_CONFIG = Object.freeze({
@@ -51,6 +56,11 @@ export const DEFAULT_CONFIG = Object.freeze({
     documents: 'Documentos',
     dashboard: 'Panel',
     search: 'Buscar',
+    login: 'Acceso',
+    payrollWorker: 'Mi liquidación',
+    payrollAdmin: 'Liquidaciones de sueldo',
+    access: 'Accesos',
+    devNotifications: 'Avisos para el desarrollador',
   }),
   customFields: Object.freeze([]),
   statusLifecycle: null,
@@ -58,6 +68,16 @@ export const DEFAULT_CONFIG = Object.freeze({
 });
 
 export const DEFAULT_ACCENT_COLOR = '#0f62fe';
+
+export const ROLES = Object.freeze(['administrador', 'trabajador']);
+
+export const ACCESS_STORAGE_KEYS = Object.freeze({
+  accessRecords: 'erp.accessRecords',
+  devNotifications: 'erp.devNotifications',
+  session: 'erp.session',
+});
+
+export const ACCESS_SCHEMA_VERSION = '2.0.0';
 
 const COMMON_INVOICE_COLUMNS = [
   ['folio', 'Folio'],
@@ -174,6 +194,30 @@ export const userConfig = {
   theme: {
     accentColor: '#0f62fe',
   },
+  demoAccess: Object.freeze({
+    administrador: Object.freeze({
+      accessId: '11.111.111-1',
+      password: '1111',
+      role: 'administrador',
+      entityId: null,
+    }),
+    trabajadores: Object.freeze([
+      Object.freeze({
+        accessId: '22.222.222-2',
+        password: '2222',
+        role: 'trabajador',
+        entityId: null,
+        personalCode: 'PE-001',
+      }),
+      Object.freeze({
+        accessId: '45000000-0',
+        password: '4500',
+        role: 'trabajador',
+        entityId: null,
+        personalCode: 'PE-002',
+      }),
+    ]),
+  }),
 };
 
 function isPlainObject(value) {
@@ -477,6 +521,7 @@ export function normalizeConfig(raw) {
       customFields,
       statusLifecycle,
       theme: { accentColor },
+      demoAccess: source.demoAccess ?? userConfig.demoAccess,
     },
     errors,
   };

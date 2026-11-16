@@ -193,3 +193,60 @@ If the configuration is invalid (unknown types, bad keys, transitions referencin
 - Data is persisted to `localStorage` under the keys `erp_base_module:entities` and `erp_base_module:documents`.
 - Deleting an entity also deletes its documents (cascade).
 - This project intentionally uses vanilla HTML, CSS, and JavaScript for simplicity.
+
+---
+
+## Control de acceso por RUT y contraseña (funcionalidad 002)
+
+La aplicación abre en una pantalla de acceso con selección de rol (administrador o
+trabajador), RUT y contraseña, pero **el ingreso con rol es opcional**: el botón
+"Continuar sin iniciar sesión" permite entrar como invitado y usar el panel y la
+facturación sin credenciales. Los accesos los crea el administrador y la
+contraseña inicial son siempre los primeros 4 dígitos del cuerpo del RUT. La
+sesión se guarda en `sessionStorage` (`erp.session`): se conserva al recargar la
+pestaña y termina al cerrar sesión, al volver al acceso desde la opción
+"Iniciar sesión" del invitado, o al cerrar la pestaña.
+
+El trabajador solo ve **Mi liquidación**: una única factura de compra vigente de
+su tercero personal, en modo de solo lectura. El administrador ve y edita las
+liquidaciones de todos, administra accesos y consulta los avisos del
+desarrollador. El invitado ve Panel, Terceros, Facturas de venta y compra,
+Movimientos, Seguimiento y Buscar; no ve liquidaciones, accesos ni avisos. Las
+facturas de venta y compra viven en colecciones separadas
+(`erp.salesInvoices` y `erp.purchaseInvoices`) y la migración desde
+`erp.documents` es idempotente.
+
+El acceso rápido "Nueva entidad"/"Nuevo tercero" se eliminó del panel porque
+duplicaba a "Abrir gestión de entidades/terceros", que lleva a la misma vista.
+
+### Datos de demostración
+
+En un navegador sin datos, usar el botón **Cargar datos de demostración** de la
+pantalla de acceso. Las credenciales ficticias son:
+
+| Rol | RUT | Contraseña inicial |
+|---|---|---|
+| Administrador | `11.111.111-1` | `1111` |
+| Trabajador (Ana Pérez Soto) | `22.222.222-2` | `2222` |
+| Trabajador (Bruno Soto Vega) | `45.000.000-0` | `4500` |
+
+> Nota: el RUT del segundo trabajador usa el dígito verificador válido calculado
+> con el algoritmo chileno (`0`) para que la carga de demostración y el login
+> funcionen con el validador existente.
+
+> **Advertencia de seguridad:** el control de acceso es solo una restricción de
+> interfaz sobre datos guardados en el navegador. No hay backend, no hay cifrado
+> y **no se deben usar datos reales**. Los RUT y nombres de la demostración son
+> ficticios.
+
+### Verificación
+
+```bash
+npm run check   # lint + formato + pruebas unitarias y de integración
+```
+
+El comando ejecuta 44 archivos de prueba con 226 pruebas (incluye autenticación,
+roles, aislamiento, separación de facturas, migración, sesión, avisos y
+demostración). Las mejoras de accesibilidad (etiquetas asociadas, `role="alert"`,
+`thead`/`tbody`, estados vacíos y navegación por teclado) y las mediciones de
+rendimiento se registran en `specs/002-payroll-access-control/quickstart.md`.

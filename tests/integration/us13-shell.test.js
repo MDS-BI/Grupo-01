@@ -2,10 +2,11 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { initApp } from '../../src/app.js';
 import { DEFAULT_CONFIG, userConfig } from '../../src/module-config.js';
 import { addEntity } from '../../src/storage.js';
-import { loadAppMarkup } from '../setup/domFixture.js';
+import { loadAppMarkup, setupAdminSession } from '../setup/domFixture.js';
 
 beforeEach(() => {
   loadAppMarkup();
+  setupAdminSession();
 });
 
 describe('US13 - shell persistente', () => {
@@ -90,7 +91,7 @@ describe('US13 - shell persistente', () => {
     );
 
     localStorage.setItem(
-      'erp.documents',
+      'erp.salesInvoices',
       JSON.stringify([
         {
           id: 'd1',
@@ -103,6 +104,12 @@ describe('US13 - shell persistente', () => {
           status: 'Borrador',
           customFields: { tipoFactura: 'venta' },
         },
+      ])
+    );
+
+    localStorage.setItem(
+      'erp.purchaseInvoices',
+      JSON.stringify([
         {
           id: 'd2',
           document_id: 'd2',
@@ -112,7 +119,7 @@ describe('US13 - shell persistente', () => {
           endDate: '2026-01-31',
           totalAmount: 200,
           status: 'Borrador',
-          customFields: { tipoFactura: 'compra' },
+          customFields: { tipoFactura: 'compra', centroCosto: 'Activo' },
         },
       ])
     );

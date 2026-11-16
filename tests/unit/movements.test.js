@@ -206,7 +206,7 @@ describe('movements: regenerable desde erp.documents (contrato)', () => {
 
     clearMovements();
     expect(loadMovements()).toEqual([]);
-    const documents = JSON.parse(localStorage.getItem('erp.documents'));
+    const documents = loadDocuments();
     const movements = rebuildMovements(documents);
     expect(movements).toHaveLength(2);
     expect(movements[0]).toMatchObject({ tipo: 'cargo', monto: 700 });

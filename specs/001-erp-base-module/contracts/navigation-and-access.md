@@ -28,7 +28,6 @@ Notas:
 
 | Acceso | Id | Lleva a |
 |---|---|---|
-| Nuevo tercero | `#qa-new-entity` | Terceros |
 | Nueva factura de venta | `#qa-new-invoice-sale` | Facturas de venta |
 | Nueva factura de compra | `#qa-new-invoice-purchase` | Facturas de compra |
 | Gestión de terceros | `#qa-manage-entities` | Terceros |
@@ -39,10 +38,13 @@ Notas:
 
 ## Reglas de acceso del MVP
 
-- No hay inicio de sesión ni perfiles: cualquier persona que abra la aplicación en ese navegador ve todas las vistas y puede usar todas las acciones.
+- El inicio de sesión por rol es **opcional**. Desde la pantalla de acceso, "Continuar sin iniciar sesión" entra como invitado (`erp.session` con rol `invitado`) y permite usar Panel, Terceros, Facturas de venta y compra, Movimientos, Seguimiento y Buscar. El invitado no ve Liquidaciones de sueldo, Accesos ni Avisos para el desarrollador.
+- Si se inicia sesión como **trabajador**, solo se muestra "Mi liquidación" (`payroll-worker`), con su liquidación vigente en modo de solo lectura.
+- Si se inicia sesión como **administrador**, se muestran las vistas de facturación más Liquidaciones de sueldo (`payroll-admin`), Accesos y Avisos para el desarrollador; puede editar las liquidaciones de todos los trabajadores.
+- El invitado puede volver a la pantalla de acceso con "Iniciar sesión" (`#nav-login`); el usuario autenticado usa "Cerrar sesión" (`#nav-logout`).
 - Los datos viven en `localStorage` del navegador (`erp.entities`, `erp.documents`, `erp.movements`). Cada navegador tiene sus propios datos y no deben usarse datos reales.
-- Las restricciones que sí aplican son de negocio, no de perfil: los movimientos son de solo lectura, una factura Pagada no cambia de estado, el folio y las fechas de emisión son de solo lectura al editar, la venta solo admite clientes y la compra solo proveedores o personal.
-- Futuro: `specs/002-payroll-access-control` propone inicio de sesión por rol (trabajador y administrador). Si el grupo lo integra, este mapa debe sumar una columna "Roles con acceso" y la HU8 debe revisarse. Hoy no aplica.
+- Las restricciones de negocio se mantienen: los movimientos son de solo lectura, una factura Pagada no cambia de estado, el folio y las fechas de emisión son de solo lectura al editar, la venta solo admite clientes y la compra solo proveedores o personal.
+- El botón "Nueva entidad"/"Nuevo tercero" (`#qa-new-entity`) se eliminó del panel porque duplicaba a "Abrir gestión de terceros" (`#qa-manage-entities`), que lleva a la misma vista.
 
 ## Contrato de la guía de uso (HU8)
 

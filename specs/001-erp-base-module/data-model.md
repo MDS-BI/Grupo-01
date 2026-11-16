@@ -299,3 +299,7 @@ erDiagram
 - Modelo de datos ERP base del curso (`ar_invoices`, `ap_invoices`, `customers`, `vendors`).
 - Diapositivas del curso (ModelaciÃ³n de Sistemas, 2026-2): modelos de datos y manejo de riesgos.
 - O'Neil, C. (2016). *Weapons of Math Destruction: How Big Data Increases Inequality and Threatens Democracy*. Crown.
+
+## Nota de supersedencia por 002 (2026-11-16)
+
+El modelo de almacenamiento único de documentos queda supersedido por 002-payroll-access-control: las facturas se separan físicamente en erp.salesInvoices (venta) y erp.purchaseInvoices (compra), con erp.unclassifiedDocuments para documentos legados sin tipo. La liquidación de sueldo no es una entidad nueva: es una proyección de la factura de compra a un tercero personal. Los campos y validaciones base de  01 se mantienen sin cambios.

@@ -18,7 +18,11 @@ import {
   ValidationFailure,
 } from './storage.js';
 import { createShell } from './components/shell.js';
-import { initDashboard, refreshDashboard } from './components/dashboard.js';
+import {
+  initDashboard,
+  refreshDashboard,
+  setDashboardSession,
+} from './components/dashboard.js';
 import {
   focusEntityForm,
   initEntityForm,
@@ -34,6 +38,14 @@ import { renderPurchaseList } from './components/invoice-purchase-list.js';
 import { renderMovementsList } from './components/movements-list.js';
 import { renderTrackingView } from './components/tracking.js';
 import { renderCashflowView } from './components/cashflow.js';
+import { initLogin } from './components/login.js';
+import { initAccessAdmin } from './components/access-admin.js';
+import { renderInvoiceStatusNotice } from './components/invoice-status-notice.js';
+import { refreshPayrollWorker } from './components/payroll-worker.js';
+import { renderPayrollList } from './components/payroll-list.js';
+import { initPayrollForm } from './components/payroll-form.js';
+import { initDevNotifications } from './components/dev-notifications.js';
+import { resolveAdminSettlements } from './payroll.js';
 import { loadMovements } from './movements.js';
 import { loadDemoData } from './demo-data.js';
 import { computeDebtSummary } from './tracking.js';
@@ -42,16 +54,83 @@ import {
   initSearchBar,
   renderSearchResults,
 } from './components/search-bar.js';
+import {
+  loadAccessRecords,
+  appendDevNotification,
+  createAccessRecord,
+} from './access-storage.js';
+import {
+  loadPurchaseInvoices,
+  loadUnclassifiedDocuments,
+  migrateLegacyDocuments,
+} from './storage.js';
+import {
+  isSessionValid,
+  loadSession,
+  clearSession,
+  saveSession,
+  createGuestSession,
+  isGuestSession,
+} from './session.js';
+import { initialPassword } from './auth.js';
 
 const VIEWS = [
+  'login',
   'dashboard',
   'entities',
   ...Object.values(INVOICE_VIEWS).map(({ module }) => module),
+  'payroll-admin',
+  'access',
+  'dev-notifications',
+  'payroll-worker',
   'movements',
   'cashflow',
   'tracking',
   'search',
 ];
+
+const ACCESS_MATRIX = {
+  login: { administrador: true, trabajador: true, invitado: true },
+  dashboard: { administrador: true, trabajador: false, invitado: true },
+  entities: { administrador: true, trabajador: false, invitado: true },
+  'invoice-sale': { administrador: true, trabajador: false, invitado: true },
+  'invoice-purchase': {
+    administrador: true,
+    trabajador: false,
+    invitado: true,
+  },
+  'payroll-admin': { administrador: true, trabajador: false, invitado: false },
+  access: { administrador: true, trabajador: false, invitado: false },
+  'dev-notifications': {
+    administrador: true,
+    trabajador: false,
+    invitado: false,
+  },
+  movements: { administrador: true, trabajador: false, invitado: true },
+  cashflow: { administrador: true, trabajador: false, invitado: true },
+  tracking: { administrador: true, trabajador: false, invitado: true },
+  search: { administrador: true, trabajador: false, invitado: true },
+  'payroll-worker': { administrador: false, trabajador: true, invitado: false },
+};
+
+export function canAccess(view, session) {
+  const allowed = ACCESS_MATRIX[view];
+  if (!allowed) return false;
+  if (session?.role === 'trabajador') return allowed.trabajador === true;
+  if (session?.role === 'administrador') return allowed.administrador === true;
+  if (isGuestSession(session)) return allowed.invitado === true;
+  return view === 'login';
+}
+
+export function resolveRoute(view, session) {
+  if (canAccess(view, session)) return view;
+  if (session?.role === 'trabajador') return 'payroll-worker';
+  if (isGuestSession(session)) return 'dashboard';
+  if (session?.role === 'administrador' && view === 'payroll-worker') {
+    return 'payroll-admin';
+  }
+  return 'login';
+}
 
 const invoiceComponents = {
   venta: { createForm: createSaleForm, renderList: renderSaleList },
@@ -65,6 +144,8 @@ const state = {
   searchTerm: '',
   shell: null,
   invoiceForms: {},
+  session: null,
+  accessAdmin: null,
 };
 
 function byId(id) {
@@ -233,21 +314,189 @@ function updateSearchResults() {
   );
 }
 
+function applySession(session) {
+  state.session = session;
+  state.shell = createShell({
+    config: state.config,
+    session,
+    onNavigate: showModule,
+    onLogout: handleLogout,
+    onLogin: showLogin,
+  });
+}
+
+function showLogin() {
+  if (isGuestSession(state.session)) {
+    clearSession();
+    applySession(null);
+  }
+  showModule('login');
+}
+
+function handleLogout() {
+  if (state.accessDirty || state.payrollDirty) {
+    const confirmed = confirmAction(
+      'Hay cambios sin guardar. ¿Deseas cerrar sesión de todos modos?'
+    );
+    if (!confirmed) return;
+  }
+  clearSession();
+  applySession(null);
+  state.accessDirty = false;
+  state.payrollDirty = false;
+  showModule('login');
+}
+
+function refreshPayrollAdmin() {
+  const entities = loadEntities();
+  const filters = {
+    worker: byId('payroll-filter-worker')?.value || '',
+    period: byId('payroll-filter-period')?.value || '',
+  };
+  const settlements = resolveAdminSettlements({
+    purchaseInvoices: loadPurchaseInvoices(),
+    entities,
+    filters,
+  });
+  const empty = byId('payroll-admin-empty');
+  if (empty) empty.hidden = settlements.length > 0;
+  renderPayrollList(byId('payroll-admin-list'), {
+    settlements,
+    entities,
+    records: loadAccessRecords(),
+    onEdit: editPayrollSettlement,
+    onAssociate: associatePayrollAccess,
+  });
+}
+
+function editPayrollSettlement(id) {
+  const settlement = loadPurchaseInvoices().find(
+    (document) => document.document_id === id
+  );
+  if (!settlement || !payrollForm) return;
+  payrollForm.setDocument(settlement);
+}
+
+function associatePayrollAccess(id) {
+  const settlement = loadPurchaseInvoices().find(
+    (document) => document.document_id === id
+  );
+  const entity = loadEntities().find(
+    (item) => item.entity_id === settlement?.entity_id
+  );
+  if (!entity || entity.customFields?.tipoTercero !== 'personal') return;
+  const records = loadAccessRecords();
+  if (records.some((item) => item.active && item.entityId === entity.entity_id))
+    return;
+  const rut = entity.taxId;
+  try {
+    createAccessRecord(
+      {
+        accessId: rut,
+        role: 'trabajador',
+        entityId: entity.entity_id,
+        password: initialPassword(rut),
+      },
+      { entities: [entity], records }
+    );
+    refreshPayrollAdmin();
+  } catch (error) {
+    if (error instanceof ValidationFailure) {
+      const errors = byId('payroll-form-errors');
+      if (errors)
+        errors.textContent = error.errors.map((item) => item.message).join(' ');
+    }
+  }
+}
+
+function handlePayrollSave(id, values, previous) {
+  const customFields = {
+    ...(previous.customFields || {}),
+    tipoFactura: 'compra',
+  };
+  for (const key of [
+    'periodoLiquidacion',
+    'centroCosto',
+    'montoPagado',
+    'fechaPago',
+  ]) {
+    if (values[key] === '') delete customFields[key];
+    else customFields[key] = values[key];
+  }
+  try {
+    updateDocument(
+      id,
+      {
+        totalAmount: values.totalAmount,
+        status: values.status,
+        startDate: values.startDate,
+        endDate: values.endDate,
+        customFields,
+      },
+      state.config
+    );
+    refreshPayrollAdmin();
+    const feedback = document.querySelector(
+      '#payroll-form [data-invoice-feedback]'
+    );
+    if (feedback) feedback.textContent = 'Cambios guardados.';
+  } catch (error) {
+    if (error instanceof ValidationFailure) {
+      payrollForm?.showErrors(error.errors);
+    } else {
+      throw error;
+    }
+  }
+}
+
 function showModule(name) {
-  if (!VIEWS.includes(name)) return;
-  state.currentModule = name;
+  const target = resolveRoute(name, state.session);
+  if (!VIEWS.includes(target)) return;
+  state.currentModule = target;
   for (const view of VIEWS) {
     const element = byId(`view-${view}`);
-    if (element) element.hidden = view !== name;
+    if (element) element.hidden = view !== target;
   }
-  if (state.shell) state.shell.setActive(name);
+  if (state.shell) state.shell.setActive(target);
 
-  if (name === 'dashboard') refreshDashboard();
-  if (name === 'entities' || name.startsWith('invoice-')) refresh();
-  if (name === 'movements') refreshMovements();
-  if (name === 'cashflow') refreshCashflow();
-  if (name === 'tracking') refreshTracking();
-  if (name === 'search') updateSearchResults();
+  if (target === 'dashboard') {
+    setDashboardSession(state.session);
+    refreshDashboard();
+  }
+  if (target === 'entities' || target.startsWith('invoice-')) refresh();
+  if (target === 'movements') refreshMovements();
+  if (target === 'cashflow') refreshCashflow();
+  if (target === 'tracking') refreshTracking();
+  if (target === 'search') updateSearchResults();
+  if (target === 'payroll-worker') refreshWorkerView();
+  if (target === 'payroll-admin') refreshPayrollAdmin();
+  if (target === 'dev-notifications') devNotifications?.render();
+}
+
+function refreshWorkerView() {
+  const entities = loadEntities();
+  const entity = entities.find(
+    (item) => item?.entity_id === state.session?.entityId
+  );
+  if (!entity || entity.customFields?.tipoTercero !== 'personal') {
+    appendDevNotification({
+      accessId: state.session?.accessId || '',
+      role: state.session?.role || 'desconocido',
+      reason: 'BROKEN_ENTITY_LINK',
+      origin: 'payroll',
+    });
+    clearSession();
+    applySession(null);
+    showModule('login');
+    const loginError = document.getElementById('login-error');
+    if (loginError) {
+      loginError.textContent =
+        'El acceso no tiene un trabajador asociado válido. Contacta al administrador.';
+      loginError.hidden = false;
+    }
+    return null;
+  }
+  return refreshPayrollWorker(state.session);
 }
 
 function confirmAction(message) {
@@ -345,14 +594,11 @@ function handleInvoiceSubmit(tipoFactura, values, editingId) {
 }
 
 function handleQuickAction(action) {
-  if (action === 'new-entity') {
-    showModule('entities');
-    resetEntityForm();
-    focusEntityForm();
+  if (action === 'new-payroll') {
+    showModule('payroll-admin');
   } else if (
     action === 'new-invoice-sale' ||
-    action === 'new-invoice-purchase' ||
-    action === 'new-payroll'
+    action === 'new-invoice-purchase'
   ) {
     const tipoFactura = action === 'new-invoice-sale' ? 'venta' : 'compra';
     const form = state.invoiceForms[tipoFactura];
@@ -397,6 +643,7 @@ function handleLoadDemoData() {
   }
   refresh();
   showModule('dashboard');
+  return result.ok;
 }
 
 function bindManagementControls() {
@@ -442,11 +689,13 @@ export function initApp(rawConfig = userConfig) {
   state.errors = errors;
   state.currentModule = 'dashboard';
   state.searchTerm = '';
+  state.session = null;
+  const migration = migrateLegacyDocuments();
 
   applyTheme(config);
   applyLabels(config);
 
-  state.shell = createShell({ config, onNavigate: showModule });
+  applySession(state.session);
   initDashboard({
     config,
     onAction: handleQuickAction,
@@ -456,13 +705,82 @@ export function initApp(rawConfig = userConfig) {
   initInvoiceForms(config);
   initSearchBar({ config, onSearch: handleSearch });
   bindManagementControls();
+  state.accessAdmin = initAccessAdmin({
+    config,
+    onDirtyChange: (dirty) => {
+      state.accessDirty = dirty;
+    },
+  });
+  payrollForm = initPayrollForm({
+    config,
+    root: byId('view-payroll-admin'),
+    onSave: handlePayrollSave,
+    onDirtyChange: (dirty) => {
+      state.payrollDirty = dirty;
+    },
+  });
+  devNotifications = initDevNotifications();
+  for (const id of ['payroll-filter-worker', 'payroll-filter-period']) {
+    const filter = byId(id);
+    if (filter) filter.addEventListener('input', refreshPayrollAdmin);
+  }
+  initLogin({
+    config,
+    onAuthenticated: (session) => {
+      applySession(session);
+      const target =
+        session?.role === 'trabajador' ? 'payroll-worker' : 'dashboard';
+      showModule(target);
+    },
+    onGuest: () => {
+      const guest = createGuestSession();
+      saveSession(guest);
+      applySession(guest);
+      showModule('dashboard');
+    },
+    onLoadDemoData: () => {
+      if (!handleLoadDemoData()) return;
+      const admin = {
+        accessId: '11111111-1',
+        role: 'administrador',
+        entityId: null,
+        startedAt: new Date().toISOString(),
+      };
+      saveSession(admin);
+      applySession(admin);
+      showModule('dashboard');
+    },
+  });
 
   renderConfigBanner(errors);
+  renderInvoiceStatusNotice(byId('invoice-status-notice'), {
+    migration,
+    unclassifiedCount: loadUnclassifiedDocuments().length,
+  });
   resetEntityForm();
   refresh();
   showModule('dashboard');
+
+  const session = loadSession();
+  const validSession =
+    session &&
+    isSessionValid(session, {
+      records: loadAccessRecords(),
+      entities: loadEntities(),
+    });
+  if (validSession) {
+    applySession(session);
+    showModule(session.role === 'trabajador' ? 'payroll-worker' : 'dashboard');
+  } else {
+    if (session) clearSession();
+    applySession(null);
+    showModule('login');
+  }
 
   return { config, errors };
 }
 
 export { state as appState };
+
+let payrollForm = null;
+let devNotifications = null;
