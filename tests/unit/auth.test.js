@@ -155,7 +155,6 @@ describe('auth: authenticate', () => {
     const options = {
       rut: '22222222-2',
       password: '2222',
-      role: 'trabajador',
       records: [baseAccess],
       entities,
       ...overrides,
@@ -196,13 +195,29 @@ describe('auth: authenticate', () => {
     }
   });
 
-  it('rechaza el rol incompatible sin avisar al desarrollador', () => {
+  it('obtiene el rol registrado aunque el llamador intente indicar otro', () => {
     const result = authenticateAccess({ role: 'administrador' });
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.reason).toBe('ROLE_MISMATCH');
-      expect(result.notifyDeveloper).toBe(false);
-    }
+    expect(result.ok).toBe(true);
+    expect(result.access.role).toBe('trabajador');
+  });
+
+  it('reconoce al administrador con RUT y contraseña sin un rol de entrada', () => {
+    const result = authenticate({
+      rut: '11.111.111-1',
+      password: '1111',
+      records: [
+        {
+          ...baseAccess,
+          accessId: '11111111-1',
+          role: 'administrador',
+          entityId: null,
+          password: '1111',
+        },
+      ],
+      entities,
+    });
+    expect(result.ok).toBe(true);
+    expect(result.access.role).toBe('administrador');
   });
 
   it('rechaza el acceso inactivo y avisa al desarrollador', () => {

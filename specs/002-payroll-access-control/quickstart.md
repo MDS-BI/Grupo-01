@@ -54,13 +54,13 @@ Pruebas nuevas esperadas:
 
 ## 4. Datos de demostración
 
-En un navegador sin datos, la pantalla de acceso ofrece **Cargar datos de demostración**. También se puede cargar desde el panel del administrador si la opción está disponible.
+En un navegador sin datos, seleccionar **Continuar sin iniciar sesión** y luego **Cargar datos de demostración** desde el panel. Usar **Iniciar sesión**, al final del lateral, para volver al acceso y probar las credenciales.
 
 | Rol | RUT | Contraseña inicial | Trabajador asociado |
 |---|---|---|---|
 | Administrador | `11.111.111-1` | `1111` | — |
 | Trabajador | `22.222.222-2` | `2222` | Ana Pérez Soto |
-| Trabajador | `45.000.000-5` | `4500` | Bruno Soto Vega |
+| Trabajador | `45.000.000-0` | `4500` | Bruno Soto Vega |
 
 La demostración incluye además facturas de venta y de compra para comprobar la separación física y visual. Todos los datos son ficticios.
 
@@ -71,25 +71,23 @@ La demostración incluye además facturas de venta y de compra para comprobar la
 ### Escenario 1: login y roles
 
 1. Abrir la aplicación en una pestaña nueva sin sesión.
-2. Verificar que se muestra la pantalla de acceso con selector de rol, RUT, contraseña y advertencia.
-3. Elegir **Administrador**, ingresar `11.111.111-1` / `1111` y entrar.
-4. Verificar que se abre el panel de administración con la navegación completa.
-5. Cerrar sesión.
-6. Elegir **Trabajador**, ingresar `22.222.222-2` / `2222` y entrar.
-7. Verificar que se abre **Mi liquidación** y que no hay navegación administrativa.
+2. Verificar que el login muestra la tarjeta centrada con RUT y contraseña, Ingresar y Continuar sin iniciar sesión, con el lateral oculto.
+3. Cargar los datos de demostración desde el panel de invitado y volver al acceso.
+4. Ingresar `11.111.111-1` / `1111` y comprobar el Panel y «Rol: Administrador» en la cabecera.
+5. Comprobar que «Cerrar sesión» es la última opción del lateral y utilizarla.
+6. Ingresar `22.222.222-2` / `2222` y comprobar Mi liquidación y «Rol: Trabajador».
+7. Cerrar sesión y continuar como invitado; comprobar «Rol: Invitado» y «Iniciar sesión» al final del lateral.
 
 **Resultado esperado**: cada rol llega a su vista y no se muestran datos antes de autenticar.
 
-### Escenario 2: credenciales inválidas y rol incompatible
+### Escenario 2: credenciales inválidas y rol registrado
 
-1. En el login, ingresar un RUT inexistente con cualquier contraseña.
-2. Verificar el mensaje claro y que no se muestran datos.
-3. Ingresar `22.222.222-2` / `2222` eligiendo **Administrador**.
-4. Verificar el mensaje de rol incompatible.
-5. Ingresar `22.222.222-2` con contraseña incorrecta.
-6. Verificar el mensaje de credenciales incorrectas.
+1. En el login, ingresar un RUT inexistente con cualquier contraseña y verificar el rechazo.
+2. Ingresar `22.222.222-2` con contraseña incorrecta y verificar el mensaje junto al formulario.
+3. Ingresar `22.222.222-2` / `2222` y verificar que el sistema reconoce Trabajador sin un selector.
+4. Repetir con el administrador y comprobar su rol en la cabecera.
 
-**Resultado esperado**: los tres intentos se rechazan sin exponer datos. El RUT inexistente y el inactivo generan una notificación para el desarrollador; la contraseña incorrecta y el rol incompatible no.
+**Resultado esperado**: las credenciales inválidas se rechazan; el RUT determina el rol del acceso registrado después de validar la contraseña. Las incidencias mantienen su registro local y la contraseña incorrecta no genera aviso al desarrollador.
 
 ### Escenario 3: administración de accesos
 
@@ -110,7 +108,7 @@ La demostración incluye además facturas de venta y de compra para comprobar la
 1. Entrar como `22.222.222-2` / `2222`.
 2. Verificar que se muestra una sola liquidación: período, monto, estado y fecha de pago.
 3. Verificar que no hay botones de edición, eliminación ni creación.
-4. Cerrar sesión, entrar como `45.000.000-5` / `4500` y verificar que se muestra una liquidación distinta.
+4. Cerrar sesión, entrar como `45.000.000-0` / `4500` y verificar que se muestra una liquidación distinta.
 5. Verificar que no se ven datos del otro trabajador.
 
 **Resultado esperado**: cada trabajador ve solo su liquidación vigente, en modo solo lectura.
@@ -189,7 +187,7 @@ La demostración incluye además facturas de venta y de compra para comprobar la
 | Síntoma | Causa probable | Solución |
 |---|---|---|
 | No hay accesos y no se puede entrar | Navegador sin datos | Cargar la demostración desde el login. |
-| El login dice "rol incompatible" | Se eligió un rol distinto al registrado | Elegir el rol correcto. |
+| El rol de la cabecera no es el esperado | El RUT pertenece a otro acceso registrado | Revisar el RUT usado y el rol asignado desde Accesos. |
 | El trabajador no ve su liquidación | No hay factura de compra a su tercero personal o el acceso no está vinculado | Revisar la liquidación en la vista del administrador y el tercero del acceso. |
 | La sesión se pierde al recargar | `sessionStorage` no disponible o sesión inválida | Verificar que el navegador permita almacenamiento de sesión y que el acceso siga activo. |
 | No aparecen facturas después de actualizar | Migración fallida | Revisar `erp.documents` y `erp.migration.invoiceSplit`; el aviso del administrador indica el problema. |
@@ -203,40 +201,51 @@ La demostración incluye además facturas de venta y de compra para comprobar la
 - Entidades y campos: `data-model.md`.
 - Decisiones de diseño: `research.md`.
 
-## 9. Validaci�n de accesibilidad, rendimiento y demostraci�n
+## 9. Validación de accesibilidad, rendimiento y demostración
 
 ### Accesibilidad (T069)
 
 - Los mensajes de error de acceso, formularios y liquidaciones usan `role="alert"`.
 - Los campos de los formularios tienen `label` asociada por `for`/`htmlFor`.
-- Las tablas de liquidaciones, avisos y facturas usan `thead`/`tbody` y encabezados expl�citos.
-- Los estados vac�os se representan con elementos de texto claro (`*-empty`).
-- La navegaci�n usa botones enfocables; el bot�n de cierre de sesi�n est� oculto sin sesi�n.
+- Las tablas de liquidaciones, avisos y facturas usan `thead`/`tbody` y encabezados explícitos.
+- Los estados vacíos se representan con elementos de texto claro (`*-empty`).
+- La navegación usa botones enfocables; el botón de cierre de sesión está oculto sin sesión.
 
 ### Rendimiento (T070)
 
-Medici�n con la suite automatizada (`npm run check`, jsdom) sobre los vol�menes del MVP:
-la pantalla de acceso se renderiza en el arranque en menos de 1 s; la autenticaci�n
+Medición con la suite automatizada (`npm run check`, jsdom) sobre los volúmenes del MVP:
+la pantalla de acceso se renderiza en el arranque en menos de 1 s; la autenticación
 y `resolveWorkerSettlement` responden en menos de 100 ms con decenas de accesos y
 cientos de facturas; los listados se renderizan en menos de 200 ms. Todo el acceso
-a datos es local y s�ncrono, sin viajes de red. No se observaron cuellos de botella
+a datos es local y síncrono, sin viajes de red. No se observaron cuellos de botella
 que justifiquen optimizaciones adicionales en este alcance.
 
 ### Escenarios manuales (T072)
 
-Los nueve escenarios de la secci�n 5 se cubren con pruebas de integraci�n
-equivalentes sobre DOM simulado (Vitest + jsdom): acceso por rol y sesi�n
-(`login-roles.test.js`), credenciales inv�lidas y avisos (`dev-notifications.test.js`),
-administraci�n de accesos (`access-admin.test.js`), vista del trabajador
-(`payroll-worker.test.js`), edici�n del administrador (`payroll-admin.test.js`),
-ciclo de sesi�n (`session-lifecycle.test.js`), separaci�n y migraci�n de facturas
-(`invoice-separation.test.js`, `invoice-migration.test.js`) y demostraci�n
-(`demo-data.test.js`). Resultado: todos pasan con `npm run check`.
+Los nueve escenarios de la sección 5 se cubren con pruebas de integración
+equivalentes sobre DOM simulado (Vitest + jsdom): acceso por rol y sesión
+(`login-roles.test.js`), credenciales inválidas y avisos (`dev-notifications.test.js`),
+administración de accesos (`access-admin.test.js`), vista del trabajador
+(`payroll-worker.test.js`), edición del administrador (`payroll-admin.test.js`),
+ciclo de sesión (`session-lifecycle.test.js`), separación y migración de facturas
+(`invoice-separation.test.js`, `invoice-migration.test.js`) y demostración
+(`demo-data.test.js`). Las pruebas de estos recorridos funcionales pasan; el resultado completo de la suite se registra en la revisión de HU1 al final de este documento.
 
 ### Datos ficticios (T073)
 
-La demostraci�n usa �nicamente RUT, nombres y montos ficticios definidos en
+La demostración usa únicamente RUT, nombres y montos ficticios definidos en
 `src/module-config.js` y `src/demo-data.js`. La advertencia de que el control es solo
 de interfaz, que los datos viven en el navegador y que no se usen datos reales
-aparece en la pantalla de acceso, en Mi liquidaci�n, en Accesos, en el aviso de
+aparece en la pantalla de acceso, en Mi liquidación, en Accesos, en el aviso de
 facturas y en el README.
+
+## Revisión de HU1 del 2026-11-17
+
+Se verificaron la detección del rol por RUT, la cabecera por sesión, la última acción del lateral, los rechazos de acceso, la recarga, el cierre de sesión y la carga de demostración desde invitado con las tres credenciales documentadas.
+
+- `npm run build` completó correctamente.
+- `npm run check` pasó lint y formato. La suite obtuvo 236 pruebas aprobadas de 237 en 45 archivos.
+- La única falla fue `tests/integration/performance.test.js`, renderizado de 500 terceros en 135,83 ms frente al umbral de 100 ms. Esta prueba ya fallaba en la revisión anterior de `main`; el cambio de HU1 conserva el código y el umbral de terceros.
+- ESLint conserva las cinco advertencias previas por variables sin uso.
+- La validación funcional se ejecutó en Vitest/jsdom. Chromium no pudo iniciar porque el entorno rechazó la creación de su socket, por lo que la revisión visual de escritorio y móvil queda pendiente.
+- Para la revisión visual, abrir con `npm run dev`, entrar como invitado, cargar los datos desde el Panel y volver al acceso. Probar administrador y ambos trabajadores, y comprobar que el lateral se oculta al salir y el rol de la cabecera se actualiza.

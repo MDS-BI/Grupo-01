@@ -28,7 +28,7 @@
 
 - [X] T001 [P] Agregar en `src/module-config.js` las constantes de roles (`ROLES`, `administrador`, `trabajador`), etiquetas de las vistas nuevas, claves de almacenamiento de accesos/sesión y las credenciales ficticias de demostración (`DEMO_ACCESS`).
 - [X] T002 [P] Agregar en `index.html` los contenedores vacíos y ocultos `#view-login`, `#view-payroll-worker`, `#view-payroll-admin`, `#view-access`, `#view-dev-notifications`, `#view-invoice-sale` y `#view-invoice-purchase`, y sus botones de navegación; conservar temporalmente `#view-documents` hasta completar US5.
-- [X] T003 [P] Agregar en `src/styles.css` los estilos de pantalla de acceso, selector de rol, tarjeta de liquidación, tablas de accesos/avisos, estados vacíos y clases de separación visual `invoice-view--sale` / `invoice-view--purchase`.
+- [X] T003 [P] Agregar en `src/styles.css` los estilos de pantalla de acceso, tarjeta de liquidación, tablas de accesos/avisos, estados vacíos y clases de separación visual `invoice-view--sale` / `invoice-view--purchase`.
 - [X] T004 [P] Extender `tests/setup/dom.js` para limpiar también `sessionStorage` y las marcas `erp.migration.invoiceSplit` y `erp.schemaVersion` entre pruebas.
 
 ---
@@ -43,7 +43,7 @@
 
 ### Pruebas fundacionales
 
-- [X] T005 [P] Crear `tests/unit/auth.test.js` con normalización de RUT (puntos, guion, K minúscula, espacios), derivación de contraseña inicial, RUT inválido, no registrado, duplicado, inactivo, vínculo roto, contraseña incorrecta y rol incompatible.
+- [X] T005 [P] Crear `tests/unit/auth.test.js` con normalización de RUT (puntos, guion, K minúscula, espacios), derivación de contraseña inicial, RUT inválido, no registrado, duplicado, inactivo, vínculo roto, contraseña incorrecta y reconocimiento automático del rol registrado.
 - [X] T006 [P] Crear `tests/unit/session.test.js` con guardado/lectura/limpieza en `sessionStorage`, sesión inválida por acceso inactivo, por cambio de rol y por `entityId` roto.
 - [X] T007 [P] Crear `tests/unit/access-storage.test.js` con creación de accesos de trabajador y administrador, contraseña inicial, RUT duplicado, tercero ya vinculado, desactivación, reactivación, restablecimiento y protección del último administrador.
 - [X] T008 [P] Crear `tests/unit/invoice-storage-separation.test.js` con escritura en la colección correcta, lecturas sin mezcla, actualización sin cambio de colección, eliminación y `loadDocuments()` como unión sin no clasificados; incluir el caso de mismo folio permitido entre venta y compra.
@@ -54,7 +54,7 @@
 - [X] T010 Actualizar `src/storage.js`: agregar `STORAGE_KEYS.salesInvoices`, `purchaseInvoices`, `unclassifiedDocuments`, `accessRecords`, `devNotifications`, `migration.invoiceSplit`; elevar `SCHEMA_VERSION` a `2.0.0` y crear los helpers `loadSaleInvoices`, `saveSaleInvoices`, `loadPurchaseInvoices`, `savePurchaseInvoices`, `loadUnclassifiedDocuments` y `saveUnclassifiedDocuments`.
 - [X] T011 Implementar `migrateLegacyDocuments()` en `src/storage.js`: separar `erp.documents` por `customFields.tipoFactura`, enviar los documentos sin tipo a `erp.unclassifiedDocuments`, evitar duplicados por `document_id`, verificar el total migrado, conservar la colección legada si falla y marcar `erp.migration.invoiceSplit = 'done'`.
 - [X] T012 Redirigir en `src/storage.js` `addDocument`, `updateDocument`, `deleteDocument`, `deleteDocumentsForEntity`, `saveDocuments` y `clearAll` a las colecciones separadas, manteniendo `loadDocuments()` como vista unificada de solo lectura (venta + compra, sin no clasificados), conservando la limpieza de movimientos y rechazando tipos distintos de `venta`/`compra`.
-- [X] T013 [P] Crear `src/auth.js` con `normalizeRut(input)`, `initialPassword(rut)`, `validateAccessRecord(record, { entities, existing })` y `authenticate({ rut, password, role, records, entities })`, reutilizando `isValidRutChileno` de `src/validation.js`.
+- [X] T013 [P] Crear `src/auth.js` con `normalizeRut(input)`, `initialPassword(rut)`, `validateAccessRecord(record, { entities, existing })` y `authenticate({ rut, password, records, entities })`, reutilizando `isValidRutChileno` de `src/validation.js`.
 - [X] T014 [P] Crear `src/session.js` con `loadSession`, `saveSession`, `clearSession` e `isSessionValid(session, { records, entities })`, usando `sessionStorage` bajo `erp.session` y degradando a memoria si no está disponible.
 - [X] T015 [P] Crear `src/access-storage.js` con `loadAccessRecords`, `saveAccessRecords`, `createAccessRecord`, `updateAccessRecord`, `deactivateAccessRecord`, `reactivateAccessRecord`, `resetPassword`, `countActiveAdmins`, `loadDevNotifications`, `appendDevNotification` y `clearDevNotifications`; usar `generateId` de `src/utils.js` para las notificaciones y `accessId` canónico como clave de acceso; emitir `console.error` al registrar una notificación.
 - [X] T016 Agregar en `src/app.js` `canAccess(view, session)` y `resolveRoute(view, session)` con la matriz de `contracts/payroll-views.md`, y aplicar la guarda al inicio de `showModule` redirigiendo a la vista permitida con un mensaje.
@@ -65,23 +65,23 @@
 
 ---
 
-## Phase 3: User Story 1 - Iniciar sesión con rol, RUT y contraseña (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 - Acceder con RUT y contraseña o como invitado (Priority: P1) 🎯 MVP
 
-**Goal**: pantalla de acceso con selección de rol, RUT y contraseña que lleva a la vista correcta y conserva la sesión al recargar.
+**Goal**: tarjeta centrada con RUT y contraseña, rol detectado desde el acceso, entrada como invitado, rol en la cabecera y acción de sesión al final del lateral.
 
-**Independent Test**: con un acceso de administrador y otro de trabajador registrados, elegir cada rol e ingresar credenciales correctas lleva a vistas distintas; credenciales incorrectas o rol incompatible no muestran datos.
+**Independent Test**: con un acceso de administrador y otro de trabajador registrados, ingresar las credenciales correctas lleva a la vista del rol registrado; el modo invitado conserva sus funciones y las credenciales incorrectas se rechazan.
 
 ### Pruebas de User Story 1
 
-- [X] T019 [P] [US1] Crear `tests/integration/login-roles.test.js` que cubra los siete escenarios de aceptación de US1, incluida la recuperación de sesión al recargar.
+- [X] T019 [P] [US1] Crear `tests/integration/login-roles.test.js` que cubra los escenarios revisados de US1, incluida la recuperación de sesión al recargar.
 
 ### Implementación de User Story 1
 
-- [X] T020 [P] [US1] Crear `src/components/login.js` con el formulario de acceso (selector de rol, RUT, contraseña, mensaje `role="alert"`, advertencia de seguridad y botón de demostración condicional).
-- [X] T021 [US1] Reemplazar el contenido de `#view-login` en `index.html` con el marcado de `src/components/login.js` (`login-role`, `login-rut`, `login-password`, `login-submit`, `login-error`, `login-warning`, `login-load-demo`).
+- [X] T020 [P] [US1] Crear `src/components/login.js` con el formulario de acceso (RUT, contraseña, Ingresar, Continuar sin iniciar sesión, mensaje `role="alert"` y aviso académico al pie).
+- [X] T021 [US1] Reemplazar el contenido de `#view-login` en `index.html` con el marcado de `src/components/login.js` (`login-rut`, `login-password`, `login-submit`, `login-guest`, `login-error`, `login-warning`, `login-no-accesses`).
 - [X] T022 [US1] Integrar el login en `src/app.js`: al iniciar sin sesión válida ocultar el espacio de trabajo y mostrar `#view-login`; al enviar, llamar a `authenticate`, guardar la sesión con `saveSession` y navegar con `resolveRoute`.
 - [X] T023 [US1] Implementar en `src/app.js` la recuperación de sesión al recargar con `loadSession` + `isSessionValid`, y descartar la sesión cuando el acceso ya no existe, está inactivo o cambió de rol.
-- [X] T024 [US1] Mostrar en `src/components/login.js` los mensajes diferenciados para credenciales incorrectas, rol incompatible, acceso inactivo, RUT inválido, RUT no registrado y vínculo roto, sin revelar si el RUT existe cuando la causa es la contraseña.
+- [X] T024 [US1] Mostrar en `src/components/login.js` los mensajes diferenciados para credenciales incorrectas, acceso inactivo, RUT inválido, RUT no registrado y vínculo roto, sin revelar si el RUT existe cuando la causa es la contraseña.
 
 **Checkpoint**: US1 funciona sola y es la base de autenticación para el resto.
 
@@ -192,7 +192,7 @@
 ### Pruebas de User Story 6
 
 - [X] T057 [P] [US6] Crear `tests/integration/session-lifecycle.test.js` con recarga que conserva la sesión, cierre de sesión que la elimina, cierre de pestaña simulado que la descarta y confirmación por cambios sin guardar.
-- [X] T058 [P] [US6] Crear `tests/integration/dev-notifications.test.js` con registro de RUT inválido, no registrado, inactivo, duplicado y vínculo roto, ausencia de registro por contraseña incorrecta o rol incompatible, emisión de `console.error`, panel solo para administrador y limpieza con confirmación.
+- [X] T058 [P] [US6] Crear `tests/integration/dev-notifications.test.js` con registro de RUT inválido, no registrado, inactivo, duplicado y vínculo roto, ausencia de registro por contraseña incorrecta, emisión de `console.error`, panel solo para administrador y limpieza con confirmación.
 - [X] T059 [P] [US6] Extender `tests/integration/demo-data.test.js` para verificar un administrador, dos trabajadores, terceros personales, liquidaciones, credenciales documentadas y carga idempotente sin duplicados.
 
 ### Implementación de User Story 6
@@ -330,3 +330,12 @@ Task: "T036 Crear src/components/invoice-status-notice.js"
 - Confirmar en cada checkpoint que un trabajador no puede ver datos ajenos ni vistas administrativas.
 - Evitar tareas vagas, conflictos sobre el mismo archivo y dependencias que rompan la independencia de las historias.
 
+
+
+## Revisión de HU1 del 2026-11-17
+
+- [X] T074 [US1] Adaptar `src/auth.js` y sus pruebas para reconocer el rol del acceso registrado a partir de RUT y contraseña, conservando los rechazos y notificaciones existentes.
+- [X] T075 [US1] Rediseñar `src/components/login.js`, `index.html` y `src/styles.css` con tarjeta centrada, dos campos, dos acciones, aviso académico y lateral oculto sin columna reservada.
+- [X] T076 [US1] Mostrar el rol en la cabecera y colocar `nav-login` / `nav-logout` al final del lateral; conservar destinos, funciones y permisos por rol en `src/components/shell.js` y `src/app.js`.
+- [X] T077 [US1] Conservar la carga de demostración en el panel de invitado, documentar sus credenciales y actualizar los contratos e instrucciones de uso.
+- [X] T078 [US1] Ejecutar pruebas de acceso y sesión, verificaciones completas y build; registrar cualquier limitación de verificación visual.

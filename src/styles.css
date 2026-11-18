@@ -550,3 +550,164 @@ select[aria-invalid='true'] {
   gap: 10px;
   margin-top: 16px;
 }
+
+.sidebar[hidden],
+.nav-group[hidden],
+.session-role[hidden],
+.login-view[hidden] {
+  display: none;
+}
+
+.session-role {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.sidebar-session {
+  display: grid;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.login-screen .workspace {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.login-screen .content {
+  display: grid;
+  padding: 32px 20px;
+}
+
+.login-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  min-height: 100%;
+}
+
+#login-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: min(100%, 440px);
+  margin: auto 0 0;
+  padding: 32px;
+  gap: 22px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgb(27 36 48 / 8%);
+}
+
+#login-title {
+  margin: 0 0 8px;
+  font-size: clamp(1.7rem, 4vw, 2rem);
+  line-height: 1.2;
+}
+
+#login-form label {
+  color: var(--text);
+  font-size: 1rem;
+}
+
+#login-form input,
+#login-form button {
+  width: 100%;
+  min-height: 48px;
+}
+
+#login-form input {
+  min-width: 0;
+  padding: 12px 14px;
+}
+
+#login-form button {
+  font-weight: 600;
+}
+
+#login-guest {
+  border-color: #8e9bad;
+}
+
+#login-error {
+  margin: 0;
+  min-height: 0;
+  font-size: 0.9rem;
+}
+
+#login-no-accesses {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+  font-size: 0.85rem;
+}
+
+.login-footer {
+  margin-top: auto;
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.login-footer p {
+  margin: 0;
+}
+
+.login-footer #login-warning {
+  margin-top: 6px;
+  font-size: 0.75rem;
+}
+
+#login-form :is(input, button):focus-visible,
+.sidebar-session button:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    height: auto;
+    min-height: var(--topbar-height);
+    flex-wrap: wrap;
+    padding: 12px 16px;
+  }
+
+  .brand {
+    min-width: 0;
+    font-size: 1rem;
+  }
+
+  .brand-logo {
+    flex-shrink: 0;
+  }
+
+  .session-role {
+    margin-left: 50px;
+  }
+
+  .sidebar .nav-group {
+    order: 0;
+  }
+
+  .sidebar-session {
+    flex: 1 0 100%;
+    margin-top: 8px;
+  }
+
+  .login-screen .content {
+    padding: 24px 16px;
+  }
+
+  .login-view {
+    gap: 32px;
+  }
+
+  #login-form {
+    padding: 24px;
+  }
+}

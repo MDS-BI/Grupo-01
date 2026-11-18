@@ -1,4 +1,4 @@
-﻿import { INVOICE_VIEWS } from '../module-config.js';
+import { INVOICE_VIEWS } from '../module-config.js';
 import { isGuestSession } from '../session.js';
 import { monogram } from '../utils.js';
 
@@ -79,7 +79,6 @@ function navLabel(config, module) {
   if (module === 'tracking') return 'Seguimiento';
   if (module === 'payroll-worker')
     return labels.payrollWorker || 'Mi liquidación';
-  if (module === 'movements') return 'Movimientos financieros';
   return labels.search || 'Buscar';
 }
 
@@ -103,12 +102,26 @@ export function createShell({
         ? GUEST_MODULES
         : ADMIN_MODULES;
 
-  if (session) {
-    for (const button of document.querySelectorAll(
-      '.sidebar .nav-item[data-module]'
-    )) {
-      button.hidden = !modules.includes(button.dataset.module);
-    }
+  for (const button of document.querySelectorAll(
+    '.sidebar .nav-item[data-module]'
+  )) {
+    button.hidden = !session || !modules.includes(button.dataset.module);
+  }
+  const invoiceGroup = document.getElementById('nav-invoices-group');
+  if (invoiceGroup) {
+    invoiceGroup.hidden =
+      !session || !modules.some((module) => INVOICE_MODULES.includes(module));
+  }
+
+  const roleLabel = document.getElementById('session-role');
+  if (roleLabel) {
+    const roleNames = {
+      administrador: 'Administrador',
+      trabajador: 'Trabajador',
+      invitado: 'Invitado',
+    };
+    roleLabel.textContent = session ? `Rol: ${roleNames[session.role]}` : '';
+    roleLabel.hidden = !session;
   }
 
   const buttons = modules

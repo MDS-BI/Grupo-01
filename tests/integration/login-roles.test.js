@@ -45,11 +45,9 @@ function createWorkerAccess(existing = []) {
   );
 }
 
-function login({ role, rut, password }) {
-  const roleInput = document.getElementById('login-role');
+function login({ rut, password }) {
   const rutInput = document.getElementById('login-rut');
   const passwordInput = document.getElementById('login-password');
-  if (roleInput) roleInput.value = role;
   if (rutInput) rutInput.value = rut;
   if (passwordInput) passwordInput.value = password;
   submit('login-form');
@@ -71,22 +69,26 @@ describe('US1 - inicio de sesión con RUT y contraseña', () => {
     expect(document.getElementById('view-login').hidden).toBe(false);
     expect(document.getElementById('view-dashboard').hidden).toBe(true);
 
-    login({ role: 'administrador', rut: '11111111-1', password: '1111' });
+    login({ rut: '11111111-1', password: '1111' });
     expect(document.getElementById('view-dashboard').hidden).toBe(false);
     expect(document.getElementById('nav-payroll-admin')).not.toBeNull();
 
     clearSession();
-    login({ role: 'trabajador', rut: '22222222-2', password: '2222' });
+    login({ rut: '22222222-2', password: '2222' });
     expect(document.getElementById('view-payroll-worker').hidden).toBe(false);
     expect(document.getElementById('view-dashboard').hidden).toBe(true);
     expect(document.getElementById('nav-payroll-worker')).not.toBeNull();
+    expect(document.getElementById('session-role').textContent).toBe(
+      'Rol: Trabajador'
+    );
+    expect(document.getElementById('nav-invoices-group').hidden).toBe(true);
   });
 
   it('rechaza credenciales incorrectas sin exponer datos ni notificar', () => {
     createWorkerAccess();
     initApp(userConfig);
 
-    login({ role: 'trabajador', rut: '22222222-2', password: '9999' });
+    login({ rut: '22222222-2', password: '9999' });
     expect(document.getElementById('view-login').hidden).toBe(false);
     expect(document.getElementById('login-error').hidden).toBe(false);
     expect(document.getElementById('login-error').textContent).toContain(
@@ -101,7 +103,7 @@ describe('US1 - inicio de sesión con RUT y contraseña', () => {
     createWorkerAccess();
     initApp(userConfig);
 
-    login({ role: 'trabajador', rut: '12345678-1', password: '1234' });
+    login({ rut: '12345678-1', password: '1234' });
     expect(document.getElementById('view-login').hidden).toBe(false);
     expect(loadDevNotifications()).toHaveLength(1);
     expect(loadDevNotifications()[0]).toMatchObject({
@@ -115,7 +117,7 @@ describe('US1 - inicio de sesión con RUT y contraseña', () => {
     createWorkerAccess();
     initApp(userConfig);
 
-    login({ role: 'trabajador', rut: '12121212-9', password: '1234' });
+    login({ rut: '12121212-9', password: '1234' });
     expect(document.getElementById('view-login').hidden).toBe(false);
     expect(loadDevNotifications()).toHaveLength(1);
     expect(loadDevNotifications()[0]).toMatchObject({
@@ -130,7 +132,7 @@ describe('US1 - inicio de sesión con RUT y contraseña', () => {
     deactivateAccessRecord(access.accessId, { records: loadAccessRecords() });
     initApp(userConfig);
 
-    login({ role: 'trabajador', rut: access.accessId, password: '2222' });
+    login({ rut: access.accessId, password: '2222' });
     expect(document.getElementById('view-login').hidden).toBe(false);
     expect(loadDevNotifications()).toHaveLength(1);
     expect(loadDevNotifications()[0]).toMatchObject({
@@ -155,7 +157,7 @@ describe('US1 - inicio de sesión con RUT y contraseña', () => {
     ]);
     initApp(userConfig);
 
-    login({ role: 'trabajador', rut: '22222222-2', password: '2222' });
+    login({ rut: '22222222-2', password: '2222' });
     expect(document.getElementById('view-login').hidden).toBe(false);
     expect(loadDevNotifications()).toHaveLength(1);
     expect(loadDevNotifications()[0]).toMatchObject({
@@ -165,16 +167,65 @@ describe('US1 - inicio de sesión con RUT y contraseña', () => {
     });
   });
 
-  it('rechaza el rol incompatible sin notificar al desarrollador', () => {
+  it('usa el rol del RUT aunque se agregue un campo de rol al formulario', () => {
     createWorkerAccess();
     initApp(userConfig);
-
-    login({ role: 'administrador', rut: '22222222-2', password: '2222' });
-    expect(document.getElementById('view-login').hidden).toBe(false);
-    expect(document.getElementById('login-error').textContent).toContain(
-      'RUT o contraseña incorrectos'
+    const injected = document.createElement('input');
+    injected.id = 'login-role';
+    injected.value = 'administrador';
+    document.getElementById('login-form').append(injected);
+    login({ rut: '22222222-2', password: '2222' });
+    expect(appState.session.role).toBe('trabajador');
+    expect(document.getElementById('session-role').textContent).toBe(
+      'Rol: Trabajador'
     );
+    expect(document.getElementById('view-payroll-worker').hidden).toBe(false);
     expect(loadDevNotifications()).toHaveLength(0);
+  });
+
+  it('muestra solo dos campos y dos acciones en el acceso y oculta el lateral', () => {
+    initApp(userConfig);
+    expect(document.getElementById('login-role')).toBeNull();
+    const form = document.getElementById('login-form');
+    expect(
+      Array.from(form.querySelectorAll('input'), (input) => input.id)
+    ).toEqual(['login-rut', 'login-password']);
+    expect(
+      Array.from(form.querySelectorAll('button'), (button) => button.id)
+    ).toEqual(['login-submit', 'login-guest']);
+    expect(document.getElementById('sidebar').hidden).toBe(true);
+    expect(
+      document.getElementById('app').classList.contains('login-screen')
+    ).toBe(true);
+    expect(document.getElementById('session-role').hidden).toBe(true);
+    expect(document.querySelector('#view-login h1').textContent).toBe(
+      'Ingresar al ERP'
+    );
+  });
+
+  it('muestra el rol del administrador y sitúa cerrar sesión al final del lateral', () => {
+    createAdminAccess();
+    initApp(userConfig);
+    login({ rut: '11.111.111-1', password: '1111' });
+    expect(document.getElementById('session-role').textContent).toBe(
+      'Rol: Administrador'
+    );
+    expect(document.getElementById('sidebar').hidden).toBe(false);
+    expect(
+      document.getElementById('app').classList.contains('login-screen')
+    ).toBe(false);
+    const buttons = Array.from(
+      document.querySelectorAll('#sidebar button')
+    ).filter((button) => !button.hidden);
+    expect(buttons.at(-1).id).toBe('nav-logout');
+    document.getElementById('nav-entities').click();
+    expect(document.getElementById('session-role').textContent).toBe(
+      'Rol: Administrador'
+    );
+    document.getElementById('nav-logout').click();
+    expect(document.getElementById('sidebar').hidden).toBe(true);
+    expect(document.getElementById('session-role').hidden).toBe(true);
+    expect(document.getElementById('session-role').textContent).toBe('');
   });
 
   it('descarta la sesión al recargar cuando no es válida', () => {

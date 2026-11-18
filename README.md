@@ -198,8 +198,9 @@ If the configuration is invalid (unknown types, bad keys, transitions referencin
 
 ## Control de acceso por RUT y contraseña (funcionalidad 002)
 
-La aplicación abre en una pantalla de acceso con selección de rol (administrador o
-trabajador), RUT y contraseña, pero **el ingreso con rol es opcional**: el botón
+La aplicación abre en una tarjeta centrada con RUT y contraseña, y reconoce el rol
+del acceso registrado. La contraseña son los primeros cuatro dígitos del cuerpo del
+RUT, omitiendo puntos y dígito verificador. **El ingreso con credenciales es opcional**: el botón
 "Continuar sin iniciar sesión" permite entrar como invitado y usar el panel y la
 facturación sin credenciales. Los accesos los crea el administrador y la
 contraseña inicial son siempre los primeros 4 dígitos del cuerpo del RUT. La
@@ -219,10 +220,16 @@ facturas de venta y compra viven en colecciones separadas
 El acceso rápido "Nueva entidad"/"Nuevo tercero" se eliminó del panel porque
 duplicaba a "Abrir gestión de entidades/terceros", que lleva a la misma vista.
 
+Dentro del ERP, la cabecera muestra **Rol: Administrador**, **Rol: Trabajador** o
+**Rol: Invitado**. La última opción del lateral es **Cerrar sesión** para los dos
+primeros, o **Iniciar sesión** para invitado. El login ocupa el ancho disponible,
+con el lateral oculto. Cada rol conserva sus funciones y permisos existentes.
+
 ### Datos de demostración
 
-En un navegador sin datos, usar el botón **Cargar datos de demostración** de la
-pantalla de acceso. Las credenciales ficticias son:
+En un navegador sin datos, elegir **Continuar sin iniciar sesión** y usar
+**Cargar datos de demostración** desde el panel. Luego seleccionar **Iniciar sesión**
+al final del lateral para probar las credenciales. Las credenciales ficticias son:
 
 | Rol | RUT | Contraseña inicial |
 |---|---|---|
@@ -245,7 +252,7 @@ pantalla de acceso. Las credenciales ficticias son:
 npm run check   # lint + formato + pruebas unitarias y de integración
 ```
 
-El comando ejecuta 44 archivos de prueba con 226 pruebas (incluye autenticación,
+El comando ejecuta las pruebas unitarias y de integración (incluye autenticación,
 roles, aislamiento, separación de facturas, migración, sesión, avisos y
 demostración). Las mejoras de accesibilidad (etiquetas asociadas, `role="alert"`,
 `thead`/`tbody`, estados vacíos y navegación por teclado) y las mediciones de

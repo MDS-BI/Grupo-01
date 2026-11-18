@@ -44,7 +44,7 @@
   id: "dev_abc123",
   timestamp: "2026-11-11T12:00:00.000Z",
   accessId: "12345678-5",   // RUT normalizado o texto original si es inválido
-  role: "trabajador",       // "administrador" | "trabajador" | "desconocido"
+  role: "trabajador",       // "administrador" | "trabajador" | "no identificado"
   reason: "INACTIVE",       // INVALID_RUT | INACTIVE | DUPLICATE | BROKEN_ENTITY_LINK | NOT_FOUND
   origin: "login"
 }
@@ -62,20 +62,20 @@ initialPassword(rut: string): string | null
 validateAccessRecord(record, { entities, existing }): ValidationError[]
 // Valida rol, entityId, contraseña, unicidad y reglas de administrador.
 
-authenticate({ rut, password, role, records, entities }): AuthResult
+authenticate({ rut, password, records, entities }): AuthResult
 // AuthResult:
 // { ok: true, access: AccessRecord }
 // { ok: false, reason: "INVALID_RUT" | "NOT_FOUND" | "INACTIVE" | "DUPLICATE" |
-//   "BROKEN_ENTITY_LINK" | "WRONG_PASSWORD" | "ROLE_MISMATCH",
+//   "BROKEN_ENTITY_LINK" | "WRONG_PASSWORD",
 //   message: string, notifyDeveloper: boolean }
 ```
 
 **Reglas de `authenticate`**:
 - Normaliza el RUT antes de buscar.
-- `WRONG_PASSWORD` y `ROLE_MISMATCH` no generan notificación al desarrollador.
+- `WRONG_PASSWORD` no genera notificación al desarrollador.
 - `INVALID_RUT`, `NOT_FOUND`, `INACTIVE`, `DUPLICATE` y `BROKEN_ENTITY_LINK` generan notificación.
 - Si hay más de un registro con el mismo `accessId`, se rechaza con `DUPLICATE`.
-- Si el rol seleccionado no coincide con `access.role`, se rechaza con `ROLE_MISMATCH`.
+- Tras validar las credenciales se utiliza `access.role` del registro; el formulario solo envía RUT y contraseña.
 - Si el acceso es de trabajador, verifica que `entityId` exista y tenga `tipoTercero = personal`; si no, rechaza con `BROKEN_ENTITY_LINK`.
 
 ## 6. API de `src/access-storage.js`
@@ -127,21 +127,25 @@ isSessionValid(session, { records, entities }): boolean
 | Elemento | ID | Función |
 |---|---|---|
 | Contenedor de login | `view-login` | Vista inicial sin sesión. |
-| Selector de rol | `login-role` | Opciones `trabajador` y `administrador`. |
 | RUT | `login-rut` | Texto; acepta puntos, guion y K. |
 | Contraseña | `login-password` | `type="password"`. |
 | Botón | `login-submit` | Envía el formulario. |
 | Mensaje de error | `login-error` | `role="alert"`. |
 | Aviso de seguridad | `login-warning` | Texto fijo sobre restricción de interfaz. |
-| Cargar demostración | `login-load-demo` | Visible si no hay accesos. |
+| Continuar como invitado | `login-guest` | Abre el Panel con el modo invitado existente. |
+| Estado sin accesos | `login-no-accesses` | Indica cómo cargar la demostración desde el panel de invitado. |
+| Rol en la cabecera | `session-role` | Texto informativo según la sesión vigente. |
+| Acción de sesión | `nav-login` / `nav-logout` | Última opción visible del lateral según el rol. |
 
 **Comportamiento**:
-- Al abrir sin sesión válida, se muestra `view-login` y se ocultan todas las demás vistas.
-- El selector de rol es obligatorio y parte en `trabajador`.
+- Al abrir sin sesión válida, se muestra `view-login`, se ocultan las demás vistas y el lateral, y el contenido ocupa una sola columna.
+- La tarjeta muestra RUT, contraseña, Ingresar y Continuar sin iniciar sesión. El rol proviene del registro de acceso.
 - El formulario no muestra datos hasta autenticar.
 - Un error muestra un mensaje claro y no revela si el RUT existe cuando la causa es la contraseña.
-- Si no hay accesos, se muestra un aviso y el botón de demostración.
-- Al autenticar, se guarda la sesión y se navega a la vista del rol.
+- Si no hay accesos, se indica que la demostración se carga desde el panel de invitado. El botón del panel conserva el flujo de demostración existente.
+- Al autenticar, se guarda la sesión y se navega a la vista del rol. La cabecera muestra Rol: Administrador, Rol: Trabajador o Rol: Invitado durante la sesión.
+- La última acción del lateral es Cerrar sesión para administrador y trabajador, o Iniciar sesión para invitado.
+- Al regresar al login, se ocultan el lateral y el rol anterior y se limpian los campos y errores del formulario.
 
 ## 9. Contrato de administración de accesos
 

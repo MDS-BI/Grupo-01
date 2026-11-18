@@ -4,15 +4,17 @@
 
 **Creada**: 2026-11-11
 
-**Estado**: Borrador
+**Estado**: Borrador · Revisión de HU1 del 2026-11-17 implementada, pendiente de revisión del usuario
 
-**Entrada**: Descripción del usuario: "Generar un apartado dentro de la página web donde se seleccione ingresar como trabajador o administrador. Al ingresar se pedirá RUT y contraseña; cuando se ingrese un RUT nuevo se pedirá como contraseña inicial sus primeros 4 dígitos. Estos datos quedarán vinculados a una única liquidación de sueldo y, una vez ingresado como trabajador, verá un apartado exclusivo con ese documento. También agregar un ID de administrador, con RUT y contraseña bajo la misma regla inicial; el administrador podrá ver y editar las liquidaciones de sueldo de cada trabajador rellenando el formulario correspondiente y asociar cada RUT de las liquidaciones a su ID de trabajador. La sesión se cierra al cerrar sesión o al cerrar la pestaña. Si se ingresa un ID inválido, duplicado o inactivo, se notifica al desarrollador. La separación de facturas debe ser física y lógica/visual. El MVP es solo frontend y usa almacenamiento del navegador; el control de acceso es una restricción de interfaz, no seguridad real. No se usan datos reales."
+**Entrada inicial**: Descripción del usuario: "Generar un apartado dentro de la página web donde se seleccione ingresar como trabajador o administrador. Al ingresar se pedirá RUT y contraseña; cuando se ingrese un RUT nuevo se pedirá como contraseña inicial sus primeros 4 dígitos. Estos datos quedarán vinculados a una única liquidación de sueldo y, una vez ingresado como trabajador, verá un apartado exclusivo con ese documento. También agregar un ID de administrador, con RUT y contraseña bajo la misma regla inicial; el administrador podrá ver y editar las liquidaciones de sueldo de cada trabajador rellenando el formulario correspondiente y asociar cada RUT de las liquidaciones a su ID de trabajador. La sesión se cierra al cerrar sesión o al cerrar la pestaña. Si se ingresa un ID inválido, duplicado o inactivo, se notifica al desarrollador. La separación de facturas debe ser física y lógica/visual. El MVP es solo frontend y usa almacenamiento del navegador; el control de acceso es una restricción de interfaz, no seguridad real. No se usan datos reales."
+
+**Revisión solicitada el 2026-11-17.** La HU1 define una pantalla de acceso con tarjeta centrada, RUT y contraseña, detección automática del rol registrado y las acciones «Ingresar» y «Continuar sin iniciar sesión». Dentro del ERP, el rol aparece en la cabecera y la acción de sesión ocupa el último lugar del lateral. Esta revisión documenta el acceso y su presentación, conservando las funciones y permisos actuales de administrador, trabajador e invitado. La implementación, las tareas y los contratos asociados se actualizan en esta revisión.
 
 ## Problema y solución
 
 **Problema.** Hoy cualquier persona que abra el módulo puede ver las liquidaciones de sueldo de todos los trabajadores. Eso expone montos y períodos de remuneraciones que deberían quedar reservados al área de remuneraciones y, como máximo, a cada trabajador sobre su propio documento. Además, las facturas de venta y de compra conviven en un mismo conjunto de datos, lo que facilita mezclarlas por error.
 
-**Solución (MVP).** Una pantalla de acceso con selección de rol (trabajador o administrador), RUT y contraseña. Los accesos los administra un administrador; al crear un acceso nuevo, la contraseña inicial son los primeros 4 dígitos del RUT. El trabajador ve un apartado exclusivo con su única liquidación, en modo solo lectura. El administrador ve y edita las liquidaciones de todos los trabajadores y asocia cada RUT de la liquidación con su acceso de trabajador. La liquidación se reutiliza como la factura de compra dirigida a un tercero de tipo personal: no se crea una entidad de almacenamiento separada. Las facturas de venta y de compra se separan físicamente en colecciones distintas y visualmente en vistas, formularios y listados independientes. La sesión vive en el almacenamiento de la pestaña y termina al cerrar sesión o al cerrar la pestaña. Todo el control es una restricción de interfaz sobre datos del navegador: no es seguridad real y no debe usarse con datos reales.
+**Solución (MVP).** Una pantalla de acceso con RUT y contraseña que reconoce automáticamente el rol del acceso registrado. También permite continuar como invitado. Después del ingreso, la cabecera identifica el rol y la última opción del lateral permite cerrar sesión o iniciar sesión, según corresponda. Los accesos los administra un administrador; al crear un acceso nuevo, la contraseña inicial son los primeros 4 dígitos del RUT. El trabajador ve un apartado exclusivo con su única liquidación, en modo solo lectura. El administrador ve y edita las liquidaciones de todos los trabajadores y asocia cada RUT de la liquidación con su acceso de trabajador. La liquidación se reutiliza como la factura de compra dirigida a un tercero de tipo personal: no se crea una entidad de almacenamiento separada. Las facturas de venta y de compra se separan físicamente en colecciones distintas y visualmente en vistas, formularios y listados independientes. La sesión vive en el almacenamiento de la pestaña y termina al cerrar sesión o al cerrar la pestaña. Todo el control es una restricción de interfaz sobre datos del navegador: no es seguridad real y no debe usarse con datos reales.
 
 ## Clarifications
 
@@ -23,31 +25,75 @@
 - Q: ¿Qué pasa con un RUT inválido, duplicado o inactivo? → A: Se notifica al desarrollador mediante un registro local y la consola.
 - Q: ¿La separación de facturas es solo visual? → A: Debe ser física (colecciones separadas) y lógica/visual (vistas, formularios y listados separados).
 
+### Session 2026-11-17
+
+- Q: ¿Cómo se reconoce el rol al ingresar? → A: Se valida el RUT y la contraseña y se usa el rol del acceso registrado; el login solo solicita las credenciales.
+- Q: ¿Qué cambia después del ingreso? → A: Se muestra el rol en la parte superior y se coloca «Cerrar sesión» al final del lateral para administrador y trabajador, o «Iniciar sesión» para invitado. Cada rol conserva sus funciones y permisos actuales.
+- Q: ¿Qué contraseña se usa en la demostración? → A: Los primeros cuatro dígitos del cuerpo del RUT, omitiendo puntos, guion y dígito verificador. Las credenciales están en la tabla de HU1.
+
 ## Usuarios
 
 - **Administrador de remuneraciones:** administra los accesos, revisa y corrige las liquidaciones de todos los trabajadores y asocia cada RUT con su acceso.
 - **Trabajador:** inicia sesión con su RUT y contraseña y consulta únicamente su propia liquidación, sin poder modificarla ni ver la de otros.
+- **Invitado:** entra mediante «Continuar sin iniciar sesión» y usa las funciones que actualmente tiene habilitadas; puede volver al acceso desde la última opción del lateral.
 - **Integrante del equipo (demostración):** carga accesos y liquidaciones ficticias para mostrar el flujo completo.
 
 ## Escenarios de Usuario y Pruebas *(obligatorio)*
 
-### Historia de Usuario 1 - Iniciar sesión con rol, RUT y contraseña (Prioridad: P1)
+### Historia de Usuario 1 - Acceder al ERP con RUT y contraseña o como invitado (Prioridad: P1)
 
-Como usuario del módulo, quiero elegir si ingreso como trabajador o administrador y autenticarme con mi RUT y contraseña, para llegar solo a la información que me corresponde.
+Como usuario del módulo, quiero ingresar con mi RUT y contraseña desde una pantalla de acceso simple, que el sistema reconozca mi rol registrado y que este quede visible en la parte superior del ERP, para acceder a las funciones que me corresponden y reconocer con qué rol estoy usando el sistema. También quiero poder continuar como invitado y encontrar la acción de iniciar o cerrar sesión al final del menú lateral.
 
-**Por qué esta prioridad**: es la puerta de entrada de toda la funcionalidad; sin inicio de sesión no existe separación entre administrador y trabajador.
+**Por qué esta prioridad**: es el acceso a las funciones existentes del ERP y permite identificar la sesión de administrador, trabajador o invitado.
 
-**Prueba independiente**: con un acceso de administrador y otro de trabajador ya registrados, se abre el módulo, se elige cada rol, se ingresa el RUT y la contraseña correctos y se comprueba que cada uno llega a una vista distinta; con credenciales incorrectas no se muestran datos.
+**Alcance de la revisión**: adaptar la presentación del acceso, reconocer el rol mediante las credenciales y mostrar la información y las acciones de sesión. La administración de accesos sigue asignando el rol de cada RUT. Los módulos, datos, operaciones y permisos existentes de cada rol se conservan.
+
+**Presentación del acceso**:
+
+- Cabecera blanca con la marca del módulo y fondo gris claro, siguiendo la imagen de referencia del login aprobada el 2026-11-17.
+- Tarjeta blanca centrada, con bordes redondeados, sombra discreta y título «Ingresar al ERP». En pantallas pequeñas se adapta al ancho disponible.
+- Campos «RUT» y «Contraseña» dispuestos verticalmente, con etiquetas visibles. El campo de contraseña oculta sus caracteres.
+- Botón azul principal «Ingresar» y botón secundario «Continuar sin iniciar sesión», debajo de los campos.
+- La pantalla de acceso ocupa todo el espacio disponible bajo la cabecera; el menú lateral está oculto y no reserva una columna vacía. El formulario no incluye un selector de rol.
+- Al pie aparece «Prototipo académico · Usa solo datos ficticios», acompañado de una aclaración breve de que el acceso y los datos son locales al navegador, según FR-033.
+
+**Presentación dentro del ERP**:
+
+| Forma de ingreso | Rol visible en la cabecera, a la derecha | Última opción del lateral | Pantalla de entrada |
+|---|---|---|---|
+| Credenciales de administrador | Rol: Administrador | Cerrar sesión | Panel |
+| Credenciales de trabajador | Rol: Trabajador | Cerrar sesión | Mi liquidación |
+| Continuar sin iniciar sesión | Rol: Invitado | Iniciar sesión | Panel |
+
+La indicación de rol es informativa y permanece visible al navegar y recargar dentro de una sesión válida. La acción de sesión se coloca debajo de todas las entradas del menú, separada visualmente y situada al pie del lateral cuando la altura disponible lo permite; en pantallas pequeñas sigue siendo la última opción y permanece accesible. La cabecera de acceso muestra la marca, sin indicar una sesión autenticada.
+
+**Credenciales ficticias de demostración**:
+
+| Acceso | RUT | Contraseña |
+|---|---|---|
+| Administrador | `11.111.111-1` | `1111` |
+| Trabajadora — Ana Pérez Soto | `22.222.222-2` | `2222` |
+| Trabajador — Bruno Soto Vega | `45.000.000-0` | `4500` |
+| Invitado | Seleccionar «Continuar sin iniciar sesión» | No requiere credenciales |
+
+Estas credenciales corresponden a los datos de demostración cargados. La contraseña de los accesos del MVP son los primeros cuatro dígitos del cuerpo del RUT, omitiendo puntos, guion y dígito verificador; por ejemplo, `45.000.000-0` usa `4500`. El RUT debe tener un acceso registrado y activo. Escribir un RUT nuevo en el login no crea un usuario. La carga de demostración se conserva disponible desde el panel; en un navegador vacío se puede entrar como invitado, cargar los ejemplos y volver al acceso para probar las credenciales.
+
+**Prueba independiente**: con los datos de demostración cargados, abrir el módulo sin sesión y comprobar el diseño del acceso. Entrar con cada RUT y contraseña, verificar el destino, el rol de la cabecera y la última acción del lateral, y recorrer las funciones existentes de ese rol. Repetir con «Continuar sin iniciar sesión», recargar y volver al acceso. Probar también credenciales incorrectas y accesos inválidos.
 
 **Escenarios de aceptación**:
 
-1. **Dado** el módulo sin sesión activa, **cuando** lo abro, **entonces** veo una pantalla de acceso con selección de rol (trabajador o administrador), RUT y contraseña, y no veo ninguna liquidación.
-2. **Dado** un acceso de administrador válido, **cuando** elijo "administrador" e ingreso su RUT y contraseña, **entonces** entro a la vista de administración.
-3. **Dado** un acceso de trabajador válido, **cuando** elijo "trabajador" e ingreso su RUT y contraseña, **entonces** entro al apartado exclusivo de mi liquidación.
-4. **Dado** un RUT con contraseña incorrecta, **cuando** intento entrar, **entonces** el sistema me rechaza con un mensaje claro, no muestra datos y me permite intentarlo de nuevo.
-5. **Dado** un RUT registrado como trabajador, **cuando** elijo "administrador" e intento entrar, **entonces** el sistema rechaza el acceso por rol incompatible y no muestra datos.
-6. **Dado** un RUT escrito con puntos, guion, mayúsculas o espacios exteriores distintos, **cuando** ingreso la contraseña correcta, **entonces** el sistema lo reconoce y aplica el rol registrado.
-7. **Dado** que ya inicié sesión, **cuando** recargo la página, **entonces** mi sesión se mantiene y no se me vuelve a pedir el RUT.
+1. **Dado** el módulo sin sesión activa, **cuando** lo abro, **entonces** veo la tarjeta de acceso centrada con RUT, contraseña, «Ingresar» y «Continuar sin iniciar sesión», sin selector de rol, sin menú lateral ni espacio reservado para él, y sin datos de negocio visibles.
+2. **Dado** un acceso de administrador válido, **cuando** ingreso su RUT y contraseña, **entonces** el sistema reconoce el rol registrado, abre el Panel, muestra «Rol: Administrador» en la cabecera y mantiene disponibles sus funciones actuales.
+3. **Dado** un acceso de trabajador válido, **cuando** ingreso su RUT y contraseña, **entonces** el sistema reconoce el rol registrado, abre Mi liquidación, muestra «Rol: Trabajador» en la cabecera y mantiene sus funciones y restricciones actuales.
+4. **Dado** el formulario de acceso, **cuando** selecciono «Continuar sin iniciar sesión», **entonces** entro al Panel como invitado, veo «Rol: Invitado» en la cabecera y dispongo de las mismas funciones y permisos que tiene actualmente ese modo de ingreso.
+5. **Dado** un RUT con contraseña incorrecta, **cuando** intento entrar, **entonces** el sistema rechaza el acceso, muestra un mensaje claro junto al formulario y me permite intentarlo de nuevo sin mostrar datos de negocio ni un rol autenticado.
+6. **Dado** un RUT registrado, **cuando** ingreso las credenciales correctas, **entonces** el rol de la sesión corresponde al acceso registrado y no puede elegirse ni modificarse desde el formulario de login o la indicación de la cabecera.
+7. **Dado** un RUT escrito con puntos, guion, mayúsculas o espacios exteriores distintos, **cuando** ingreso la contraseña correcta, **entonces** el sistema lo reconoce según FR-004 y aplica el rol registrado.
+8. **Dado** que ingresé como administrador, trabajador o invitado, **cuando** navego o recargo dentro de una sesión válida, **entonces** se conserva la sesión, el rol visible y el acceso a las funciones actuales de ese rol.
+9. **Dado** que estoy autenticado como administrador o trabajador, **cuando** reviso el menú lateral, **entonces** «Cerrar sesión» es su última opción; al utilizarla se aplica el cierre de FR-007, se vuelve al acceso y desaparece la indicación del rol anterior.
+10. **Dado** que ingresé como invitado, **cuando** reviso el menú lateral, **entonces** «Iniciar sesión» es su última opción; al utilizarla se vuelve al formulario de acceso, se termina la sesión de invitado y se oculta el lateral.
+11. **Dado** un RUT inválido, no registrado, duplicado, inactivo o con vínculo roto, **cuando** intento ingresar, **entonces** se aplican los rechazos y notificaciones existentes de FR-002, FR-008 y FR-009, sin asignar arbitrariamente un rol.
+12. **Dado** un computador o un teléfono, **cuando** utilizo el acceso con teclado o controles táctiles, **entonces** los campos, mensajes y botones son legibles, tienen etiquetas y foco visibles y permiten enviar el formulario con Enter.
 
 ---
 
@@ -146,7 +192,7 @@ Como usuario del módulo, quiero cerrar sesión de forma segura, que las inciden
 4. **Dado** un intento de acceso con RUT inválido, no registrado, inactivo, duplicado o con un vínculo roto a un tercero personal, **cuando** el sistema lo rechaza, **entonces** registra una notificación para el desarrollador con fecha, RUT intentado, rol y motivo.
 5. **Dado** el módulo vacío, **cuando** cargo los datos de demostración, **entonces** aparecen al menos un acceso de administrador y dos accesos de trabajadores ficticios, con sus terceros personales y liquidaciones de ejemplo.
 6. **Dados** los datos de demostración ya cargados, **cuando** intento cargarlos de nuevo, **entonces** el sistema no duplica accesos ni liquidaciones y conserva lo existente.
-7. **Dado** un navegador sin datos, **cuando** abro el módulo, **entonces** veo un mensaje que explica que no hay accesos registrados y me ofrece cargar la demostración.
+7. **Dado** un navegador sin datos, **cuando** abro el módulo, **entonces** veo un mensaje que explica que no hay accesos registrados y que puedo continuar como invitado para cargar la demostración desde el panel y luego volver al acceso.
 8. **Dado** el módulo abierto, **cuando** reviso la pantalla de acceso o la vista de liquidaciones, **entonces** veo una advertencia de que el control de acceso es una restricción de interfaz y que no deben usarse datos reales.
 
 ---
@@ -157,14 +203,14 @@ Como usuario del módulo, quiero cerrar sesión de forma segura, que las inciden
 - ¿Qué pasa si el RUT tiene un dígito verificador inválido? Se rechaza con un mensaje claro y se registra una notificación para el desarrollador.
 - ¿Qué pasa si el RUT es válido pero no está registrado? Se rechaza el acceso con un mensaje claro y se registra una notificación `NOT_FOUND` para el desarrollador.
 - ¿Qué pasa si el RUT existe pero está inactivo? Se rechaza el acceso con un mensaje claro y se registra una notificación para el desarrollador.
-- ¿Qué pasa si el rol elegido no coincide con el rol registrado? Se rechaza el acceso y no se muestran datos; no es una incidencia para el desarrollador.
+- ¿Qué pasa si alguien intenta atribuirse otro rol desde el acceso? El sistema obtiene el rol del acceso registrado después de validar las credenciales; ni el formulario ni la indicación de la cabecera permiten elegir otro rol.
 - ¿Qué pasa si el acceso de trabajador apunta a un tercero que fue eliminado o que dejó de ser de tipo personal? El acceso se considera inválido, no muestra datos y se registra una notificación para el desarrollador.
 - ¿Qué pasa si dos accesos tienen el mismo RUT normalizado? El sistema impide el segundo y registra una notificación para el desarrollador.
 - ¿Qué pasa si el administrador intenta desactivar el último acceso de administrador activo? El sistema lo impide para evitar el bloqueo total.
 - ¿Qué pasa si un trabajador intenta abrir una liquidación de otro trabajador manipulando la navegación o la vista? La acción se bloquea y no se muestran datos del otro trabajador.
 - ¿Qué pasa si un trabajador intenta acceder a la administración de accesos, a la vista global de facturas o a otro módulo administrativo? La acción se bloquea.
 - ¿Qué pasa si no hay liquidación para el trabajador? Se muestra un estado vacío claro.
-- ¿Qué pasa si se borran los datos del navegador? Se pierden accesos, sesión y liquidaciones; el sistema vuelve a la pantalla de acceso y ofrece cargar la demostración.
+- ¿Qué pasa si se borran los datos del navegador? Se pierden accesos, sesión y liquidaciones; el sistema vuelve al acceso y explica cómo cargar la demostración desde el panel de invitado.
 - ¿Qué pasa si se carga la demostración dos veces? No se duplican accesos ni liquidaciones; se informa que ya hay datos.
 - ¿Qué pasa si el administrador cierra sesión con una edición a medio terminar? Se pide confirmación y, si acepta, se descarta el cambio.
 - ¿Qué pasa si se ingresa un período con formato distinto de `YYYY-MM`? Se rechaza con un mensaje claro, según las reglas existentes de la factura de compra a personal.
@@ -177,15 +223,15 @@ Como usuario del módulo, quiero cerrar sesión de forma segura, que las inciden
 
 **Acceso y sesión**
 
-- **FR-001**: Al abrir el módulo sin una sesión activa, el sistema DEBE mostrar una pantalla de acceso con selección de rol (trabajador o administrador), RUT y contraseña, y NO DEBE mostrar ninguna liquidación hasta validar las credenciales.
+- **FR-001**: Al abrir el módulo sin una sesión activa, el sistema DEBE mostrar el acceso descrito en HU1: cabecera de marca, tarjeta centrada con RUT y contraseña, botón «Ingresar» y opción «Continuar sin iniciar sesión». El menú lateral y su espacio reservado DEBEN permanecer ocultos, y el formulario NO DEBE incluir selección de rol. Los datos de negocio permanecen ocultos hasta acceder con credenciales válidas o continuar como invitado.
 - **FR-002**: El sistema DEBE validar el RUT y la contraseña contra los accesos registrados y DEBE rechazar credenciales vacías, inválidas, inactivas o con vínculo roto con un mensaje claro, sin exponer datos.
-- **FR-003**: El rol elegido en la pantalla de acceso DEBE coincidir con el rol registrado para ese RUT; si no coincide, el sistema DEBE rechazar el acceso sin mostrar datos.
+- **FR-003**: Después de validar las credenciales, el sistema DEBE obtener el rol del acceso único y activo asociado al RUT normalizado y abrir la pantalla correspondiente: Panel para administrador y Mi liquidación para trabajador. El rol se asigna desde la administración de accesos y NO DEBE elegirse en el login. «Continuar sin iniciar sesión» abre el Panel con la sesión de invitado existente. Las funciones y permisos actuales de cada rol se conservan.
 - **FR-004**: El sistema DEBE normalizar el RUT para compararlo y almacenarlo en una forma canónica, sin distinguir puntos, mayúsculas, espacios exteriores ni el formato del guion.
 - **FR-005**: Todo acceso nuevo, de trabajador o de administrador, DEBE tener como contraseña inicial los primeros 4 dígitos del cuerpo del RUT; el sistema DEBE aplicar y verificar esta regla al crear el acceso.
-- **FR-006**: La sesión DEBE conservar el RUT, el rol y el tercero personal asociado cuando corresponda, y DEBE sobrevivir a una recarga de página.
-- **FR-007**: La sesión DEBE terminar al cerrar sesión o al cerrar la pestaña. El cierre de sesión DEBE eliminar la sesión activa, volver a la pantalla de acceso y, si hay cambios sin guardar, pedir confirmación antes de descartarlos. El estado "cambios sin guardar" DEBE detectarse comparando el formulario con el registro cargado.
+- **FR-006**: La sesión DEBE conservar el RUT, el rol y el tercero personal asociado cuando corresponda, y DEBE sobrevivir a una recarga de página. Dentro del ERP, la parte superior derecha de la cabecera DEBE mostrar «Rol: Administrador», «Rol: Trabajador» o «Rol: Invitado» según la sesión vigente. La indicación es informativa y se actualiza al ingresar, navegar, recargar o terminar la sesión.
+- **FR-007**: La sesión DEBE terminar al cerrar sesión o al cerrar la pestaña. El cierre de sesión DEBE eliminar la sesión activa, volver a la pantalla de acceso y, si hay cambios sin guardar, pedir confirmación antes de descartarlos. El estado "cambios sin guardar" DEBE detectarse comparando el formulario con el registro cargado. «Cerrar sesión» DEBE ser la última opción del lateral para administrador y trabajador. Para invitado, la última opción DEBE ser «Iniciar sesión», que termina la sesión de invitado y vuelve al acceso. En ambos casos, volver al acceso oculta el lateral y la indicación del rol anterior.
 - **FR-008**: Un acceso de trabajador DEBE estar asociado a exactamente un tercero de tipo personal; si el tercero no existe, no es de tipo personal o el vínculo es ambiguo, el acceso DEBE considerarse inválido.
-- **FR-009**: Todo intento de acceso con RUT inválido, no registrado, inactivo, duplicado o con vínculo roto DEBE registrar una notificación para el desarrollador con fecha, RUT intentado, rol y motivo; la notificación DEBE quedar disponible en el registro local y en la consola.
+- **FR-009**: Todo intento de acceso con RUT inválido, no registrado, inactivo, duplicado o con vínculo roto DEBE registrar una notificación para el desarrollador con fecha, RUT intentado, rol registrado cuando pueda determinarse y motivo; si el acceso no puede resolverse, el rol se registra como no identificado. La notificación DEBE quedar disponible en el registro local y en la consola.
 
 **Administración de accesos**
 
@@ -222,7 +268,7 @@ Como usuario del módulo, quiero cerrar sesión de forma segura, que las inciden
 - **FR-031**: Los datos de demostración DEBEN incluir al menos un acceso de administrador y dos accesos de trabajadores ficticios, con sus terceros personales y liquidaciones de ejemplo, y sus credenciales DEBEN estar documentadas.
 - **FR-032**: La carga de demostración DEBE ser idempotente: si ya existen datos, NO DEBE duplicar accesos ni liquidaciones y DEBE conservar lo existente.
 - **FR-033**: La interfaz DEBE advertir que el control de acceso es una restricción de interfaz, que los datos se guardan solo en el navegador y que no deben usarse datos reales.
-- **FR-034**: Si no hay datos en el navegador, el sistema DEBE volver a la pantalla de acceso sin sesión, explicar que no hay accesos registrados y ofrecer la carga de demostración.
+- **FR-034**: Si no hay datos en el navegador, el sistema DEBE mostrar el acceso sin sesión y explicar que no hay accesos registrados. La demostración DEBE seguir disponible desde el panel al que se llega con «Continuar sin iniciar sesión»; después de cargarla, la persona puede volver al acceso mediante «Iniciar sesión» y probar los RUT y contraseñas de HU1.
 - **FR-035**: El README DEBE documentar los RUT y contraseñas de demostración y la advertencia de que el control es solo de interfaz y no seguridad real.
 
 ### Entidades Clave
@@ -241,7 +287,7 @@ Como usuario del módulo, quiero cerrar sesión de forma segura, que las inciden
 - **SC-001**: Un usuario con credenciales válidas llega a la vista correcta de su rol en menos de 30 segundos desde que abre el módulo.
 - **SC-002**: El 100% de las sesiones de trabajador muestra exactamente su liquidación vigente y cero liquidaciones de otros terceros, comprobado con al menos dos trabajadores con datos distintos.
 - **SC-003**: El 100% de los intentos con RUT inválido, inactivo, duplicado o con vínculo roto se rechaza con un mensaje claro, sin mostrar datos, y queda registrado para el desarrollador.
-- **SC-004**: El 100% de los intentos con rol incompatible se rechaza sin mostrar datos.
+- **SC-004**: El 100% de los ingresos con credenciales válidas utiliza el rol registrado para ese RUT; la cabecera y la navegación corresponden a la sesión vigente. El formulario y la indicación de rol no permiten elegir ni atribuirse otro rol.
 - **SC-005**: El 100% de las sesiones termina al cerrar sesión o al cerrar la pestaña, y se conserva al recargar la página dentro de la misma pestaña.
 - **SC-006**: El administrador encuentra y edita una liquidación de un trabajador en menos de 1 minuto usando la lista y sus filtros.
 - **SC-007**: La carga de demostración deja al menos un administrador y dos trabajadores con liquidaciones en menos de 1 minuto, con credenciales documentadas.

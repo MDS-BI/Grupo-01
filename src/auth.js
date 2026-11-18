@@ -144,7 +144,6 @@ export function validateAccessRecord(
 export function authenticate({
   rut,
   password,
-  role,
   records = [],
   entities = [],
 } = {}) {
@@ -186,15 +185,6 @@ export function authenticate({
       reason: 'INACTIVE',
       message: 'El acceso está inactivo.',
       notifyDeveloper: true,
-    };
-  }
-
-  if (access.role !== role) {
-    return {
-      ok: false,
-      reason: 'ROLE_MISMATCH',
-      message: 'El RUT no corresponde al rol seleccionado.',
-      notifyDeveloper: false,
     };
   }
 

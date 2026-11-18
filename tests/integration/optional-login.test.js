@@ -1,13 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { appState, canAccess, initApp, resolveRoute } from '../../src/app.js';
+import { loadDocuments } from '../../src/storage.js';
+import { loadAccessRecords } from '../../src/access-storage.js';
 import { userConfig } from '../../src/module-config.js';
 import { clearSession, loadSession } from '../../src/session.js';
 import { loadAppMarkup, setupAdminSession } from '../setup/domFixture.js';
 
 const byId = (id) => document.getElementById(id);
 
-function submitLogin({ role, rut, password }) {
-  byId('login-role').value = role;
+function submitLogin({ rut, password }) {
   byId('login-rut').value = rut;
   byId('login-password').value = password;
   byId('login-form').dispatchEvent(
@@ -37,6 +38,38 @@ describe('Ingreso opcional por rol', () => {
     expect(byId('qa-new-payroll').hidden).toBe(true);
     expect(byId('nav-login').hidden).toBe(false);
     expect(byId('nav-logout').hidden).toBe(true);
+    expect(byId('session-role').textContent).toBe('Rol: Invitado');
+    const buttons = Array.from(
+      document.querySelectorAll('#sidebar button')
+    ).filter((button) => !button.hidden);
+    expect(buttons.at(-1).id).toBe('nav-login');
+  });
+
+  it('carga la demostración desde invitado y permite probar las tres credenciales', () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    initApp(userConfig);
+    expect(byId('login-no-accesses').hidden).toBe(false);
+    byId('login-guest').click();
+    byId('qa-load-demo').click();
+    expect(loadAccessRecords()).toHaveLength(3);
+    expect(loadDocuments().length).toBeGreaterThan(0);
+    expect(appState.session.role).toBe('invitado');
+
+    for (const [rut, password, role, view] of [
+      ['11.111.111-1', '1111', 'Administrador', 'dashboard'],
+      ['22.222.222-2', '2222', 'Trabajador', 'payroll-worker'],
+      ['45.000.000-0', '4500', 'Trabajador', 'payroll-worker'],
+    ]) {
+      byId('nav-login').click();
+      expect(byId('login-no-accesses').hidden).toBe(true);
+      submitLogin({ rut, password });
+      expect(byId(`view-${view}`).hidden).toBe(false);
+      expect(byId('session-role').textContent).toBe(`Rol: ${role}`);
+      byId('nav-logout').click();
+      expect(byId('session-role').hidden).toBe(true);
+      expect(byId('sidebar').hidden).toBe(true);
+      byId('login-guest').click();
+    }
   });
 
   it('el invitado navega por facturación pero no ve liquidaciones ni accesos', () => {
@@ -72,11 +105,14 @@ describe('Ingreso opcional por rol', () => {
     initApp(userConfig);
     expect(byId('view-dashboard').hidden).toBe(false);
     expect(byId('nav-login').hidden).toBe(false);
+    expect(byId('session-role').textContent).toBe('Rol: Invitado');
 
     byId('nav-login').click();
     expect(byId('view-login').hidden).toBe(false);
     expect(loadSession()).toBeNull();
     expect(byId('nav-login').hidden).toBe(true);
+    expect(byId('sidebar').hidden).toBe(true);
+    expect(byId('session-role').hidden).toBe(true);
   });
 
   it('matriz de acceso: el rol define quién ve cada liquidación', () => {
@@ -101,7 +137,6 @@ describe('Ingreso opcional por rol', () => {
     expect(byId('view-login').hidden).toBe(false);
 
     submitLogin({
-      role: 'administrador',
       rut: '11111111-1',
       password: '1111',
     });

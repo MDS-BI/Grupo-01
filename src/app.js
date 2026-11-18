@@ -146,6 +146,7 @@ const state = {
   invoiceForms: {},
   session: null,
   accessAdmin: null,
+  login: null,
 };
 
 function byId(id) {
@@ -331,6 +332,7 @@ function showLogin() {
     applySession(null);
   }
   showModule('login');
+  state.login?.reset();
 }
 
 function handleLogout() {
@@ -345,6 +347,7 @@ function handleLogout() {
   state.accessDirty = false;
   state.payrollDirty = false;
   showModule('login');
+  state.login?.reset();
 }
 
 function refreshPayrollAdmin() {
@@ -453,6 +456,9 @@ function showModule(name) {
   const target = resolveRoute(name, state.session);
   if (!VIEWS.includes(target)) return;
   state.currentModule = target;
+  const isLogin = target === 'login';
+  byId('app').classList.toggle('login-screen', isLogin);
+  byId('sidebar').hidden = isLogin;
   for (const view of VIEWS) {
     const element = byId(`view-${view}`);
     if (element) element.hidden = view !== target;
@@ -724,8 +730,7 @@ export function initApp(rawConfig = userConfig) {
     const filter = byId(id);
     if (filter) filter.addEventListener('input', refreshPayrollAdmin);
   }
-  initLogin({
-    config,
+  state.login = initLogin({
     onAuthenticated: (session) => {
       applySession(session);
       const target =
@@ -736,18 +741,6 @@ export function initApp(rawConfig = userConfig) {
       const guest = createGuestSession();
       saveSession(guest);
       applySession(guest);
-      showModule('dashboard');
-    },
-    onLoadDemoData: () => {
-      if (!handleLoadDemoData()) return;
-      const admin = {
-        accessId: '11111111-1',
-        role: 'administrador',
-        entityId: null,
-        startedAt: new Date().toISOString(),
-      };
-      saveSession(admin);
-      applySession(admin);
       showModule('dashboard');
     },
   });
@@ -775,6 +768,7 @@ export function initApp(rawConfig = userConfig) {
     if (session) clearSession();
     applySession(null);
     showModule('login');
+    state.login.reset();
   }
 
   return { config, errors };

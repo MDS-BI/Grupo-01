@@ -6,7 +6,7 @@
 
 ## Resumen
 
-La funcionalidad agrega una capa de acceso por rol sobre el módulo de facturación y pagos. Al abrir la aplicación se muestra una pantalla de acceso con selección de rol (trabajador o administrador), RUT y contraseña. Los accesos los administra un administrador; todo acceso nuevo usa como contraseña inicial los primeros 4 dígitos del RUT. El trabajador ve un apartado exclusivo con su única liquidación vigente, en modo solo lectura. El administrador ve y edita las liquidaciones de todos los trabajadores mediante el formulario de factura de compra y asocia cada RUT con su acceso de trabajador.
+La funcionalidad agrega una capa de acceso por rol sobre el módulo de facturación y pagos. Al abrir la aplicación se muestra una tarjeta centrada con RUT y contraseña. La autenticación reconoce el rol del acceso registrado. También se puede continuar como invitado. El lateral se oculta en el login; dentro del ERP, la cabecera muestra el rol y la última opción del lateral permite cerrar sesión o iniciar sesión, según corresponda. Los accesos los administra un administrador; todo acceso nuevo usa como contraseña inicial los primeros 4 dígitos del RUT. El trabajador ve un apartado exclusivo con su única liquidación vigente, en modo solo lectura. El administrador ve y edita las liquidaciones de todos los trabajadores mediante el formulario de factura de compra y asocia cada RUT con su acceso de trabajador.
 
 La liquidación no se almacena como entidad nueva: se reutiliza la factura de compra dirigida a un tercero de tipo personal (`tipoFactura = compra`, `tipoTercero = personal`, `entity_id`). Las facturas de venta y de compra se separan físicamente en colecciones distintas del almacenamiento del navegador y visualmente en vistas, formularios y listados independientes. La sesión vive en `sessionStorage`, por lo que se conserva al recargar la pestaña y termina al cerrarla o al cerrar sesión. Los intentos inválidos, duplicados, inactivos o con vínculo roto se registran como notificaciones para el desarrollador.
 
@@ -96,7 +96,7 @@ src/
 ├── styles.css                     # estilos de login, roles, avisos y separación visual
 └── components/
     ├── shell.js                   # navegación por rol
-    ├── login.js                   # pantalla de acceso con selección de rol
+    ├── login.js                   # pantalla de acceso con RUT, contraseña y modo invitado
     ├── access-admin.js            # creación, activación, desactivación y lista de accesos
     ├── dev-notifications.js       # registro local de incidencias para el desarrollador
     ├── payroll-list.js            # listado de liquidaciones para el administrador

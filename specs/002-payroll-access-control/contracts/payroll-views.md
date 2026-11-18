@@ -133,9 +133,8 @@ resolveRoute(view, session): string
 
 | Situación | Mensaje | Dónde |
 |---|---|---|
-| Sin accesos registrados | "No hay accesos registrados. Carga los datos de demostración para comenzar." | Login |
+| Sin accesos registrados | "No hay accesos registrados. Continúa como invitado para cargar los datos de demostración desde el panel y vuelve a iniciar sesión." | Login |
 | Credenciales incorrectas | "RUT o contraseña incorrectos." | Login |
-| Rol incompatible | "El RUT no corresponde al rol seleccionado." | Login |
 | Acceso inactivo | "El acceso está inactivo. Contacta al administrador." | Login |
 | Vínculo roto | "El acceso no tiene un trabajador asociado válido. Contacta al administrador." | Login |
 | Trabajador sin liquidación | "Aún no tienes una liquidación registrada." | Mi liquidación |

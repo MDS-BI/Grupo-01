@@ -177,7 +177,6 @@ describe('US2 - administración de accesos', () => {
 
     clearSession();
     initApp(userConfig);
-    byId('login-role').value = 'trabajador';
     byId('login-rut').value = '22.222.222-2';
     byId('login-password').value = '2222';
     submit('login-form');
@@ -200,7 +199,6 @@ describe('US2 - administración de accesos', () => {
     deactivateAccessRecord('22222222-2', { records: loadAccessRecords() });
     clearSession();
     initApp(userConfig);
-    byId('login-role').value = 'trabajador';
     byId('login-rut').value = '22.222.222-2';
     byId('login-password').value = '2222';
     submit('login-form');
@@ -233,7 +231,6 @@ describe('US2 - administración de accesos', () => {
     expect(updated.password).toBe('2222');
     clearSession();
     initApp(userConfig);
-    byId('login-role').value = 'trabajador';
     byId('login-rut').value = '22.222.222-2';
     byId('login-password').value = '2222';
     submit('login-form');
