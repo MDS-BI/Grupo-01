@@ -89,9 +89,6 @@
             Buscar
           </button>
           <div class="sidebar-session">
-            <button id="nav-login" class="nav-item" hidden>
-              Iniciar sesión
-            </button>
             <button id="nav-logout" class="nav-item" hidden>
               Cerrar sesión
             </button>
@@ -120,15 +117,6 @@
               <button id="qa-cashflow">Ver flujo de caja</button>
               <button id="qa-movements">Ver movimientos financieros</button>
             </div>
-            <p
-              id="dashboard-guest-note"
-              class="dashboard-note"
-              role="status"
-              hidden
-            >
-              Estás navegando sin iniciar sesión. Para consultar tu liquidación
-              o editar las liquidaciones de sueldo, usa «Iniciar sesión».
-            </p>
             <h2>Resumen financiero</h2>
             <div class="stats summary-stats">
               <div class="stat-card">
@@ -166,12 +154,6 @@
                 <span id="kpi-vencidas-label">Facturas vencidas</span>
               </div>
             </div>
-            <p>
-              <button id="qa-load-demo" hidden>
-                Cargar datos de demostración
-              </button>
-            </p>
-            <p id="demo-status" role="status" hidden></p>
           </section>
 
           <section id="view-entities" class="view" hidden>
@@ -395,6 +377,7 @@
                 <label for="access-role">Rol</label>
                 <select id="access-role" name="role">
                   <option value="trabajador">Trabajador</option>
+                  <option value="finanzas">Finanzas</option>
                   <option value="administrador">Administrador</option>
                 </select>
                 <div data-error="role" class="error"></div>

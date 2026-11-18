@@ -14,7 +14,8 @@ const ACCESS_MARKUP = `
   <h1 id="access-title">Accesos</h1>
   <p id="access-warning" class="login-warning">
     El control de acceso es una restricción de interfaz sobre datos que viven en el
-    navegador. No es seguridad real y no deben usarse datos reales.
+    navegador. No es seguridad real. La contraseña inicial es inmutable y no
+    pueden usarse datos reales.
   </p>
   <form id="access-form" novalidate>
     <h2 id="access-form-title">Crear acceso</h2>
@@ -22,6 +23,7 @@ const ACCESS_MARKUP = `
       <label for="access-role">Rol</label>
       <select id="access-role" name="role">
         <option value="trabajador">Trabajador</option>
+        <option value="finanzas">Finanzas</option>
         <option value="administrador">Administrador</option>
       </select>
       <div data-error="role" class="error"></div>
@@ -69,7 +71,9 @@ export function initAccessAdmin({
   const errorElement = document.getElementById('access-form-error');
   const feedbackElement = document.getElementById('access-feedback');
   const listElement = document.getElementById('access-list');
+  const roleSelect = document.getElementById('access-role');
   const entitySelect = document.getElementById('access-entity');
+  const entityField = entitySelect?.closest('.form-field');
   const passwordInput = document.getElementById('access-password');
 
   let dirty = false;
@@ -88,9 +92,19 @@ export function initAccessAdmin({
     errorElement.textContent = errorText(errors);
   }
 
+  function syncEntityField() {
+    const needsEntity = roleSelect?.value === 'trabajador';
+    if (entityField) {
+      entityField.hidden = !needsEntity;
+      entityField.style.display = needsEntity ? '' : 'none';
+    }
+    if (!needsEntity && entitySelect) entitySelect.value = '';
+  }
+
   function resetForm() {
     if (form) form.reset();
     setDirty(false);
+    syncEntityField();
     if (entitySelect) {
       entitySelect.innerHTML = '';
       const placeholder = document.createElement('option');
@@ -201,21 +215,18 @@ export function initAccessAdmin({
 
   function handleCreate(event) {
     event?.preventDefault?.();
-    const role = document.getElementById('access-role')?.value || 'trabajador';
+    const role = roleSelect?.value || 'trabajador';
     const accessId = document.getElementById('access-rut')?.value || '';
-    const entityId = document.getElementById('access-entity')?.value || null;
+    const entityId = role === 'trabajador' ? entitySelect?.value || null : null;
     const password =
-      document.getElementById('access-password')?.value ||
-      (entityId
-        ? String(document.getElementById('access-rut')?.value || '').slice(0, 4)
-        : '');
+      passwordInput?.value || initialPassword(normalizeRut(accessId)) || '';
 
     try {
       const record = createAccessRecord(
         {
           accessId,
           role,
-          entityId: role === 'trabajador' ? entityId : null,
+          entityId,
           password,
         },
         { entities: loadEntities(), records: loadAccessRecords() }
@@ -233,6 +244,13 @@ export function initAccessAdmin({
 
   if (form) {
     form.addEventListener('submit', handleCreate);
+  }
+
+  if (roleSelect) {
+    roleSelect.addEventListener('change', () => {
+      syncEntityField();
+      setDirty(true);
+    });
   }
 
   const rutInput = document.getElementById('access-rut');

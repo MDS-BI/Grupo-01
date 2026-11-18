@@ -69,7 +69,7 @@ export const DEFAULT_CONFIG = Object.freeze({
 
 export const DEFAULT_ACCENT_COLOR = '#0f62fe';
 
-export const ROLES = Object.freeze(['administrador', 'trabajador']);
+export const ROLES = Object.freeze(['administrador', 'finanzas', 'trabajador']);
 
 export const ACCESS_STORAGE_KEYS = Object.freeze({
   accessRecords: 'erp.accessRecords',
@@ -196,9 +196,15 @@ export const userConfig = {
   },
   demoAccess: Object.freeze({
     administrador: Object.freeze({
-      accessId: '11.111.111-1',
-      password: '1111',
+      accessId: '88.888.888-8',
+      password: '8888',
       role: 'administrador',
+      entityId: null,
+    }),
+    finanzas: Object.freeze({
+      accessId: '55.555.555-5',
+      password: '5555',
+      role: 'finanzas',
       entityId: null,
     }),
     trabajadores: Object.freeze([

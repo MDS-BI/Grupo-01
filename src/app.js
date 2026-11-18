@@ -47,8 +47,8 @@ import { initPayrollForm } from './components/payroll-form.js';
 import { initDevNotifications } from './components/dev-notifications.js';
 import { resolveAdminSettlements } from './payroll.js';
 import { loadMovements } from './movements.js';
-import { loadDemoData } from './demo-data.js';
 import { computeDebtSummary } from './tracking.js';
+import { loadDemoData } from './demo-data.js';
 import {
   focusSearchInput,
   initSearchBar,
@@ -64,14 +64,7 @@ import {
   loadUnclassifiedDocuments,
   migrateLegacyDocuments,
 } from './storage.js';
-import {
-  isSessionValid,
-  loadSession,
-  clearSession,
-  saveSession,
-  createGuestSession,
-  isGuestSession,
-} from './session.js';
+import { isSessionValid, loadSession, clearSession } from './session.js';
 import { initialPassword } from './auth.js';
 
 const VIEWS = [
@@ -90,43 +83,47 @@ const VIEWS = [
 ];
 
 const ACCESS_MATRIX = {
-  login: { administrador: true, trabajador: true, invitado: true },
-  dashboard: { administrador: true, trabajador: false, invitado: true },
-  entities: { administrador: true, trabajador: false, invitado: true },
-  'invoice-sale': { administrador: true, trabajador: false, invitado: true },
+  login: { administrador: true, finanzas: true, trabajador: true },
+  dashboard: { administrador: true, finanzas: true, trabajador: false },
+  entities: { administrador: true, finanzas: true, trabajador: false },
+  'invoice-sale': { administrador: true, finanzas: true, trabajador: false },
   'invoice-purchase': {
     administrador: true,
+    finanzas: true,
     trabajador: false,
-    invitado: true,
   },
-  'payroll-admin': { administrador: true, trabajador: false, invitado: false },
-  access: { administrador: true, trabajador: false, invitado: false },
+  'payroll-admin': { administrador: true, finanzas: true, trabajador: false },
+  access: { administrador: true, finanzas: false, trabajador: false },
   'dev-notifications': {
     administrador: true,
+    finanzas: false,
     trabajador: false,
-    invitado: false,
   },
-  movements: { administrador: true, trabajador: false, invitado: true },
-  cashflow: { administrador: true, trabajador: false, invitado: true },
-  tracking: { administrador: true, trabajador: false, invitado: true },
-  search: { administrador: true, trabajador: false, invitado: true },
-  'payroll-worker': { administrador: false, trabajador: true, invitado: false },
+  movements: { administrador: true, finanzas: true, trabajador: false },
+  cashflow: { administrador: true, finanzas: true, trabajador: false },
+  tracking: { administrador: true, finanzas: true, trabajador: false },
+  search: { administrador: true, finanzas: true, trabajador: false },
+  'payroll-worker': { administrador: false, finanzas: false, trabajador: true },
 };
+
+function hasSession(session) {
+  return Boolean(session?.role && session.role !== 'invitado');
+}
 
 export function canAccess(view, session) {
   const allowed = ACCESS_MATRIX[view];
-  if (!allowed) return false;
-  if (session?.role === 'trabajador') return allowed.trabajador === true;
-  if (session?.role === 'administrador') return allowed.administrador === true;
-  if (isGuestSession(session)) return allowed.invitado === true;
-  return view === 'login';
+  if (!allowed || !hasSession(session)) return false;
+  return allowed[session.role] === true;
 }
 
 export function resolveRoute(view, session) {
   if (canAccess(view, session)) return view;
-  if (session?.role === 'trabajador') return 'payroll-worker';
-  if (isGuestSession(session)) return 'dashboard';
-  if (session?.role === 'administrador' && view === 'payroll-worker') {
+  if (!hasSession(session)) return 'login';
+  if (session.role === 'trabajador') return 'payroll-worker';
+  if (session.role === 'finanzas') {
+    return view === 'payroll-worker' ? 'payroll-admin' : 'dashboard';
+  }
+  if (session.role === 'administrador' && view === 'payroll-worker') {
     return 'payroll-admin';
   }
   return 'login';
@@ -145,6 +142,7 @@ const state = {
   shell: null,
   invoiceForms: {},
   session: null,
+  migration: null,
   accessAdmin: null,
   login: null,
 };
@@ -315,6 +313,14 @@ function updateSearchResults() {
   );
 }
 
+function refreshInvoiceStatusNotice() {
+  renderInvoiceStatusNotice(byId('invoice-status-notice'), {
+    migration: state.migration,
+    unclassifiedCount: loadUnclassifiedDocuments().length,
+    isAdmin: state.session?.role === 'administrador',
+  });
+}
+
 function applySession(session) {
   state.session = session;
   state.shell = createShell({
@@ -322,15 +328,13 @@ function applySession(session) {
     session,
     onNavigate: showModule,
     onLogout: handleLogout,
-    onLogin: showLogin,
   });
+  refreshInvoiceStatusNotice();
 }
 
 function showLogin() {
-  if (isGuestSession(state.session)) {
-    clearSession();
-    applySession(null);
-  }
+  clearSession();
+  applySession(null);
   showModule('login');
   state.login?.reset();
 }
@@ -342,12 +346,9 @@ function handleLogout() {
     );
     if (!confirmed) return;
   }
-  clearSession();
-  applySession(null);
   state.accessDirty = false;
   state.payrollDirty = false;
-  showModule('login');
-  state.login?.reset();
+  showLogin();
 }
 
 function refreshPayrollAdmin() {
@@ -367,6 +368,7 @@ function refreshPayrollAdmin() {
     settlements,
     entities,
     records: loadAccessRecords(),
+    canAssociate: state.session?.role === 'administrador',
     onEdit: editPayrollSettlement,
     onAssociate: associatePayrollAccess,
   });
@@ -381,6 +383,7 @@ function editPayrollSettlement(id) {
 }
 
 function associatePayrollAccess(id) {
+  if (state.session?.role !== 'administrador') return;
   const settlement = loadPurchaseInvoices().find(
     (document) => document.document_id === id
   );
@@ -631,27 +634,6 @@ function handleSearch(term) {
   updateSearchResults();
 }
 
-function handleLoadDemoData() {
-  if (
-    !confirmAction(
-      '¿Cargar los datos de demostración ficticios? El módulo debe estar vacío; si ya tiene registros, no se modificará nada.'
-    )
-  ) {
-    return;
-  }
-  const result = loadDemoData(state.config);
-  const status = byId('demo-status');
-  if (status) {
-    status.textContent = result.ok
-      ? 'Datos de demostración cargados correctamente.'
-      : result.message;
-    status.hidden = false;
-  }
-  refresh();
-  showModule('dashboard');
-  return result.ok;
-}
-
 function bindManagementControls() {
   const loadEntity = byId('load-entity');
   if (loadEntity) {
@@ -697,6 +679,7 @@ export function initApp(rawConfig = userConfig) {
   state.searchTerm = '';
   state.session = null;
   const migration = migrateLegacyDocuments();
+  state.migration = migration;
 
   applyTheme(config);
   applyLabels(config);
@@ -705,7 +688,6 @@ export function initApp(rawConfig = userConfig) {
   initDashboard({
     config,
     onAction: handleQuickAction,
-    onLoadDemoData: handleLoadDemoData,
   });
   initEntityForm({ config, onSubmit: handleEntitySubmit });
   initInvoiceForms(config);
@@ -737,22 +719,24 @@ export function initApp(rawConfig = userConfig) {
         session?.role === 'trabajador' ? 'payroll-worker' : 'dashboard';
       showModule(target);
     },
-    onGuest: () => {
-      const guest = createGuestSession();
-      saveSession(guest);
-      applySession(guest);
-      showModule('dashboard');
+    onLoadDemoData: () => {
+      const result = loadDemoData(state.config);
+      if (result.ok) {
+        showModule('login');
+        const noAccesses = byId('login-no-accesses');
+        if (noAccesses) noAccesses.hidden = true;
+        state.login?.showDemoStatus(
+          'Datos de demostración cargados. Ingresa con uno de los RUT y contraseñas de la demostración.'
+        );
+      } else {
+        state.login?.showDemoStatus(result.message);
+      }
     },
   });
 
   renderConfigBanner(errors);
-  renderInvoiceStatusNotice(byId('invoice-status-notice'), {
-    migration,
-    unclassifiedCount: loadUnclassifiedDocuments().length,
-  });
   resetEntityForm();
   refresh();
-  showModule('dashboard');
 
   const session = loadSession();
   const validSession =
@@ -765,10 +749,7 @@ export function initApp(rawConfig = userConfig) {
     applySession(session);
     showModule(session.role === 'trabajador' ? 'payroll-worker' : 'dashboard');
   } else {
-    if (session) clearSession();
-    applySession(null);
-    showModule('login');
-    state.login.reset();
+    showLogin();
   }
 
   return { config, errors };

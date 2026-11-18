@@ -10,6 +10,7 @@ export function renderPayrollList(container, options = {}) {
     settlements = [],
     entities = [],
     records = [],
+    canAssociate = true,
     onEdit = () => {},
     onAssociate = () => {},
   } = options;
@@ -67,7 +68,7 @@ export function renderPayrollList(container, options = {}) {
     editButton.addEventListener('click', () => onEdit(settlement.document_id));
     actions.append(editButton);
 
-    if (!linkedIds.has(settlement.entity_id)) {
+    if (canAssociate && !linkedIds.has(settlement.entity_id)) {
       const associateButton = document.createElement('button');
       associateButton.type = 'button';
       associateButton.dataset.action = 'associate';

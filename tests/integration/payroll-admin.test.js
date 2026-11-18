@@ -6,6 +6,7 @@ import { saveSession } from '../../src/session.js';
 import {
   createAccessRecord,
   loadAccessRecords,
+  saveAccessRecords,
 } from '../../src/access-storage.js';
 import { loadAppMarkup, setupAdminSession } from '../setup/domFixture.js';
 
@@ -45,98 +46,171 @@ function settlement(entity, period, amount, folio) {
   return created;
 }
 
-describe('US4 - liquidaciones del administrador', () => {
+function setupFinanceSession() {
+  const now = new Date().toISOString();
+  saveAccessRecords([
+    {
+      accessId: '55555555-5',
+      role: 'finanzas',
+      entityId: null,
+      password: '5555',
+      active: true,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ]);
+  saveSession({
+    accessId: '55555555-5',
+    role: 'finanzas',
+    entityId: null,
+    startedAt: now,
+  });
+}
+
+function createWorkerAccess(entity) {
+  createAccessRecord(
+    {
+      accessId: '22222222-2',
+      role: 'trabajador',
+      entityId: entity.entity_id,
+      password: '2222',
+    },
+    { entities: [entity], records: loadAccessRecords() }
+  );
+}
+
+describe('US4/US7 - liquidaciones del administrador y de finanzas', () => {
   beforeEach(() => {
     loadAppMarkup();
     localStorage.clear();
     sessionStorage.clear();
     appState.currentModule = 'dashboard';
-    setupAdminSession();
   });
 
-  it('lista todas las liquidaciones con trabajador, RUT, período, monto y estado', () => {
-    const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
-    const bruno = worker('45000000-0', 'PE-002', 'Bruno Soto Vega');
-    settlement(ana, '2026-10', 700000, 1);
-    settlement(bruno, '2026-09', 620000, 2);
+  for (const role of ['administrador', 'finanzas']) {
+    describe(`sesión de ${role}`, () => {
+      beforeEach(() => {
+        if (role === 'administrador') setupAdminSession();
+        else setupFinanceSession();
+      });
 
-    initApp(userConfig);
-    byId('nav-payroll-admin').click();
+      it('lista todas las liquidaciones con trabajador, RUT, período, monto y estado', () => {
+        const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
+        const bruno = worker('45000000-0', 'PE-002', 'Bruno Soto Vega');
+        settlement(ana, '2026-10', 700000, 1);
+        settlement(bruno, '2026-09', 620000, 2);
 
-    const text = byId('payroll-admin-list').textContent;
-    expect(text).toContain('Ana Pérez Soto');
-    expect(text).toContain('22222222-2');
-    expect(text).toContain('2026-10');
-    expect(text).toContain('Emitida');
-    expect(text).toContain('Bruno Soto Vega');
-  });
+        initApp(userConfig);
+        byId('nav-payroll-admin').click();
 
-  it('filtra por trabajador/RUT y por período', () => {
-    const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
-    const bruno = worker('45000000-0', 'PE-002', 'Bruno Soto Vega');
-    settlement(ana, '2026-10', 700000, 1);
-    settlement(bruno, '2026-09', 620000, 2);
-    initApp(userConfig);
-    byId('nav-payroll-admin').click();
+        const text = byId('payroll-admin-list').textContent;
+        expect(text).toContain('Ana Pérez Soto');
+        expect(text).toContain('22222222-2');
+        expect(text).toContain('2026-10');
+        expect(text).toContain('Emitida');
+        expect(text).toContain('Bruno Soto Vega');
+      });
 
-    byId('payroll-filter-worker').value = 'Bruno';
-    byId('payroll-filter-worker').dispatchEvent(new Event('input'));
-    expect(byId('payroll-admin-list').textContent).toContain('Bruno Soto Vega');
-    expect(byId('payroll-admin-list').textContent).not.toContain(
-      'Ana Pérez Soto'
-    );
+      it('filtra por trabajador/RUT y por período', () => {
+        const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
+        const bruno = worker('45000000-0', 'PE-002', 'Bruno Soto Vega');
+        settlement(ana, '2026-10', 700000, 1);
+        settlement(bruno, '2026-09', 620000, 2);
+        initApp(userConfig);
+        byId('nav-payroll-admin').click();
 
-    byId('payroll-filter-worker').value = '';
-    byId('payroll-filter-period').value = '2026-10';
-    byId('payroll-filter-period').dispatchEvent(new Event('input'));
-    expect(byId('payroll-admin-list').textContent).toContain('Ana Pérez Soto');
-    expect(byId('payroll-admin-list').textContent).not.toContain(
-      'Bruno Soto Vega'
-    );
-  });
+        byId('payroll-filter-worker').value = 'Bruno';
+        byId('payroll-filter-worker').dispatchEvent(new Event('input'));
+        expect(byId('payroll-admin-list').textContent).toContain(
+          'Bruno Soto Vega'
+        );
+        expect(byId('payroll-admin-list').textContent).not.toContain(
+          'Ana Pérez Soto'
+        );
 
-  it('edita una liquidación y rechaza un período inválido', () => {
-    const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
-    settlement(ana, '2026-10', 700000, 1);
-    initApp(userConfig);
-    byId('nav-payroll-admin').click();
+        byId('payroll-filter-worker').value = '';
+        byId('payroll-filter-period').value = '2026-10';
+        byId('payroll-filter-period').dispatchEvent(new Event('input'));
+        expect(byId('payroll-admin-list').textContent).toContain(
+          'Ana Pérez Soto'
+        );
+        expect(byId('payroll-admin-list').textContent).not.toContain(
+          'Bruno Soto Vega'
+        );
+      });
 
-    byId('payroll-admin-list').querySelector('[data-action="edit"]').click();
-    const periodInput = byId('payroll-field-periodoLiquidacion');
-    expect(periodInput.value).toBe('2026-10');
+      it('edita una liquidación y rechaza un período inválido', () => {
+        const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
+        settlement(ana, '2026-10', 700000, 1);
+        initApp(userConfig);
+        byId('nav-payroll-admin').click();
 
-    periodInput.value = '2026-13';
-    periodInput.dispatchEvent(new Event('input'));
-    byId('payroll-form').dispatchEvent(
-      new Event('submit', { bubbles: true, cancelable: true })
-    );
-    expect(byId('payroll-form-errors').textContent).toContain('AAAA-MM');
-  });
+        const editButton = byId('payroll-admin-list').querySelector(
+          '[data-action="edit"]'
+        );
+        expect(editButton).not.toBeNull();
+        editButton.click();
+        const periodInput = byId('payroll-field-periodoLiquidacion');
+        expect(periodInput.value).toBe('2026-10');
 
-  it('asocia un acceso de trabajador cuando el RUT coincide', () => {
-    const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
-    settlement(ana, '2026-10', 700000, 1);
-    initApp(userConfig);
-    byId('nav-payroll-admin').click();
+        periodInput.value = '2026-13';
+        periodInput.dispatchEvent(new Event('input'));
+        byId('payroll-form').dispatchEvent(
+          new Event('submit', { bubbles: true, cancelable: true })
+        );
+        expect(byId('payroll-form-errors').textContent).toContain('AAAA-MM');
+      });
+    });
+  }
 
-    const text = byId('payroll-admin-list').textContent;
-    expect(text).toContain('no tiene un acceso de trabajador activo');
+  describe('asociación de un acceso por RUT', () => {
+    it('el administrador asocia un acceso de trabajador cuando el RUT coincide', () => {
+      setupAdminSession();
+      const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
+      settlement(ana, '2026-10', 700000, 1);
+      initApp(userConfig);
+      byId('nav-payroll-admin').click();
 
-    byId('payroll-admin-list')
-      .querySelector('[data-action="associate"]')
-      .click();
+      const text = byId('payroll-admin-list').textContent;
+      expect(text).toContain('no tiene un acceso de trabajador activo');
 
-    const access = loadAccessRecords().find(
-      (item) => item.entityId === ana.entity_id
-    );
-    expect(access).toMatchObject({
-      accessId: '22222222-2',
-      role: 'trabajador',
-      password: '2222',
+      byId('payroll-admin-list')
+        .querySelector('[data-action="associate"]')
+        .click();
+
+      const access = loadAccessRecords().find(
+        (item) => item.entityId === ana.entity_id
+      );
+      expect(access).toMatchObject({
+        accessId: '22222222-2',
+        role: 'trabajador',
+        password: '2222',
+      });
+    });
+
+    it('finanzas ve y edita liquidaciones, pero no puede asociar un acceso por RUT', () => {
+      const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
+      settlement(ana, '2026-10', 700000, 1);
+      setupFinanceSession();
+      initApp(userConfig);
+      byId('nav-payroll-admin').click();
+
+      const list = byId('payroll-admin-list');
+      expect(list.textContent).toContain('Ana Pérez Soto');
+      expect(list.querySelector('[data-action="associate"]')).toBeNull();
+      expect(
+        loadAccessRecords().some((item) => item.entityId === ana.entity_id)
+      ).toBe(false);
+
+      const editButton = list.querySelector('[data-action="edit"]');
+      expect(editButton).not.toBeNull();
+      editButton.click();
+      expect(byId('payroll-field-periodoLiquidacion').value).toBe('2026-10');
     });
   });
 
   it('el cambio del administrador se refleja en la vista del trabajador', () => {
+    setupAdminSession();
     const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
     const liquidacion = settlement(ana, '2026-10', 700000, 1);
     createWorkerAccess(ana);
@@ -158,15 +232,3 @@ describe('US4 - liquidaciones del administrador', () => {
     expect(byId('payroll-worker-amount').textContent).toContain('750');
   });
 });
-
-function createWorkerAccess(entity) {
-  createAccessRecord(
-    {
-      accessId: '22222222-2',
-      role: 'trabajador',
-      entityId: entity.entity_id,
-      password: '2222',
-    },
-    { entities: [entity], records: loadAccessRecords() }
-  );
-}

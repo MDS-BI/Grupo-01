@@ -28,18 +28,39 @@ export function setupAdminSession() {
   const now = new Date().toISOString();
   saveAccessRecords([
     {
-      accessId: '11111111-1',
+      accessId: '88888888-8',
       role: 'administrador',
       entityId: null,
-      password: '1111',
+      password: '8888',
       active: true,
       createdAt: now,
       updatedAt: now,
     },
   ]);
   saveSession({
-    accessId: '11111111-1',
+    accessId: '88888888-8',
     role: 'administrador',
+    entityId: null,
+    startedAt: now,
+  });
+}
+
+export function setupFinanzasSession() {
+  const now = new Date().toISOString();
+  saveAccessRecords([
+    {
+      accessId: '55555555-5',
+      role: 'finanzas',
+      entityId: null,
+      password: '5555',
+      active: true,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ]);
+  saveSession({
+    accessId: '55555555-5',
+    role: 'finanzas',
     entityId: null,
     startedAt: now,
   });

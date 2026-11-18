@@ -125,7 +125,7 @@ describe('session: isSessionValid', () => {
 
   it('acepta una sesión de administrador sin entidad', () => {
     const session = {
-      accessId: '11.111.111-1',
+      accessId: '88.888.888-8',
       role: 'administrador',
       entityId: null,
       startedAt: '2026-11-11T12:00:00.000Z',
@@ -135,7 +135,7 @@ describe('session: isSessionValid', () => {
         records: [
           {
             ...access(),
-            accessId: '11.111.111-1',
+            accessId: '88.888.888-8',
             role: 'administrador',
             entityId: null,
           },
@@ -143,5 +143,49 @@ describe('session: isSessionValid', () => {
         entities: [],
       })
     ).toBe(true);
+  });
+
+  it('acepta una sesión de finanzas sin entidad', () => {
+    const session = {
+      accessId: '55.555.555-5',
+      role: 'finanzas',
+      entityId: null,
+      startedAt: '2026-11-11T12:00:00.000Z',
+    };
+    expect(
+      isSessionValid(session, {
+        records: [
+          {
+            ...access(),
+            accessId: '55.555.555-5',
+            role: 'finanzas',
+            entityId: null,
+          },
+        ],
+        entities: [],
+      })
+    ).toBe(true);
+  });
+
+  it('rechaza una sesión de finanzas con entidad personal', () => {
+    const session = {
+      accessId: '55.555.555-5',
+      role: 'finanzas',
+      entityId: 'ent_worker',
+      startedAt: '2026-11-11T12:00:00.000Z',
+    };
+    expect(
+      isSessionValid(session, {
+        records: [
+          {
+            ...access(),
+            accessId: '55.555.555-5',
+            role: 'finanzas',
+            entityId: 'ent_worker',
+          },
+        ],
+        entities: [entity()],
+      })
+    ).toBe(false);
   });
 });

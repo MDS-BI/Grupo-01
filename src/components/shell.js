@@ -1,22 +1,9 @@
 import { INVOICE_VIEWS } from '../module-config.js';
-import { isGuestSession } from '../session.js';
 import { monogram } from '../utils.js';
 
 const INVOICE_MODULES = Object.values(INVOICE_VIEWS).map(
   ({ module }) => module
 );
-
-// El invitado ve solo los módulos de facturación; liquidaciones, accesos y
-// avisos del desarrollador siguen reservados al administrador.
-const GUEST_MODULES = [
-  'dashboard',
-  'entities',
-  ...INVOICE_MODULES,
-  'movements',
-  'cashflow',
-  'tracking',
-  'search',
-];
 
 const ADMIN_MODULES = [
   'dashboard',
@@ -25,6 +12,17 @@ const ADMIN_MODULES = [
   'payroll-admin',
   'access',
   'dev-notifications',
+  'movements',
+  'cashflow',
+  'tracking',
+  'search',
+];
+
+const FINANCE_MODULES = [
+  'dashboard',
+  'entities',
+  ...INVOICE_MODULES,
+  'payroll-admin',
   'movements',
   'cashflow',
   'tracking',
@@ -82,30 +80,31 @@ function navLabel(config, module) {
   return labels.search || 'Buscar';
 }
 
-export function createShell({
-  config,
-  session,
-  onNavigate,
-  onLogout,
-  onLogin,
-}) {
+export function createShell({ config, session, onNavigate, onLogout }) {
   const brandName = document.getElementById('brand-name');
   const brandLogo = document.getElementById('brand-logo');
 
   if (brandName) brandName.textContent = config.moduleName;
   renderLogo(brandLogo, config.moduleName);
 
-  const modules =
-    session?.role === 'trabajador'
+  const modules = !session
+    ? []
+    : session.role === 'trabajador'
       ? ['payroll-worker']
-      : isGuestSession(session)
-        ? GUEST_MODULES
+      : session.role === 'finanzas'
+        ? FINANCE_MODULES
         : ADMIN_MODULES;
 
-  for (const button of document.querySelectorAll(
-    '.sidebar .nav-item[data-module]'
-  )) {
+  const navButtons = Array.from(
+    document.querySelectorAll('.sidebar .nav-item[data-module]')
+  );
+  for (const button of navButtons) {
+    const label = navLabel(config, button.dataset.module);
+    button.textContent = label;
+    button.setAttribute('aria-label', label);
     button.hidden = !session || !modules.includes(button.dataset.module);
+    button.onclick =
+      session && onNavigate ? () => onNavigate(button.dataset.module) : null;
   }
   const invoiceGroup = document.getElementById('nav-invoices-group');
   if (invoiceGroup) {
@@ -117,42 +116,23 @@ export function createShell({
   if (roleLabel) {
     const roleNames = {
       administrador: 'Administrador',
+      finanzas: 'Finanzas',
       trabajador: 'Trabajador',
-      invitado: 'Invitado',
     };
     roleLabel.textContent = session ? `Rol: ${roleNames[session.role]}` : '';
     roleLabel.hidden = !session;
   }
 
-  const buttons = modules
-    .map((module) => {
-      const button = document.getElementById(`nav-${module}`);
-      if (button) {
-        button.textContent = navLabel(config, module);
-        button.setAttribute('aria-label', navLabel(config, module));
-        button.onclick = () => onNavigate(module);
-      }
-      return button;
-    })
-    .filter(Boolean);
-
   const logoutButton = document.getElementById('nav-logout');
   if (logoutButton) {
-    logoutButton.hidden = !session || isGuestSession(session);
+    logoutButton.hidden = !session;
     if (!logoutButton.hidden && onLogout)
       logoutButton.onclick = () => onLogout();
     else logoutButton.onclick = null;
   }
 
-  const loginButton = document.getElementById('nav-login');
-  if (loginButton) {
-    loginButton.hidden = !isGuestSession(session);
-    if (!loginButton.hidden && onLogin) loginButton.onclick = () => onLogin();
-    else loginButton.onclick = null;
-  }
-
   function setActive(module) {
-    for (const button of buttons) {
+    for (const button of navButtons) {
       const isActive = button.dataset.module === module;
       button.classList.toggle('active', isActive);
       if (isActive) {

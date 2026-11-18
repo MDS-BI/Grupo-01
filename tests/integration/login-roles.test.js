@@ -9,48 +9,82 @@ import {
   loadDevNotifications,
   saveAccessRecords,
 } from '../../src/access-storage.js';
-import { clearSession, saveSession } from '../../src/session.js';
+import { clearSession, loadSession, saveSession } from '../../src/session.js';
 import { loadAppMarkup, submit } from '../setup/domFixture.js';
+
+const byId = (id) => document.getElementById(id);
+
+const ADMIN_RUT = '88.888.888-8';
+const FINANZAS_RUT = '55.555.555-5';
+const WORKER_RUT = '22.222.222-2';
+const OTHER_WORKER_RUT = '45.000.000-0';
 
 function createAdminAccess(existing = []) {
   return createAccessRecord(
     {
-      accessId: '11111111-1',
+      accessId: '88888888-8',
       role: 'administrador',
       entityId: null,
-      password: '1111',
+      password: '8888',
     },
     { entities: [], records: existing }
   );
 }
 
-function createWorkerAccess(existing = []) {
+function createFinanceAccess(existing = []) {
+  const now = new Date().toISOString();
+  const record = {
+    accessId: '55555555-5',
+    role: 'finanzas',
+    entityId: null,
+    password: '5555',
+    active: true,
+    createdAt: now,
+    updatedAt: now,
+  };
+  saveAccessRecords([...existing, record]);
+  return record;
+}
+
+function createWorkerAccess(
+  existing = [],
+  {
+    rut = WORKER_RUT,
+    password = '2222',
+    name = 'Ana Pérez Soto',
+    code = 'PE-001',
+  } = {}
+) {
   const worker = addEntity(
     {
-      name: 'Ana Pérez Soto',
-      code: 'PE-001',
-      taxId: '22222222-2',
+      name,
+      code,
+      taxId: rut,
       customFields: { tipoTercero: 'personal' },
     },
     userConfig
   );
   return createAccessRecord(
     {
-      accessId: '22222222-2',
+      accessId: rut,
       role: 'trabajador',
       entityId: worker.entity_id,
-      password: '2222',
+      password,
     },
     { entities: [worker], records: existing }
   );
 }
 
 function login({ rut, password }) {
-  const rutInput = document.getElementById('login-rut');
-  const passwordInput = document.getElementById('login-password');
-  if (rutInput) rutInput.value = rut;
-  if (passwordInput) passwordInput.value = password;
+  byId('login-rut').value = rut;
+  byId('login-password').value = password;
   submit('login-form');
+}
+
+function visibleNavIds() {
+  return Array.from(document.querySelectorAll('#sidebar button'))
+    .filter((button) => !button.hidden)
+    .map((button) => button.id);
 }
 
 describe('US1 - inicio de sesión con RUT y contraseña', () => {
@@ -61,37 +95,135 @@ describe('US1 - inicio de sesión con RUT y contraseña', () => {
     appState.currentModule = 'dashboard';
   });
 
-  it('admin valida credenciales y entra al panel; trabajador a su liquidación', () => {
-    const adminAccess = createAdminAccess();
-    createWorkerAccess([adminAccess]);
+  it('muestra login-submit y login-demo-load sin invitado ni selector de rol', () => {
     initApp(userConfig);
 
-    expect(document.getElementById('view-login').hidden).toBe(false);
-    expect(document.getElementById('view-dashboard').hidden).toBe(true);
+    expect(byId('login-guest')).toBeNull();
+    expect(byId('login-submit')).not.toBeNull();
+    expect(byId('login-demo-load')).not.toBeNull();
+    expect(
+      Array.from(
+        byId('login-form').querySelectorAll('button'),
+        (button) => button.id
+      )
+    ).toEqual(['login-submit', 'login-demo-load']);
+    expect(byId('login-role')).toBeNull();
+    expect(document.querySelector('#view-login select')).toBeNull();
+    expect(document.querySelector('#view-login [name="role"]')).toBeNull();
+    expect(
+      Array.from(
+        byId('login-form').querySelectorAll('input'),
+        (input) => input.id
+      )
+    ).toEqual(['login-rut', 'login-password']);
+    expect(byId('sidebar').hidden).toBe(true);
+    expect(byId('app').classList.contains('login-screen')).toBe(true);
+    expect(byId('session-role').hidden).toBe(true);
+  });
 
-    login({ rut: '11111111-1', password: '1111' });
-    expect(document.getElementById('view-dashboard').hidden).toBe(false);
-    expect(document.getElementById('nav-payroll-admin')).not.toBeNull();
+  it('admin, finanzas y trabajador entran a su vista según el acceso registrado', () => {
+    const admin = createAdminAccess();
+    const finance = createFinanceAccess([admin]);
+    const worker = createWorkerAccess([admin, finance]);
+    createWorkerAccess([admin, finance, worker], {
+      rut: OTHER_WORKER_RUT,
+      password: '4500',
+      name: 'Bruno Soto Vega',
+      code: 'PE-002',
+    });
 
-    clearSession();
-    login({ rut: '22222222-2', password: '2222' });
-    expect(document.getElementById('view-payroll-worker').hidden).toBe(false);
-    expect(document.getElementById('view-dashboard').hidden).toBe(true);
-    expect(document.getElementById('nav-payroll-worker')).not.toBeNull();
-    expect(document.getElementById('session-role').textContent).toBe(
-      'Rol: Trabajador'
-    );
-    expect(document.getElementById('nav-invoices-group').hidden).toBe(true);
+    const cases = [
+      {
+        rut: ADMIN_RUT,
+        password: '8888',
+        role: 'administrador',
+        roleLabel: 'Administrador',
+        view: 'dashboard',
+        allowed: 'nav-access',
+        denied: 'nav-payroll-worker',
+      },
+      {
+        rut: FINANZAS_RUT,
+        password: '5555',
+        role: 'finanzas',
+        roleLabel: 'Finanzas',
+        view: 'dashboard',
+        allowed: 'nav-payroll-admin',
+        denied: 'nav-access',
+      },
+      {
+        rut: WORKER_RUT,
+        password: '2222',
+        role: 'trabajador',
+        roleLabel: 'Trabajador',
+        view: 'payroll-worker',
+        allowed: 'nav-payroll-worker',
+        denied: 'nav-access',
+      },
+      {
+        rut: OTHER_WORKER_RUT,
+        password: '4500',
+        role: 'trabajador',
+        roleLabel: 'Trabajador',
+        view: 'payroll-worker',
+        allowed: 'nav-payroll-worker',
+        denied: 'nav-access',
+      },
+    ];
+
+    for (const item of cases) {
+      clearSession();
+      initApp(userConfig);
+      login({ rut: item.rut, password: item.password });
+
+      expect(appState.session.role).toBe(item.role);
+      expect(byId('session-role').textContent).toBe(`Rol: ${item.roleLabel}`);
+      expect(byId(`view-${item.view}`).hidden).toBe(false);
+      expect(byId('view-login').hidden).toBe(true);
+      expect(byId('sidebar').hidden).toBe(false);
+      expect(byId(item.allowed).hidden).toBe(false);
+      expect(byId(item.denied).hidden).toBe(true);
+      expect(visibleNavIds().at(-1)).toBe('nav-logout');
+    }
+  });
+
+  it('rechaza un RUT vacío sin abrir ninguna vista de negocio', () => {
+    createAdminAccess();
+    initApp(userConfig);
+
+    login({ rut: '', password: '8888' });
+
+    expect(byId('view-login').hidden).toBe(false);
+    expect(byId('view-dashboard').hidden).toBe(true);
+    expect(byId('login-error').hidden).toBe(false);
+    expect(byId('login-error').textContent).toContain('RUT');
+    expect(loadSession()).toBeNull();
+    expect(appState.session).toBeNull();
+  });
+
+  it('rechaza una contraseña vacía sin notificar al desarrollador', () => {
+    createAdminAccess();
+    initApp(userConfig);
+
+    login({ rut: ADMIN_RUT, password: '' });
+
+    expect(byId('view-login').hidden).toBe(false);
+    expect(byId('view-dashboard').hidden).toBe(true);
+    expect(byId('login-error').hidden).toBe(false);
+    expect(byId('login-error').textContent).toContain('contraseña');
+    expect(loadSession()).toBeNull();
+    expect(appState.session).toBeNull();
+    expect(loadDevNotifications()).toHaveLength(0);
   });
 
   it('rechaza credenciales incorrectas sin exponer datos ni notificar', () => {
-    createWorkerAccess();
+    createAdminAccess();
     initApp(userConfig);
 
-    login({ rut: '22222222-2', password: '9999' });
-    expect(document.getElementById('view-login').hidden).toBe(false);
-    expect(document.getElementById('login-error').hidden).toBe(false);
-    expect(document.getElementById('login-error').textContent).toContain(
+    login({ rut: ADMIN_RUT, password: '9999' });
+    expect(byId('view-login').hidden).toBe(false);
+    expect(byId('login-error').hidden).toBe(false);
+    expect(byId('login-error').textContent).toContain(
       'RUT o contraseña incorrectos'
     );
     expect(loadAccessRecords()).toHaveLength(1);
@@ -104,7 +236,7 @@ describe('US1 - inicio de sesión con RUT y contraseña', () => {
     initApp(userConfig);
 
     login({ rut: '12345678-1', password: '1234' });
-    expect(document.getElementById('view-login').hidden).toBe(false);
+    expect(byId('view-login').hidden).toBe(false);
     expect(loadDevNotifications()).toHaveLength(1);
     expect(loadDevNotifications()[0]).toMatchObject({
       accessId: '12345678-1',
@@ -118,7 +250,7 @@ describe('US1 - inicio de sesión con RUT y contraseña', () => {
     initApp(userConfig);
 
     login({ rut: '12121212-9', password: '1234' });
-    expect(document.getElementById('view-login').hidden).toBe(false);
+    expect(byId('view-login').hidden).toBe(false);
     expect(loadDevNotifications()).toHaveLength(1);
     expect(loadDevNotifications()[0]).toMatchObject({
       accessId: '12121212-9',
@@ -133,7 +265,7 @@ describe('US1 - inicio de sesión con RUT y contraseña', () => {
     initApp(userConfig);
 
     login({ rut: access.accessId, password: '2222' });
-    expect(document.getElementById('view-login').hidden).toBe(false);
+    expect(byId('view-login').hidden).toBe(false);
     expect(loadDevNotifications()).toHaveLength(1);
     expect(loadDevNotifications()[0]).toMatchObject({
       accessId: access.accessId,
@@ -157,8 +289,8 @@ describe('US1 - inicio de sesión con RUT y contraseña', () => {
     ]);
     initApp(userConfig);
 
-    login({ rut: '22222222-2', password: '2222' });
-    expect(document.getElementById('view-login').hidden).toBe(false);
+    login({ rut: WORKER_RUT, password: '2222' });
+    expect(byId('view-login').hidden).toBe(false);
     expect(loadDevNotifications()).toHaveLength(1);
     expect(loadDevNotifications()[0]).toMatchObject({
       accessId: '22222222-2',
@@ -173,59 +305,30 @@ describe('US1 - inicio de sesión con RUT y contraseña', () => {
     const injected = document.createElement('input');
     injected.id = 'login-role';
     injected.value = 'administrador';
-    document.getElementById('login-form').append(injected);
-    login({ rut: '22222222-2', password: '2222' });
-    expect(appState.session.role).toBe('trabajador');
-    expect(document.getElementById('session-role').textContent).toBe(
-      'Rol: Trabajador'
-    );
-    expect(document.getElementById('view-payroll-worker').hidden).toBe(false);
-    expect(loadDevNotifications()).toHaveLength(0);
-  });
+    byId('login-form').append(injected);
+    login({ rut: WORKER_RUT, password: '2222' });
 
-  it('muestra solo dos campos y dos acciones en el acceso y oculta el lateral', () => {
-    initApp(userConfig);
-    expect(document.getElementById('login-role')).toBeNull();
-    const form = document.getElementById('login-form');
-    expect(
-      Array.from(form.querySelectorAll('input'), (input) => input.id)
-    ).toEqual(['login-rut', 'login-password']);
-    expect(
-      Array.from(form.querySelectorAll('button'), (button) => button.id)
-    ).toEqual(['login-submit', 'login-guest']);
-    expect(document.getElementById('sidebar').hidden).toBe(true);
-    expect(
-      document.getElementById('app').classList.contains('login-screen')
-    ).toBe(true);
-    expect(document.getElementById('session-role').hidden).toBe(true);
-    expect(document.querySelector('#view-login h1').textContent).toBe(
-      'Ingresar al ERP'
-    );
+    expect(appState.session.role).toBe('trabajador');
+    expect(byId('session-role').textContent).toBe('Rol: Trabajador');
+    expect(byId('view-payroll-worker').hidden).toBe(false);
+    expect(loadDevNotifications()).toHaveLength(0);
   });
 
   it('muestra el rol del administrador y sitúa cerrar sesión al final del lateral', () => {
     createAdminAccess();
     initApp(userConfig);
-    login({ rut: '11.111.111-1', password: '1111' });
-    expect(document.getElementById('session-role').textContent).toBe(
-      'Rol: Administrador'
-    );
-    expect(document.getElementById('sidebar').hidden).toBe(false);
-    expect(
-      document.getElementById('app').classList.contains('login-screen')
-    ).toBe(false);
-    const buttons = Array.from(
-      document.querySelectorAll('#sidebar button')
-    ).filter((button) => !button.hidden);
-    expect(buttons.at(-1).id).toBe('nav-logout');
-    document.getElementById('nav-entities').click();
-    expect(document.getElementById('session-role').textContent).toBe(
-      'Rol: Administrador'
-    );
-    document.getElementById('nav-logout').click();
-    expect(document.getElementById('sidebar').hidden).toBe(true);
-    expect(document.getElementById('session-role').hidden).toBe(true);
-    expect(document.getElementById('session-role').textContent).toBe('');
+    login({ rut: ADMIN_RUT, password: '8888' });
+
+    expect(byId('session-role').textContent).toBe('Rol: Administrador');
+    expect(byId('sidebar').hidden).toBe(false);
+    expect(byId('app').classList.contains('login-screen')).toBe(false);
+    expect(visibleNavIds().at(-1)).toBe('nav-logout');
+    byId('nav-entities').click();
+    expect(byId('session-role').textContent).toBe('Rol: Administrador');
+    byId('nav-logout').click();
+    expect(byId('sidebar').hidden).toBe(true);
+    expect(byId('session-role').hidden).toBe(true);
+    expect(byId('session-role').textContent).toBe('');
   });
 
   it('descarta la sesión al recargar cuando no es válida', () => {
@@ -237,10 +340,10 @@ describe('US1 - inicio de sesión con RUT y contraseña', () => {
       startedAt: new Date().toISOString(),
     });
     initApp(userConfig);
-    expect(document.getElementById('view-payroll-worker').hidden).toBe(false);
+    expect(byId('view-payroll-worker').hidden).toBe(false);
 
     clearSession();
     initApp(userConfig);
-    expect(document.getElementById('view-login').hidden).toBe(false);
+    expect(byId('view-login').hidden).toBe(false);
   });
 });

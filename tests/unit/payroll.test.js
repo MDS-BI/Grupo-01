@@ -13,7 +13,7 @@ const worker = {
 const otherWorker = {
   entity_id: 'ent_other',
   name: 'Bruno Soto Vega',
-  taxId: '45000000-5',
+  taxId: '45000000-0',
   customFields: { tipoTercero: 'personal' },
 };
 const supplier = {
@@ -162,5 +162,12 @@ describe('payroll: listado del administrador', () => {
         filters: { worker: '22222222-2' },
       }).map((item) => item.document_id)
     ).toEqual(['doc_1']);
+    expect(
+      resolveAdminSettlements({
+        purchaseInvoices: invoices,
+        entities,
+        filters: { worker: '45000000-0' },
+      }).map((item) => item.document_id)
+    ).toEqual(['doc_2']);
   });
 });

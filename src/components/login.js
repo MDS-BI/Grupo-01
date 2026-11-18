@@ -16,14 +16,15 @@ const LOGIN_MARKUP = `
     </div>
     <p id="login-error" class="error" role="alert" hidden></p>
     <button type="submit" id="login-submit">Ingresar</button>
-    <button type="button" id="login-guest">Continuar sin iniciar sesión</button>
+    <button type="button" id="login-demo-load">Cargar demostración</button>
+    <p id="demo-status" class="demo-status" role="status" hidden></p>
     <p id="login-no-accesses" role="status" hidden>
-      No hay accesos registrados. Continúa como invitado para cargar los datos de demostración desde el panel y vuelve a iniciar sesión.
+      No hay accesos registrados. Usa «Cargar demostración» y luego ingresa con el RUT y la contraseña correspondientes.
     </p>
   </form>
   <footer class="login-footer">
     <p>Prototipo académico · Usa solo datos ficticios</p>
-    <p id="login-warning">Acceso de demostración y datos locales al navegador. El control es solo de interfaz.</p>
+    <p id="login-warning">El control de acceso es solo una restricción de interfaz sobre datos guardados en el navegador; la contraseña inicial son los primeros 4 dígitos del RUT y no se puede cambiar, por lo que no deben usarse datos reales.</p>
   </footer>
 `;
 
@@ -51,12 +52,13 @@ function errorMessageByReason(reason) {
   }
 }
 
-export function initLogin({ onAuthenticated, onGuest }) {
+export function initLogin({ onAuthenticated, onLoadDemoData } = {}) {
   const root = document.getElementById('view-login');
   renderLogin(root);
 
   const form = document.getElementById('login-form');
   const errorElement = document.getElementById('login-error');
+  const demoStatus = document.getElementById('demo-status');
   const rutInput = document.getElementById('login-rut');
   const passwordInput = document.getElementById('login-password');
   const noAccesses = document.getElementById('login-no-accesses');
@@ -66,9 +68,16 @@ export function initLogin({ onAuthenticated, onGuest }) {
     errorElement.hidden = !message;
   }
 
+  function showDemoStatus(message) {
+    if (!demoStatus) return;
+    demoStatus.textContent = message || '';
+    demoStatus.hidden = !message;
+  }
+
   function reset() {
     form.reset();
     showError('');
+    showDemoStatus('');
     rutInput.removeAttribute('aria-invalid');
     passwordInput.removeAttribute('aria-invalid');
     noAccesses.hidden = loadAccessRecords().length > 0;
@@ -122,11 +131,10 @@ export function initLogin({ onAuthenticated, onGuest }) {
     invalidInput.focus();
   };
 
-  document.getElementById('login-guest').onclick = () => {
-    reset();
-    onGuest?.();
+  document.getElementById('login-demo-load').onclick = () => {
+    onLoadDemoData?.();
   };
   noAccesses.hidden = loadAccessRecords().length > 0;
 
-  return { showError, reset };
+  return { showError, reset, showDemoStatus };
 }

@@ -1,6 +1,8 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { initApp } from '../../src/app.js';
+import { loadAccessRecords } from '../../src/access-storage.js';
 import { userConfig, getConfig } from '../../src/module-config.js';
+import { loadSession } from '../../src/session.js';
 import {
   addEntity,
   loadDocuments,
@@ -10,16 +12,30 @@ import {
 } from '../../src/storage.js';
 import { loadMovements } from '../../src/movements.js';
 import { loadDemoData, hasStoredRecords } from '../../src/demo-data.js';
-import { loadAccessRecords } from '../../src/access-storage.js';
 import { loadAppMarkup } from '../setup/domFixture.js';
+
+let originalConfirm;
 
 beforeEach(() => {
   loadAppMarkup();
   localStorage.clear();
   localStorage.removeItem('erp.movements');
+  originalConfirm = window.confirm;
+  window.confirm = () => true;
+});
+
+afterEach(() => {
+  window.confirm = originalConfirm;
 });
 
 const config = getConfig();
+
+function canonical(value) {
+  return String(value ?? '')
+    .trim()
+    .replace(/[.\s]/g, '')
+    .toUpperCase();
+}
 
 describe('HU6 - carga de datos de demostración', () => {
   it('carga terceros de los tres tipos y facturas en distintos estados con movimientos', () => {
@@ -145,30 +161,34 @@ describe('HU6 - carga de datos de demostración', () => {
     );
   });
 
-  it('carga accesos de demostración con credenciales documentadas y liquidaciones', () => {
+  it('carga los cuatro accesos de demostración con las credenciales revisadas y liquidaciones', () => {
     const result = loadDemoData(userConfig);
     expect(result.ok).toBe(true);
 
     const records = loadAccessRecords();
-    expect(records).toHaveLength(3);
-    expect(
-      records.find((item) => item.accessId === '11111111-1')
-    ).toMatchObject({
+    expect(records).toHaveLength(4);
+    const accessFor = (rut) =>
+      records.find((item) => canonical(item.accessId) === canonical(rut));
+
+    expect(accessFor('88.888.888-8')).toMatchObject({
       role: 'administrador',
-      password: '1111',
+      password: '8888',
+      entityId: null,
     });
-    expect(
-      records.find((item) => item.accessId === '22222222-2')
-    ).toMatchObject({
+    expect(accessFor('55.555.555-5')).toMatchObject({
+      role: 'finanzas',
+      password: '5555',
+      entityId: null,
+    });
+    expect(accessFor('22.222.222-2')).toMatchObject({
       role: 'trabajador',
       password: '2222',
     });
-    expect(
-      records.find((item) => item.accessId === '45000000-0')
-    ).toMatchObject({
+    expect(accessFor('45.000.000-0')).toMatchObject({
       role: 'trabajador',
       password: '4500',
     });
+
     const personales = loadEntities().filter(
       (entity) => entity.customFields.tipoTercero === 'personal'
     );
@@ -184,8 +204,48 @@ describe('HU6 - carga de datos de demostración', () => {
 
   it('no duplica accesos de demostración al cargar dos veces', () => {
     loadDemoData(userConfig);
+    expect(hasStoredRecords()).toBe(true);
     const result = loadDemoData(userConfig);
     expect(result.ok).toBe(false);
-    expect(loadAccessRecords()).toHaveLength(3);
+    expect(result.reason).toBe('EXISTS');
+    expect(loadAccessRecords()).toHaveLength(4);
+  });
+
+  it('el RUT del administrador no coincide con los terceros ni con los RUT descartados', () => {
+    loadDemoData(userConfig);
+
+    const taxIds = loadEntities().map((entity) => canonical(entity.taxId));
+    const accessIds = loadAccessRecords().map((item) =>
+      canonical(item.accessId)
+    );
+    expect(taxIds).not.toContain(canonical('88.888.888-8'));
+    for (const descartado of ['11.111.111-1', '45.000.000-5']) {
+      expect(taxIds).not.toContain(canonical(descartado));
+      expect(accessIds).not.toContain(canonical(descartado));
+    }
+  });
+
+  it('carga la demostración desde login-demo-load sin crear sesión ni duplicar registros', () => {
+    initApp(userConfig);
+
+    const button = document.getElementById('login-demo-load');
+    expect(button).not.toBeNull();
+    button?.click();
+
+    expect(document.getElementById('view-login').hidden).toBe(false);
+    expect(document.getElementById('view-dashboard').hidden).toBe(true);
+    expect(document.getElementById('sidebar').hidden).toBe(true);
+    expect(loadSession()).toBeNull();
+    expect(loadAccessRecords()).toHaveLength(4);
+    const tercerosPrevios = loadEntities().length;
+    const facturasPrevias = loadDocuments().length;
+
+    button?.click();
+
+    expect(document.getElementById('view-login').hidden).toBe(false);
+    expect(loadSession()).toBeNull();
+    expect(loadAccessRecords()).toHaveLength(4);
+    expect(loadEntities()).toHaveLength(tercerosPrevios);
+    expect(loadDocuments()).toHaveLength(facturasPrevias);
   });
 });

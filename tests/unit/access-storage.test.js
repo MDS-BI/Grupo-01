@@ -24,10 +24,22 @@ function entity(tipoTercero = 'personal', entityId = 'ent_worker') {
 
 function adminRecord() {
   return {
-    accessId: '11111111-1',
+    accessId: '88888888-8',
     role: 'administrador',
     entityId: null,
-    password: '1111',
+    password: '8888',
+    active: true,
+    createdAt: '2026-11-11T12:00:00.000Z',
+    updatedAt: '2026-11-11T12:00:00.000Z',
+  };
+}
+
+function finanzasRecord() {
+  return {
+    accessId: '55555555-5',
+    role: 'finanzas',
+    entityId: null,
+    password: '5555',
     active: true,
     createdAt: '2026-11-11T12:00:00.000Z',
     updatedAt: '2026-11-11T12:00:00.000Z',
@@ -156,6 +168,25 @@ describe('access-storage: persistencia de accesos', () => {
     );
     expect(record.role).toBe('administrador');
   });
+
+  it('crea un acceso de finanzas sin tercero y con la contraseña inicial del RUT', () => {
+    const record = createAccessRecord(
+      {
+        accessId: '55555555-5',
+        role: 'finanzas',
+        entityId: null,
+        password: initialPassword('55.555.555-5'),
+      },
+      { entities: [], records: [adminRecord()] }
+    );
+    expect(record).toMatchObject({
+      accessId: '55555555-5',
+      role: 'finanzas',
+      entityId: null,
+      password: '5555',
+    });
+    expect(loadAccessRecords()).toHaveLength(2);
+  });
 });
 
 describe('access-storage: ciclo de vida de accesos', () => {
@@ -172,15 +203,24 @@ describe('access-storage: ciclo de vida de accesos', () => {
     expect(worker.active).toBe(false);
 
     expect(() =>
-      deactivateAccessRecord('11111111-1', {
+      deactivateAccessRecord('88888888-8', {
         entities: [],
         records: [adminRecord(), workerRecord()],
       })
     ).toThrow(ValidationFailure);
     const admin = loadAccessRecords().find(
-      (record) => record.accessId === '11111111-1'
+      (record) => record.accessId === '88888888-8'
     );
     expect(admin.active).toBe(true);
+  });
+
+  it('no cuenta el acceso de finanzas como administrador activo', () => {
+    expect(() =>
+      deactivateAccessRecord('88888888-8', {
+        entities: [],
+        records: [adminRecord(), finanzasRecord()],
+      })
+    ).toThrow(ValidationFailure);
   });
 
   it('restablece la contraseña inicial del RUT', () => {

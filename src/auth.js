@@ -1,3 +1,4 @@
+import { ROLES } from './module-config.js';
 import { isValidRutChileno } from './validation.js';
 
 export function normalizeRut(input) {
@@ -42,12 +43,12 @@ export function validateAccessRecord(
   }
 
   const role = record?.role;
-  if (role !== 'administrador' && role !== 'trabajador') {
+  if (!ROLES.includes(role)) {
     errors.push(
       makeError(
         'role',
         'ROLE_INVALID',
-        'El rol debe ser administrador o trabajador.'
+        'El rol debe ser administrador, finanzas o trabajador.'
       )
     );
   }
@@ -115,12 +116,12 @@ export function validateAccessRecord(
     }
   }
 
-  if (role === 'administrador' && record?.entityId) {
+  if ((role === 'administrador' || role === 'finanzas') && record?.entityId) {
     errors.push(
       makeError(
         'entityId',
         'ENTITY_NOT_ALLOWED',
-        'El administrador no puede tener un tercero personal asociado.'
+        'Los roles administrador y finanzas no pueden tener un tercero personal asociado.'
       )
     );
   }

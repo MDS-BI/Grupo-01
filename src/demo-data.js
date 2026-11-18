@@ -43,8 +43,22 @@ function baseFactura(entity, { folio, serie = 'A' }) {
   };
 }
 
+function isDemoAccessId(accessId) {
+  const demoAccess = userConfig.demoAccess;
+  const ids = [
+    demoAccess.administrador?.accessId,
+    demoAccess.finanzas?.accessId,
+    ...(demoAccess.trabajadores || []).map((worker) => worker.accessId),
+  ];
+  return ids.some((id) => id && normalizeRut(id) === normalizeRut(accessId));
+}
+
 export function hasStoredRecords() {
-  return loadEntities().length > 0 || loadDocuments().length > 0;
+  return (
+    loadEntities().length > 0 ||
+    loadDocuments().length > 0 ||
+    loadAccessRecords().some((record) => !isDemoAccessId(record.accessId))
+  );
 }
 
 export function loadDemoData(config) {
@@ -81,7 +95,7 @@ function buildDemoData(config) {
     {
       name: 'Proveedores del Sur S.A.',
       code: 'PV-001',
-      dni: '11111111',
+      dni: '77777777',
       tipo: 'proveedor',
       custom: { referenciaOtroModulo: 'Compras: ord-0089' },
     },
@@ -288,6 +302,23 @@ function buildDemoData(config) {
         role: adminAccess.role,
         entityId: null,
         password: adminAccess.password,
+      },
+      { entities: loadEntities(), records: loadAccessRecords() }
+    );
+  }
+  const financeAccess = demoAccess.finanzas;
+  if (
+    financeAccess &&
+    !loadAccessRecords().some(
+      (item) => item.accessId === normalizeRut(financeAccess.accessId)
+    )
+  ) {
+    createAccessRecord(
+      {
+        accessId: financeAccess.accessId,
+        role: financeAccess.role,
+        entityId: null,
+        password: financeAccess.password,
       },
       { entities: loadEntities(), records: loadAccessRecords() }
     );

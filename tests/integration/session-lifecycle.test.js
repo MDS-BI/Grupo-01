@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { initApp, appState } from '../../src/app.js';
 import { userConfig } from '../../src/module-config.js';
-import { loadAppMarkup, setupAdminSession } from '../setup/domFixture.js';
+import {
+  loadAppMarkup,
+  setupAdminSession,
+  setupFinanzasSession,
+} from '../setup/domFixture.js';
 import { loadSession } from '../../src/session.js';
 
 const byId = (id) => document.getElementById(id);
@@ -25,8 +29,20 @@ describe('US6 - ciclo de vida de la sesión', () => {
     expect(byId('view-dashboard').hidden).toBe(false);
     expect(byId('session-role').textContent).toBe('Rol: Administrador');
     expect(loadSession()).toMatchObject({
-      accessId: '11111111-1',
+      accessId: '88888888-8',
       role: 'administrador',
+    });
+  });
+
+  it('la recarga conserva la sesión de finanzas', () => {
+    setupFinanzasSession();
+    initApp(userConfig);
+    expect(byId('view-dashboard').hidden).toBe(false);
+    expect(byId('session-role').textContent).toBe('Rol: Finanzas');
+    expect(loadSession()).toMatchObject({
+      accessId: '55555555-5',
+      role: 'finanzas',
+      entityId: null,
     });
   });
 

@@ -30,7 +30,7 @@ function setHidden(id, hidden) {
 }
 
 const SECURITY_WARNING =
-  'El control de acceso es una restricción de interfaz; los datos viven en el navegador y no deben usarse datos reales. Exactamente una liquidación vigente se muestra para tu RUT.';
+  'El control de acceso es una restricción de interfaz; los datos viven en el navegador. La contraseña inicial es inmutable y no deben usarse datos reales. Exactamente una liquidación vigente se muestra para tu RUT.';
 
 export function renderWorkerMarkup() {
   const root = document.getElementById('view-payroll-worker');

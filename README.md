@@ -198,53 +198,53 @@ If the configuration is invalid (unknown types, bad keys, transitions referencin
 
 ## Control de acceso por RUT y contraseña (funcionalidad 002)
 
-La aplicación abre en una tarjeta centrada con RUT y contraseña, y reconoce el rol
-del acceso registrado. La contraseña son los primeros cuatro dígitos del cuerpo del
-RUT, omitiendo puntos y dígito verificador. **El ingreso con credenciales es opcional**: el botón
-"Continuar sin iniciar sesión" permite entrar como invitado y usar el panel y la
-facturación sin credenciales. Los accesos los crea el administrador y la
-contraseña inicial son siempre los primeros 4 dígitos del cuerpo del RUT. La
-sesión se guarda en `sessionStorage` (`erp.session`): se conserva al recargar la
-pestaña y termina al cerrar sesión, al volver al acceso desde la opción
-"Iniciar sesión" del invitado, o al cerrar la pestaña.
+La aplicación abre en una pantalla de acceso con RUT y contraseña. **El ingreso es
+obligatorio**: no existe el rol invitado ni la opción "Continuar sin iniciar
+sesión". Sin una sesión válida no se muestra ninguna vista de negocio. La
+contraseña inicial son los primeros cuatro dígitos del cuerpo del RUT, omitiendo
+puntos y dígito verificador. Los accesos los crea el administrador; la contraseña
+inicial es inmutable y no puede cambiarse desde la aplicación. La sesión se guarda
+en `sessionStorage` (`erp.session`): se conserva al recargar la pestaña y termina
+al cerrar sesión o al cerrar la pestaña. La última opción del lateral es **Cerrar
+sesión**, sin una opción para volver al acceso desde dentro del ERP.
 
-El trabajador solo ve **Mi liquidación**: una única factura de compra vigente de
-su tercero personal, en modo de solo lectura. El administrador ve y edita las
-liquidaciones de todos, administra accesos y consulta los avisos del
-desarrollador. El invitado ve Panel, Terceros, Facturas de venta y compra,
-Movimientos, Seguimiento y Buscar; no ve liquidaciones, accesos ni avisos. Las
-facturas de venta y compra viven en colecciones separadas
+Los roles son administrador, finanzas y trabajador:
+
+- **Trabajador**: ve solo **Mi liquidación**, una única factura de compra vigente
+  de su tercero personal, en modo de solo lectura.
+- **Finanzas**: ve y edita terceros, facturas de venta y compra, liquidaciones,
+  movimientos, flujo de caja, seguimiento y búsqueda. No administra accesos ni ve
+  los avisos del desarrollador.
+- **Administrador**: conserva todas las funciones, incluidas administrar accesos
+  y consultar los avisos del desarrollador.
+
+Las facturas de venta y compra viven en colecciones separadas
 (`erp.salesInvoices` y `erp.purchaseInvoices`) y la migración desde
-`erp.documents` es idempotente.
-
-El acceso rápido "Nueva entidad"/"Nuevo tercero" se eliminó del panel porque
-duplicaba a "Abrir gestión de entidades/terceros", que lleva a la misma vista.
-
-Dentro del ERP, la cabecera muestra **Rol: Administrador**, **Rol: Trabajador** o
-**Rol: Invitado**. La última opción del lateral es **Cerrar sesión** para los dos
-primeros, o **Iniciar sesión** para invitado. El login ocupa el ancho disponible,
-con el lateral oculto. Cada rol conserva sus funciones y permisos existentes.
+`erp.documents` es idempotente. El acceso rápido "Nueva entidad"/"Nuevo tercero"
+se eliminó del panel porque duplicaba a "Abrir gestión de entidades/terceros".
 
 ### Datos de demostración
 
-En un navegador sin datos, elegir **Continuar sin iniciar sesión** y usar
-**Cargar datos de demostración** desde el panel. Luego seleccionar **Iniciar sesión**
-al final del lateral para probar las credenciales. Las credenciales ficticias son:
+En un navegador sin datos, usar **Cargar demostración** desde la pantalla de
+acceso. La carga precarga los datos ficticios, permanece en la pantalla de acceso,
+no crea sesión ni abre vistas, y es idempotente. Después se ingresa con una de
+estas credenciales ficticias:
 
 | Rol | RUT | Contraseña inicial |
 |---|---|---|
-| Administrador | `11.111.111-1` | `1111` |
+| Administrador | `88.888.888-8` | `8888` |
+| Finanzas | `55.555.555-5` | `5555` |
 | Trabajador (Ana Pérez Soto) | `22.222.222-2` | `2222` |
 | Trabajador (Bruno Soto Vega) | `45.000.000-0` | `4500` |
 
-> Nota: el RUT del segundo trabajador usa el dígito verificador válido calculado
-> con el algoritmo chileno (`0`) para que la carga de demostración y el login
-> funcionen con el validador existente.
+La carga anterior desde el panel (`qa-load-demo`) queda superada por la tarea
+T107; la demostración se carga solo desde `login-demo-load`. La tarea T077 queda
+superada por T107.
 
 > **Advertencia de seguridad:** el control de acceso es solo una restricción de
-> interfaz sobre datos guardados en el navegador. No hay backend, no hay cifrado
-> y **no se deben usar datos reales**. Los RUT y nombres de la demostración son
-> ficticios.
+> interfaz sobre datos guardados en el navegador. La contraseña inicial es
+> inmutable y no hay backend ni cifrado, por lo que **no deben usarse datos
+> reales**. Los RUT y nombres de la demostración son ficticios.
 
 ### Verificación
 

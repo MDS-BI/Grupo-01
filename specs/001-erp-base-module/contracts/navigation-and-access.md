@@ -1,10 +1,10 @@
 # Contrato de Navegación y Accesos (mapa de uso y guía de uso)
 
-**Rama**: `001-erp-base-module` · **Fecha**: 2026-11-16 · **Relacionado con**: `spec.md` (HU8, FR-020 a FR-022 y FR-031 a FR-036), `contracts/invoice-views.md` y `tasks.md` (Fase 12)
+**Rama**: `001-erp-base-module` · **Fecha**: 2026-11-16 · **Revisado**: 2026-11-18 (acceso obligatorio de `002`) · **Relacionado con**: `spec.md` (HU8, FR-020 a FR-022 y FR-031 a FR-036), `contracts/invoice-views.md`, `tasks.md` (Fase 12) y `002-payroll-access-control/contracts/access-and-session.md`
 
 ## Propósito
 
-Documentar por dónde se navega el módulo y cómo se llega a cada función, y definir el contrato de la guía de uso (tutorial) de la HU8. Describe el MVP de la 001: un solo usuario por navegador, sin inicio de sesión ni perfiles, por lo que todas las vistas están disponibles. Este mapa refleja el menú real de la aplicación al 2026-11-16.
+Documentar por dónde se navega el módulo y cómo se llega a cada función, y definir el contrato de la guía de uso (tutorial) de la HU8. Describe el MVP de la 001: un solo usuario por navegador, sin inicio de sesión ni perfiles, por lo que todas las vistas están disponibles. Este mapa refleja el menú real de la aplicación al 2026-11-16. La funcionalidad `002-payroll-access-control` reemplaza el ingreso opcional/invitado por acceso obligatorio con tres roles; el detalle se registra en «Revisión de `002`: acceso obligatorio por rol» y no cambia el mapa de vistas de negocio.
 
 ## Mapa de navegación
 
@@ -36,7 +36,11 @@ Notas:
 | Cargar datos de demostración | `#qa-load-demo` | Acción (no cambia de vista); solo visible con el módulo vacío |
 | ¿Primera vez? Ver la guía | `#qa-guide` | Abre la guía de uso (HU8, pendiente de implementar) |
 
+Nota (`002`): la carga de demostración pasa a ejecutarse desde la pantalla de acceso (`login-demo-load`), sin abrir vistas del módulo ni crear sesión; `#qa-load-demo` queda como acceso rápido heredado de la 001. Ver «Revisión de `002`: acceso obligatorio por rol».
+
 ## Reglas de acceso del MVP
+
+> **Revisión de `002`.** Las reglas de ingreso opcional/invitado de esta sección quedan reemplazadas por el acceso obligatorio de `002-payroll-access-control`. Se conservan como descripción histórica de la 001; el contrato vigente está en «Revisión de `002`: acceso obligatorio por rol».
 
 - El inicio de sesión por rol es **opcional**. Desde la pantalla de acceso, "Continuar sin iniciar sesión" entra como invitado (`erp.session` con rol `invitado`) y permite usar Panel, Terceros, Facturas de venta y compra, Movimientos, Seguimiento y Buscar. El invitado no ve Liquidaciones de sueldo, Accesos ni Avisos para el desarrollador.
 - Si se inicia sesión como **trabajador**, solo se muestra "Mi liquidación" (`payroll-worker`), con su liquidación vigente en modo de solo lectura.
@@ -45,6 +49,18 @@ Notas:
 - Los datos viven en `localStorage` del navegador (`erp.entities`, `erp.documents`, `erp.movements`). Cada navegador tiene sus propios datos y no deben usarse datos reales.
 - Las restricciones de negocio se mantienen: los movimientos son de solo lectura, una factura Pagada no cambia de estado, el folio y las fechas de emisión son de solo lectura al editar, la venta solo admite clientes y la compra solo proveedores o personal.
 - El botón "Nueva entidad"/"Nuevo tercero" (`#qa-new-entity`) se eliminó del panel porque duplicaba a "Abrir gestión de terceros" (`#qa-manage-entities`), que lleva a la misma vista.
+
+## Revisión de `002`: acceso obligatorio por rol
+
+La funcionalidad `002-payroll-access-control` reemplaza el ingreso opcional/invitado de la 001 por acceso obligatorio con credenciales válidas (RUT y contraseña). El almacenamiento de accesos y sesión se detalla en `002-payroll-access-control/contracts/access-and-session.md`; aquí se registra su efecto sobre la navegación y los accesos.
+
+- No existe "Continuar sin iniciar sesión" ni el rol `invitado` (`erp.session` con rol `invitado`). Sin sesión válida no se muestra ninguna vista de negocio: los enlaces directos y las recargas vuelven a la pantalla de acceso (`view-login`) sin exponer datos.
+- El acceso reconoce tres roles desde el registro de acceso: `administrador` (RRHH), `finanzas` y `trabajador`. El formulario solo pide RUT y contraseña, sin selector de rol; el rol se obtiene del registro tras validar las credenciales y se muestra en la cabecera (`session-role`). El administrador abre Panel; finanzas abre Panel; el trabajador abre Mi liquidación.
+- El `administrador` conserva todas las funciones, incluidos administrar accesos (también los de rol `finanzas`) y los Avisos para el desarrollador. `finanzas` ve y edita toda la facturación (terceros, facturas de venta y compra, liquidaciones, movimientos, flujo de caja, seguimiento y búsqueda), sin gestionar accesos ni ver avisos. El `trabajador` ve solo su propia liquidación vigente, en modo de solo lectura.
+- "Cargar demostración" (`login-demo-load`) se ejecuta desde la pantalla de acceso: precarga los datos ficticios sin abrir vistas del módulo ni crear sesión (`erp.session`). Sustituye al acceso rápido `#qa-load-demo` del home para cargar la demostración.
+- `nav-logout` ("Cerrar sesión") es la acción de sesión: última opción del lateral para los tres roles, separada visualmente del menú. No existe "Iniciar sesión" (`#nav-login`) dentro del ERP. Al usarlo se elimina `erp.session` (`sessionStorage`), vuelve al acceso y se ocultan el lateral y la indicación del rol anterior; la sesión termina también al cerrar la pestaña.
+- Toda vista de negocio del mapa exige sesión iniciada con credenciales válidas: Panel, Terceros, Facturas de venta, Facturas de compra, Movimientos, Seguimiento y Buscar, además de Liquidaciones de sueldo, Accesos y Avisos para el desarrollador según el rol. Las vistas no permitidas por rol se ocultan y se bloquean también si se intenta navegar directamente.
+- La guía de uso (HU8) sigue siendo un panel del marco general sin efectos sobre los datos; sus pasos apuntan a las mismas vistas, que ahora se alcanzan solo con sesión activa y permisos del rol.
 
 ## Contrato de la guía de uso (HU8)
 

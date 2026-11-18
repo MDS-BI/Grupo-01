@@ -3,10 +3,11 @@ const SECURITY_WARNING =
 
 export function renderInvoiceStatusNotice(
   container,
-  { migration, unclassifiedCount = 0 } = {}
+  { migration, unclassifiedCount = 0, isAdmin = true } = {}
 ) {
   if (!container) return;
   container.textContent = '';
+  if (!isAdmin) return;
 
   const messages = [];
   if (migration && migration.ok === false) {

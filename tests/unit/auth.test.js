@@ -20,7 +20,8 @@ describe('auth: normalización de RUT', () => {
 describe('auth: contraseña inicial', () => {
   it('deriva los primeros 4 dígitos del cuerpo del RUT', () => {
     expect(initialPassword('12.345.678-5')).toBe('1234');
-    expect(initialPassword('11111111-1')).toBe('1111');
+    expect(initialPassword('88888888-8')).toBe('8888');
+    expect(initialPassword('55.555.555-5')).toBe('5555');
     expect(initialPassword('12345678-5')).toBe('1234');
   });
 
@@ -120,15 +121,45 @@ describe('auth: validateAccessRecord', () => {
   it('rechaza un acceso de administrador con tercero asociado', () => {
     const errors = validateAccessRecord(
       {
-        accessId: '11111111-1',
+        accessId: '88888888-8',
         role: 'administrador',
         entityId: 'ent_worker',
-        password: '1111',
+        password: '8888',
         active: true,
       },
       { entities, existing: [] }
     );
     expect(errors.length).toBeGreaterThan(0);
+  });
+
+  it('acepta un acceso de finanzas sin tercero personal', () => {
+    const errors = validateAccessRecord(
+      {
+        accessId: '55555555-5',
+        role: 'finanzas',
+        entityId: null,
+        password: '5555',
+        active: true,
+      },
+      { entities, existing: [] }
+    );
+    expect(errors).toEqual([]);
+  });
+
+  it('rechaza un acceso de finanzas con tercero personal', () => {
+    const errors = validateAccessRecord(
+      {
+        accessId: '55555555-5',
+        role: 'finanzas',
+        entityId: 'ent_worker',
+        password: '5555',
+        active: true,
+      },
+      { entities, existing: [] }
+    );
+    expect(errors.some((error) => error.code === 'ENTITY_NOT_ALLOWED')).toBe(
+      true
+    );
   });
 });
 
@@ -203,21 +234,58 @@ describe('auth: authenticate', () => {
 
   it('reconoce al administrador con RUT y contraseña sin un rol de entrada', () => {
     const result = authenticate({
-      rut: '11.111.111-1',
-      password: '1111',
+      rut: '88.888.888-8',
+      password: '8888',
       records: [
         {
           ...baseAccess,
-          accessId: '11111111-1',
+          accessId: '88888888-8',
           role: 'administrador',
           entityId: null,
-          password: '1111',
+          password: '8888',
         },
       ],
       entities,
     });
     expect(result.ok).toBe(true);
     expect(result.access.role).toBe('administrador');
+  });
+
+  it('reconoce a finanzas con RUT y contraseña sin un rol de entrada', () => {
+    const result = authenticate({
+      rut: '55.555.555-5',
+      password: '5555',
+      records: [
+        {
+          ...baseAccess,
+          accessId: '55555555-5',
+          role: 'finanzas',
+          entityId: null,
+          password: '5555',
+        },
+      ],
+      entities,
+    });
+    expect(result.ok).toBe(true);
+    expect(result.access.role).toBe('finanzas');
+  });
+
+  it('rechaza el RUT vacío', () => {
+    const result = authenticateAccess({ rut: '' });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('INVALID_RUT');
+      expect(result.notifyDeveloper).toBe(true);
+    }
+  });
+
+  it('rechaza la contraseña vacía', () => {
+    const result = authenticateAccess({ password: '' });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reason).toBe('WRONG_PASSWORD');
+      expect(result.notifyDeveloper).toBe(false);
+    }
   });
 
   it('rechaza el acceso inactivo y avisa al desarrollador', () => {
