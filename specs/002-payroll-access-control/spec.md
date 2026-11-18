@@ -130,7 +130,7 @@ Como administrador de remuneraciones, quiero crear y administrar los accesos por
 6. **Dado** un acceso activo, **cuando** el administrador lo desactiva, **entonces** ese RUT deja de permitir el acceso en el siguiente intento y se registra una notificación para el desarrollador.
 7. **Dado** un acceso inactivo, **cuando** el administrador lo reactiva, **entonces** vuelve a permitir el acceso según su rol.
 8. **Dado** un acceso de trabajador o de finanzas, **cuando** el administrador restablece su contraseña, **entonces** vuelve a ser los primeros 4 dígitos de su RUT.
-9. **Dado** el último administrador activo, **cuando** intento desactivarlo o eliminarlo, **entonces** el sistema lo impide para no dejar el módulo sin administración.
+9. **Dado** el último administrador activo, **cuando** intento desactivarlo, **entonces** el sistema lo impide para no dejar el módulo sin administración.
 10. **Dado** un trabajador o un acceso de finanzas autenticado, **cuando** intenta abrir la administración de accesos, **entonces** el sistema se lo impide.
 11. **Dado** un administrador autenticado, **cuando** abre la administración de accesos, **entonces** ve la lista con RUT, rol (`administrador`, `finanzas` o `trabajador`), tercero asociado cuando corresponde, estado y fecha de creación.
 
@@ -284,7 +284,7 @@ Como integrante de finanzas, quiero ver y editar toda la facturación del módul
 - **FR-013**: Un tercero personal DEBE tener como máximo un acceso activo; el administrador DEBE poder desactivar y reactivar accesos.
 - **FR-014**: El administrador DEBE poder restablecer la contraseña de un acceso a los primeros 4 dígitos de su RUT.
 - **FR-015**: El administrador DEBE ver la lista de accesos con RUT, rol (`administrador`, `finanzas` o `trabajador`), tercero asociado cuando corresponda, estado y fecha de creación, sin exponer datos innecesarios.
-- **FR-016**: DEBE existir al menos un acceso de administrador activo y el sistema DEBE impedir desactivar o eliminar el último.
+- **FR-016**: DEBE existir al menos un acceso de administrador activo y el sistema DEBE impedir desactivar el último.
 - **FR-017**: El sistema DEBE impedir que un trabajador o un acceso de finanzas cree, modifique, desactive o consulte la lista completa de accesos.
 - **FR-018**: Los cambios en los accesos DEBEN aplicarse en el siguiente intento de acceso, sin reiniciar la aplicación.
 
