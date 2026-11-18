@@ -1,6 +1,6 @@
 # Contrato: Separación física y visual de facturas
 
-**Funcionalidad**: `002-payroll-access-control` · **Fecha**: 2026-11-11
+**Funcionalidad**: `002-payroll-access-control` · **Fecha**: 2026-11-11 · **Revisado**: 2026-11-17
 **Relacionado con**: `spec.md`, `data-model.md`, `research.md`
 
 ## 1. Decisión
@@ -25,6 +25,7 @@ La separación de facturas es **física** y **lógica/visual**:
 - Un `document_id` no puede existir en ambas colecciones.
 - Un registro de venta nunca se muestra en la vista de compra, en la liquidación del trabajador ni en la lista del administrador.
 - Un registro de compra nunca se muestra en la vista de venta.
+- Las vistas de venta y compra están disponibles para `administrador` y `finanzas`; el trabajador no puede abrirlas.
 
 ## 3. API de `src/storage.js`
 

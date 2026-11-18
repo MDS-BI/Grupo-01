@@ -1,6 +1,6 @@
 # Contrato: Vistas de liquidaciones
 
-**Funcionalidad**: `002-payroll-access-control` · **Fecha**: 2026-11-11
+**Funcionalidad**: `002-payroll-access-control` · **Fecha**: 2026-11-11 · **Revisado**: 2026-11-17
 **Relacionado con**: `spec.md`, `data-model.md`, `contracts/access-and-session.md`
 
 ## 1. Resolución de la liquidación
@@ -10,6 +10,7 @@ La liquidación es una factura de compra a un tercero de tipo personal. No exist
 ```js
 resolveWorkerSettlement({ entityId, purchaseInvoices, entities }): PurchaseInvoice | null
 resolveAdminSettlements({ purchaseInvoices, entities, filters }): PurchaseInvoice[]
+// También se usa con sesión de rol `finanzas`; el trabajador nunca la invoca.
 ```
 
 **Regla del trabajador**:
@@ -19,7 +20,7 @@ resolveAdminSettlements({ purchaseInvoices, entities, filters }): PurchaseInvoic
 4. Desempatar por `startDate` descendente y luego por `createdAt` descendente.
 5. Devolver la primera o `null`.
 
-**Regla del administrador**:
+**Regla del administrador y de finanzas**:
 1. Incluir todas las facturas de compra cuyo tercero sea personal.
 2. Aplicar filtros opcionales por `entity_id`/RUT y por `customFields.periodoLiquidacion`.
 3. Ordenar por período descendente y luego por nombre de trabajador.
@@ -49,13 +50,13 @@ resolveAdminSettlements({ purchaseInvoices, entities, filters }): PurchaseInvoic
 - Si la sesión no tiene un `entityId` válido, se cierra la sesión y se vuelve al login con un mensaje.
 - No se muestra la navegación administrativa.
 
-## 3. Vista del administrador: "Liquidaciones de sueldo"
+## 3. Vista del administrador y de finanzas: "Liquidaciones de sueldo"
 
 **Elementos requeridos en `index.html`**:
 
 | Elemento | ID | Función |
 |---|---|---|
-| Vista | `view-payroll-admin` | Solo administrador. |
+| Vista | `view-payroll-admin` | Solo administrador y finanzas. |
 | Filtro por trabajador/RUT | `payroll-filter-worker` | Selector o texto. |
 | Filtro por período | `payroll-filter-period` | `YYYY-MM` o selector. |
 | Lista | `payroll-admin-list` | Tabla de liquidaciones. |
@@ -74,7 +75,7 @@ resolveAdminSettlements({ purchaseInvoices, entities, filters }): PurchaseInvoic
 - Acción "Editar".
 
 **Comportamiento**:
-- Solo se muestra con sesión de rol `administrador`.
+- Solo se muestra con sesión de rol `administrador` o `finanzas`.
 - La lista incluye todas las facturas de compra a terceros personales.
 - Los filtros se aplican en memoria y no modifican los datos.
 - "Editar" carga la factura en el formulario de compra y permite modificar período, monto, estado, fechas y datos de pago.
@@ -108,32 +109,34 @@ resolveRoute(view, session): string
 
 **Matriz de acceso**:
 
-| Vista | Administrador | Trabajador |
-|---|---|---|
-| `login` | Solo sin sesión | Solo sin sesión |
-| `dashboard` | Sí | No |
-| `entities` | Sí | No |
-| `invoice-sale` | Sí | No |
-| `invoice-purchase` | Sí | No |
-| `payroll-admin` | Sí | No |
-| `access` | Sí | No |
-| `dev-notifications` | Sí | No |
-| `movements` | Sí | No |
-| `tracking` | Sí | No |
-| `search` | Sí | No |
-| `payroll-worker` | No | Sí |
+| Vista | Administrador | Finanzas | Trabajador |
+|---|---|---|---|
+| `login` | Solo sin sesión | Solo sin sesión | Solo sin sesión |
+| `dashboard` | Sí | Sí | No |
+| `entities` | Sí | Sí | No |
+| `invoice-sale` | Sí | Sí | No |
+| `invoice-purchase` | Sí | Sí | No |
+| `payroll-admin` | Sí | Sí | No |
+| `access` | Sí | No | No |
+| `dev-notifications` | Sí | No | No |
+| `movements` | Sí | Sí | No |
+| `cashflow` | Sí | Sí | No |
+| `tracking` | Sí | Sí | No |
+| `search` | Sí | Sí | No |
+| `payroll-worker` | No | No | Sí |
 
 **Comportamiento**:
 - Si un trabajador intenta una vista no permitida, se redirige a `payroll-worker` y se muestra un mensaje claro.
-- Si un administrador intenta `payroll-worker`, se redirige a `payroll-admin`.
-- Si no hay sesión, cualquier vista distinta de `login` redirige a `login`.
+- Si un administrador o finanzas intenta `payroll-worker`, se redirige a `payroll-admin`.
+- Si finanzas intenta `access` o `dev-notifications`, se redirige a `dashboard` y se muestra un mensaje claro.
+- Si no hay sesión, cualquier vista distinta de `login` redirige a `login`; no existe modo invitado ni navegación sin autenticar.
 - Las guardas se aplican tanto en la navegación visible como en las funciones que cargan datos.
 
 ## 6. Estados vacíos y errores
 
 | Situación | Mensaje | Dónde |
 |---|---|---|
-| Sin accesos registrados | "No hay accesos registrados. Continúa como invitado para cargar los datos de demostración desde el panel y vuelve a iniciar sesión." | Login |
+| Sin accesos registrados | "No hay accesos registrados. Usa «Cargar demostración» y luego ingresa con el RUT y la contraseña correspondientes." | Login |
 | Credenciales incorrectas | "RUT o contraseña incorrectos." | Login |
 | Acceso inactivo | "El acceso está inactivo. Contacta al administrador." | Login |
 | Vínculo roto | "El acceso no tiene un trabajador asociado válido. Contacta al administrador." | Login |
@@ -145,9 +148,10 @@ resolveRoute(view, session): string
 
 ## 7. Pruebas de contrato
 
-- `tests/integration/login-roles.test.js`: selección de rol, credenciales válidas, rol incompatible, RUT inválido, inactivo y vínculo roto.
+- `tests/integration/login-roles.test.js`: roles registrados, credenciales válidas, RUT inválido, inactivo y vínculo roto; sin modo invitado.
+- `tests/integration/demo-data.test.js`: carga desde el acceso, credenciales de administrador, finanzas y trabajadores, idempotencia y RUT del administrador distinto de los terceros.
 - `tests/integration/payroll-worker.test.js`: liquidación vigente, estado vacío, solo lectura y aislamiento entre dos trabajadores.
-- `tests/integration/payroll-admin.test.js`: lista completa, filtros, edición y reflejo en la vista del trabajador.
+- `tests/integration/payroll-admin.test.js`: lista completa, filtros, edición y reflejo en la vista del trabajador, tanto con administrador como con finanzas; bloqueo de accesos y avisos para finanzas.
 - `tests/integration/session-lifecycle.test.js`: recarga conserva la sesión, cierre de sesión la elimina y cierre de pestaña la descarta.
 - `tests/integration/access-admin.test.js`: creación, duplicado, contraseña inicial, desactivación, reactivación, último administrador y restablecimiento.
 - `tests/integration/dev-notifications.test.js`: registro de incidencias y panel del administrador.

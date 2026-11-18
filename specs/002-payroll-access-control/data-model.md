@@ -1,6 +1,6 @@
 # Modelo de Datos: Acceso a liquidaciones de sueldo por RUT y contraseña
 
-**Rama**: `002-payroll-access-control` · **Fecha**: 2026-11-11 · **Estado**: Borrador
+**Rama**: `002-payroll-access-control` · **Fecha**: 2026-11-11 · **Revisado**: 2026-11-17 · **Estado**: Borrador
 **Relacionado con**: `spec.md`, `plan.md`, `research.md` y `contracts/`
 
 ## 1. Descripción general
@@ -9,7 +9,7 @@ El modelo agrega credenciales de acceso y una sesión por pestaña sobre el mód
 
 | Concepto | Tipo | Para qué existe |
 |---|---|---|
-| **Acceso (AccessRecord)** | Registro de credencial | Identifica a un administrador o trabajador por RUT y contraseña. |
+| **Acceso (AccessRecord)** | Registro de credencial | Identifica a un administrador, finanzas o trabajador por RUT y contraseña. |
 | **Sesión (Session)** | Registro efímero en `sessionStorage` | Mantiene el rol y el vínculo mientras la pestaña está abierta. |
 | **Notificación al desarrollador (DevNotification)** | Registro local de incidencia | Diagnostica RUT inválidos, duplicados, inactivos o con vínculo roto. |
 | **Tercero (Entity)** | Registro de datos maestros existente | Contraparte; el tercero de tipo personal es el trabajador. |
@@ -25,8 +25,8 @@ Credencial de entrada del MVP. Se guarda en `erp.accessRecords`.
 | Campo | Tipo | Descripción | Restricciones |
 |---|---|---|---|
 | `accessId` | string | RUT canónico del usuario; clave primaria | Obligatorio, único, válido según `isValidRutChileno`, forma `CUERPO-DV` sin puntos. |
-| `role` | string | Rol del usuario | Obligatorio. Valores: `administrador`, `trabajador`. |
-| `entityId` | string \| null | `entity_id` del tercero personal asociado | Obligatorio para `trabajador`; debe existir y tener `tipoTercero = personal`. `null` para `administrador`. |
+| `role` | string | Rol del usuario | Obligatorio. Valores: `administrador` (RRHH), `finanzas`, `trabajador`. |
+| `entityId` | string \| null | `entity_id` del tercero personal asociado | Obligatorio para `trabajador`; debe existir y tener `tipoTercero = personal`. `null` para `administrador` y `finanzas`. |
 | `password` | string | Contraseña del MVP | Obligatoria, exactamente 4 dígitos. Al crear o restablecer debe ser igual a los primeros 4 dígitos del cuerpo del RUT. |
 | `active` | boolean | Estado del acceso | Obligatorio. `true` por defecto. |
 | `createdAt` | string | Fecha de creación (ISO 8601) | Obligatorio. |
@@ -36,9 +36,10 @@ Credencial de entrada del MVP. Se guarda en `erp.accessRecords`.
 - `accessId` es único entre todos los accesos, comparado en forma canónica.
 - Un `entityId` puede tener como máximo un acceso con `active = true`.
 - Debe existir al menos un acceso con `role = administrador` y `active = true`.
-- Un acceso de administrador no puede tener `entityId`.
+- Un acceso de administrador o de finanzas no puede tener `entityId`.
 - Un acceso de trabajador no puede quedar sin `entityId` ni apuntar a un tercero que no sea personal.
-- La contraseña inicial y la restablecida se derivan del RUT; no se acepta otra en la creación.
+- La contraseña inicial y la restablecida se derivan del RUT; no se acepta otra en la creación. Sin cambio de contraseña en el MVP, es un riesgo conocido documentado.
+- En los datos de demostración, el `accessId` del administrador (`88.888.888-8`) no puede coincidir con el `taxId` de ningún `Entity`.
 
 ## 3. Entidad: Session (Sesión)
 
@@ -47,8 +48,8 @@ Registro efímero en `sessionStorage` bajo `erp.session`. No se guarda en `local
 | Campo | Tipo | Descripción | Restricciones |
 |---|---|---|---|
 | `accessId` | string | RUT canónico del acceso autenticado | Obligatorio. |
-| `role` | string | Rol de la sesión | Obligatorio. Valores: `administrador`, `trabajador`. |
-| `entityId` | string \| null | Tercero personal asociado | Obligatorio para `trabajador`; `null` para `administrador`. |
+| `role` | string | Rol de la sesión | Obligatorio. Valores: `administrador`, `finanzas`, `trabajador`. |
+| `entityId` | string \| null | Tercero personal asociado | Obligatorio para `trabajador`; `null` para `administrador` y `finanzas`. |
 | `startedAt` | string | Inicio de la sesión (ISO 8601) | Obligatorio. |
 
 **Ciclo de vida**:
@@ -57,6 +58,7 @@ Registro efímero en `sessionStorage` bajo `erp.session`. No se guarda en `local
 3. Se elimina al cerrar sesión.
 4. El navegador la elimina al cerrar la pestaña.
 5. Si al recuperarla el acceso ya no existe, está inactivo o cambió de rol, se descarta y se vuelve al login.
+6. No existe sesión de invitado: sin `Session` válida, toda vista distinta de `login` se considera inalcanzable.
 
 ## 4. Entidad: DevNotification (Notificación al desarrollador)
 
@@ -67,14 +69,14 @@ Registro local en `erp.devNotifications`.
 | `id` | string | Identificador único | Obligatorio, generado automáticamente. |
 | `timestamp` | string | Fecha y hora del intento (ISO 8601) | Obligatorio. |
 | `accessId` | string | RUT intentado, normalizado si es posible | Obligatorio; puede ser el texto original si el RUT es inválido. |
-| `role` | string | Rol seleccionado en el intento | Obligatorio. Valores: `administrador`, `trabajador` o `desconocido`. |
+| `role` | string | Rol del acceso relacionado con el intento | Obligatorio. Valores: `administrador`, `finanzas`, `trabajador` o `desconocido`. |
 | `reason` | string | Motivo del rechazo | Obligatorio. Valores: `INVALID_RUT`, `INACTIVE`, `DUPLICATE`, `BROKEN_ENTITY_LINK`, `NOT_FOUND`. |
 | `origin` | string | Origen del intento | Obligatorio. Valor inicial: `login`. |
 
 **Reglas**:
 - Se registra una notificación por cada intento rechazado por las razones indicadas.
 - No se registra una notificación por contraseña incorrecta ni por rol incompatible; esos son errores del usuario, no incidencias del desarrollador.
-- El panel de avisos solo es visible para administradores.
+- El panel de avisos solo es visible para administradores; el rol `finanzas` no puede abrirlo.
 - Las notificaciones no se eliminan automáticamente en el MVP; el administrador puede limpiarlas con confirmación.
 
 ## 5. Proyección: PayrollSettlement (Liquidación de sueldo)
@@ -105,7 +107,7 @@ No tiene almacenamiento propio. Se obtiene de `erp.purchaseInvoices` con estas r
 4. Desempatar por `createdAt` descendente.
 5. Mostrar solo la primera.
 
-**Regla del administrador**: ve todas las liquidaciones (todas las facturas de compra a terceros personales), sin límite de período, y puede filtrar por trabajador/RUT y por período.
+**Regla del administrador y de finanzas**: ambos ven todas las liquidaciones (todas las facturas de compra a terceros personales), sin límite de período, y pueden filtrar por trabajador/RUT y por período. El trabajador ve solo la liquidación vigente de su propio `entityId`.
 
 ## 6. Entidades de facturación (existentes, con separación física)
 
@@ -158,7 +160,7 @@ Se mantiene el modelo de `001`. Campos relevantes para esta funcionalidad:
 | `entity_id` | string | Vínculo con accesos y facturas. |
 | `name` | string | Nombre del trabajador en la liquidación. |
 | `code` | string | Código interno. |
-| `taxId` | string | RUT del tercero; debe coincidir con el RUT del acceso cuando el tercero es personal. |
+| `taxId` | string | RUT del tercero; debe coincidir con el RUT del acceso cuando el tercero es personal; en la demostración no puede coincidir con el RUT del administrador. |
 | `customFields.tipoTercero` | string | `personal` identifica al trabajador; `cliente` y `proveedor` se usan en las facturas. |
 
 ## 8. Entidad: Movement (Movimiento financiero)
@@ -168,7 +170,7 @@ Se mantiene el contrato de `001`. Se genera a partir de las facturas y no se edi
 ## 9. Relaciones
 
 - Un `AccessRecord` de trabajador referencia exactamente un `Entity` personal por `entityId`.
-- Un `AccessRecord` de administrador no referencia ningún `Entity`.
+- Un `AccessRecord` de administrador o de finanzas no referencia ningún `Entity`.
 - Un `Entity` personal puede tener cero o un `AccessRecord` activo.
 - Una `PurchaseInvoice` pertenece a un `Entity`; si el `Entity` es personal, la factura es una liquidación.
 - Una `SaleInvoice` pertenece a un `Entity` de tipo cliente.
@@ -179,9 +181,9 @@ Se mantiene el contrato de `001`. Se genera a partir de las facturas y no se edi
 
 **Acceso**
 - RUT válido, único y normalizado.
-- Rol en `{administrador, trabajador}`.
-- Trabajador: `entityId` obligatorio, existente y de tipo personal.
-- Administrador: `entityId` debe ser `null`.
+- Rol en `{administrador, finanzas, trabajador}`.
+- Trabajador: `entityId` obligatorio, existente y de tipo personal; ve solo su propia liquidación.
+- Administrador y finanzas: `entityId` debe ser `null`. El administrador conserva accesos y avisos del desarrollador; finanzas no.
 - Contraseña de exactamente 4 dígitos; al crear o restablecer, igual a los primeros 4 dígitos del cuerpo del RUT.
 - No se puede desactivar ni eliminar el último administrador activo.
 - No se puede tener dos accesos activos para el mismo `entityId`.
@@ -205,6 +207,16 @@ Se mantiene el contrato de `001`. Se genera a partir de las facturas y no se edi
 - `erp.purchaseInvoices` solo contiene `tipoFactura = compra`.
 - Un documento no puede existir simultáneamente en ambas colecciones con el mismo `document_id`.
 - El tipo se fija por la vista y no se puede cambiar desde el formulario.
+
+**Permisos por rol**
+
+| Funcionalidad | Administrador (RRHH) | Finanzas | Trabajador |
+|---|---|---|---|
+| Terceros, facturas de venta y compra, movimientos, flujo de caja, seguimiento y búsqueda | Ver y editar | Ver y editar | Sin acceso |
+| Liquidaciones de todos los trabajadores | Ver y editar | Ver y editar | Solo la propia, solo lectura |
+| Administración de accesos (incluidos accesos de finanzas) | Sí | No | No |
+| Avisos del desarrollador | Sí | No | No |
+| Cargar demostración desde la pantalla de acceso | Sí, como acción previa a la autenticación | Sí, como acción previa a la autenticación | Sí, como acción previa a la autenticación |
 
 ## 11. Transiciones de estado
 
@@ -262,7 +274,7 @@ erDiagram
 
     ACCESO {
         string accessId PK "RUT canonico"
-        string role "administrador o trabajador"
+        string role "administrador, finanzas o trabajador"
         string entityId FK "solo trabajador"
         string password "4 digitos MVP"
         boolean active
@@ -337,7 +349,7 @@ erDiagram
 
 ## 14. Notas de extensibilidad
 
-- **Etapa futura 1**: agregar cambio obligatorio de contraseña en el primer ingreso y recuperación de contraseña.
+- **Etapa futura 1**: agregar cambio obligatorio de contraseña en el primer ingreso y recuperación de contraseña, para cerrar el riesgo conocido del MVP.
 - **Etapa futura 2**: historial completo de liquidaciones para el trabajador y pagos parciales.
 - **Etapa futura 3**: backend real con autenticación, autorización del lado del servidor y cifrado.
 - **Etapa futura 4**: permisos granulares y auditoría completa de accesos.

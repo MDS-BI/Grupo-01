@@ -1,6 +1,6 @@
 # Investigación: Acceso a liquidaciones de sueldo por RUT y contraseña
 
-**Rama**: `002-payroll-access-control` · **Fecha**: 2026-11-11
+**Rama**: `002-payroll-access-control` · **Fecha**: 2026-11-11 · **Revisado**: 2026-11-17 (seguridad y privacidad)
 **Relacionado con**: `spec.md`, `plan.md`, `data-model.md` y `contracts/`
 
 ## 1. Normalización y validación del RUT
@@ -22,7 +22,7 @@ La comparación de accesos se hace siempre con la forma canónica. La visualizac
 
 ## 2. Contraseña inicial
 
-**Decisión.** La contraseña inicial son los primeros 4 dígitos del cuerpo del RUT, sin puntos ni dígito verificador. Ejemplo: `12.345.678-5` → `1234`. La regla se aplica al crear un acceso de trabajador o de administrador y al restablecer la contraseña. El sistema verifica que la contraseña guardada coincida exactamente con esos 4 dígitos al crear el acceso.
+**Decisión.** La contraseña inicial son los primeros 4 dígitos del cuerpo del RUT, sin puntos ni dígito verificador. Ejemplo: `12.345.678-5` → `1234`. La regla se aplica al crear un acceso de trabajador, de finanzas o de administrador y al restablecer la contraseña. El sistema verifica que la contraseña guardada coincida exactamente con esos 4 dígitos al crear el acceso.
 
 **Justificación.** Es la regla explícita del usuario y es fácil de explicar en la demostración. No se exige cambio obligatorio en el primer ingreso porque el usuario no lo pidió y el MVP no tiene backend.
 
@@ -31,7 +31,7 @@ La comparación de accesos se hace siempre con la forma canónica. La visualizac
 - Contraseña igual al RUT completo: más larga, pero no es lo solicitado.
 - Forzar cambio en el primer ingreso: agrega un flujo no pedido y una pantalla adicional.
 
-**Riesgo documentado.** La contraseña se guarda en `localStorage` sin cifrado. El control es de interfaz y no debe usarse con datos reales. Se documenta en `README.md` y en la interfaz.
+**Riesgo documentado.** La contraseña se guarda en `localStorage` sin cifrado y el MVP no ofrece cambio de contraseña: cualquier persona que conozca el RUT de otra persona puede iniciar sesión como ella. El control de acceso es solo de interfaz y no debe usarse con datos reales. Se documenta como riesgo conocido en `README.md`, en la sección «Manejo de riesgos de datos y sesgos» de `spec.md` y en la interfaz.
 
 ## 3. Modelo de acceso sin entidad de liquidación
 
@@ -105,33 +105,37 @@ Cada registro conserva `customFields.tipoFactura` como invariante y para compati
 ## 8. Guardas de rol y navegación
 
 **Decisión.** `app.js` mantiene una función `resolveRoute(view, session)` que devuelve la vista permitida o la vista de acceso. `shell.js` recibe la sesión y muestra solo los módulos permitidos:
-- **Administrador**: panel, terceros, facturas de venta, facturas de compra, liquidaciones, accesos, avisos, movimientos, seguimiento y búsqueda.
-- **Trabajador**: solo "Mi liquidación" y "Cerrar sesión".
+- **Administrador (RRHH)**: panel, terceros, facturas de venta, facturas de compra, liquidaciones, accesos, avisos, movimientos, seguimiento y búsqueda. Puede crear accesos de rol `finanzas`.
+- **Finanzas**: panel, terceros, facturas de venta, facturas de compra, liquidaciones, movimientos, flujo de caja, seguimiento y búsqueda, con permisos de edición. No ve accesos ni avisos del desarrollador.
+- **Trabajador**: solo "Mi liquidación" y "Cerrar sesión". No ve datos de otros trabajadores ni de terceros.
 
-Toda acción de edición, eliminación o administración verifica el rol antes de ejecutarse. Las vistas no permitidas se ocultan y, si se intenta navegar por código o por URL, se redirige a la vista permitida con un mensaje.
+No existe rol invitado ni sesión sin credenciales: cualquier vista distinta de `login` sin sesión válida redirige al acceso. Toda acción de edición, eliminación o administración verifica el rol antes de ejecutarse. Las vistas no permitidas se ocultan y, si se intenta navegar por código o por URL, se redirige a la vista permitida con un mensaje.
 
 **Justificación.** Centralizar las guardas evita que cada componente repita la lógica y facilita las pruebas. La navegación por rol es parte de la experiencia de usuario y del requisito de no exponer datos.
 
 **Alternativas consideradas.**
 - Ocultar solo los botones: insuficiente, porque una llamada directa a la vista podría seguir mostrando datos.
 - Duplicar guardas en cada componente: más código y más riesgo de inconsistencia.
+- Un único rol con permisos amplios: incumple el feedback de privacidad, porque finanzas no debe administrar accesos ni ver avisos del desarrollador y el trabajador no debe ver datos ajenos.
 
 ## 9. Datos de demostración
 
 **Decisión.** La demostración incluye:
-- Un administrador: RUT `11.111.111-1`, contraseña `1111`.
-- Dos trabajadores: RUT `22.222.222-2` / `2222` y `45.000.000-5` / `4500`.
+- Un administrador (RRHH): RUT `88.888.888-8`, contraseña `8888`.
+- Un acceso de finanzas: RUT `55.555.555-5`, contraseña `5555`.
+- Dos trabajadores: RUT `22.222.222-2` / `2222` y `45.000.000-0` / `4500`.
 - Terceros personales asociados y una liquidación por trabajador, con períodos `2026-09` y `2026-10`.
 - Facturas de venta y de compra de ejemplo para demostrar la separación.
 
-La carga es idempotente: si ya existen accesos o facturas, no duplica y conserva lo existente. Los RUT y contraseñas se documentan en `README.md`.
+El RUT del administrador no coincide con el RUT de ningún tercero: se descarta `11.111.111-1` porque pertenece a un tercero proveedor. La carga se inicia desde el botón «Cargar demostración» de la pantalla de acceso, sin abrir vistas del módulo ni iniciar sesión. Es idempotente: si ya existen accesos o facturas, no duplica y conserva lo existente. Los RUT y contraseñas se documentan en `README.md`.
 
-**Justificación.** Permite demostrar los dos roles y la separación sin datos reales. Los RUT son ficticios y válidos según el algoritmo chileno.
+**Justificación.** Permite demostrar los tres roles y la separación sin datos reales. Los RUT son ficticios y válidos según el módulo 11; mantener el RUT del administrador distinto de los terceros evita confundir al personal de RRHH con un trabajador o proveedor.
 
 **Alternativas consideradas.**
 - Generar RUT aleatorios: dificulta la repetición de la demostración.
 - Usar datos reales: prohibido por el alcance.
-- Sembrar solo un administrador: no permite demostrar la vista del trabajador.
+- Sembrar solo un administrador: no permite demostrar la vista del trabajador ni la de finanzas.
+- Cargar la demostración desde un panel sin sesión: reintroduce el modo invitado que el feedback de privacidad pide eliminar.
 
 ## 10. Riesgos y mitigaciones
 
@@ -144,3 +148,17 @@ La carga es idempotente: si ya existen accesos o facturas, no duplica y conserva
 | Documentos legados sin `tipoFactura` | Bandeja `erp.unclassifiedDocuments` y aviso al administrador; no se muestran como liquidación. |
 | Duplicación de lógica entre vistas de factura | Fábricas compartidas `invoice-form.js` e `invoice-list.js` con configuración por tipo. |
 | Rol incompatible | Validación explícita en el login y mensaje claro; no se registra como incidencia del desarrollador. |
+| Riesgo conocido: contraseña inicial sin cambio | RUT y contraseña documentados como riesgo del MVP en `spec.md`, `README.md` y la interfaz; solo datos ficticios. |
+| Riesgo conocido: control solo de interfaz | Guardas centralizadas y aviso explícito; no se promete seguridad real ni se usan datos reales. |
+| RUT del administrador igual al de un tercero | RUT de demostración `88.888.888-8`, validado como distinto de todos los terceros en la carga idempotente. |
+
+## 11. Acceso obligatorio y carga de demostración
+
+**Decisión.** No existe modo invitado. La pantalla de acceso ofrece «Ingresar» y «Cargar demostración»; esta última siembra los datos ficticios y permanece en el acceso, sin crear sesión ni mostrar vistas de negocio. Toda vista del módulo exige una sesión válida de `administrador`, `finanzas` o `trabajador`.
+
+**Justificación.** Responde al feedback de privacidad: eliminar la puerta de entrada sin credenciales evita que cualquier persona vea información de terceros o trabajadores, y permite arrancar en un navegador vacío sin reintroducir el invitado por otro nombre.
+
+**Alternativas consideradas.**
+- Conservar «Continuar sin iniciar sesión»: permite ver datos sin autenticar y contradice la decisión del grupo.
+- Crear un registro de arranque documentado: agrega una credencial fija adicional y más pasos para la demostración.
+- Auto-cargar la demostración al abrir: oculta la acción al usuario y dificulta explicar el origen de los datos.
