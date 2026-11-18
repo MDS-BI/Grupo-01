@@ -6,7 +6,7 @@
 
 **Pruebas**: La Constitución (principio II) y la especificación exigen pruebas unitarias y de integración para autenticación, roles y aislamiento. Las tareas de prueba se escriben antes o junto con la implementación.
 
-**Organización**: Las tareas se agrupan por historia de usuario. Los identificadores `[US1]`…`[US6]` mapean a `spec.md`. El orden de fases sigue la prioridad: P1 (US1, US2, US5) → P2 (US3, US4) → P3 (US6). US5 se ejecuta antes de US3/US4 porque provee el formulario de factura de compra que reutiliza la edición de liquidaciones.
+**Organización**: Las tareas se agrupan por historia de usuario. Los identificadores `[US1]`…`[US7]` mapean a `spec.md`. El orden de fases sigue la prioridad: P1 (US1, US2, US5, US7) → P2 (US3, US4) → P3 (US6). US5 se ejecuta antes de US3/US4 porque provee el formulario de factura de compra que reutiliza la edición de liquidaciones. Phase 10 agrupa las correcciones de la revisión de seguridad y privacidad sin modificar T001–T078.
 
 ## Formato: `[ID] [P?] [Story] Descripción`
 
@@ -18,7 +18,7 @@
 
 - Aplicación de un solo proyecto: `src/`, `tests/` e `index.html` en la raíz del repositorio.
 - Claves de almacenamiento: `erp.salesInvoices`, `erp.purchaseInvoices`, `erp.unclassifiedDocuments`, `erp.accessRecords`, `erp.devNotifications`, `sessionStorage: erp.session`.
-- Roles canónicos: `administrador` y `trabajador`.
+- Roles canónicos tras la revisión: `administrador`, `finanzas` y `trabajador`; `invitado` queda eliminado. Las tareas históricas que mencionan `invitado` se conservan y se corrigen en Phase 10.
 
 ---
 
@@ -231,6 +231,7 @@
 - **Foundational (Phase 2)**: depende de Setup; bloquea todas las historias. Las pruebas T005–T009 se escriben antes que T010–T017.
 - **User Stories (Phase 3+)**: dependen de Foundational.
 - **Polish (Phase 9)**: depende de las historias que se quieran entregar.
+- **Revisión (Phase 10)**: depende de Foundational y de las historias US1/US2/US4/US5/US6 que se estén corrigiendo; agrupa pruebas primero y luego las correcciones de implementación y documentación.
 
 ### Dependencias entre historias
 
@@ -240,11 +241,12 @@
 - **US3 (P2)**: depende de US1 y de la separación física de Foundational; puede probarse con accesos y compras creados por API.
 - **US4 (P2)**: depende de US3 por `src/payroll.js` y de US5 por `src/components/invoice-purchase-form.js`.
 - **US6 (P3)**: depende de US1 (cierre de sesión), de US2/US4 (banderas `dirty`) y de `access-storage.js` (notificaciones y demostración).
+- **US7 (P1)**: depende de US1 y US2 para la sesión y la creación del acceso de finanzas; puede ejecutarse en paralelo con US5 tras Foundational. Corrige la matriz de permisos y la visibilidad de módulos.
 
 ### Orden recomendado
 
 ```text
-Setup → Foundational → US1 → US2 → US5 → US3 → US4 → US6 → Polish
+Setup → Foundational → US1 → US2 → US5 → US3 → US4 → US6 → Polish → Revisión (Phase 10)
 ```
 
 US2 y US5 pueden avanzar en paralelo tras US1. US3 puede avanzar en paralelo con US2/US5 si se crean accesos por API. US4 requiere US3 y US5. US6 cierra el ciclo.
@@ -266,6 +268,7 @@ US2 y US5 pueden avanzar en paralelo tras US1. US3 puede avanzar en paralelo con
 - US4: T048–T050 en paralelo.
 - US6: T057–T060 en paralelo.
 - Polish: T066–T069 en paralelo.
+- Revisión (Phase 10): T079–T088 en paralelo por archivos distintos; T089–T090, T098–T101 y T102–T105 son secuenciales por solapamiento de archivos; T106–T109 se ejecutan después de las correcciones de US1/US2/US7.
 
 ---
 
@@ -329,6 +332,8 @@ Task: "T036 Crear src/components/invoice-status-notice.js"
 - Verificar que las pruebas fallan antes de implementar cuando sea posible.
 - Confirmar en cada checkpoint que un trabajador no puede ver datos ajenos ni vistas administrativas.
 - Evitar tareas vagas, conflictos sobre el mismo archivo y dependencias que rompan la independencia de las historias.
+- Phase 10 conserva T001–T078 tal cual; cuando una tarea antigua contradice la revisión, la nueva tarea incluye una nota `corrige T0xx`.
+- El MVP corregido exige US1 sin invitado y US7 con el rol finanzas antes de dar por terminada la revisión.
 
 
 
@@ -339,3 +344,66 @@ Task: "T036 Crear src/components/invoice-status-notice.js"
 - [X] T076 [US1] Mostrar el rol en la cabecera y colocar `nav-login` / `nav-logout` al final del lateral; conservar destinos, funciones y permisos por rol en `src/components/shell.js` y `src/app.js`.
 - [X] T077 [US1] Conservar la carga de demostración en el panel de invitado, documentar sus credenciales y actualizar los contratos e instrucciones de uso.
 - [X] T078 [US1] Ejecutar pruebas de acceso y sesión, verificaciones completas y build; registrar cualquier limitación de verificación visual.
+
+---
+
+## Phase 10: Revisión de seguridad y privacidad (correcciones pendientes)
+
+**Propósito**: eliminar el modo invitado, incorporar el rol `finanzas`, mover la carga de demostración a la pantalla de acceso, corregir los RUT de demostración y documentar los riesgos conocidos.
+
+**⚠️ Conservación**: T001–T078 se mantienen con su ID y estado. Las tareas antiguas que contradicen la revisión se corrigen con nuevas tareas T079 en adelante; no se renumera ni se desmarca ninguna.
+
+### Pruebas de la revisión (TDD — escribir primero; deben fallar)
+
+> **NOTA**: ejecutar estas pruebas antes de las correcciones de implementación y confirmar que fallan por las condiciones nuevas.
+
+- [ ] T079 [P] [US1] Crear `tests/integration/no-guest-access.test.js` para verificar que no existen `login-guest`, `nav-login`, `dashboard-guest-note` ni `Rol: Invitado`, que `canAccess`/`resolveRoute` no aceptan `invitado`, y que toda vista distinta de `login` sin sesión redirige a `login` sin exponer datos; retirar `tests/integration/optional-login.test.js`. Nota: corrige T019, T020, T021, T074 y T077, que conservan el modo invitado.
+- [ ] T080 [P] [US1] Actualizar `tests/integration/login-roles.test.js` para esperar `login-submit` y `login-demo-load` en lugar de `login-guest`, cubrir administrador, finanzas y trabajador, y comprobar que no hay selector de rol. Nota: corrige T019 y T075.
+- [ ] T081 [P] [US6] Crear `tests/unit/demo-data-ruts.test.js` con administrador `88.888.888-8`/`8888`, finanzas `55.555.555-5`/`5555`, trabajadores `22.222.222-2`/`2222` y `45.000.000-0`/`4500`, administrador distinto de todo `taxId` de entidades, ausencia de `11.111.111-1` y `45.000.000-5`, e idempotencia. Nota: corrige T059 y T063.
+- [ ] T082 [P] [US6] Crear `tests/integration/demo-from-login.test.js` para pulsar `login-demo-load` desde `view-login`, comprobar que se permanece en el acceso, que `loadSession()` es `null`, que el lateral sigue oculto y que no se muestran datos de negocio; después probar los cuatro RUT. Nota: corrige T064 y T077, que cargaban la demostración desde el panel de invitado.
+- [ ] T083 [P] [US2] Crear `tests/unit/finanzas-role.test.js` para verificar que `ROLES` incluye `finanzas`, que `validateAccessRecord` lo acepta sin `entityId` y lo rechaza con `entityId`, que `initialPassword('55.555.555-5')` es `5555`, y que `authenticate` e `isSessionValid` lo reconocen. Nota: corrige T001, T007, T013 y T014.
+- [ ] T084 [P] [US7] Crear `tests/integration/finanzas-permissions.test.js` para entrar con `55.555.555-5`, comprobar exactamente los módulos permitidos y denegados de `contracts/payroll-views.md`, editar terceros, facturas, liquidaciones, movimientos y flujo de caja, y bloquear `access`, `dev-notifications` y `payroll-worker`. Nota: nuevo US7 derivado de FR-036 y FR-037.
+- [ ] T085 [P] [US7] Actualizar `tests/integration/payroll-admin.test.js` para ejecutar lista, filtros y edición también con sesión de finanzas, y verificar que la acción de asociar un acceso con el RUT quede restringida a administrador. Nota: corrige T048 y T053, que solo consideraban al administrador.
+- [ ] T086 [P] [US2] Crear `tests/integration/access-admin-finanzas.test.js` para que el administrador cree un acceso de finanzas desde `#access-role` sin `#access-entity`, verificar la lista con el rol y comprobar que finanzas no puede abrir `view-access`. Nota: corrige T025, T026 y T027, cuyo selector solo ofrecía trabajador y administrador.
+- [ ] T087 [P] [US6] Crear `tests/integration/security-warnings.test.js` para verificar en `login-warning`, `access-warning`, `payroll-worker` y `README.md` los textos sobre control solo de interfaz, contraseña inicial sin cambio y prohibición de datos reales. Nota: corrige T065, T066 y T073, que no documentaban el riesgo de contraseña inmutable.
+- [ ] T088 [P] [US6] Actualizar `tests/integration/demo-data.test.js` con los cuatro accesos, las credenciales revisadas, la carga desde `login-demo-load`, la idempotencia y la comprobación de que el RUT del administrador no coincide con terceros. Nota: corrige T059 y T063.
+- [ ] T089 [US1] Actualizar `tests/setup/domFixture.js`, `tests/unit/auth.test.js`, `tests/unit/access-storage.test.js`, `tests/unit/session.test.js`, `tests/unit/payroll.test.js` y `tests/integration/session-lifecycle.test.js` para sustituir `11.111.111-1`/`1111` por `88.888.888-8`/`8888`, `45.000.000-5` por `45.000.000-0` y agregar una fixture de sesión de finanzas. Nota: corrige T063 y las fixtures derivadas de T006/T014.
+- [ ] T090 [US7] Actualizar `tests/integration/us3-dashboard.test.js` para retirar expectativas sobre `qa-load-demo` y `dashboard-guest-note`, y verificar que `qa-new-payroll` aparece para administrador y finanzas. Nota: corrige T039, T064 y T077.
+
+### Correcciones de US1: acceso obligatorio y demostración en el acceso
+
+- [ ] T091 [US1] Eliminar `GUEST_ROLE`, `createGuestSession` e `isGuestSession` de `src/session.js` y hacer que `isSessionValid` rechace cualquier sesión sin un acceso registrado válido. Nota: corrige T006, T014 y T074.
+- [ ] T092 [US1] Reescribir `src/components/login.js` para eliminar `login-guest`, agregar `login-demo-load` y `demo-status`, actualizar `login-no-accesses` con «Cargar demostración» y ampliar `login-warning` con el riesgo de contraseña inicial sin cambio. Nota: corrige T020, T021 y T077.
+- [ ] T093 [US1] Actualizar `index.html` para eliminar `nav-login` y `dashboard-guest-note`, dejando `#view-login` como única vista sin sesión y `#nav-logout` como acción de sesión. Nota: corrige T021, T061 y T075.
+- [ ] T094 [US1] Actualizar `src/app.js` para eliminar importaciones y ramas de invitado, quitar la columna `invitado` de `ACCESS_MATRIX`, devolver `login` desde `canAccess`/`resolveRoute` sin sesión válida y limpiar la sesión en `showLogin`. Nota: corrige T016, T022 y T074.
+- [ ] T095 [US1] Actualizar `src/components/shell.js` para eliminar `GUEST_MODULES`, `onLogin`, `isGuestSession`, la etiqueta `Rol: Invitado` y `nav-login`, dejando `nav-logout` como última opción para las tres sesiones válidas. Nota: corrige T017, T061 y T076.
+- [ ] T096 [US1] Actualizar `src/components/dashboard.js` para eliminar `isGuestSession`, `dashboard-guest-note`, `qa-load-demo` y `onLoadDemoData`, y condicionar `qa-new-payroll` a las sesiones de administrador y finanzas. Nota: corrige T039, T064 y T077.
+- [ ] T097 [US1] Actualizar `src/styles.css` para retirar los estilos de `#login-guest` y `dashboard-guest-note`, y agregar los estilos de `login-demo-load`, `demo-status` y `session-role`. Nota: corrige T003 y T075.
+
+### Correcciones de US2: rol finanzas en la administración de accesos
+
+- [ ] T098 [US2] Extender `src/module-config.js` con `finanzas` en `ROLES`, las credenciales de demostración `88.888.888-8`/`8888` y `55.555.555-5`/`5555`, y el RUT de trabajador canónico `45000000-0`. Nota: corrige T001 y T063.
+- [ ] T099 [US2] Actualizar `src/auth.js` para aceptar `finanzas` en `validateAccessRecord`, exigir ausencia de `entityId` para administrador y finanzas, y ajustar el mensaje `ROLE_INVALID` a los tres roles. Nota: corrige T013 y T026.
+- [ ] T100 [US2] Actualizar `src/components/access-admin.js` para ofrecer `finanzas` en `#access-role`, ocultar y limpiar `#access-entity` para roles sin tercero personal, y mostrar el rol en `#access-list`; conservar notificaciones y protección del último administrador. Nota: corrige T026 y T027.
+- [ ] T101 [US2] Actualizar `index.html` para incluir la opción `finanzas` en el selector estático `#access-role`. Nota: corrige T027.
+
+### Correcciones de US7: permisos de finanzas
+
+- [ ] T102 [US7] Ampliar `ACCESS_MATRIX` y `resolveRoute` en `src/app.js` con la columna `finanzas` según `contracts/payroll-views.md`: facturación sí, `access`/`dev-notifications`/`payroll-worker` no, con redirección a `dashboard` o `payroll-admin` según el caso. Nota: nuevo US7; depende de T094.
+- [ ] T103 [US7] Agregar `FINANCE_MODULES` en `src/components/shell.js` y la etiqueta `Rol: Finanzas`, sin `access`, `dev-notifications`, `payroll-worker` ni `nav-login`. Nota: nuevo US7; depende de T095.
+- [ ] T104 [US7] Ajustar `src/components/payroll-list.js` y `src/app.js` para que finanzas vea, filtre y edite liquidaciones, mientras la acción de asociar un acceso por RUT quede restringida a administrador. Nota: corrige T053 y T055; nuevo US7.
+- [ ] T105 [US7] Ajustar `src/components/invoice-status-notice.js` y `src/app.js` para que el aviso de migración y documentos no clasificados se muestre solo al administrador, no a finanzas. Nota: nuevo US7; cubre FR-028.
+
+### Correcciones de US6: demostración y riesgos conocidos
+
+- [ ] T106 [US6] Extender `src/demo-data.js` con el acceso de finanzas `55.555.555-5`/`5555`, actualizar el administrador a `88.888.888-8`/`8888`, mantener los trabajadores con `45.000.000-0` y hacer que `hasStoredRecords()` también revise `erp.accessRecords`. Nota: corrige T059 y T063.
+- [ ] T107 [US6] Conectar en `src/components/login.js` y `src/app.js` el botón `login-demo-load` con `loadDemoData`, actualizar `demo-status`, permanecer en `#view-login`, no crear sesión ni abrir vistas y conservar la carga idempotente. Nota: corrige T064 y T077; depende de T092 y T094.
+- [ ] T108 [US6] Actualizar `src/components/login.js`, `src/components/access-admin.js`, `src/components/payroll-worker.js` y `README.md` para documentar como riesgos conocidos la contraseña inicial inmutable y el control de acceso solo de interfaz, además de la prohibición de datos reales. Nota: corrige T065, T066 y T073.
+- [ ] T109 [US6] Actualizar `README.md` con los cuatro RUT y contraseñas, la carga de demostración desde la pantalla de acceso, los permisos de finanzas y la nota de que T077 queda superada. Nota: corrige T066 y T077.
+
+### Polish de la revisión
+
+- [ ] T110 [P] Actualizar `specs/001-erp-base-module/contracts/navigation-and-access.md` para registrar que `002` reemplaza el ingreso opcional por acceso obligatorio con tres roles. Nota: corrige T067, que solo cubría el almacenamiento.
+- [ ] T111 Ejecutar `npm run check`, `npm test -- --run` y `npm run build`; corregir fallos en `src/`, `tests/` y documentación derivados de T079–T110, y verificar los diez escenarios de `specs/002-payroll-access-control/quickstart.md` sin modo invitado. Nota: corrige T071, T072 y T078.
+
+**Checkpoint de la revisión**: sin modo invitado, con demo cargable desde el acceso, tres roles con la matriz de `contracts/payroll-views.md`, riesgos documentados y pruebas T079–T090 ejecutadas antes de las correcciones.
