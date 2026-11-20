@@ -14,13 +14,13 @@
 
 **Problema.** Hoy cualquier persona que abra el módulo puede ver la información de un colega, incluidas las liquidaciones de sueldo de todos los trabajadores. Eso expone montos, períodos de remuneraciones y datos personales que deberían quedar reservados al área de remuneraciones y a finanzas y, como máximo, a cada trabajador sobre su propio documento. Además, las facturas de venta y de compra conviven en un mismo conjunto de datos, lo que facilita mezclarlas por error.
 
-**Solución (MVP).** Una pantalla de acceso con RUT y contraseña que reconoce automáticamente el rol del acceso registrado; no existe modo invitado y toda vista del módulo exige una sesión iniciada. Después del ingreso, la cabecera identifica el rol y «Cerrar sesión» es la última opción del lateral. Los accesos los administra el administrador; al crear un acceso nuevo, la contraseña inicial son los primeros 4 dígitos del RUT. El trabajador ve un apartado exclusivo con su única liquidación, en modo solo lectura. El rol finanzas ve y edita toda la facturación, incluidas las liquidaciones de todos los trabajadores, pero no administra accesos ni consulta los avisos del desarrollador. El administrador conserva todas las funciones, incluidos accesos y avisos del desarrollador. El administrador también asocia cada RUT de la liquidación con su acceso de trabajador. La liquidación se reutiliza como la factura de compra dirigida a un tercero de tipo personal: no se crea una entidad de almacenamiento separada. Las facturas de venta y de compra se separan físicamente en colecciones distintas y visualmente en vistas, formularios y listados independientes. La sesión vive en el almacenamiento de la pestaña y termina al cerrar sesión o al cerrar la pestaña. Todo el control es una restricción de interfaz sobre datos del navegador: no es seguridad real y no debe usarse con datos reales.
+**Solución (MVP).** Una pantalla de acceso con RUT y contraseña que reconoce automáticamente el rol del acceso registrado; no existe modo invitado y toda vista del módulo exige una sesión iniciada. Después del ingreso, la cabecera identifica el rol y «Cerrar sesión» es la última opción del lateral. Los accesos los administra el administrador; al crear un acceso nuevo, la contraseña inicial son los primeros 4 dígitos del RUT. El trabajador ve un apartado exclusivo con su última liquidación y el historial de sus pagos, en modo solo lectura. El rol finanzas ve y edita toda la facturación, incluidas las liquidaciones de todos los trabajadores, pero no administra accesos ni consulta los avisos del desarrollador. El administrador conserva todas las funciones, incluidos accesos y avisos del desarrollador. El administrador también asocia cada RUT de la liquidación con su acceso de trabajador. La liquidación se registra en una entidad propia vinculada por `documentId` a la factura de compra dirigida a un tercero de tipo personal, que sigue siendo el comprobante de pago; la entidad propia guarda el sueldo base, los descuentos y los bonos. Las facturas de venta y de compra se separan físicamente en colecciones distintas y visualmente en vistas, formularios y listados independientes. La sesión vive en el almacenamiento de la pestaña y termina al cerrar sesión o al cerrar la pestaña. Todo el control es una restricción de interfaz sobre datos del navegador: no es seguridad real y no debe usarse con datos reales.
 
 ## Clarifications
 
 ### Session 2026-11-11
 
-- Q: ¿La liquidación debe ser una entidad propia o reutilizar la factura de compra a personal? → A: Reutilizar la factura de compra a un tercero personal; no se crea una entidad `LiquidacionSueldo`.
+- Q: ¿La liquidación debe ser una entidad propia o reutilizar la factura de compra a personal? → A: Decisión original: reutilizar la factura de compra a un tercero personal. Superada el 2026-11-19: el desglose se guarda en una entidad `LiquidacionSueldo` vinculada por `documentId` (ver FR-019 y FR-043).
 - Q: ¿Cómo se cierra la sesión? → A: Al cerrar sesión o al cerrar la pestaña; la sesión se guarda en el almacenamiento de la pestaña.
 - Q: ¿Qué pasa con un RUT inválido, duplicado o inactivo? → A: Se notifica al desarrollador mediante un registro local y la consola.
 - Q: ¿La separación de facturas es solo visual? → A: Debe ser física (colecciones separadas) y lógica/visual (vistas, formularios y listados separados).
@@ -33,23 +33,31 @@
 - Q: ¿Se mantiene el modo invitado «Continuar sin iniciar sesión»? → A: No; se elimina y toda vista del módulo exige iniciar sesión con credenciales válidas.
 - Q: ¿Qué puede hacer el rol finanzas? → A: Ve y edita toda la facturación (terceros, facturas de venta y compra, liquidaciones de sueldo, movimientos, flujo de caja, seguimiento y búsqueda), sin gestión de accesos ni avisos del desarrollador.
 - Q: ¿Qué conserva el rol administrador? → A: Todas las funciones, incluidas la gestión de accesos (puede crear accesos de rol finanzas) y los avisos del desarrollador.
-- Q: ¿Qué ve el rol trabajador? → A: Solo su propia liquidación, sin ver la información de sus compañeros.
+- Q: ¿Qué ve el rol trabajador? → A: Solo su última liquidación y el historial de sus propios pagos, sin ver la información de sus compañeros.
 - Q: ¿Cómo se documenta la contraseña inicial? → A: Como riesgo conocido del MVP en la sección de riesgos de datos, junto con que el control de acceso es solo de interfaz.
 - Q: ¿Qué restricción aplica al RUT del administrador en los datos de demostración? → A: No debe coincidir con el RUT de ningún tercero.
 - Q: ¿Cómo se carga la demostración si ya no existe el modo invitado? → A: Con un botón «Cargar demostración» en la pantalla de acceso, sin entrar a ninguna vista del módulo.
+
+### Session 2026-11-19
+
+- Q: ¿El historial de pagos de la vista del trabajador debe incluir solo las liquidaciones ya pagadas o todas las liquidaciones de sus períodos? → A: Solo liquidaciones con estado Pagada y fecha de pago registrada; las demás no aparecen en el historial.
+- Q: ¿De dónde deben salir el sueldo base, los descuentos y los bonos de la liquidación? → A: Crear una entidad `LiquidacionSueldo` separada con esos campos.
+- Q: ¿La nueva entidad `LiquidacionSueldo` reemplaza a la factura de compra como origen de la liquidación o convive vinculada a ella? → A: Convive vinculada por `documentId`; la factura de compra sigue siendo el comprobante de pago y la entidad nueva guarda el desglose.
+- Q: ¿Por qué fecha y en qué orden debe aparecer el historial de pagos debajo de la última liquidación? → A: Por `fechaPago` descendente, con desempate por período descendente.
+- Q: ¿Qué datos debe mostrar cada fila del historial de pagos debajo de la última liquidación? → A: Fecha de pago, período, monto y estado por fila; el desglose completo solo en la última liquidación.
 
 ## Usuarios
 
 - **Administrador de remuneraciones (RRHH):** administra los accesos, incluidos los de rol finanzas, ve y edita toda la facturación y las liquidaciones de todos los trabajadores, asocia cada RUT con su acceso y consulta los avisos del desarrollador.
 - **Finanzas:** ve y edita toda la facturación (terceros, facturas de venta y compra, liquidaciones de sueldo, movimientos, flujo de caja, seguimiento y búsqueda), pero no gestiona accesos ni consulta los avisos del desarrollador.
-- **Trabajador:** inicia sesión con su RUT y contraseña y consulta únicamente su propia liquidación, sin poder modificarla ni ver la de otros.
+- **Trabajador:** inicia sesión con su RUT y contraseña y consulta únicamente su última liquidación y el historial de sus propios pagos, sin poder modificarlos ni ver los de otros.
 - **Integrante del equipo (demostración):** carga accesos y liquidaciones ficticias desde la pantalla de acceso para mostrar el flujo completo.
 
 ## Manejo de riesgos de datos y sesgos
 
 - **Contraseña inicial (riesgo conocido del MVP):** todos los accesos, incluidos administrador y finanzas, usan como contraseña los primeros 4 dígitos del cuerpo del RUT y el MVP no ofrece cambio de contraseña. Cualquier persona que conozca el RUT de un compañero puede iniciar sesión como ese trabajador; se documenta como riesgo aceptado solo para demostración con datos ficticios.
 - **Control de acceso solo de interfaz (riesgo conocido del MVP):** el control de roles y la separación de vistas se aplican únicamente en el navegador. No hay autenticación, autorización ni cifrado del lado del servidor; un usuario técnico podría leer o modificar los datos directamente. El MVP no debe usarse con datos reales.
-- **Datos personales y de remuneraciones:** los RUT y las liquidaciones son datos personales y sensibles. El rol trabajador solo ve su propia liquidación; el acceso a la información de los demás queda reservado a RRHH (administrador) y finanzas.
+- **Datos personales y de remuneraciones:** los RUT y las liquidaciones son datos personales y sensibles. El rol trabajador solo ve su última liquidación y el historial de sus propios pagos; el acceso a la información de los demás queda reservado a RRHH (administrador) y finanzas.
 - **RUT del administrador de demostración:** no debe coincidir con el RUT de ningún tercero, para evitar que el acceso de RRHH se confunda con el de un trabajador o proveedor.
 - **Datos de demostración:** deben ser ficticios y sus credenciales documentadas.
 
@@ -93,13 +101,13 @@ La indicación de rol es informativa y permanece visible al navegar y recargar d
 
 Estas credenciales corresponden a los datos de demostración cargados. La contraseña de los accesos del MVP son los primeros cuatro dígitos del cuerpo del RUT, omitiendo puntos, guion y dígito verificador; por ejemplo, `45.000.000-0` usa `4500`. El RUT del administrador de demostración es `88.888.888-8` y no coincide con el RUT de ningún tercero; el valor anterior `11.111.111-1` se descarta porque coincide con un tercero proveedor de los datos de demostración. El RUT debe tener un acceso registrado y activo. Escribir un RUT nuevo en el login no crea un usuario. En un navegador vacío se usa «Cargar demostración» desde el acceso y después se prueban las credenciales de esta tabla.
 
-**Prueba independiente**: con los datos de demostración cargados, abrir el módulo sin sesión y comprobar el diseño del acceso y que no exista la opción de invitado. Entrar con cada RUT y contraseña, verificar el destino, el rol de la cabecera y la última acción del lateral, y recorrer las funciones de ese rol. Comprobar que finanzas no ve accesos ni avisos del desarrollador y que el trabajador solo ve su liquidación. Probar también credenciales incorrectas, accesos inválidos y la carga de demostración desde el acceso.
+**Prueba independiente**: con los datos de demostración cargados, abrir el módulo sin sesión y comprobar el diseño del acceso y que no exista la opción de invitado. Entrar con cada RUT y contraseña, verificar el destino, el rol de la cabecera y la última acción del lateral, y recorrer las funciones de ese rol. Comprobar que finanzas no ve accesos ni avisos del desarrollador y que el trabajador solo ve su última liquidación y su historial de pagos. Probar también credenciales incorrectas, accesos inválidos y la carga de demostración desde el acceso.
 
 **Escenarios de aceptación**:
 
 1. **Dado** el módulo sin sesión activa, **cuando** lo abro, **entonces** veo la tarjeta de acceso centrada con RUT, contraseña, «Ingresar» y «Cargar demostración», sin opción de invitado, sin selector de rol, sin menú lateral ni espacio reservado para él, y sin datos de negocio visibles.
 2. **Dado** un acceso de administrador válido, **cuando** ingreso su RUT y contraseña, **entonces** el sistema reconoce el rol registrado, abre el Panel, muestra «Rol: Administrador» en la cabecera y conserva todas sus funciones, incluidos accesos y avisos del desarrollador.
-3. **Dado** un acceso de trabajador válido, **cuando** ingreso su RUT y contraseña, **entonces** el sistema reconoce el rol registrado, abre Mi liquidación, muestra «Rol: Trabajador» en la cabecera y solo ve su propia liquidación.
+3. **Dado** un acceso de trabajador válido, **cuando** ingreso su RUT y contraseña, **entonces** el sistema reconoce el rol registrado, abre Mi liquidación, muestra «Rol: Trabajador» en la cabecera y solo ve su última liquidación y el historial de sus pagos.
 4. **Dado** un acceso de finanzas válido, **cuando** ingreso su RUT y contraseña, **entonces** el sistema abre el Panel, muestra «Rol: Finanzas» en la cabecera, permite ver y editar toda la facturación y no muestra gestión de accesos ni avisos del desarrollador.
 5. **Dado** un RUT con contraseña incorrecta, **cuando** intento entrar, **entonces** el sistema rechaza el acceso, muestra un mensaje claro junto al formulario y me permite intentarlo de nuevo sin mostrar datos de negocio ni un rol autenticado.
 6. **Dado** un RUT registrado, **cuando** ingreso las credenciales correctas, **entonces** el rol de la sesión corresponde al acceso registrado y no puede elegirse ni modificarse desde el formulario de login o la indicación de la cabecera.
@@ -136,22 +144,24 @@ Como administrador de remuneraciones, quiero crear y administrar los accesos por
 
 ---
 
-### Historia de Usuario 3 - Consultar mi única liquidación (Prioridad: P2)
+### Historia de Usuario 3 - Consultar mi liquidación y mi historial de pagos (Prioridad: P2)
 
-Como trabajador, quiero ver mi liquidación de sueldo en un apartado exclusivo y en modo solo lectura, para conocer mi pago sin poder ver el de mis compañeros.
+Como trabajador, quiero ver primero mi última liquidación de sueldo con su sueldo base, descuentos, bonos y fecha, y debajo un historial de pagos ordenado por fecha de pago de más reciente a más antiguo, en un apartado exclusivo y en modo solo lectura, para conocer el detalle de mi pago y su evolución sin poder ver el de mis compañeros.
 
 **Por qué esta prioridad**: entrega el valor directo al trabajador y demuestra la separación de datos; depende de que existan accesos y liquidaciones.
 
-**Prueba independiente**: con dos trabajadores con liquidaciones distintas, se entra con el RUT de uno y se comprueba que solo aparece su liquidación vigente, sin acciones de edición ni datos del otro.
+**Prueba independiente**: con dos trabajadores con liquidaciones distintas, se entra con el RUT de uno y se comprueba que solo ve su última liquidación y el historial de sus pagos, sin acciones de edición ni datos del otro.
 
 **Escenarios de aceptación**:
 
-1. **Dado** un trabajador con una liquidación registrada, **cuando** entra con su RUT y contraseña, **entonces** ve un apartado exclusivo con período, monto, estado y fecha de pago de su liquidación.
-2. **Dado** un trabajador con varias liquidaciones de distintos períodos, **cuando** entra, **entonces** ve únicamente la liquidación vigente: la del período más reciente.
-3. **Dado** un trabajador sin liquidación, **cuando** entra, **entonces** ve un estado vacío claro y ningún dato de otro trabajador.
-4. **Dado** un trabajador autenticado, **cuando** intenta editar su liquidación o abrir la de otro trabajador, **entonces** el sistema bloquea la acción y muestra un mensaje claro.
-5. **Dado** un trabajador autenticado, **cuando** intenta abrir la vista global de facturas, la administración de accesos, los avisos del desarrollador o cualquier módulo de administración, **entonces** el sistema se lo impide.
-6. **Dado** un trabajador autenticado, **cuando** intenta ver el RUT, el nombre, la liquidación o cualquier información de otro trabajador o tercero, **entonces** no se muestra ningún dato ajeno y la acción se bloquea con un mensaje claro.
+1. **Dado** un trabajador con una liquidación registrada, **cuando** entra con su RUT y contraseña, **entonces** ve un apartado exclusivo con su última liquidación: período, sueldo base, descuentos, bonos, monto, estado y fecha de pago, y debajo el historial de sus pagos, donde cada fila muestra fecha de pago, período, monto y estado.
+2. **Dado** un trabajador con varias liquidaciones de distintos períodos, **cuando** entra, **entonces** ve primero la liquidación vigente: la del período más reciente, con desempate por fecha de emisión y luego por fecha de creación, y debajo el historial de sus pagos ordenado por `fechaPago` de más reciente a más antiguo, con desempate por período descendente.
+3. **Dado** un trabajador con liquidaciones en estado Borrador o Emitida, **cuando** entra, **entonces** esas liquidaciones no aparecen en el historial; solo se muestran las de estado Pagada con fecha de pago registrada.
+4. **Dado** un trabajador sin liquidación, **cuando** entra, **entonces** ve un estado vacío claro y ningún dato de otro trabajador.
+5. **Dado** un trabajador sin liquidaciones pagadas, **cuando** entra, **entonces** ve su última liquidación y un historial vacío claro, sin datos de otros trabajadores.
+6. **Dado** un trabajador autenticado, **cuando** intenta editar su liquidación o abrir la de otro trabajador, **entonces** el sistema bloquea la acción y muestra un mensaje claro.
+7. **Dado** un trabajador autenticado, **cuando** intenta abrir la vista global de facturas, la administración de accesos, los avisos del desarrollador o cualquier módulo de administración, **entonces** el sistema se lo impide.
+8. **Dado** un trabajador autenticado, **cuando** intenta ver el RUT, el nombre, la liquidación o cualquier información de otro trabajador o tercero, **entonces** no se muestra ningún dato ajeno y la acción se bloquea con un mensaje claro.
 
 ---
 
@@ -220,7 +230,7 @@ Como usuario del módulo, quiero cerrar sesión de forma segura, que las inciden
 
 Como integrante de finanzas, quiero ver y editar toda la facturación del módulo, para operar terceros, facturas, movimientos y flujo de caja sin depender del administrador, pero sin poder administrar accesos ni ver los avisos del desarrollador.
 
-**Por qué esta prioridad**: constituye la respuesta al feedback de privacidad: RRHH y finanzas pueden trabajar con la información de terceros y trabajadores, mientras que el trabajador solo ve su propia liquidación.
+**Por qué esta prioridad**: constituye la respuesta al feedback de privacidad: RRHH y finanzas pueden trabajar con la información de terceros y trabajadores, mientras que el trabajador solo ve su última liquidación y su historial de pagos.
 
 **Prueba independiente**: se entra con el RUT de finanzas, se recorren terceros, facturas de venta y compra, liquidaciones, movimientos, flujo de caja, seguimiento y búsqueda, se edita un registro y se comprueba que no aparecen la administración de accesos ni los avisos del desarrollador.
 
@@ -247,6 +257,8 @@ Como integrante de finanzas, quiero ver y editar toda la facturación del módul
 - ¿Qué pasa si un trabajador intenta abrir una liquidación de otro trabajador manipulando la navegación o la vista? La acción se bloquea y no se muestran datos del otro trabajador.
 - ¿Qué pasa si un trabajador intenta acceder a la administración de accesos, a la vista global de facturas o a otro módulo administrativo? La acción se bloquea.
 - ¿Qué pasa si no hay liquidación para el trabajador? Se muestra un estado vacío claro.
+- ¿Qué pasa si el trabajador tiene liquidaciones pero ninguna pagada? Ve su última liquidación y un historial vacío claro, sin datos de otros trabajadores.
+- ¿Qué pasa si dos liquidaciones pagadas tienen la misma fecha de pago? Se ordenan por período descendente y no se duplica ninguna fila.
 - ¿Qué pasa si se borran los datos del navegador? Se pierden accesos, sesión y liquidaciones; el sistema vuelve al acceso y explica cómo cargar la demostración desde el botón de la pantalla de acceso.
 - ¿Qué pasa si se carga la demostración dos veces? No se duplican accesos ni liquidaciones; se informa que ya hay datos.
 - ¿Qué pasa si el administrador cierra sesión con una edición a medio terminar? Se pide confirmación y, si acepta, se descarta el cambio.
@@ -290,13 +302,13 @@ Como integrante de finanzas, quiero ver y editar toda la facturación del módul
 
 **Liquidaciones de sueldo**
 
-- **FR-019**: Una liquidación de sueldo DEBE ser una factura de compra asociada a un tercero de tipo personal, con un período obligatorio en formato `YYYY-MM`, respetando las reglas existentes del módulo; NO DEBE existir una entidad de almacenamiento separada para la liquidación.
-- **FR-020**: El trabajador DEBE ver exactamente una liquidación: la de período más reciente de su tercero personal, con desempate por fecha de emisión y luego por fecha de creación; la vista DEBE ser de solo lectura.
+- **FR-019**: Una liquidación de sueldo DEBE registrarse en la entidad `LiquidacionSueldo`, asociada a un tercero de tipo personal y vinculada por `documentId` a la factura de compra que sirve de comprobante de pago, con un período obligatorio en formato `YYYY-MM`, respetando las reglas existentes del módulo.
+- **FR-020**: El trabajador DEBE ver primero exactamente una liquidación completa: la de período más reciente de su tercero personal, con desempate por fecha de emisión y luego por fecha de creación; la vista DEBE ser de solo lectura. Debajo de esa liquidación DEBE ver un historial de pagos de su mismo tercero personal.
 - **FR-021**: Si el trabajador no tiene liquidación, DEBE ver un estado vacío claro, sin datos de otros trabajadores.
-- **FR-022**: El administrador y el rol finanzas DEBEN poder ver todas las liquidaciones de todos los trabajadores, con trabajador, RUT, período, monto y estado; el trabajador SOLO DEBE ver la suya.
+- **FR-022**: El administrador y el rol finanzas DEBEN poder ver todas las liquidaciones de todos los trabajadores, con trabajador, RUT, período, monto y estado; el trabajador SOLO DEBE ver las suyas.
 - **FR-023**: El administrador y el rol finanzas DEBEN poder filtrar la lista de liquidaciones por trabajador o RUT y por período.
-- **FR-024**: El administrador y el rol finanzas DEBEN poder editar una liquidación existente mediante el formulario de factura de compra, respetando el ciclo de vida y las validaciones del módulo; esta funcionalidad NO DEBE permitir saltarse esas reglas.
-- **FR-025**: El administrador DEBE poder asociar el RUT de una liquidación con su acceso de trabajador desde la vista de liquidaciones, seleccionando un acceso activo cuyo RUT coincida o creándolo si no existe. La asociación DEBE usar el tercero personal como vínculo (`AccessRecord.entityId === PurchaseInvoice.entity_id`) y DEBE reflejarse en el apartado del trabajador.
+- **FR-024**: El administrador y el rol finanzas DEBEN poder editar una liquidación existente mediante el formulario de factura de compra y el desglose de `LiquidacionSueldo`, respetando el ciclo de vida y las validaciones del módulo; esta funcionalidad NO DEBE permitir saltarse esas reglas.
+- **FR-025**: El administrador DEBE poder asociar el RUT de una liquidación con su acceso de trabajador desde la vista de liquidaciones, seleccionando un acceso activo cuyo RUT coincida o creándolo si no existe. La asociación DEBE usar el tercero personal como vínculo (`AccessRecord.entityId === LiquidacionSueldo.entityId`) y DEBE reflejarse en el apartado del trabajador.
 - **FR-026**: El trabajador NO DEBE poder ver, editar, eliminar ni abrir liquidaciones de otros terceros, ni acceder a la administración de accesos, a la vista global de facturas o a otros módulos administrativos; todo intento DEBE bloquearse con un mensaje claro.
 
 **Separación física y visual de facturas**
@@ -308,23 +320,26 @@ Como integrante de finanzas, quiero ver y editar toda la facturación del módul
 
 **Datos de demostración y transparencia**
 
-- **FR-031**: Los datos de demostración DEBEN incluir al menos un acceso de administrador, un acceso de finanzas y dos accesos de trabajadores ficticios, con sus terceros personales y liquidaciones de ejemplo, y sus credenciales DEBEN estar documentadas. El RUT del administrador NO DEBE coincidir con el RUT de ningún tercero.
+- **FR-031**: Los datos de demostración DEBEN incluir al menos un acceso de administrador, un acceso de finanzas y dos accesos de trabajadores ficticios, con sus terceros personales, una liquidación vigente con desglose de sueldo base, descuentos y bonos y al menos dos liquidaciones `Pagadas` por trabajador con `fechaPago` distinta, y sus credenciales DEBEN estar documentadas. El RUT del administrador NO DEBE coincidir con el RUT de ningún tercero.
 - **FR-032**: La carga de demostración DEBE ser idempotente: si ya existen datos, NO DEBE duplicar accesos ni liquidaciones y DEBE conservar lo existente. DEBE ejecutarse desde el botón «Cargar demostración» de la pantalla de acceso, sin abrir vistas del módulo ni iniciar sesión.
 - **FR-033**: La interfaz DEBE advertir que el control de acceso es una restricción de interfaz, que los datos se guardan solo en el navegador y que no deben usarse datos reales.
 - **FR-034**: Si no hay datos en el navegador, el sistema DEBE mostrar la pantalla de acceso, explicar que no hay accesos registrados y ofrecer «Cargar demostración». NO DEBE existir el modo invitado ni una vista del módulo sin sesión; después de cargar la demostración, la persona prueba los RUT y contraseñas de HU1 desde el acceso.
 - **FR-035**: El README DEBE documentar los RUT y contraseñas de demostración, la advertencia de que el control es solo de interfaz y no seguridad real, y el riesgo de la contraseña inicial sin cambio (FR-041).
-- **FR-036**: El sistema DEBE reconocer tres roles: `administrador` (RRHH), `finanzas` y `trabajador`. El rol `administrador` DEBE conservar todas las funciones, incluidos la gestión de accesos y los avisos del desarrollador. El rol `finanzas` DEBE ver y editar toda la facturación: terceros, facturas de venta y compra, liquidaciones de sueldo, movimientos, flujo de caja, seguimiento y búsqueda. El rol `trabajador` DEBE ver solo su propia liquidación.
+- **FR-036**: El sistema DEBE reconocer tres roles: `administrador` (RRHH), `finanzas` y `trabajador`. El rol `administrador` DEBE conservar todas las funciones, incluidos la gestión de accesos y los avisos del desarrollador. El rol `finanzas` DEBE ver y editar toda la facturación: terceros, facturas de venta y compra, liquidaciones de sueldo, movimientos, flujo de caja, seguimiento y búsqueda. El rol `trabajador` DEBE ver solo su última liquidación y el historial de sus propios pagos.
 - **FR-037**: El sistema DEBE impedir que el rol `finanzas` gestione accesos o consulte los avisos del desarrollador, y DEBE impedir que el rol `trabajador` vea la información de otros trabajadores o terceros, invoque funciones de administración o consulte esos avisos.
 - **FR-038**: Toda vista del módulo DEBE exigir una sesión iniciada con credenciales válidas; un enlace directo o una recarga sin sesión DEBE volver a la pantalla de acceso sin mostrar datos de negocio.
 - **FR-039**: Los avisos del desarrollador DEBEN estar disponibles únicamente para el rol `administrador`, incluidos los avisos por RUT inválido, duplicado, inactivo o con vínculo roto.
 - **FR-040**: En los datos de demostración, el RUT del administrador NO DEBE coincidir con el RUT de ningún tercero; DEBE usarse `88.888.888-8` en lugar de `11.111.111-1`.
 - **FR-041**: La contraseña inicial de todos los roles (primeros 4 dígitos del cuerpo del RUT, sin opción de cambio) y el carácter solo de interfaz del control de acceso DEBEN documentarse como riesgos conocidos del MVP en la sección de riesgos de datos.
+- **FR-042**: El historial de pagos del trabajador DEBE incluir únicamente las liquidaciones de su tercero personal con estado Pagada y fecha de pago registrada, ordenadas por `fechaPago` descendente con desempate por período descendente; NO DEBE incluir liquidaciones en Borrador o Emitida, pagos parciales ni datos de otros trabajadores.
+- **FR-043**: La entidad `LiquidacionSueldo` DEBE registrar como mínimo `documentId` de la factura de compra vinculada, `entityId` del tercero personal, período `YYYY-MM`, sueldo base, descuentos, bonos, monto, estado y fecha de pago; el rol trabajador DEBE ver estos campos solo en lectura.
+- **FR-044**: Cada fila del historial de pagos DEBE mostrar fecha de pago, período, monto y estado de la liquidación pagada; el sueldo base, los descuentos y los bonos DEBEN mostrarse solo en la última liquidación.
 
 ### Entidades Clave
 
 - **Acceso (Usuario)**: credencial de entrada del MVP. Tiene un RUT único normalizado (`accessId`), un rol (`administrador`, `finanzas` o `trabajador`), un tercero personal asociado solo cuando el rol es trabajador (`entityId`), una contraseña inicial derivada del RUT, un estado (activo o inactivo) y marcas de creación y actualización. Un tercero personal tiene como máximo un acceso activo; puede haber varios administradores y varios accesos de finanzas. En la demostración, el RUT del administrador no coincide con ningún tercero.
 - **Sesión**: acceso vigente mientras la pestaña esté abierta y el usuario no cierre sesión. Conserva el RUT, el rol y el tercero personal asociado. Se guarda en el almacenamiento de la pestaña y no otorga permisos distintos de los del rol. No existe sesión de invitado.
-- **Liquidación de sueldo**: proyección de una factura de compra dirigida a un tercero de tipo personal, con período `YYYY-MM`, monto, estado y fecha de pago. Pertenece a un solo tercero personal y se muestra según el rol de la sesión. No tiene almacenamiento propio.
+- **Liquidación de sueldo**: entidad propia con `documentId` que apunta a la factura de compra de pago, `entityId` del tercero personal, período `YYYY-MM`, sueldo base, descuentos, bonos, monto, estado y fecha de pago. Se muestra según el rol de la sesión; el trabajador la consulta en solo lectura.
 - **Tercero personal**: trabajador al que se asocian el acceso y sus liquidaciones. Es la fuente del vínculo entre una sesión de trabajador y su documento.
 - **Notificación al desarrollador**: registro local de una incidencia de acceso (fecha, RUT intentado, rol y motivo) para diagnosticar RUT inválidos, duplicados, inactivos o vínculos rotos.
 - **Datos de demostración**: conjunto ficticio de accesos, terceros personales y liquidaciones que permite probar el flujo sin datos reales.
@@ -334,12 +349,12 @@ Como integrante de finanzas, quiero ver y editar toda la facturación del módul
 ### Resultados Medibles
 
 - **SC-001**: Un usuario con credenciales válidas llega a la vista correcta de su rol en menos de 30 segundos desde que abre el módulo.
-- **SC-002**: El 100% de las sesiones de trabajador muestra exactamente su liquidación vigente y cero liquidaciones de otros terceros, comprobado con al menos dos trabajadores con datos distintos.
+- **SC-002**: El 100% de las sesiones de trabajador muestra primero su liquidación vigente y, debajo, el historial de sus liquidaciones pagadas, y cero liquidaciones de otros terceros, comprobado con al menos dos trabajadores con datos distintos.
 - **SC-003**: El 100% de los intentos con RUT inválido, inactivo, duplicado o con vínculo roto se rechaza con un mensaje claro, sin mostrar datos, y queda registrado para el desarrollador.
 - **SC-004**: El 100% de los ingresos con credenciales válidas utiliza el rol registrado para ese RUT (`administrador`, `finanzas` o `trabajador`); la cabecera y la navegación corresponden a la sesión vigente. El formulario y la indicación de rol no permiten elegir ni atribuirse otro rol.
 - **SC-005**: El 100% de las sesiones termina al cerrar sesión o al cerrar la pestaña, y se conserva al recargar la página dentro de la misma pestaña.
 - **SC-006**: El administrador encuentra y edita una liquidación de un trabajador en menos de 1 minuto usando la lista y sus filtros.
-- **SC-007**: La carga de demostración desde la pantalla de acceso deja al menos un administrador, un acceso de finanzas y dos trabajadores con liquidaciones en menos de 1 minuto, con credenciales documentadas y sin coincidencia entre el RUT del administrador y el de ningún tercero.
+- **SC-007**: La carga de demostración desde la pantalla de acceso deja al menos un administrador, un acceso de finanzas y dos trabajadores con liquidaciones en menos de 1 minuto, con al menos dos pagos por trabajador con `fechaPago` distinta, credenciales documentadas y sin coincidencia entre el RUT del administrador y el de ningún tercero.
 - **SC-008**: El 100% de las facturas de venta y de compra se verifica en colecciones separadas y en vistas separadas; ninguna aparece en el conjunto o la vista del otro tipo.
 - **SC-009**: El 100% de los cambios de estado o contraseña de un acceso surte efecto en el siguiente intento de acceso, sin reiniciar la aplicación.
 - **SC-010**: El 100% de los intentos de un trabajador por abrir datos de otro trabajador, la administración de accesos, los avisos del desarrollador o un módulo administrativo se bloquea y no expone información.
@@ -347,6 +362,7 @@ Como integrante de finanzas, quiero ver y editar toda la facturación del módul
 - **SC-012**: El 100% de las vistas del módulo exige sesión iniciada; el 100% de los accesos sin sesión, incluidos los enlaces directos, termina en la pantalla de acceso sin exponer datos de negocio.
 - **SC-013**: El 100% de los datos de demostración usa RUT distintos entre el administrador y los terceros, comprobado con la carga idempotente de ejemplos.
 - **SC-014**: El 100% de la documentación de entrega (spec, README y riesgos de datos) menciona la contraseña inicial sin cambio y el control de acceso solo de interfaz como riesgos conocidos del MVP.
+- **SC-015**: El 100% de las sesiones de trabajador muestra primero la última liquidación con sueldo base, descuentos, bonos y fecha, y debajo el historial de pagos ordenado por fecha de pago descendente, con fecha, período, monto y estado por fila.
 
 ## Supuestos
 
@@ -355,8 +371,8 @@ Como integrante de finanzas, quiero ver y editar toda la facturación del módul
 - La contraseña inicial son los primeros 4 dígitos del cuerpo del RUT, sin puntos ni dígito verificador, y no se puede cambiar en el MVP. Por ejemplo, `12.345.678-5` usa `1234`. Es un riesgo conocido documentado en «Manejo de riesgos de datos y sesgos».
 - La contraseña se guarda localmente sin cifrado ni funciones de seguridad reales; el control de acceso es solo de interfaz y el MVP no debe usarse con datos reales.
 - No existe modo invitado: toda vista del módulo exige iniciar sesión.
-- La liquidación se define en FR-019; no existe una colección `LiquidacionSueldo`.
-- El trabajador ve una sola liquidación, la del período más reciente; el historial completo de períodos queda fuera del alcance del MVP.
+- La liquidación se define en FR-019 y FR-043; existe una colección `LiquidacionSueldo` para su desglose.
+- El trabajador ve primero una sola liquidación completa, la del período más reciente, y debajo un historial con sus liquidaciones pagadas; el historial de liquidaciones no pagadas queda fuera del alcance del MVP.
 - Las facturas de venta y de compra se separan en colecciones distintas del almacenamiento del navegador y en vistas, formularios y listados independientes; los datos previos se migran al abrir la nueva versión.
 - La sesión se guarda en el almacenamiento de la pestaña (`sessionStorage`) y termina al cerrarla; una recarga dentro de la misma pestaña la conserva.
 - Los RUT se comparan en forma normalizada para evitar rechazos por errores de tipeo.
@@ -372,6 +388,6 @@ Como integrante de finanzas, quiero ver y editar toda la facturación del módul
 - Autorregistro de trabajadores, finanzas o administradores.
 - Modo invitado, vistas sin sesión, cambio de contraseña y recuperación de contraseña; la contraseña inicial derivada del RUT se acepta como riesgo conocido del MVP.
 - Perfiles genéricos, permisos granulares distintos de administrador, finanzas y trabajador, o integración con un directorio corporativo.
-- Cálculo de haberes, descuentos legales, AFP, salud o imponibilidad: la liquidación sigue siendo el comprobante de pago del módulo de facturación.
-- Historial completo de liquidaciones para el trabajador, eliminación de liquidaciones y pagos parciales.
+- Cálculo de haberes, descuentos legales, AFP, salud o imponibilidad: la factura de compra sigue siendo el comprobante de pago del módulo de facturación y `LiquidacionSueldo` solo muestra el desglose registrado.
+- Historial de liquidaciones no pagadas para el trabajador, eliminación de liquidaciones y pagos parciales.
 - Auditoría de accesos o de cambios de accesos más allá del registro local de notificaciones para el desarrollador.

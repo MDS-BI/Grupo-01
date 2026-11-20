@@ -576,6 +576,157 @@ function applyModuleRules(
   }
 }
 
+export function validateSettlement(
+  settlement,
+  { entities = [], documents = [], settlements = [] } = {}
+) {
+  const errors = [];
+  const settlementId = String(settlement?.settlementId ?? '');
+  const documentId = String(settlement?.documentId ?? '');
+  const entityId = String(settlement?.entityId ?? '');
+  const estado = String(settlement?.estado ?? '');
+
+  if (isBlank(settlementId)) {
+    errors.push(
+      makeError('settlementId', 'REQUIRED', 'El identificador es obligatorio.')
+    );
+  } else if (
+    settlements.some(
+      (item) =>
+        item &&
+        item !== settlement &&
+        String(item.settlementId) === settlementId
+    )
+  ) {
+    errors.push(
+      makeError('settlementId', 'DUPLICATE', 'El identificador ya está en uso.')
+    );
+  }
+
+  if (isBlank(documentId)) {
+    errors.push(
+      makeError(
+        'documentId',
+        'REQUIRED',
+        'La factura de compra vinculada es obligatoria.'
+      )
+    );
+  } else if (
+    settlements.some(
+      (item) =>
+        item && item !== settlement && String(item.documentId) === documentId
+    )
+  ) {
+    errors.push(
+      makeError(
+        'documentId',
+        'DUPLICATE',
+        'Ya existe una liquidación para esta factura.'
+      )
+    );
+  }
+
+  const document = documents.find(
+    (item) => String(item?.document_id) === documentId
+  );
+  if (!document) {
+    errors.push(
+      makeError(
+        'documentId',
+        'MISSING_DOCUMENT',
+        'La factura de compra vinculada no existe.'
+      )
+    );
+  } else if (document.customFields?.tipoFactura !== 'compra') {
+    errors.push(
+      makeError(
+        'documentId',
+        'INVALID_DOCUMENT_TYPE',
+        'La liquidación solo se vincula a facturas de compra.'
+      )
+    );
+  } else if (String(document.entity_id) !== entityId) {
+    errors.push(
+      makeError(
+        'entityId',
+        'ENTITY_MISMATCH',
+        'El trabajador debe coincidir con el de la factura vinculada.'
+      )
+    );
+  }
+
+  const entity = entities.find((item) => String(item?.entity_id) === entityId);
+  if (!entity || entity.customFields?.tipoTercero !== 'personal') {
+    errors.push(
+      makeError(
+        'entityId',
+        'INVALID_ENTITY',
+        'La liquidación debe asociarse a un tercero de tipo personal.'
+      )
+    );
+  }
+
+  if (!PERIODO_PATTERN.test(String(settlement?.periodo ?? ''))) {
+    errors.push(
+      makeError(
+        'periodo',
+        'INVALID_FORMAT',
+        'El período debe usar el formato AAAA-MM.'
+      )
+    );
+  }
+
+  for (const field of ['sueldoBase', 'descuentos', 'bonos']) {
+    const value = toNumber(settlement?.[field]);
+    if (!Number.isFinite(value) || value < 0) {
+      errors.push(
+        makeError(
+          field,
+          'NEGATIVE_NOT_ALLOWED',
+          'El valor debe ser un número mayor o igual que cero.'
+        )
+      );
+    }
+  }
+
+  const monto = toNumber(settlement?.monto);
+  if (!Number.isFinite(monto) || monto <= 0) {
+    errors.push(
+      makeError(
+        'monto',
+        'TOTAL_NOT_POSITIVE',
+        'El monto debe ser mayor que cero.'
+      )
+    );
+  }
+
+  if (!['Borrador', 'Emitida', 'Pagada'].includes(estado)) {
+    errors.push(
+      makeError(
+        'estado',
+        'INVALID_FORMAT',
+        'El estado debe ser Borrador, Emitida o Pagada.'
+      )
+    );
+  }
+
+  if (
+    settlement?.fechaPago !== null &&
+    settlement?.fechaPago !== undefined &&
+    !isValidDate(String(settlement.fechaPago))
+  ) {
+    errors.push(
+      makeError(
+        'fechaPago',
+        'INVALID_DATE',
+        'La fecha de pago debe usar el formato AAAA-MM-DD.'
+      )
+    );
+  }
+
+  return errors;
+}
+
 export function isDuplicateInvoice(documents, document) {
   const tipoFactura = document.customFields
     ? document.customFields.tipoFactura

@@ -46,6 +46,7 @@ import { renderPayrollList } from './components/payroll-list.js';
 import { initPayrollForm } from './components/payroll-form.js';
 import { initDevNotifications } from './components/dev-notifications.js';
 import { resolveAdminSettlements } from './payroll.js';
+import { validateSettlement } from './validation.js';
 import { loadMovements } from './movements.js';
 import { computeDebtSummary } from './tracking.js';
 import { loadDemoData } from './demo-data.js';
@@ -60,9 +61,12 @@ import {
   createAccessRecord,
 } from './access-storage.js';
 import {
+  backfillPayrollSettlements,
+  loadPayrollSettlements,
   loadPurchaseInvoices,
   loadUnclassifiedDocuments,
   migrateLegacyDocuments,
+  savePayrollSettlements,
 } from './storage.js';
 import { isSessionValid, loadSession, clearSession } from './session.js';
 import { initialPassword } from './auth.js';
@@ -351,6 +355,31 @@ function handleLogout() {
   showLogin();
 }
 
+function findPayrollSettlement(id) {
+  return loadPayrollSettlements().find(
+    (item) => item?.settlementId === id || item?.documentId === id
+  );
+}
+
+function combinedPayrollRecord(settlement) {
+  const document = loadPurchaseInvoices().find(
+    (item) => item?.document_id === settlement?.documentId
+  );
+  return {
+    ...(document || {}),
+    ...settlement,
+    settlementId: settlement?.settlementId,
+    documentId: settlement?.documentId,
+    periodo: settlement?.periodo,
+    sueldoBase: settlement?.sueldoBase,
+    descuentos: settlement?.descuentos,
+    bonos: settlement?.bonos,
+    monto: settlement?.monto,
+    estado: settlement?.estado,
+    fechaPago: settlement?.fechaPago,
+  };
+}
+
 function refreshPayrollAdmin() {
   const entities = loadEntities();
   const filters = {
@@ -358,6 +387,7 @@ function refreshPayrollAdmin() {
     period: byId('payroll-filter-period')?.value || '',
   };
   const settlements = resolveAdminSettlements({
+    settlements: loadPayrollSettlements(),
     purchaseInvoices: loadPurchaseInvoices(),
     entities,
     filters,
@@ -375,20 +405,16 @@ function refreshPayrollAdmin() {
 }
 
 function editPayrollSettlement(id) {
-  const settlement = loadPurchaseInvoices().find(
-    (document) => document.document_id === id
-  );
+  const settlement = findPayrollSettlement(id);
   if (!settlement || !payrollForm) return;
-  payrollForm.setDocument(settlement);
+  payrollForm.setDocument(combinedPayrollRecord(settlement));
 }
 
 function associatePayrollAccess(id) {
   if (state.session?.role !== 'administrador') return;
-  const settlement = loadPurchaseInvoices().find(
-    (document) => document.document_id === id
-  );
+  const settlement = findPayrollSettlement(id);
   const entity = loadEntities().find(
-    (item) => item.entity_id === settlement?.entity_id
+    (item) => item.entity_id === settlement?.entityId
   );
   if (!entity || entity.customFields?.tipoTercero !== 'personal') return;
   const records = loadAccessRecords();
@@ -400,7 +426,7 @@ function associatePayrollAccess(id) {
       {
         accessId: rut,
         role: 'trabajador',
-        entityId: entity.entity_id,
+        entityId: settlement.entityId,
         password: initialPassword(rut),
       },
       { entities: [entity], records }
@@ -415,9 +441,13 @@ function associatePayrollAccess(id) {
   }
 }
 
-function handlePayrollSave(id, values, previous) {
+function handlePayrollSave(id, values, _previous) {
+  const settlement = findPayrollSettlement(id);
+  if (!settlement) return;
   const customFields = {
-    ...(previous.customFields || {}),
+    ...(loadPurchaseInvoices().find(
+      (item) => item.document_id === settlement.documentId
+    )?.customFields || {}),
     tipoFactura: 'compra',
   };
   for (const key of [
@@ -430,8 +460,8 @@ function handlePayrollSave(id, values, previous) {
     else customFields[key] = values[key];
   }
   try {
-    updateDocument(
-      id,
+    const updatedDocument = updateDocument(
+      settlement.documentId,
       {
         totalAmount: values.totalAmount,
         status: values.status,
@@ -441,6 +471,34 @@ function handlePayrollSave(id, values, previous) {
       },
       state.config
     );
+    const settlements = loadPayrollSettlements();
+    const index = settlements.findIndex(
+      (item) => item.settlementId === settlement.settlementId
+    );
+    const updated = {
+      ...settlement,
+      periodo: values.periodoLiquidacion,
+      sueldoBase: Number(values.sueldoBase) || 0,
+      descuentos: Number(values.descuentos) || 0,
+      bonos: Number(values.bonos) || 0,
+      monto: Number(updatedDocument.totalAmount) || 0,
+      estado: updatedDocument.status,
+      fechaPago: updatedDocument.customFields?.fechaPago || null,
+      updatedAt: new Date().toISOString(),
+    };
+    const errors = validateSettlement(updated, {
+      entities: loadEntities(),
+      documents: loadDocuments(),
+      settlements: settlements.filter(
+        (item) => item.settlementId !== settlement.settlementId
+      ),
+    });
+    if (errors.length > 0) {
+      payrollForm?.showErrors(errors);
+      return;
+    }
+    settlements[index] = updated;
+    savePayrollSettlements(settlements);
     refreshPayrollAdmin();
     const feedback = document.querySelector(
       '#payroll-form [data-invoice-feedback]'
@@ -505,7 +563,11 @@ function refreshWorkerView() {
     }
     return null;
   }
-  return refreshPayrollWorker(state.session);
+  return refreshPayrollWorker(state.session, undefined, {
+    entities,
+    purchaseInvoices: loadPurchaseInvoices(),
+    settlements: loadPayrollSettlements(),
+  });
 }
 
 function confirmAction(message) {
@@ -581,12 +643,29 @@ function handleEntitySubmit(values, editingId) {
   }
 }
 
+function syncSettlementFromDocument(document) {
+  const settlements = loadPayrollSettlements();
+  const index = settlements.findIndex(
+    (item) => item?.documentId === document?.document_id
+  );
+  if (index === -1) return;
+  settlements[index] = {
+    ...settlements[index],
+    monto: Number(document.totalAmount) || 0,
+    estado: document.status,
+    fechaPago: document.customFields?.fechaPago || null,
+    updatedAt: new Date().toISOString(),
+  };
+  savePayrollSettlements(settlements);
+}
+
 function handleInvoiceSubmit(tipoFactura, values, editingId) {
   const form = state.invoiceForms[tipoFactura];
   values.customFields.tipoFactura = tipoFactura;
   try {
     if (editingId) {
-      updateDocument(editingId, values, state.config);
+      const updated = updateDocument(editingId, values, state.config);
+      if (tipoFactura === 'compra') syncSettlementFromDocument(updated);
     } else {
       addDocument(values, state.config);
     }
@@ -679,7 +758,9 @@ export function initApp(rawConfig = userConfig) {
   state.searchTerm = '';
   state.session = null;
   const migration = migrateLegacyDocuments();
+  const payrollBackfill = backfillPayrollSettlements();
   state.migration = migration;
+  state.payrollBackfill = payrollBackfill;
 
   applyTheme(config);
   applyLabels(config);

@@ -12,6 +12,8 @@
 | `erp.session` | `sessionStorage` | Objeto `Session` o ausente. |
 | `erp.schemaVersion` | `localStorage` | `"2.0.0"` para esta versión. |
 
+La clave `erp.payrollSettlements` (`localStorage`) almacena las `LiquidacionSueldo` vinculadas por `documentId` a las facturas de compra; la versión de esquema permanece `"2.0.0"`. Esto no modifica los contratos de autenticación, sesión ni acceso.
+
 ## 2. Forma de `AccessRecord`
 
 ```js

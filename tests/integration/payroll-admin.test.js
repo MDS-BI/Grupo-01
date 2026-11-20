@@ -1,7 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { initApp, appState } from '../../src/app.js';
 import { userConfig } from '../../src/module-config.js';
-import { addDocument, addEntity, updateDocument } from '../../src/storage.js';
+import {
+  addDocument,
+  addEntity,
+  loadPayrollSettlements,
+  savePayrollSettlements,
+  updateDocument,
+} from '../../src/storage.js';
 import { saveSession } from '../../src/session.js';
 import {
   createAccessRecord,
@@ -24,12 +30,7 @@ function worker(taxId, code, name) {
   );
 }
 
-function settlement(entity, period, amount, folio) {
-  const customFields = {
-    tipoFactura: 'compra',
-    centroCosto: 'Consumible',
-    periodoLiquidacion: period,
-  };
+function addSettlement(entity, period, amount, folio, status = 'Emitida') {
   const created = addDocument(
     {
       entity_id: entity.entity_id,
@@ -38,12 +39,45 @@ function settlement(entity, period, amount, folio) {
       startDate: `${period}-01`,
       endDate: `${period}-28`,
       totalAmount: amount,
-      customFields,
+      customFields: {
+        tipoFactura: 'compra',
+        centroCosto: 'Consumible',
+        periodoLiquidacion: period,
+      },
     },
     userConfig
   );
-  updateDocument(created.document_id, { status: 'Emitida' }, userConfig);
-  return created;
+  if (status === 'Emitida' || status === 'Pagada') {
+    updateDocument(created.document_id, { status: 'Emitida' }, userConfig);
+  }
+  if (status === 'Pagada') {
+    updateDocument(
+      created.document_id,
+      {
+        status: 'Pagada',
+        customFields: {
+          ...created.customFields,
+          montoPagado: amount,
+          fechaPago: `${period}-15`,
+        },
+      },
+      userConfig
+    );
+  }
+  const record = {
+    settlementId: `set_${folio}`,
+    documentId: created.document_id,
+    entityId: entity.entity_id,
+    periodo: period,
+    sueldoBase: Math.round(amount * 0.7),
+    descuentos: Math.round(amount * 0.03),
+    bonos: Math.round(amount * 0.3),
+    monto: amount,
+    estado: status,
+    fechaPago: status === 'Pagada' ? `${period}-15` : null,
+  };
+  savePayrollSettlements([record]);
+  return record;
 }
 
 function setupFinanceSession() {
@@ -94,28 +128,29 @@ describe('US4/US7 - liquidaciones del administrador y de finanzas', () => {
         else setupFinanceSession();
       });
 
-      it('lista todas las liquidaciones con trabajador, RUT, período, monto y estado', () => {
+      it('lista liquidaciones con trabajador, RUT, período, monto, estado y factura vinculada', () => {
         const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
         const bruno = worker('45000000-0', 'PE-002', 'Bruno Soto Vega');
-        settlement(ana, '2026-10', 700000, 1);
-        settlement(bruno, '2026-09', 620000, 2);
+        const first = addSettlement(ana, '2026-10', 700000, 1);
+        addSettlement(bruno, '2026-09', 620000, 2);
 
         initApp(userConfig);
         byId('nav-payroll-admin').click();
 
-        const text = byId('payroll-admin-list').textContent;
-        expect(text).toContain('Ana Pérez Soto');
-        expect(text).toContain('22222222-2');
-        expect(text).toContain('2026-10');
-        expect(text).toContain('Emitida');
-        expect(text).toContain('Bruno Soto Vega');
+        const table = byId('payroll-admin-list');
+        expect(table.textContent).toContain('Ana Pérez Soto');
+        expect(table.textContent).toContain('22222222-2');
+        expect(table.textContent).toContain('2026-10');
+        expect(table.textContent).toContain('Emitida');
+        expect(table.textContent).toContain(first.documentId);
+        expect(table.textContent).toContain('Bruno Soto Vega');
       });
 
       it('filtra por trabajador/RUT y por período', () => {
         const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
         const bruno = worker('45000000-0', 'PE-002', 'Bruno Soto Vega');
-        settlement(ana, '2026-10', 700000, 1);
-        settlement(bruno, '2026-09', 620000, 2);
+        addSettlement(ana, '2026-10', 700000, 1);
+        addSettlement(bruno, '2026-09', 620000, 2);
         initApp(userConfig);
         byId('nav-payroll-admin').click();
 
@@ -139,20 +174,29 @@ describe('US4/US7 - liquidaciones del administrador y de finanzas', () => {
         );
       });
 
-      it('edita una liquidación y rechaza un período inválido', () => {
+      it('edita el desglose y rechaza un período inválido', () => {
         const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
-        settlement(ana, '2026-10', 700000, 1);
+        addSettlement(ana, '2026-10', 700000, 1);
         initApp(userConfig);
         byId('nav-payroll-admin').click();
 
-        const editButton = byId('payroll-admin-list').querySelector(
-          '[data-action="edit"]'
-        );
-        expect(editButton).not.toBeNull();
-        editButton.click();
-        const periodInput = byId('payroll-field-periodoLiquidacion');
-        expect(periodInput.value).toBe('2026-10');
+        byId('payroll-admin-list')
+          .querySelector('[data-action="edit"]')
+          .click();
+        expect(byId('payroll-field-periodoLiquidacion').value).toBe('2026-10');
+        expect(byId('payroll-field-sueldoBase').value).toBe('490000');
 
+        byId('payroll-field-sueldoBase').value = '510000';
+        byId('payroll-field-sueldoBase').dispatchEvent(new Event('input'));
+        byId('payroll-form').dispatchEvent(
+          new Event('submit', { bubbles: true, cancelable: true })
+        );
+        expect(
+          loadPayrollSettlements().find((item) => item.settlementId === 'set_1')
+            .sueldoBase
+        ).toBe(510000);
+
+        const periodInput = byId('payroll-field-periodoLiquidacion');
         periodInput.value = '2026-13';
         periodInput.dispatchEvent(new Event('input'));
         byId('payroll-form').dispatchEvent(
@@ -160,20 +204,54 @@ describe('US4/US7 - liquidaciones del administrador y de finanzas', () => {
         );
         expect(byId('payroll-form-errors').textContent).toContain('AAAA-MM');
       });
+
+      it('sincroniza el espejo al editar la factura de compra vinculada', () => {
+        const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
+        const record = addSettlement(ana, '2026-10', 700000, 1, 'Borrador');
+        initApp(userConfig);
+        byId('nav-invoice-purchase').click();
+
+        const select = byId('invoice-purchase-edit');
+        select.value = record.documentId;
+        select.dispatchEvent(new Event('change'));
+        byId('view-invoice-purchase')
+          .querySelector('[data-load-invoice]')
+          .click();
+        const amountInput = byId('invoice-purchase-form').querySelector(
+          '[name="totalAmount"]'
+        );
+        amountInput.value = '750000';
+        amountInput.dispatchEvent(new Event('input'));
+        const statusInput = byId('invoice-purchase-form').querySelector(
+          '[data-field="status"]'
+        );
+        statusInput.value = 'Emitida';
+        statusInput.dispatchEvent(new Event('change'));
+        byId('invoice-purchase-form').dispatchEvent(
+          new Event('submit', { bubbles: true, cancelable: true })
+        );
+
+        const updated = loadPayrollSettlements().find(
+          (item) => item.settlementId === record.settlementId
+        );
+        expect(updated.monto).toBe(750000);
+        expect(updated.estado).toBe('Emitida');
+        expect(updated.fechaPago).toBeNull();
+      });
     });
   }
 
   describe('asociación de un acceso por RUT', () => {
-    it('el administrador asocia un acceso de trabajador cuando el RUT coincide', () => {
+    it('el administrador asocia un acceso de trabajador usando entityId de la liquidación', () => {
       setupAdminSession();
       const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
-      settlement(ana, '2026-10', 700000, 1);
+      addSettlement(ana, '2026-10', 700000, 1);
       initApp(userConfig);
       byId('nav-payroll-admin').click();
 
-      const text = byId('payroll-admin-list').textContent;
-      expect(text).toContain('no tiene un acceso de trabajador activo');
-
+      expect(byId('payroll-admin-list').textContent).toContain(
+        'no tiene un acceso de trabajador activo'
+      );
       byId('payroll-admin-list')
         .querySelector('[data-action="associate"]')
         .click();
@@ -190,7 +268,7 @@ describe('US4/US7 - liquidaciones del administrador y de finanzas', () => {
 
     it('finanzas ve y edita liquidaciones, pero no puede asociar un acceso por RUT', () => {
       const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
-      settlement(ana, '2026-10', 700000, 1);
+      addSettlement(ana, '2026-10', 700000, 1);
       setupFinanceSession();
       initApp(userConfig);
       byId('nav-payroll-admin').click();
@@ -212,8 +290,23 @@ describe('US4/US7 - liquidaciones del administrador y de finanzas', () => {
   it('el cambio del administrador se refleja en la vista del trabajador', () => {
     setupAdminSession();
     const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
-    const liquidacion = settlement(ana, '2026-10', 700000, 1);
+    const liquidacion = addSettlement(ana, '2026-10', 700000, 1, 'Borrador');
     createWorkerAccess(ana);
+    initApp(userConfig);
+    byId('nav-invoice-purchase').click();
+
+    const select = byId('invoice-purchase-edit');
+    select.value = liquidacion.documentId;
+    select.dispatchEvent(new Event('change'));
+    byId('view-invoice-purchase').querySelector('[data-load-invoice]').click();
+    const form = byId('invoice-purchase-form');
+    const amountInput = form.querySelector('[name="totalAmount"]');
+    amountInput.value = '750000';
+    amountInput.dispatchEvent(new Event('input'));
+    form.dispatchEvent(
+      new Event('submit', { bubbles: true, cancelable: true })
+    );
+
     saveSession({
       accessId: '22222222-2',
       role: 'trabajador',
@@ -221,14 +314,6 @@ describe('US4/US7 - liquidaciones del administrador y de finanzas', () => {
       startedAt: new Date().toISOString(),
     });
     initApp(userConfig);
-    expect(byId('payroll-worker-amount').textContent).toContain('700');
-
-    updateDocument(
-      liquidacion.document_id,
-      { totalAmount: 750000 },
-      userConfig
-    );
-    byId('nav-payroll-worker').click();
     expect(byId('payroll-worker-amount').textContent).toContain('750');
   });
 });

@@ -48,7 +48,11 @@ if (!localStorageWorks()) {
 }
 
 beforeEach(() => {
-  if (typeof localStorage !== 'undefined') localStorage.clear();
+  if (typeof localStorage !== 'undefined') {
+    localStorage.clear();
+    localStorage.removeItem('erp.payrollSettlements');
+    localStorage.removeItem('erp.migration.payrollSettlements');
+  }
   if (typeof sessionStorage !== 'undefined') sessionStorage.clear();
   if (typeof document !== 'undefined') {
     document.body.innerHTML = '';

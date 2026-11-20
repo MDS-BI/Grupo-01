@@ -1,11 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { initApp, appState } from '../../src/app.js';
 import { userConfig } from '../../src/module-config.js';
-import {
-  addEntity,
-  addDocument as storageAddDocument,
-  updateDocument,
-} from '../../src/storage.js';
+import { addEntity, savePayrollSettlements } from '../../src/storage.js';
 import {
   createAccessRecord,
   loadDevNotifications,
@@ -29,24 +25,29 @@ function worker(accessId, code, name) {
 
 function settlement(
   entity,
-  { period, amount, status = 'Pagada', folio = 1 } = {}
+  {
+    id = 'set_1',
+    documentId = 'doc_1',
+    period = '2026-10',
+    amount = 700000,
+    status = 'Pagada',
+    fechaPago = `${period}-15`,
+    sueldoBase = 500000,
+    descuentos = 20000,
+    bonos = 220000,
+  } = {}
 ) {
   return {
-    entity_id: entity.entity_id,
-    folio,
-    series: 'LIQ',
-    startDate: `${period}-01`,
-    endDate: `${period}-28`,
-    totalAmount: amount,
-    status,
-    customFields: {
-      tipoFactura: 'compra',
-      centroCosto: 'Consumible',
-      periodoLiquidacion: period,
-      ...(status === 'Pagada'
-        ? { montoPagado: amount, fechaPago: `${period}-15` }
-        : {}),
-    },
+    settlementId: id,
+    documentId,
+    entityId: entity.entity_id,
+    periodo: period,
+    sueldoBase,
+    descuentos,
+    bonos,
+    monto: amount,
+    estado: status,
+    fechaPago,
   };
 }
 
@@ -68,25 +69,6 @@ function signIn(entity, accessId) {
   });
 }
 
-function addSettlement(record) {
-  const { status, customFields, ...input } = record;
-  const created = storageAddDocument(
-    { ...input, status: 'Borrador', customFields },
-    userConfig
-  );
-  if (status === 'Emitida' || status === 'Pagada') {
-    updateDocument(created.document_id, { status: 'Emitida' }, userConfig);
-  }
-  if (status === 'Pagada') {
-    updateDocument(
-      created.document_id,
-      { status: 'Pagada', customFields },
-      userConfig
-    );
-  }
-  return created;
-}
-
 describe('US3 - mi liquidación del trabajador', () => {
   beforeEach(() => {
     loadAppMarkup();
@@ -95,14 +77,28 @@ describe('US3 - mi liquidación del trabajador', () => {
     appState.currentModule = 'dashboard';
   });
 
-  it('muestra únicamente la liquidación vigente del trabajador', () => {
+  it('muestra el desglose de la última liquidación del trabajador', () => {
     const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
-    addSettlement(
-      settlement(ana, { period: '2026-09', amount: 500000, folio: 1 })
-    );
-    addSettlement(
-      settlement(ana, { period: '2026-10', amount: 700000, folio: 2 })
-    );
+    savePayrollSettlements([
+      settlement(ana, {
+        id: 'set_sep',
+        documentId: 'doc_sep',
+        period: '2026-09',
+        amount: 500000,
+        sueldoBase: 400000,
+        descuentos: 10000,
+        bonos: 110000,
+      }),
+      settlement(ana, {
+        id: 'set_oct',
+        documentId: 'doc_oct',
+        period: '2026-10',
+        amount: 700000,
+        sueldoBase: 500000,
+        descuentos: 20000,
+        bonos: 220000,
+      }),
+    ]);
     signIn(ana, '22222222-2');
 
     initApp(userConfig);
@@ -110,12 +106,68 @@ describe('US3 - mi liquidación del trabajador', () => {
     expect(byId('view-payroll-worker').hidden).toBe(false);
     expect(byId('payroll-worker-period').textContent).toBe('2026-10');
     expect(byId('payroll-worker-name').textContent).toBe('Ana Pérez Soto');
+    expect(byId('payroll-worker-base-salary').textContent).toContain('500');
+    expect(byId('payroll-worker-discounts').textContent).toContain('20');
+    expect(byId('payroll-worker-bonuses').textContent).toContain('220');
     expect(byId('payroll-worker-amount').textContent).toContain('700');
     expect(byId('payroll-worker-paid-at').textContent).toContain('2026-10-15');
     expect(byId('payroll-worker-empty').hidden).toBe(true);
   });
 
-  it('muestra el estado vacío sin liquidación', () => {
+  it('muestra solo pagos pagados con fecha, ordenados de más reciente a más antiguo', () => {
+    const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
+    savePayrollSettlements([
+      settlement(ana, {
+        id: 'set_old',
+        documentId: 'doc_old',
+        period: '2026-08',
+        fechaPago: '2026-08-15',
+      }),
+      settlement(ana, {
+        id: 'set_new',
+        documentId: 'doc_new',
+        period: '2026-11',
+        fechaPago: '2026-11-15',
+      }),
+      settlement(ana, {
+        id: 'set_same_day',
+        documentId: 'doc_same_day',
+        period: '2026-12',
+        fechaPago: '2026-11-15',
+      }),
+      settlement(ana, {
+        id: 'set_draft',
+        documentId: 'doc_draft',
+        period: '2026-09',
+        status: 'Borrador',
+        fechaPago: null,
+      }),
+      settlement(ana, {
+        id: 'set_emitted',
+        documentId: 'doc_emitted',
+        period: '2026-10',
+        status: 'Emitida',
+        fechaPago: '2026-10-15',
+      }),
+    ]);
+    signIn(ana, '22222222-2');
+
+    initApp(userConfig);
+
+    const rows = [...byId('payroll-worker-history').querySelectorAll('tr')];
+    expect(rows.map((row) => row.cells[1].textContent)).toEqual([
+      '2026-12',
+      '2026-11',
+      '2026-08',
+    ]);
+    expect(byId('payroll-worker-history-empty').hidden).toBe(true);
+    expect(byId('payroll-worker-history-table').hidden).toBe(false);
+    expect(byId('payroll-worker-history').textContent).not.toContain(
+      'Sueldo base'
+    );
+  });
+
+  it('muestra estados vacíos sin liquidación ni pagos', () => {
     const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
     signIn(ana, '22222222-2');
 
@@ -123,11 +175,13 @@ describe('US3 - mi liquidación del trabajador', () => {
 
     expect(byId('payroll-worker-card').hidden).toBe(true);
     expect(byId('payroll-worker-empty').hidden).toBe(false);
+    expect(byId('payroll-worker-history-table').hidden).toBe(true);
+    expect(byId('payroll-worker-history-empty').hidden).toBe(false);
   });
 
   it('no ofrece acciones de edición, eliminación ni creación', () => {
     const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
-    addSettlement(settlement(ana, { period: '2026-10', amount: 700000 }));
+    savePayrollSettlements([settlement(ana)]);
     signIn(ana, '22222222-2');
 
     initApp(userConfig);
@@ -140,19 +194,78 @@ describe('US3 - mi liquidación del trabajador', () => {
   it('aísla a dos trabajadores y bloquea las vistas administrativas', () => {
     const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
     const bruno = worker('45000000-0', 'PE-002', 'Bruno Soto Vega');
-    addSettlement(settlement(ana, { period: '2026-10', amount: 700000 }));
-    addSettlement(
-      settlement(bruno, { period: '2026-09', amount: 620000, folio: 2 })
-    );
+    savePayrollSettlements([
+      settlement(ana, {
+        id: 'set_ana',
+        documentId: 'doc_ana',
+        amount: 700000,
+      }),
+      settlement(bruno, {
+        id: 'set_bruno',
+        documentId: 'doc_bruno',
+        amount: 620000,
+        period: '2026-09',
+      }),
+    ]);
     signIn(ana, '22222222-2');
 
     initApp(userConfig);
+
     expect(byId('payroll-worker-amount').textContent).toContain('700');
     expect(byId('payroll-worker-amount').textContent).not.toContain('620');
+    expect(byId('payroll-worker-history').textContent).not.toContain('620');
 
     byId('nav-invoice-sale').click();
     expect(byId('view-payroll-worker').hidden).toBe(false);
     expect(byId('view-invoice-sale').hidden).toBe(true);
+  });
+
+  it('muestra como vigente una liquidación en Borrador o Emitida', () => {
+    const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
+    savePayrollSettlements([
+      settlement(ana, {
+        id: 'set_draft',
+        documentId: 'doc_draft',
+        period: '2026-11',
+        status: 'Borrador',
+        fechaPago: null,
+        amount: 800000,
+      }),
+    ]);
+    signIn(ana, '22222222-2');
+
+    initApp(userConfig);
+
+    expect(byId('payroll-worker-period').textContent).toBe('2026-11');
+    expect(byId('payroll-worker-status').textContent).toContain('Borrador');
+    expect(byId('payroll-worker-paid-at').textContent).toContain('Sin pago');
+    expect(byId('payroll-worker-history-empty').hidden).toBe(false);
+  });
+
+  it('excluye pagos parciales del historial', () => {
+    const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
+    savePayrollSettlements([
+      settlement(ana, {
+        id: 'set_partial',
+        documentId: 'doc_partial',
+        status: 'Emitida',
+        fechaPago: '2026-10-15',
+      }),
+      settlement(ana, {
+        id: 'set_paid',
+        documentId: 'doc_paid',
+        period: '2026-09',
+        fechaPago: '2026-09-15',
+      }),
+    ]);
+    signIn(ana, '22222222-2');
+
+    initApp(userConfig);
+
+    expect(byId('payroll-worker-history').querySelectorAll('tr')).toHaveLength(
+      1
+    );
+    expect(byId('payroll-worker-history').textContent).toContain('2026-09');
   });
 
   it('cierra la sesión y notifica cuando el vínculo del trabajador está roto', () => {

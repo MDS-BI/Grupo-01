@@ -210,8 +210,9 @@ sesión**, sin una opción para volver al acceso desde dentro del ERP.
 
 Los roles son administrador, finanzas y trabajador:
 
-- **Trabajador**: ve solo **Mi liquidación**, una única factura de compra vigente
-  de su tercero personal, en modo de solo lectura.
+- **Trabajador**: ve solo **Mi liquidación**, la liquidación vigente de su tercero
+  personal con sueldo base, descuentos, bonos y el historial de pagos efectuados,
+  en modo de solo lectura.
 - **Finanzas**: ve y edita terceros, facturas de venta y compra, liquidaciones,
   movimientos, flujo de caja, seguimiento y búsqueda. No administra accesos ni ve
   los avisos del desarrollador.
@@ -220,8 +221,17 @@ Los roles son administrador, finanzas y trabajador:
 
 Las facturas de venta y compra viven en colecciones separadas
 (`erp.salesInvoices` y `erp.purchaseInvoices`) y la migración desde
-`erp.documents` es idempotente. El acceso rápido "Nueva entidad"/"Nuevo tercero"
-se eliminó del panel porque duplicaba a "Abrir gestión de entidades/terceros".
+`erp.documents` es idempotente. Las liquidaciones se guardan como entidad propia
+en `erp.payrollSettlements` (esquema `2.0.0`), vinculadas por `documentId` a su
+factura de compra; guardan el desglose de sueldo base, descuentos y bonos, y
+reflejan `estado`, `fechaPago` y `monto` de la factura. El historial del
+trabajador solo incluye liquidaciones `Pagadas` con fecha de pago, ordenadas de
+más reciente a más antiguo. Si ya existen facturas de compra de terceros
+personales, el backfill crea las liquidaciones que falten con desglose en `0`,
+es idempotente por `documentId` y usa la marca
+`erp.migration.payrollSettlements`. El acceso rápido "Nueva entidad"/"Nuevo
+tercero" se eliminó del panel porque duplicaba a "Abrir gestión de
+entidades/terceros".
 
 ### Datos de demostración
 
@@ -236,6 +246,10 @@ estas credenciales ficticias:
 | Finanzas | `55.555.555-5` | `5555` |
 | Trabajador (Ana Pérez Soto) | `22.222.222-2` | `2222` |
 | Trabajador (Bruno Soto Vega) | `45.000.000-0` | `4500` |
+
+Cada trabajador de demostración tiene una liquidación vigente con desglose y al
+menos dos liquidaciones pagadas con fechas de pago distintas para probar el
+historial.
 
 La carga anterior desde el panel (`qa-load-demo`) queda superada por la tarea
 T107; la demostración se carga solo desde `login-demo-load`. La tarea T077 queda

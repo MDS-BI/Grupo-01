@@ -4,7 +4,7 @@ import { loadAccessRecords } from '../../src/access-storage.js';
 import { normalizeRut } from '../../src/auth.js';
 import { userConfig } from '../../src/module-config.js';
 import { loadSession } from '../../src/session.js';
-import { loadEntities } from '../../src/storage.js';
+import { loadEntities, loadPayrollSettlements } from '../../src/storage.js';
 import { loadAppMarkup, submit } from '../setup/domFixture.js';
 
 function visibleViews() {
@@ -58,6 +58,7 @@ describe('US6 - demostración cargada desde la pantalla de acceso', () => {
     ).toBe(true);
     expect(loadAccessRecords()).toHaveLength(4);
     expect(loadEntities().length).toBeGreaterThan(0);
+    expect(loadPayrollSettlements()).toHaveLength(4);
   });
 
   it('los accesos de administrador y finanzas funcionan después de la carga', () => {
@@ -131,6 +132,16 @@ describe('US6 - demostración cargada desde la pantalla de acceso', () => {
       expect(document.getElementById('payroll-worker-rut').textContent).toBe(
         caso.taxId
       );
+      expect(
+        document.getElementById('payroll-worker-base-salary').textContent
+      ).toContain('Sueldo base');
+      const historyRows = Array.from(
+        document.getElementById('payroll-worker-history').querySelectorAll('tr')
+      );
+      expect(historyRows.length).toBeGreaterThanOrEqual(2);
+      expect(
+        new Set(historyRows.map((row) => row.cells[0].textContent)).size
+      ).toBeGreaterThanOrEqual(2);
 
       logout();
       expect(loadSession()).toBeNull();

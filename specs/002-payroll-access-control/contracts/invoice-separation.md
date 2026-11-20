@@ -16,13 +16,18 @@ La separación de facturas es **física** y **lógica/visual**:
 | Clave | Tipo de factura | Contenido |
 |---|---|---|
 | `erp.salesInvoices` | `venta` | Facturas de venta. |
-| `erp.purchaseInvoices` | `compra` | Facturas de compra, incluidas las liquidaciones a personal. |
+| `erp.purchaseInvoices` | `compra` | Facturas de compra; las dirigidas a terceros `personal` son los comprobantes de pago de las liquidaciones. |
 | `erp.unclassifiedDocuments` | — | Documentos legados sin tipo o con tipo desconocido. |
+| `erp.payrollSettlements` | — | `LiquidacionSueldo`: desglose de sueldos vinculado por `documentId` a `PurchaseInvoice.document_id`. |
 
 **Invariantes**:
 - `erp.salesInvoices` solo contiene registros con `customFields.tipoFactura === 'venta'`.
 - `erp.purchaseInvoices` solo contiene registros con `customFields.tipoFactura === 'compra'`.
 - Un `document_id` no puede existir en ambas colecciones.
+- La factura de compra a un tercero `personal` sigue siendo el comprobante de pago; el desglose vive en `erp.payrollSettlements`, en su propia entidad `LiquidacionSueldo`, y se vincula por `documentId === document_id`.
+- No existen dos liquidaciones con el mismo `documentId`.
+- `estado`, `fechaPago` y `monto` de la liquidación reflejan la factura vinculada y se sincronizan al editarla.
+- La nueva colección no cambia la versión de esquema: `erp.schemaVersion` sigue siendo `'2.0.0'`.
 - Un registro de venta nunca se muestra en la vista de compra, en la liquidación del trabajador ni en la lista del administrador.
 - Un registro de compra nunca se muestra en la vista de venta.
 - Las vistas de venta y compra están disponibles para `administrador` y `finanzas`; el trabajador no puede abrirlas.
@@ -33,6 +38,7 @@ La separación de facturas es **física** y **lógica/visual**:
 STORAGE_KEYS.salesInvoices    // 'erp.salesInvoices'
 STORAGE_KEYS.purchaseInvoices // 'erp.purchaseInvoices'
 STORAGE_KEYS.unclassifiedDocuments // 'erp.unclassifiedDocuments'
+STORAGE_KEYS.payrollSettlements // 'erp.payrollSettlements'
 
 loadSaleInvoices(): Document[]
 saveSaleInvoices(documents: Document[]): void
@@ -40,6 +46,8 @@ loadPurchaseInvoices(): Document[]
 savePurchaseInvoices(documents: Document[]): void
 loadUnclassifiedDocuments(): Document[]
 saveUnclassifiedDocuments(documents: Document[]): void
+loadPayrollSettlements(): LiquidacionSueldo[]
+savePayrollSettlements(settlements: LiquidacionSueldo[]): void
 
 loadDocuments(): Document[]
 // Vista unificada de solo lectura: venta + compra.
@@ -63,7 +71,7 @@ deleteDocumentsForEntity(entityId): Document[]
 **Compatibilidad**:
 - `loadDocuments()` se mantiene para búsqueda, seguimiento, movimientos y pruebas existentes.
 - `saveDocuments()` se mantiene como función de compatibilidad que separa por tipo antes de escribir; no debe usarse para mezclar tipos.
-- `clearAll()` elimina las colecciones nuevas, la marca de migración y la colección legada.
+- `clearAll()` elimina las colecciones nuevas, la colección de liquidaciones, las marcas de migración y la colección legada.
 
 ## 4. Migración desde `001`
 
@@ -102,6 +110,19 @@ deleteDocumentsForEntity(entityId): Document[]
 - No debe perder documentos.
 - No debe mezclar tipos.
 - Debe poder ejecutarse en pruebas con `localStorage` simulado.
+
+### 4.1 Backfill de `LiquidacionSueldo`
+
+**Disparador**: al inicializar `storage.js` junto con `migrateLegacyDocuments()`, con la marca `erp.migration.payrollSettlements`.
+
+1. Si `erp.migration.payrollSettlements === 'done'`, no hacer nada.
+2. Recorrer las facturas de `erp.purchaseInvoices` cuyo tercero sea `personal`.
+3. Para cada factura, si no existe una liquidación con `documentId === document_id`, crearla con `settlementId` único, `documentId`, `entityId` desde `entity_id` y `periodo` desde `customFields.periodoLiquidacion`.
+4. El desglose backfillado usa `sueldoBase: 0`, `descuentos: 0` y `bonos: 0` cuando no haya datos previos; `monto` se toma de `totalAmount`, `estado` de `status` y `fechaPago` de `customFields.fechaPago`.
+5. Completar `createdAt` y `updatedAt`, escribir `erp.payrollSettlements` y marcar `erp.migration.payrollSettlements = 'done'`.
+6. Mantener `erp.schemaVersion = '2.0.0'`.
+
+**Requisitos**: idempotente, deduplicar por `documentId`, no modificar las facturas de compra ni tocar facturas de venta, y conservar los desgloses ya registrados.
 
 ## 5. Vistas y elementos
 
@@ -172,9 +193,15 @@ deleteDocumentsForEntity(entityId): Document[]
   - migra una colección única con ventas y compras;
   - no duplica al ejecutar dos veces;
   - envía documentos sin tipo a `unclassified`;
-  - conserva la colección legada si falla.
+  - conserva la colección legada si falla;
+  - backfill de `LiquidacionSueldo` con `erp.migration.payrollSettlements`, dedupe por `documentId` y desglose en 0.
 - `tests/integration/invoice-separation.test.js`:
   - existen las dos vistas y no la genérica;
   - cada listado muestra solo su tipo;
   - el formulario fija el tipo;
   - la liquidación del trabajador no muestra facturas de venta.
+- `tests/integration/payroll-settlement-link.test.js`:
+  - `LiquidacionSueldo.documentId` apunta a un `PurchaseInvoice.document_id` y nunca a una factura de venta;
+  - no se crean dos liquidaciones para el mismo `documentId`;
+  - `resolveWorkerPaymentHistory` filtra `estado === 'Pagada' && fechaPago` y ordena por `fechaPago` descendente con desempate por `periodo` descendente;
+  - la última liquidación se resuelve solo para el `entityId` de la sesión y no exige `Pagada`.

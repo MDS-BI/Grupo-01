@@ -1,6 +1,6 @@
 # Investigación: Acceso a liquidaciones de sueldo por RUT y contraseña
 
-**Rama**: `002-payroll-access-control` · **Fecha**: 2026-11-11 · **Revisado**: 2026-11-17 (seguridad y privacidad)
+**Rama**: `002-payroll-access-control` · **Fecha**: 2026-11-11 · **Revisado**: 2026-11-17 (seguridad y privacidad) · 2026-11-19 (`LiquidacionSueldo`, desglose e historial)
 **Relacionado con**: `spec.md`, `plan.md`, `data-model.md` y `contracts/`
 
 ## 1. Normalización y validación del RUT
@@ -33,33 +33,43 @@ La comparación de accesos se hace siempre con la forma canónica. La visualizac
 
 **Riesgo documentado.** La contraseña se guarda en `localStorage` sin cifrado y el MVP no ofrece cambio de contraseña: cualquier persona que conozca el RUT de otra persona puede iniciar sesión como ella. El control de acceso es solo de interfaz y no debe usarse con datos reales. Se documenta como riesgo conocido en `README.md`, en la sección «Manejo de riesgos de datos y sesgos» de `spec.md` y en la interfaz.
 
-## 3. Modelo de acceso sin entidad de liquidación
+## 3. Entidad persistente `LiquidacionSueldo`
 
-**Decisión.** No se crea una entidad `LiquidacionSueldo`. La liquidación es una proyección de una factura de compra a un tercero de tipo personal. El acceso de trabajador guarda `entityId` y el vínculo con la liquidación se resuelve por `entity_id`, `tipoFactura = compra` y `tipoTercero = personal`.
+**Decisión.** Se crea la entidad persistente `LiquidacionSueldo`, guardada bajo la clave `erp.payrollSettlements` de `localStorage`; el esquema se mantiene en `2.0.0`. Sus campos son `settlementId`, `documentId` (FK a `PurchaseInvoice.document_id`), `entityId` del tercero personal, `periodo` (`YYYY-MM`), `sueldoBase`, `descuentos`, `bonos`, `monto`, `estado` (`Borrador` | `Emitida` | `Pagada`), `fechaPago`, `createdAt` y `updatedAt`.
 
-**Justificación.** Es la recomendación más reciente del usuario: crear otra entidad duplica el modelo, obliga a conciliar dos registros del mismo pago y rompe la trazabilidad con movimientos financieros y seguimiento. La factura de compra ya contiene período, monto, estado y fecha de pago.
+La factura de compra vinculada sigue siendo el comprobante de pago. Los campos `estado`, `fechaPago` y `monto` de la liquidación son un espejo de la factura y se sincronizan al editarla; el desglose (`sueldoBase`, `descuentos` y `bonos`) se registra en la entidad. No se calculan haberes, descuentos legales, AFP, salud ni imponibilidad: los valores del desglose son los registrados por remuneraciones o finanzas.
 
-**Alternativas consideradas.**
-- Entidad `LiquidacionSueldo` independiente: duplica datos y requiere sincronización con la factura.
-- Entidad que referencia una factura: agrega una tabla puente sin valor en el MVP.
-- Guardar la liquidación dentro del acceso: mezcla credenciales con datos de negocio y complica la edición.
-
-## 4. Una única liquidación por trabajador
-
-**Decisión.** La vista del trabajador muestra exactamente una liquidación: la del período más reciente (`periodoLiquidacion` en formato `YYYY-MM`) de su tercero personal. Si hay empate, se usa la fecha de emisión (`startDate`) más reciente y, si persiste, la fecha de creación (`createdAt`) más reciente. El administrador puede editar cualquier liquidación; el trabajador siempre ve la vigente.
-
-**Justificación.** El usuario pidió "una única liquidación". Un criterio determinista evita ambigüedad sin agregar un campo de vínculo ni una tabla nueva. El período es el criterio natural del dominio de remuneraciones.
+**Justificación.** El desglose necesita valores registrados explícitamente y el historial necesita liquidaciones identificables, no solo una proyección del estado actual de la factura. El vínculo por `documentId` conserva la trazabilidad con movimientos, seguimiento y la colección `erp.purchaseInvoices`, sin convertir la factura en el lugar donde se inventan los componentes del sueldo.
 
 **Alternativas consideradas.**
-- Mostrar todas las liquidaciones del trabajador: incumple "una única".
-- Agregar `settlementId` al acceso: permite un vínculo explícito, pero complica la creación cuando la liquidación aún no existe y duplica la fuente de verdad.
-- Usar solo `createdAt`: no refleja el período de remuneración.
+- Reutilizar `customFields` de la factura de compra para el desglose: mezcla el comprobante de pago con datos de remuneraciones, pierde `settlementId` y hace ambiguo el historial cuando la factura cambia de estado; rechazada.
+- No almacenar nada y proyectar la liquidación desde las facturas: el desglose no tendría valores registrados y el historial no existiría como conjunto explícito de liquidaciones; rechazada.
+- Entidad independiente sin `documentId`: rompe la trazabilidad con el comprobante de pago y obliga a conciliar dos registros sin una clave común.
+- Guardar la liquidación dentro del acceso de trabajador: mezcla credenciales con datos de negocio y complica edición, historial y backfill.
+
+## 4. Última liquidación, desglose e historial de pagos
+
+**Decisión.** La vista del trabajador muestra primero exactamente una liquidación completa, sin exigir que esté `Pagada`: se filtran las liquidaciones por `entityId` de la sesión, se ordenan por `periodo` descendente, se desempata por el `startDate` de la factura vinculada descendente y luego por `createdAt` descendente, y se toma la primera. Esa liquidación vigente muestra período, sueldo base, descuentos, bonos, monto, estado y fecha de pago; el desglose aparece solo aquí.
+
+Los identificadores de la vista del trabajador son los existentes (`payroll-worker-title`, `payroll-worker-card`, `payroll-worker-period`, `payroll-worker-name`, `payroll-worker-rut`, `payroll-worker-amount`, `payroll-worker-status`, `payroll-worker-paid-at`, `payroll-worker-empty` y `payroll-worker-warning`) más `payroll-worker-base-salary`, `payroll-worker-discounts`, `payroll-worker-bonuses`, `payroll-worker-history` y `payroll-worker-history-empty`.
+
+El historial incluye únicamente las liquidaciones del trabajador con `estado === 'Pagada' && fechaPago`. Se ordena por `fechaPago` descendente, con desempate por `periodo` descendente. Cada fila muestra fecha de pago, período, monto y estado; no repite sueldo base, descuentos ni bonos. No aparecen Borrador, Emitida, pagos parciales ni liquidaciones de otros trabajadores.
+
+**Justificación.** «Una única liquidación» significa una única liquidación vigente en la cabecera de la vista, no la ausencia de historial. El criterio determinista de selección evita ambigüedad entre períodos y facturas emitidas el mismo día. Filtrar el historial por pago efectivo y ordenarlo por fecha de pago responde a la necesidad del trabajador de revisar su evolución sin exponer borradores ni datos ajenos.
+
+**Alternativas consideradas.**
+- Mostrar solo la liquidación vigente y dejar el historial para una etapa futura: incumple los escenarios actuales de la vista del trabajador; rechazada.
+- Incluir todas las liquidaciones del trabajador en el historial: mostraría períodos aún no pagados como pagos; rechazada.
+- Leer el historial directamente desde el estado de las facturas: no permite identificar cada liquidación ni conservar su desglose registrado; rechazada.
+- Exigir `Pagada` para la liquidación vigente: ocultaría la liquidación actual mientras está en Borrador o Emitida; rechazada.
+- Ordenar el historial por `createdAt` o por período: no refleja cuándo se efectuó el pago; rechazada.
+- Repetir el desglose en cada fila: mezcla el detalle de la última liquidación con el resumen de pagos; rechazada.
 
 ## 5. Separación física de facturas
 
 **Decisión.** Las facturas de venta y de compra se guardan en colecciones separadas:
 - `erp.salesInvoices` para facturas de venta;
-- `erp.purchaseInvoices` para facturas de compra (incluidas las liquidaciones);
+- `erp.purchaseInvoices` para facturas de compra, incluidos los comprobantes de pago de las liquidaciones a terceros personales; el desglose y el historial viven en `erp.payrollSettlements`;
 - `erp.unclassifiedDocuments` para documentos legados sin `tipoFactura` detectados durante la migración.
 
 Cada registro conserva `customFields.tipoFactura` como invariante y para compatibilidad con búsqueda, movimientos y exportaciones. `storage.js` expone una vista unificada (`loadDocuments`) para los cálculos que necesitan ambos tipos, pero las escrituras se dirigen a la colección correspondiente. La migración desde `erp.documents` se ejecuta una vez, es idempotente y eleva `erp.schemaVersion` a `2.0.0`.
@@ -124,17 +134,18 @@ No existe rol invitado ni sesión sin credenciales: cualquier vista distinta de 
 - Un administrador (RRHH): RUT `88.888.888-8`, contraseña `8888`.
 - Un acceso de finanzas: RUT `55.555.555-5`, contraseña `5555`.
 - Dos trabajadores: RUT `22.222.222-2` / `2222` y `45.000.000-0` / `4500`.
-- Terceros personales asociados y una liquidación por trabajador, con períodos `2026-09` y `2026-10`.
+- Terceros personales asociados y, para cada trabajador, una liquidación vigente con `sueldoBase`, `descuentos` y `bonos` registrados, además de al menos dos liquidaciones `Pagadas` con `fechaPago` distinta. Cada liquidación tiene su `documentId` vinculado a una factura de compra de ejemplo.
 - Facturas de venta y de compra de ejemplo para demostrar la separación.
 
-El RUT del administrador no coincide con el RUT de ningún tercero: se descarta `11.111.111-1` porque pertenece a un tercero proveedor. La carga se inicia desde el botón «Cargar demostración» de la pantalla de acceso, sin abrir vistas del módulo ni iniciar sesión. Es idempotente: si ya existen accesos o facturas, no duplica y conserva lo existente. Los RUT y contraseñas se documentan en `README.md`.
+El RUT del administrador no coincide con el RUT de ningún tercero: se descarta `11.111.111-1` porque pertenece a un tercero proveedor. La carga se inicia desde el botón «Cargar demostración» de la pantalla de acceso, sin abrir vistas del módulo ni iniciar sesión. Es idempotente: si ya existen accesos, facturas o liquidaciones con el mismo `documentId`, no duplica y conserva lo existente. Siembra en `erp.payrollSettlements` y registra la marca de backfill cuando corresponda. Los RUT y contraseñas se documentan en `README.md`.
 
-**Justificación.** Permite demostrar los tres roles y la separación sin datos reales. Los RUT son ficticios y válidos según el módulo 11; mantener el RUT del administrador distinto de los terceros evita confundir al personal de RRHH con un trabajador o proveedor.
+**Justificación.** Permite demostrar los tres roles, el desglose de la última liquidación y un historial con más de un pago ordenado por fecha. Los RUT son ficticios y válidos según el módulo 11; mantener el RUT del administrador distinto de los terceros evita confundir al personal de RRHH con un trabajador o proveedor.
 
 **Alternativas consideradas.**
 - Generar RUT aleatorios: dificulta la repetición de la demostración.
 - Usar datos reales: prohibido por el alcance.
-- Sembrar solo un administrador: no permite demostrar la vista del trabajador ni la de finanzas.
+- Sembrar solo un administrador o una sola liquidación por trabajador: no permite demostrar la vista del trabajador, el desglose ni el historial; rechazada.
+- Sembrar liquidaciones sin factura vinculada: rompe la trazabilidad por `documentId` y la sincronización de estado, monto y fecha de pago; rechazada.
 - Cargar la demostración desde un panel sin sesión: reintroduce el modo invitado que el feedback de privacidad pide eliminar.
 
 ## 10. Riesgos y mitigaciones
@@ -147,6 +158,9 @@ El RUT del administrador no coincide con el RUT de ningún tercero: se descarta 
 | Acceso de trabajador a datos ajenos | Guardas centralizadas, filtrado por `entityId` y pruebas con dos trabajadores. |
 | Documentos legados sin `tipoFactura` | Bandeja `erp.unclassifiedDocuments` y aviso al administrador; no se muestran como liquidación. |
 | Duplicación de lógica entre vistas de factura | Fábricas compartidas `invoice-form.js` e `invoice-list.js` con configuración por tipo. |
+| Desincronización entre factura y liquidación | `estado`, `fechaPago` y `monto` se sincronizan desde la factura vinculada al editar; se comprueba por `documentId` en las pruebas. |
+| Backfill duplicado o con desglose inventado | Idempotencia por `documentId`, desglose predeterminado en `0` y marca `erp.migration.payrollSettlements`. |
+| Historial incompleto o desordenado | Filtro `Pagada` con `fechaPago`, orden por fecha de pago y período descendentes, y verificación manual con dos trabajadores. |
 | Rol incompatible | Validación explícita en el login y mensaje claro; no se registra como incidencia del desarrollador. |
 | Riesgo conocido: contraseña inicial sin cambio | RUT y contraseña documentados como riesgo del MVP en `spec.md`, `README.md` y la interfaz; solo datos ficticios. |
 | Riesgo conocido: control solo de interfaz | Guardas centralizadas y aviso explícito; no se promete seguridad real ni se usan datos reales. |
@@ -162,3 +176,17 @@ El RUT del administrador no coincide con el RUT de ningún tercero: se descarta 
 - Conservar «Continuar sin iniciar sesión»: permite ver datos sin autenticar y contradice la decisión del grupo.
 - Crear un registro de arranque documentado: agrega una credencial fija adicional y más pasos para la demostración.
 - Auto-cargar la demostración al abrir: oculta la acción al usuario y dificulta explicar el origen de los datos.
+
+## 12. Backfill de liquidaciones desde facturas de compra
+
+**Decisión.** Al abrir una versión con facturas de compra ya almacenadas, se ejecuta un backfill desde esas facturas hacia `erp.payrollSettlements`. Se consideran las facturas dirigidas a terceros de tipo personal; por cada `document_id` sin liquidación se crea un registro con `settlementId` propio, `entityId`, `periodo` desde `customFields.periodoLiquidacion`, `monto`, `estado` y `fechaPago` espejo de la factura. El desglose (`sueldoBase`, `descuentos`, `bonos`) se inicializa en `0` cuando no hay valores registrados. El proceso es idempotente por `documentId`: si ya existe liquidación para esa factura, se conserva y no se duplica. La marca de migración es `erp.migration.payrollSettlements` y `clearAll()` también la elimina, junto con las colecciones y el resto de marcas, para que un arranque posterior pueda repetir el backfill desde cero. El esquema sigue siendo `2.0.0`.
+
+**Justificación.** El backfill permite que las facturas históricas sigan siendo visibles como liquidaciones sin perder la edición ya realizada en la entidad propia. Los valores `0` son explícitos y no inventan remuneraciones; la marca evita repetir el trabajo en cada carga, y limpiarla con `clearAll()` deja un estado coherente en navegadores vacíos y pruebas.
+
+**Alternativas consideradas.**
+- Reconstruir todas las liquidaciones en cada arranque: sobrescribiría el desglose registrado y los `updatedAt`; rechazada.
+- Usar `settlementId` como única clave de idempotencia: no evita duplicados cuando el backfill se ejecuta dos veces sobre la misma factura; rechazada.
+- Derivar `sueldoBase`, `descuentos` y `bonos` desde el total de la factura: inventaría datos de remuneración; rechazada.
+- No registrar marca de migración: repetiría el backfill y dificultaría diagnosticar el estado del navegador; rechazada.
+
+La verificación automatizada de estas decisiones se ejecuta con `npm run check` (ESLint, comprobación de formato con Prettier y `vitest run`).

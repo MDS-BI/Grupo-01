@@ -3,7 +3,7 @@ import { initialPassword, normalizeRut } from '../../src/auth.js';
 import { loadAccessRecords } from '../../src/access-storage.js';
 import { loadDemoData } from '../../src/demo-data.js';
 import { userConfig } from '../../src/module-config.js';
-import { loadEntities } from '../../src/storage.js';
+import { loadEntities, loadPayrollSettlements } from '../../src/storage.js';
 
 const DEMO_ACCESSES = [
   { accessId: '88.888.888-8', password: '8888', role: 'administrador' },
@@ -76,6 +76,32 @@ describe('US6 - RUT y credenciales de la demostración', () => {
     for (const descartado of descartados) {
       expect(accessIds).not.toContain(descartado);
       expect(taxIds).not.toContain(descartado);
+    }
+  });
+
+  it('siembra desglose y al menos dos pagos con fechas distintas por trabajador', () => {
+    loadDemoData(userConfig);
+    const settlements = loadPayrollSettlements();
+    const personales = loadEntities().filter(
+      (entity) => entity.customFields.tipoTercero === 'personal'
+    );
+
+    expect(settlements).toHaveLength(4);
+    for (const personal of personales) {
+      const propias = settlements.filter(
+        (item) => item.entityId === personal.entity_id
+      );
+      expect(propias.length).toBeGreaterThanOrEqual(2);
+      expect(propias.every((item) => item.sueldoBase > 0)).toBe(true);
+      expect(propias.every((item) => item.descuentos > 0)).toBe(true);
+      expect(propias.every((item) => item.bonos > 0)).toBe(true);
+      const pagadas = propias.filter(
+        (item) => item.estado === 'Pagada' && item.fechaPago
+      );
+      expect(pagadas.length).toBeGreaterThanOrEqual(2);
+      expect(new Set(pagadas.map((item) => item.fechaPago)).size).toBe(
+        pagadas.length
+      );
     }
   });
 

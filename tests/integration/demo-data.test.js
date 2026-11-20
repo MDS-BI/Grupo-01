@@ -7,6 +7,7 @@ import {
   addEntity,
   loadDocuments,
   loadEntities,
+  loadPayrollSettlements,
   loadPurchaseInvoices,
   updateEntity,
 } from '../../src/storage.js';
@@ -199,6 +200,18 @@ describe('HU6 - carga de datos de demostración', () => {
           (item) => item.entity_id === personal.entity_id
         )
       ).toBe(true);
+      const propias = loadPayrollSettlements().filter(
+        (item) => item.entityId === personal.entity_id
+      );
+      expect(propias.length).toBeGreaterThanOrEqual(2);
+      expect(propias.some((item) => item.sueldoBase > 0)).toBe(true);
+      expect(
+        new Set(
+          propias
+            .filter((item) => item.estado === 'Pagada')
+            .map((item) => item.fechaPago)
+        ).size
+      ).toBeGreaterThanOrEqual(2);
     }
   });
 
@@ -237,6 +250,7 @@ describe('HU6 - carga de datos de demostración', () => {
     expect(document.getElementById('sidebar').hidden).toBe(true);
     expect(loadSession()).toBeNull();
     expect(loadAccessRecords()).toHaveLength(4);
+    expect(loadPayrollSettlements()).toHaveLength(4);
     const tercerosPrevios = loadEntities().length;
     const facturasPrevias = loadDocuments().length;
 

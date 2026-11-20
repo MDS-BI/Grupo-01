@@ -79,6 +79,11 @@ export const ACCESS_STORAGE_KEYS = Object.freeze({
 
 export const ACCESS_SCHEMA_VERSION = '2.0.0';
 
+export const PAYROLL_STORAGE_KEYS = Object.freeze({
+  payrollSettlements: 'erp.payrollSettlements',
+  migrationPayrollSettlements: 'erp.migration.payrollSettlements',
+});
+
 const COMMON_INVOICE_COLUMNS = [
   ['folio', 'Folio'],
   ['status', 'Estado'],

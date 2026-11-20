@@ -310,6 +310,11 @@
               <h2 id="payroll-worker-period">Sin período asignado</h2>
               <p id="payroll-worker-name"></p>
               <p id="payroll-worker-rut"></p>
+              <div class="payroll-breakdown">
+                <p id="payroll-worker-base-salary"></p>
+                <p id="payroll-worker-discounts"></p>
+                <p id="payroll-worker-bonuses"></p>
+              </div>
               <p id="payroll-worker-amount"></p>
               <p id="payroll-worker-status"></p>
               <p id="payroll-worker-paid-at"></p>
@@ -319,6 +324,21 @@
                 Aún no tienes una liquidación registrada. Pídela al
                 administrador o registra la compra de la que eres parte.
               </p>
+            </div>
+            <h2 id="payroll-worker-history-title">Historial de pagos</h2>
+            <table id="payroll-worker-history-table">
+              <thead>
+                <tr>
+                  <th>Fecha de pago</th>
+                  <th>Período</th>
+                  <th>Monto</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="payroll-worker-history"></tbody>
+            </table>
+            <div id="payroll-worker-history-empty" hidden>
+              <p>Aún no tienes pagos registrados.</p>
             </div>
             <div id="payroll-worker-warning" hidden>
               <p id="payroll-worker-warning-message"></p>
@@ -357,7 +377,35 @@
             </div>
             <form id="payroll-form" novalidate>
               <h2 id="payroll-form-title">Editar liquidación</h2>
-              <div id="payroll-form-fields"></div>
+              <div id="payroll-form-fields">
+                <div class="form-field">
+                  <label for="payroll-field-periodoLiquidacion"
+                    >Período (AAAA-MM)</label
+                  >
+                  <input
+                    id="payroll-field-periodoLiquidacion"
+                    data-field="periodoLiquidacion"
+                  />
+                </div>
+                <div class="form-field">
+                  <label for="payroll-field-sueldoBase">Sueldo base</label>
+                  <input
+                    id="payroll-field-sueldoBase"
+                    data-field="sueldoBase"
+                  />
+                </div>
+                <div class="form-field">
+                  <label for="payroll-field-descuentos">Descuentos</label>
+                  <input
+                    id="payroll-field-descuentos"
+                    data-field="descuentos"
+                  />
+                </div>
+                <div class="form-field">
+                  <label for="payroll-field-bonos">Bonos</label>
+                  <input id="payroll-field-bonos" data-field="bonos" />
+                </div>
+              </div>
               <p
                 class="invoice-feedback"
                 role="status"

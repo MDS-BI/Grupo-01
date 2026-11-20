@@ -6,7 +6,7 @@
 
 **Pruebas**: La Constitución (principio II) y la especificación exigen pruebas unitarias y de integración para autenticación, roles y aislamiento. Las tareas de prueba se escriben antes o junto con la implementación.
 
-**Organización**: Las tareas se agrupan por historia de usuario. Los identificadores `[US1]`…`[US7]` mapean a `spec.md`. El orden de fases sigue la prioridad: P1 (US1, US2, US5, US7) → P2 (US3, US4) → P3 (US6). US5 se ejecuta antes de US3/US4 porque provee el formulario de factura de compra que reutiliza la edición de liquidaciones. Phase 10 agrupa las correcciones de la revisión de seguridad y privacidad sin modificar T001–T078.
+**Organización**: Las tareas se agrupan por historia de usuario. Los identificadores `[US1]`…`[US7]` mapean a `spec.md`. El orden de fases sigue la prioridad: P1 (US1, US2, US5, US7) → P2 (US3, US4) → P3 (US6). US5 se ejecuta antes de US3/US4 porque provee el formulario de factura de compra que reutiliza la edición de liquidaciones. Phase 10 agrupa las correcciones de la revisión de seguridad y privacidad sin modificar T001–T078. Phase 11–15 incorporan la revisión del 2026-11-19: entidad persistente `LiquidacionSueldo`, desglose e historial de pagos.
 
 ## Formato: `[ID] [P?] [Story] Descripción`
 
@@ -17,7 +17,7 @@
 ## Convenciones de rutas
 
 - Aplicación de un solo proyecto: `src/`, `tests/` e `index.html` en la raíz del repositorio.
-- Claves de almacenamiento: `erp.salesInvoices`, `erp.purchaseInvoices`, `erp.unclassifiedDocuments`, `erp.accessRecords`, `erp.devNotifications`, `sessionStorage: erp.session`.
+- Claves de almacenamiento: `erp.salesInvoices`, `erp.purchaseInvoices`, `erp.unclassifiedDocuments`, `erp.payrollSettlements`, `erp.accessRecords`, `erp.devNotifications`, `erp.migration.payrollSettlements`, `sessionStorage: erp.session`.
 - Roles canónicos tras la revisión: `administrador`, `finanzas` y `trabajador`; `invitado` queda eliminado. Las tareas históricas que mencionan `invitado` se conservan y se corrigen en Phase 10.
 
 ---
@@ -65,11 +65,11 @@
 
 ---
 
-## Phase 3: User Story 1 - Acceder con RUT y contraseña o como invitado (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 - Acceder con RUT y contraseña (Priority: P1) 🎯 MVP
 
-**Goal**: tarjeta centrada con RUT y contraseña, rol detectado desde el acceso, entrada como invitado, rol en la cabecera y acción de sesión al final del lateral.
+**Goal**: tarjeta centrada con RUT y contraseña, rol detectado desde el acceso, sin modo invitado, rol en la cabecera y acción de sesión al final del lateral.
 
-**Independent Test**: con un acceso de administrador y otro de trabajador registrados, ingresar las credenciales correctas lleva a la vista del rol registrado; el modo invitado conserva sus funciones y las credenciales incorrectas se rechazan.
+**Independent Test**: con un acceso de administrador y otro de trabajador registrados, ingresar las credenciales correctas lleva a la vista del rol registrado; no existe acceso sin sesión y las credenciales incorrectas se rechazan.
 
 ### Pruebas de User Story 1
 
@@ -334,6 +334,7 @@ Task: "T036 Crear src/components/invoice-status-notice.js"
 - Evitar tareas vagas, conflictos sobre el mismo archivo y dependencias que rompan la independencia de las historias.
 - Phase 10 conserva T001–T078 tal cual; cuando una tarea antigua contradice la revisión, la nueva tarea incluye una nota `corrige T0xx`.
 - El MVP corregido exige US1 sin invitado y US7 con el rol finanzas antes de dar por terminada la revisión.
+- Pruebas e2e: el principio II de la Constitución las espera por defecto, pero `plan.md` registra la desviación heredada de `001` (solo Vitest/jsdom). La cobertura crítica se compensa con pruebas unitarias y de integración en T112–T141.
 
 
 
@@ -407,3 +408,131 @@ Task: "T036 Crear src/components/invoice-status-notice.js"
 - [X] T111 Ejecutar `npm run check`, `npm test -- --run` y `npm run build`; corregir fallos en `src/`, `tests/` y documentación derivados de T079–T110, y verificar los diez escenarios de `specs/002-payroll-access-control/quickstart.md` sin modo invitado. Nota: corrige T071, T072 y T078.
 
 **Checkpoint de la revisión**: sin modo invitado, con demo cargable desde el acceso, tres roles con la matriz de `contracts/payroll-views.md`, riesgos documentados y pruebas T079–T090 ejecutadas antes de las correcciones.
+
+---
+
+## Phase 11: Extensión fundacional — `LiquidacionSueldo` y backfill (2026-11-19)
+
+**Propósito**: persistir la liquidación en `erp.payrollSettlements`, crear el backfill idempotente desde `erp.purchaseInvoices` y reemplazar los resolvers basados solo en facturas. Bloquea US3, US4 y US6 de esta revisión.
+
+**⚠️ CRÍTICO**: ninguna tarea de Phase 12–14 puede completarse hasta terminar esta fase.
+
+**Orden TDD**: T112, T114 y T116 se escriben primero y deben fallar antes de T113, T115 y T117.
+
+### Pruebas de la extensión fundacional
+
+- [X] T112 [P] Crear `tests/unit/payroll-settlements-storage.test.js` con `loadPayrollSettlements`, `savePayrollSettlements`, unicidad de `settlementId`, dedupe por `documentId`, inclusión en `clearAll()` y `hasStoredRecords()`, sin cambiar `erp.schemaVersion` (`2.0.0`).
+- [X] T113 Extender `src/storage.js` con `STORAGE_KEYS.payrollSettlements`, `STORAGE_KEYS.migrationPayrollSettlements`, los helpers de carga/guardado y la limpieza de la nueva colección y su marca de migración.
+- [X] T114 [P] Crear `tests/integration/payroll-backfill.test.js` con backfill desde facturas de compra a terceros personales, dedupe por `documentId`, desglose inicial en `0`, respeto de desgloses ya registrados, idempotencia y marca `erp.migration.payrollSettlements`.
+- [X] T115 Implementar `backfillPayrollSettlements()` en `src/storage.js` según `contracts/invoice-separation.md` e invocarlo desde la inicialización junto con `migrateLegacyDocuments()`.
+- [X] T116 [P] Crear `tests/unit/payroll-settlements.test.js` con `resolveWorkerSettlement`, `resolveWorkerPaymentHistory` y `resolveAdminSettlements` sobre `erp.payrollSettlements`, incluyendo desempate por `startDate`/`createdAt`, filtro `Pagada && fechaPago`, orden por `fechaPago` descendente con desempate por `periodo` descendente y filtros por trabajador/RUT y período.
+- [X] T117 Actualizar `src/payroll.js` para que los resolvers usen `settlements` como fuente principal y `purchaseInvoices` solo para desempate y datos de la factura vinculada, según `contracts/payroll-views.md`.
+- [X] T118 [P] Actualizar `src/validation.js` con la validación de `LiquidacionSueldo`: `settlementId` único, `documentId` existente en compras, `entityId` personal, `periodo` `YYYY-MM`, desglose `>= 0`, `monto > 0`, `estado` espejo y `fechaPago` `YYYY-MM-DD` o `null`.
+- [X] T119 [P] Actualizar `tests/setup/dom.js` para limpiar `erp.payrollSettlements` y `erp.migration.payrollSettlements` entre pruebas.
+
+**Checkpoint**: la entidad existe, el backfill es idempotente y los resolvers devuelven última liquidación e historial sin depender de una proyección de la factura.
+
+---
+
+## Phase 12: User Story 3 - Consultar mi liquidación y mi historial de pagos (Priority: P2, revisión 2026-11-19)
+
+**Goal**: el trabajador ve primero su última liquidación con sueldo base, descuentos, bonos, monto, estado y fecha, y debajo el historial de sus pagos ordenado por fecha de pago, sin datos ajenos ni acciones de edición.
+
+**Independent Test**: con dos trabajadores y liquidaciones distintas, cada sesión ve solo su última liquidación con desglose y su historial filtrado a `Pagada` con fecha de pago, ordenado de más reciente a más antiguo; Borrador/Emitida no aparecen en el historial.
+
+### Pruebas de User Story 3
+
+- [X] T120 [P] [US3] Actualizar `tests/integration/payroll-worker.test.js` para cubrir los ocho escenarios de HU3: desglose en la última liquidación, historial filtrado y ordenado, estados vacíos, solo lectura, bloqueo de vistas administrativas y aislamiento entre dos trabajadores.
+- [X] T121 [P] [US3] Crear `tests/integration/payroll-settlement-link.test.js` según `contracts/invoice-separation.md`: `documentId` apunta solo a una factura de compra, no se duplica por `documentId`, el historial excluye no pagadas y la última liquidación no exige `Pagada`.
+
+### Implementación de User Story 3
+
+- [X] T122 [P] [US3] Actualizar `src/components/payroll-worker.js` para renderizar el desglose y el historial con los IDs `payroll-worker-base-salary`, `payroll-worker-discounts`, `payroll-worker-bonuses`, `payroll-worker-history` y `payroll-worker-history-empty`, sin botones de edición.
+- [X] T123 [US3] Actualizar `index.html` con los elementos de desglose e historial dentro de `#view-payroll-worker`, incluyendo el mensaje de historial vacío.
+- [X] T124 [US3] Actualizar `src/app.js` para resolver la vista con `resolveWorkerSettlement` y `resolveWorkerPaymentHistory` usando `session.entityId`, sin exponer liquidaciones de otros terceros.
+- [X] T125 [US3] Actualizar `src/styles.css` con estilos de tarjeta de desglose, tabla de historial y estados vacíos, legibles en escritorio y móvil.
+- [X] T126 [US3] Verificar en `tests/integration/payroll-worker.test.js` y `quickstart.md` que la última liquidación pueda estar en Borrador o Emitida, que el historial excluya pagos parciales y que no se muestre desglose en sus filas.
+
+**Checkpoint**: US3 es independientemente verificable y cumple FR-020, FR-042, FR-044, SC-002 y SC-015.
+
+---
+
+## Phase 13: User Story 4 - Ver y editar liquidaciones con desglose (Priority: P2, revisión 2026-11-19)
+
+**Goal**: administrador y finanzas listan, filtran y editan `LiquidacionSueldo` junto con su factura de compra vinculada, manteniendo sincronizados `estado`, `fechaPago` y `monto`.
+
+**Independent Test**: con liquidaciones de dos trabajadores, ambos roles ven la lista con `documentId`, filtran por trabajador/RUT y período, editan el desglose, guardan sin saltarse el ciclo de vida y el cambio se refleja en la vista del trabajador correspondiente.
+
+### Pruebas de User Story 4
+
+- [X] T127 [P] [US4] Actualizar `tests/integration/payroll-admin.test.js` con los siete escenarios de HU4, la columna de factura vinculada, la edición del desglose y la sincronización del espejo al editar la factura, ejecutado con administrador y con finanzas.
+
+### Implementación de User Story 4
+
+- [X] T128 [P] [US4] Actualizar `src/components/payroll-list.js` para listar `LiquidacionSueldo` con trabajador, RUT, período, monto, estado, fecha de pago, `documentId` y acción Editar, aplicando filtros en memoria por trabajador/RUT y período.
+- [X] T129 [US4] Actualizar `src/components/payroll-form.js` para editar `periodo`, `sueldoBase`, `descuentos` y `bonos`, reutilizando `src/components/invoice-purchase-form.js` para la factura vinculada y sin crear liquidaciones huérfanas.
+- [X] T130 [US4] Actualizar `src/app.js` para guardar la liquidación, sincronizar `estado`, `fechaPago` y `monto` con `updateDocument` sobre `erp.purchaseInvoices`, actualizar `updatedAt` y refrescar la vista del trabajador.
+- [X] T131 [US4] Ajustar `src/components/payroll-list.js` y `src/app.js` para usar `AccessRecord.entityId === LiquidacionSueldo.entityId` en la asociación RUT↔acceso, manteniéndola restringida al administrador.
+- [X] T132 [US4] Actualizar `index.html` con los campos de desglose en `payroll-form` y la columna de factura vinculada en `payroll-admin-list`.
+
+**Checkpoint**: US3 y US4 comparten la misma fuente de verdad con permisos distintos y sin duplicar la factura.
+
+---
+
+## Phase 14: User Story 6 - Demostración con desglose e historial (Priority: P3, revisión 2026-11-19)
+
+**Goal**: la carga de demostración desde el acceso siembra liquidaciones con desglose y al menos dos pagos por trabajador, sin duplicar datos ni iniciar sesión.
+
+**Independent Test**: en un navegador vacío se pulsa «Cargar demostración», se permanece en el login y, al entrar como trabajador, se ven desglose e historial con fechas de pago distintas; cargar dos veces no duplica registros.
+
+### Pruebas de User Story 6
+
+- [X] T133 [P] [US6] Actualizar `tests/unit/demo-data-ruts.test.js` y `tests/integration/demo-data.test.js` para verificar desglose en la liquidación vigente de cada trabajador y al menos dos liquidaciones pagadas con fechas distintas.
+
+### Implementación de User Story 6
+
+- [X] T134 [US6] Actualizar `src/demo-data.js` para sembrar `erp.payrollSettlements` con desglose y al menos dos liquidaciones pagadas por trabajador, manteniendo la idempotencia y `hasStoredRecords()`.
+- [X] T135 [US6] Actualizar `src/module-config.js` para exponer la clave `erp.payrollSettlements` y la marca `erp.migration.payrollSettlements` en la configuración de demostración y migración.
+- [X] T136 [US6] Actualizar `tests/integration/demo-from-login.test.js` para comprobar que la carga desde el login siembra `erp.payrollSettlements` sin crear sesión ni abrir vistas.
+
+**Checkpoint**: la demostración cubre desglose e historial sin duplicados y sin modo invitado.
+
+---
+
+## Phase 15: Polish y verificación de la revisión 2026-11-19
+
+**Propósito**: documentación, verificación y cierre de calidad de la revisión de liquidaciones.
+
+- [X] T137 [P] Actualizar `specs/002-payroll-access-control/checklists/requirements.md` para reemplazar la nota obsoleta «sin almacenamiento propio» por la referencia a `LiquidacionSueldo` en `erp.payrollSettlements`.
+- [X] T138 [P] Actualizar `specs/002-payroll-access-control/plan.md` para reflejar que `tasks.md` fue regenerado con Phase 11–15 y que la desviación e2e sigue registrada.
+- [X] T139 [P] Actualizar `README.md` y `quickstart.md` para documentar `erp.payrollSettlements`, desglose, historial pagado y backfill idempotente.
+- [X] T140 Ejecutar `npm run check` y `npm run build`, corrigiendo fallos derivados de T112–T139 en `src/`, `tests/` y documentación.
+- [X] T141 Ejecutar los escenarios de `quickstart.md` para desglose, historial ordenado, backfill idempotente y aislamiento entre trabajadores, registrando el resultado de cada uno.
+
+**Checkpoint final**: spec, plan, tasks, contratos y código describen la misma entidad persistente y la misma vista del trabajador.
+
+---
+
+## Dependencias de la revisión 2026-11-19
+
+- **Phase 11** depende de la revisión de datos de `data-model.md` y `contracts/`; bloquea Phase 12, Phase 13 y Phase 14.
+- **US3 (Phase 12)** depende de Phase 11 por los resolvers y del acceso de US1 por la sesión; es prerrequisito directo de US4.
+- **US4 (Phase 13)** depende de US3 y de US5 por `invoice-purchase-form.js`; finanzas hereda los permisos definidos en US7.
+- **US6 (Phase 14)** depende de Phase 11 y US3 para sembrar desglose e historial válidos.
+- **Phase 15** depende de Phase 11–14.
+
+### Oportunidades de paralelización (revisión 2026-11-19)
+
+- Phase 11: T112, T114, T116, T118 y T119 en paralelo por archivos distintos; T113 → T115 → T117 son secuenciales por solapamiento en `src/storage.js` y `src/payroll.js`.
+- US3: T120 y T121 en paralelo; luego T122 en paralelo con T125; T123, T124 y T126 son secuenciales por solapamiento en `index.html`, `src/app.js` y pruebas.
+- US4: T127 y T128 en paralelo; T129, T130, T131 y T132 se ordenan por dependencia de formulario, guardado, asociación y marcado.
+- US6: T133 y T136 en paralelo; T134 y T135 después de T133.
+- Phase 15: T137, T138 y T139 en paralelo; T140 y T141 al final.
+
+### Estrategia incremental (revisión 2026-11-19)
+
+1. Completar Phase 11 y validar el backfill dos veces seguidas.
+2. Completar Phase 12 (US3) y detenerse a validar desglose e historial con dos trabajadores.
+3. Completar Phase 13 (US4) y verificar que el cambio del administrador/finanzas se refleje en US3.
+4. Completar Phase 14 (US6) y comprobar la demo desde el login.
+5. Cerrar con Phase 15 y `npm run check` + `npm run build`.

@@ -3,6 +3,9 @@ import {
   addEntity,
   loadDocuments,
   loadEntities,
+  loadPayrollSettlements,
+  loadPurchaseInvoices,
+  savePayrollSettlements,
   updateDocument,
 } from './storage.js';
 import { createAccessRecord, loadAccessRecords } from './access-storage.js';
@@ -43,6 +46,26 @@ function baseFactura(entity, { folio, serie = 'A' }) {
   };
 }
 
+function settlementFromDocument(documentId, settlementId, breakdown) {
+  const document = loadPurchaseInvoices().find(
+    (item) => item.document_id === documentId
+  );
+  return {
+    settlementId,
+    documentId,
+    entityId: document.entity_id,
+    periodo: document.customFields?.periodoLiquidacion || '',
+    sueldoBase: breakdown.sueldoBase,
+    descuentos: breakdown.descuentos,
+    bonos: breakdown.bonos,
+    monto: Number(document.totalAmount) || 0,
+    estado: document.status,
+    fechaPago: document.customFields?.fechaPago || null,
+    createdAt: document.createdAt,
+    updatedAt: document.updatedAt,
+  };
+}
+
 function isDemoAccessId(accessId) {
   const demoAccess = userConfig.demoAccess;
   const ids = [
@@ -57,6 +80,7 @@ export function hasStoredRecords() {
   return (
     loadEntities().length > 0 ||
     loadDocuments().length > 0 ||
+    loadPayrollSettlements().length > 0 ||
     loadAccessRecords().some((record) => !isDemoAccessId(record.accessId))
   );
 }
@@ -241,6 +265,30 @@ function buildDemoData(config) {
     },
   });
 
+  const c5 = addDocument({
+    ...baseFactura(pe1, { folio: 3, serie: 'LIQ' }),
+    startDate: addDays(-50),
+    endDate: addDays(-20),
+    totalAmount: 650000,
+    customFields: {
+      tipoFactura: 'compra',
+      periodoLiquidacion: addDays(-50).slice(0, 7),
+      referenciaOtroModulo: 'Remuneraciones: ago-2026',
+    },
+  });
+
+  const c6 = addDocument({
+    ...baseFactura(pe2, { folio: 4, serie: 'LIQ' }),
+    startDate: addDays(-70),
+    endDate: addDays(-40),
+    totalAmount: 600000,
+    customFields: {
+      tipoFactura: 'compra',
+      periodoLiquidacion: addDays(-70).slice(0, 7),
+      referenciaOtroModulo: 'Remuneraciones: jul-2026',
+    },
+  });
+
   // Emisiones y pagos vía transiciones del ciclo de vida
   updateDocument(v1.document_id, { status: 'Emitida' });
   updateDocument(v2.document_id, { status: 'Emitida' });
@@ -271,6 +319,8 @@ function buildDemoData(config) {
     [c2, 'Consumible'],
     [c3, 'Consumible'],
     [c4, 'Consumible'],
+    [c5, 'Consumible'],
+    [c6, 'Consumible'],
   ]) {
     updateDocument(factura.document_id, {
       status: 'Emitida',
@@ -288,6 +338,47 @@ function buildDemoData(config) {
       referenciaOtroModulo: 'Compras: ord-0076',
     },
   });
+
+  for (const [factura, fechaPago] of [
+    [c2, addDays(-1)],
+    [c4, addDays(-10)],
+    [c5, addDays(-40)],
+    [c6, addDays(-60)],
+  ]) {
+    updateDocument(factura.document_id, {
+      status: 'Pagada',
+      customFields: {
+        ...factura.customFields,
+        centroCosto: 'Consumible',
+        montoPagado: factura.totalAmount,
+        fechaPago,
+      },
+    });
+  }
+
+  const liquidaciones = [
+    settlementFromDocument(c2.document_id, 'set_demo_pe1_latest', {
+      sueldoBase: 500000,
+      descuentos: 20000,
+      bonos: 220000,
+    }),
+    settlementFromDocument(c5.document_id, 'set_demo_pe1_previous', {
+      sueldoBase: 480000,
+      descuentos: 15000,
+      bonos: 185000,
+    }),
+    settlementFromDocument(c4.document_id, 'set_demo_pe2_latest', {
+      sueldoBase: 450000,
+      descuentos: 12000,
+      bonos: 182000,
+    }),
+    settlementFromDocument(c6.document_id, 'set_demo_pe2_previous', {
+      sueldoBase: 430000,
+      descuentos: 10000,
+      bonos: 180000,
+    }),
+  ];
+  savePayrollSettlements(liquidaciones);
 
   const adminAccess = demoAccess.administrador;
   if (
@@ -352,7 +443,8 @@ function buildDemoData(config) {
       terceros: loadEntities().length,
       facturas: loadDocuments().length,
       cobradas: [v1, v2, v3, v4, v5],
-      compras: [c1, c2, c3, c4],
+      compras: [c1, c2, c3, c4, c5, c6],
+      liquidaciones,
     },
   };
 }

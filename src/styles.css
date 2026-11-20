@@ -706,3 +706,73 @@ select[aria-invalid='true'] {
     padding: 24px;
   }
 }
+
+.payroll-breakdown {
+  display: grid;
+  gap: 6px;
+  margin: 16px 0;
+  padding: 14px 16px;
+  background: #eef4ff;
+  border: 1px solid #cbdcff;
+  border-radius: var(--radius);
+}
+
+#payroll-worker-history-title {
+  margin-top: 28px;
+  font-size: 1.1rem;
+}
+
+#payroll-worker-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+#payroll-worker-history-table th,
+#payroll-worker-history-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+#payroll-worker-history-table th {
+  background: #f0f3f8;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
+#payroll-worker-history-empty {
+  padding: 16px;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+}
+
+@media (max-width: 640px) {
+  #payroll-worker-history-table,
+  #payroll-worker-history-table tbody,
+  #payroll-worker-history-table tr,
+  #payroll-worker-history-table td {
+    display: block;
+    width: 100%;
+  }
+
+  #payroll-worker-history-table thead {
+    display: none;
+  }
+
+  #payroll-worker-history-table tr {
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  #payroll-worker-history-table td {
+    border-bottom: 1px solid var(--border);
+  }
+}
