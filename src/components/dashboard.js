@@ -7,16 +7,32 @@ function setText(id, value) {
   if (element) element.textContent = value;
 }
 
+function setQuickActionLabel(id, label) {
+  const button = document.getElementById(id);
+  if (!button) return;
+  const text = button.querySelector('.qa-label') || button;
+  text.textContent = label;
+}
+
 export function initDashboard({ config, onAction }) {
-  setText('dashboard-title', config.labels.dashboard || 'Panel');
-  setText('stat-entities-label', config.labels.entities || 'Entidades');
-  setText('stat-documents-label', config.labels.documents || 'Documentos');
+  const labels = config.labels || {};
+  const documents = labels.documents || 'Documentos';
 
-  const manageEntities = document.getElementById('qa-manage-entities');
+  setText('dashboard-title', labels.dashboard || 'Panel');
+  setText('stat-entities-label', labels.entities || 'Entidades');
+  setText('stat-documents-label', documents);
 
-  if (manageEntities) {
-    manageEntities.textContent = `Abrir gestión de ${(config.labels.entities || 'Entidades').toLowerCase()}`;
-  }
+  const quickLabels = [
+    ['qa-manage-entities', labels.entities || 'Entidades'],
+    ['qa-new-invoice-sale', `${documents} de venta`],
+    ['qa-new-invoice-purchase', `${documents} de compra`],
+    ['qa-new-payroll', labels.payrollAdmin || 'Liquidaciones de sueldo'],
+    ['qa-tracking', 'Seguimiento'],
+    ['qa-cashflow', 'Flujo de caja'],
+    ['qa-movements', 'Movimientos financieros'],
+    ['qa-search', labels.search || 'Buscar'],
+  ];
+  for (const [id, label] of quickLabels) setQuickActionLabel(id, label);
 
   const bindings = [
     ['qa-new-invoice-sale', 'new-invoice-sale'],

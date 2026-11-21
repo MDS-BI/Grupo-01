@@ -29,6 +29,9 @@ const FINANCE_MODULES = [
   'search',
 ];
 
+const MENU_TRANSITION_MS = 180;
+let activeEscapeHandler = null;
+
 function renderLogo(container, moduleName) {
   if (!container) return;
   container.textContent = '';
@@ -78,6 +81,16 @@ function navLabel(config, module) {
   if (module === 'payroll-worker')
     return labels.payrollWorker || 'Mi liquidación';
   return labels.search || 'Buscar';
+}
+
+function registerEscapeHandler(closeMenu) {
+  if (activeEscapeHandler) {
+    document.removeEventListener('keydown', activeEscapeHandler);
+  }
+  activeEscapeHandler = (event) => {
+    if (event.key === 'Escape') closeMenu({ returnFocus: true });
+  };
+  document.addEventListener('keydown', activeEscapeHandler);
 }
 
 export function createShell({ config, session, onNavigate, onLogout }) {
@@ -131,6 +144,116 @@ export function createShell({ config, session, onNavigate, onLogout }) {
     else logoutButton.onclick = null;
   }
 
+  const menuToggle = document.getElementById('menu-toggle');
+  const utilitiesMenu = document.getElementById('utilities-menu');
+  const utilitiesOverlay = document.getElementById('utilities-overlay');
+  const menuAccess = document.getElementById('menu-access');
+  const menuDevNotifications = document.getElementById(
+    'menu-dev-notifications'
+  );
+  const menuSeparator = document.getElementById('menu-separator');
+  const menuLogout = document.getElementById('menu-logout');
+  const backBar = document.getElementById('back-bar');
+  const backButton = document.getElementById('back-to-dashboard');
+  const backViewName = document.getElementById('back-view-name');
+
+  function closeMenu({ returnFocus = false, immediate = false } = {}) {
+    if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
+    if (utilitiesMenu) utilitiesMenu.classList.remove('is-open');
+    if (utilitiesOverlay) utilitiesOverlay.classList.remove('is-open');
+
+    const wasOpen = utilitiesMenu && !utilitiesMenu.hidden;
+    if (wasOpen && !immediate) {
+      const menu = utilitiesMenu;
+      const overlay = utilitiesOverlay;
+      window.setTimeout(() => {
+        if (!menu.classList.contains('is-open')) {
+          menu.hidden = true;
+          if (overlay) overlay.hidden = true;
+        }
+      }, MENU_TRANSITION_MS);
+    } else {
+      if (utilitiesMenu) utilitiesMenu.hidden = true;
+      if (utilitiesOverlay) utilitiesOverlay.hidden = true;
+    }
+
+    if (returnFocus && wasOpen && menuToggle && !menuToggle.hidden)
+      menuToggle.focus();
+  }
+
+  function openMenu() {
+    if (!session || !utilitiesMenu) return;
+    utilitiesMenu.hidden = false;
+    if (utilitiesOverlay) utilitiesOverlay.hidden = false;
+    if (menuToggle) menuToggle.setAttribute('aria-expanded', 'true');
+    void utilitiesMenu.offsetWidth;
+    utilitiesMenu.classList.add('is-open');
+    if (utilitiesOverlay) utilitiesOverlay.classList.add('is-open');
+
+    const firstOption = [menuAccess, menuDevNotifications, menuLogout].find(
+      (button) => button && !button.hidden
+    );
+    if (firstOption) firstOption.focus();
+  }
+
+  if (menuToggle) {
+    menuToggle.hidden = !session;
+    menuToggle.onclick = () => {
+      if (!session) return;
+      if (utilitiesMenu && !utilitiesMenu.hidden) closeMenu();
+      else openMenu();
+    };
+  }
+
+  if (utilitiesOverlay) utilitiesOverlay.onclick = () => closeMenu();
+
+  const isAdmin = Boolean(session) && session.role === 'administrador';
+  if (menuAccess) {
+    menuAccess.hidden = !isAdmin;
+    menuAccess.onclick =
+      isAdmin && onNavigate
+        ? () => {
+            closeMenu();
+            onNavigate('access');
+          }
+        : null;
+  }
+  if (menuDevNotifications) {
+    menuDevNotifications.hidden = !isAdmin;
+    menuDevNotifications.onclick =
+      isAdmin && onNavigate
+        ? () => {
+            closeMenu();
+            onNavigate('dev-notifications');
+          }
+        : null;
+  }
+  if (menuSeparator) menuSeparator.hidden = !isAdmin;
+  if (menuLogout) {
+    menuLogout.hidden = !session;
+    menuLogout.onclick =
+      session && onLogout
+        ? () => {
+            closeMenu();
+            onLogout();
+          }
+        : null;
+  }
+  if (backButton) {
+    backButton.onclick =
+      session && onNavigate
+        ? () => {
+            closeMenu();
+            onNavigate('dashboard');
+          }
+        : null;
+  }
+
+  if (utilitiesMenu) utilitiesMenu.hidden = true;
+  if (utilitiesOverlay) utilitiesOverlay.hidden = true;
+  if (backBar) backBar.hidden = true;
+  registerEscapeHandler(closeMenu);
+
   function setActive(module) {
     for (const button of navButtons) {
       const isActive = button.dataset.module === module;
@@ -141,7 +264,24 @@ export function createShell({ config, session, onNavigate, onLogout }) {
         button.removeAttribute('aria-current');
       }
     }
+
+    const isLogin = module === 'login';
+    const canUsePanel = Boolean(session) && session.role !== 'trabajador';
+    const showBack = canUsePanel && !isLogin && module !== 'dashboard';
+
+    if (backBar) backBar.hidden = !showBack;
+    if (showBack && backViewName)
+      backViewName.textContent = navLabel(config, module);
+
+    if (!session || isLogin) {
+      closeMenu({ immediate: true });
+      if (menuToggle) menuToggle.hidden = true;
+      if (utilitiesMenu) utilitiesMenu.hidden = true;
+      if (utilitiesOverlay) utilitiesOverlay.hidden = true;
+    } else if (menuToggle) {
+      menuToggle.hidden = false;
+    }
   }
 
-  return { setActive };
+  return { setActive, closeMenu };
 }
