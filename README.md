@@ -2,83 +2,113 @@
 
 Modelación de Sistemas 2026-2 · Departamento de Ingeniería Industrial · Universidad de Concepción
 
-Módulo de facturación y pagos (por cobrar y por pagar) de un sistema ERP, construido sobre el template `Speckit_Template` con Spec Driven Development (Plan → Spec → Tasks → Implement). Es una aplicación solo frontend: los datos se guardan en el `localStorage` del navegador y no hay backend ni base de datos remota.
+Módulo de facturación y pagos (por cobrar y por pagar) de un sistema ERP, construido sobre el template `Speckit_Template` con Spec Driven Development (Specify → Clarify → Plan → Tasks → Analyze → Implement). Es una aplicación solo frontend: los datos se guardan en el navegador (`localStorage` y `sessionStorage`) y no hay backend ni base de datos remota.
 
 ## Equipo
 
-| Integrante | Rol | Historia de usuario |
+| Integrante | Historia de usuario original | Aportes principales al repositorio |
 |---|---|---|
-| Rivera Benavente, Jaime Alberto | Por definir | HU1 Registrar terceros |
-| Zavala Campos, Elías Ignacio | Por definir | HU5 Ver la deuda por tercero y las facturas vencidas |
-| Vásquez Mera, Carolina Andrea | Por definir | HU2 Emitir facturas de venta |
-| Espinoza Muñoz, Matías Ignacio | Por definir | HU3 Registrar facturas de compra |
-| Ulloa Troncoso, Javier Ignacio | Por definir | HU4 Registrar el pago y marcar Pagada |
-| Aguayo Puentes, Mauro Alejandro | Por definir | HU6 Datos de demostración y otros módulos |
+| Rivera Benavente, Jaime Alberto | HU1 Registrar terceros | Organización inicial del repositorio y del README; HU8 guía de uso y tutorial (tarea 6); revisión de privacidad con Speckit en la 002 (sin modo invitado, rol finanzas); MER único; formato en pesos chilenos; registro en Speckit de cambios hechos sin él |
+| Zavala Campos, Elías Ignacio | HU5 Ver la deuda por tercero y las facturas vencidas | Menú desplegable ☰ «Utilidades & Sesión» y reorganización del Panel |
+| Vásquez Mera, Carolina Andrea | HU2 Emitir facturas de venta | Revisión 3 de la spec 001 e implementación de las HU1 a HU7 (05-11); minuta de cambios de la reunión con el profesor (04-11) |
+| Espinoza Muñoz, Matías Ignacio | HU3 Registrar facturas de compra | Flujo de caja y Resumen financiero del Panel (tareas 7 y 8); desglose de la liquidación e historial de pagos del trabajador (HU3 de la 002) |
+| Ulloa Troncoso, Javier Ignacio | HU4 Registrar el pago y marcar Pagada | Spec 002 (acceso por RUT, liquidaciones de sueldo y separación de facturas) y su primera implementación |
+| Aguayo Puentes, Mauro Alejandro | HU6 Datos de demostración y otros módulos | Separación de las facturas de venta y de compra; revisión del login (rol visible y cierre de sesión) |
 
-Líder del grupo: por definir.
+Coordinación del grupo: por confirmar (Carolina Vásquez se ofreció el 04-11-2026).
 
 ## Visión de producto
 
-**Problema.** Muchas pequeñas y medianas empresas llevan sus facturas en planillas sueltas. Eso les hace perder de vista cuánto les deben, cuánto deben y qué está vencido, y su flujo de caja se <resiente.
+**Problema.** Muchas pequeñas y medianas empresas llevan sus facturas en planillas sueltas. Eso les hace perder de vista cuánto les deben, cuánto deben y qué está vencido, y su flujo de caja se resiente. Además, las liquidaciones de sueldo quedan al alcance de cualquiera que abra la planilla.
 
-**Usuarios.** Encargado de cobranzas, encargado de pagos a proveedores, contador y gerencia. Para la demostración, también el equipo del proyecto, que carga los datos de ejemplo.
+**Solución (MVP).** Un módulo de facturación y pagos con acceso por RUT y contraseña. Registra terceros (clientes, proveedores y personal), facturas de venta y de compra separadas con su ciclo Borrador → Emitida → Pagada, liquidaciones de sueldo, movimientos financieros, flujo de caja y seguimiento de la deuda. Cada rol ve solo lo que le corresponde.
 
-**Qué incluye el MVP.**
+### Usuarios y roles
 
-- Terceros, que pueden ser clientes o proveedores (campo `tipoTercero`).
-- Facturas de venta (por cobrar) y de compra (por pagar), con campo `tipoFactura`.
-- Ciclo de la factura: Borrador → Emitida → Pagada.
-- Pagos como campos de la factura (monto pagado y fecha de pago), no como registro aparte.
-- Vista de seguimiento: deuda por tercero y facturas vencidas, hasta donde lo permita el template.
+El módulo distingue tres roles de acceso. Cada usuario del negocio entra con uno de ellos:
 
-**Qué no incluye el MVP (desarrollo futuro).** Pagos como registro propio, plan de cuentas y asientos contables, activos fijos, presupuestos y conciliación bancaria.
+| Usuario del negocio | Rol en la aplicación | Qué hace |
+|---|---|---|
+| Encargado de cobranzas | Finanzas | Registra clientes y emite facturas de venta |
+| Encargado de pagos a proveedores | Finanzas | Registra facturas de compra |
+| Contador | Finanzas | Registra los pagos y revisa movimientos y flujo de caja |
+| Gerencia | Finanzas | Revisa el Panel, el resumen financiero, la deuda por tercero y las vencidas |
+| Responsable de remuneraciones (RRHH) | Administrador | Registra liquidaciones, crea los accesos (incluidos los de finanzas) y revisa los avisos del desarrollador |
+| Trabajador | Trabajador | Ve solo su propia liquidación, con desglose e historial de pagos |
+| Integrante del equipo (demostración) | Cualquiera, tras cargar la demostración | Carga datos ficticios para mostrar el flujo |
+
+### Qué incluye el MVP
+
+- **Acceso obligatorio** con RUT y contraseña, tres roles y cierre de sesión. No existe modo invitado.
+- **Terceros** de tipo cliente, proveedor o personal, con RUT validado (módulo 11) y límite de crédito para clientes.
+- **Facturas de venta y de compra** en vistas y colecciones separadas, con ciclo Borrador → Emitida → Pagada; centro de costo (Activo/Consumible) al emitir compras y período `AAAA-MM` en las compras a personal.
+- **Pagos** como campos de la factura (monto pagado y fecha de pago).
+- **Liquidaciones de sueldo** con sueldo base, descuentos y bonos, vinculadas a su factura de compra.
+- **Movimientos financieros** generados por emisiones y pagos (solo lectura).
+- **Flujo de caja** de las facturas pagadas y **resumen financiero** del Panel (saldo neto, deuda pendiente y caja neta).
+- **Seguimiento** de la deuda por tercero y de las facturas vencidas, y **búsqueda** de registros.
+- **Montos en pesos chilenos** con separador de miles.
+- **Guía de uso** paso a paso según el rol, desde el menú ☰.
+- **Datos de demostración** ficticios, cargados desde la pantalla de acceso.
+
+**Qué no incluye (desarrollo futuro).** Pagos parciales o como registro propio, cambio y recuperación de contraseña, plan de cuentas y asientos contables, cálculo legal de remuneraciones (AFP, salud, impuestos), activos fijos, presupuestos, conciliación bancaria y backend.
 
 ## Escalabilidad y desarrollo futuro
 
 - **Etapa 2: pagos como registro propio.** Hoy el pago va como campos de la factura. Más adelante se separaría en un registro ligado a la factura, para permitir pagos parciales y varios pagos por factura.
-- **Etapa 3: contabilidad general.** Plan de cuentas y asientos contables alimentados por las facturas emitidas y pagadas, además de activos fijos y presupuestos.
-- **Etapa 4: sistema completo.** Backend y base de datos reales, roles y permisos, e integración con el resto de los módulos del ERP.
+- **Etapa 3: contabilidad general.** Plan de cuentas y asientos contables alimentados por las facturas emitidas y pagadas, además de activos fijos, presupuestos y cálculo de remuneraciones.
+- **Etapa 4: sistema completo.** Backend y base de datos reales, autenticación segura (contraseñas cifradas, cambio y recuperación), permisos aplicados en el servidor e integración con el resto de los módulos del ERP.
 
-**Integración con otros módulos.** Los terceros se relacionan con `customers` (CRM) y `vendors` (Compras). Las facturas de venta, con `sales_orders` (Ventas), y las de compra, con `purchase_orders` (Compras). Los productos vendrían de `products` (Logística). Estas llaves salen del modelo ERP base del curso (`ar_invoices` y `ap_invoices`).
+**Integración con otros módulos.** Los terceros se relacionan con `customers` (CRM) y `vendors` (Compras). Las facturas de venta, con `sales_orders` (Ventas), y las de compra, con `purchase_orders` (Compras). Por ahora la relación se guarda como referencia manual en texto libre (`salesOrderId` y "Referencia a otro módulo").
 
-## Riesgos de datos
+## Riesgos de datos y sesgos
 
-- El RUT es un dato personal: hay que definir quién puede verlo y cómo se muestra.
-- El límite de crédito es una decisión que puede discriminar a algunos clientes. Hay que documentar con qué criterios se fija y cómo se revisa, considerando los sesgos que señala el profesor (O'Neil, 2016).
-- `localStorage` no es un almacenamiento seguro: el MVP no debe usarse con datos reales.
+- **RUT:** es un dato personal. Solo los roles administrador y finanzas ven los RUT de terceros; el trabajador solo ve el suyo.
+- **Remuneraciones:** sueldos, descuentos y bonos son datos sensibles. El trabajador solo ve su propia liquidación; las de los demás las ven solo RRHH (administrador) y finanzas, como pidió el profesor.
+- **Contraseña inicial (riesgo conocido):** son los primeros 4 dígitos del RUT y no se puede cambiar. Quien conozca el RUT de un compañero puede entrar como él.
+- **Control solo de interfaz (riesgo conocido):** los permisos se aplican en el navegador, sin servidor ni cifrado. Alguien con conocimientos técnicos podría leer o modificar los datos.
+- **Almacenamiento:** `localStorage` no es seguro; el MVP no debe usarse con datos reales. Los datos de demostración son ficticios.
+- **Sesgo en el límite de crédito:** si se fija con criterios subjetivos, puede discriminar a algunos clientes (O'Neil, 2016). Los criterios deben documentarse y, en el futuro, calcularse con una fórmula transparente y revisable.
+- **Sesgo en el seguimiento:** que una factura esté vencida no prueba que el cliente sea mal pagador (puede haber errores de registro o acuerdos de pago). El seguimiento informa, pero no debe usarse solo para castigar a un tercero.
 
-## Pendiente de confirmar (consultar con el profesor)
+## Dudas consultadas y cómo se resolvieron
 
-1. Usar un solo tipo de Entidad (Tercero, con `tipoTercero`) y un solo tipo de Documento (Factura, con `tipoFactura`), o documentos separados (cuenta por cobrar y cuenta por pagar), como recomendó el ayudante.
-2. Modelar los pagos como campos de la factura.
-3. Usar `startDate` y `endDate` del template como fecha de emisión y de vencimiento.
-4. Si las líneas de detalle de la factura (ítems) son necesarias en el MVP, o basta con subtotal y total.
-5. A qué se refiere la "nomenclatura que dejó el profesor": los nombres del template (Entity, Document) o los del modelo ERP base (`ar_invoices`, `ap_invoices`).
-6. Cómo se coordina con los grupos de CRM, Ventas y Compras el identificador que se comparte para relacionar terceros y facturas. Por ahora se deja de forma universal, enfocados en este departamento, y el ayudante lo confirmará con el profesor.
-7. Si `plan.md` puede incluir las puertas de calidad (`npm run check`) y la tabla de cobertura que surgieron de `speckit.analyze`, o si solo debe editarse el resumen, como indicó la clase.
-8. Si el profesor acepta que `src/`, `index.html` y las pruebas del template actual se hayan copiado al repositorio (03-11-2026, en un commit aparte), o si prefiere que el código se genere con `speckit.implement`.
-9. Si se acepta que el MVP no tenga pruebas e2e (excepción al principio II de la Constitución), porque el template solo trae Vitest con jsdom.
-10. Si se actualizan la constitución y las herramientas de Speckit (`.specify/`, `.opencode/`) a la versión actual del template (Speckit 1.2.5, constitución «ERP Base Module»), porque el repositorio conserva la versión de agosto (Speckit 0.16.0, constitución genérica). La constitución actual exige que el código central no tenga términos del dominio y que se adapte solo desde `src/module-config.js`, lo que afectaría a varias tareas.
+| Duda (octubre-noviembre) | Cómo quedó |
+|---|---|
+| Un solo Tercero y una sola Factura, o documentos separados | Un solo Tercero con `tipoTercero`. Las facturas de venta y de compra se separaron en vistas (05-11) y en colecciones (`erp.salesInvoices` y `erp.purchaseInvoices`, 16-11) |
+| Pagos como campos de la factura | Se mantiene: monto pagado y fecha de pago. Los pagos parciales quedan para el futuro |
+| `startDate` y `endDate` como emisión y vencimiento | Sí, con las etiquetas "Fecha de emisión" y "Fecha de vencimiento" |
+| Líneas de detalle de la factura | No en el MVP: basta con subtotal, descuento y total |
+| Nomenclatura | Se usan los nombres del template (`entity_id`, `document_id`), con su correspondencia al modelo ERP base en `data-model.md` |
+| Identificador compartido con CRM, Ventas y Compras | Referencia manual en texto libre, como indicó el ayudante |
+| Contenido de `plan.md` | Incluye las puertas de calidad (`npm run check`) y la tabla de cobertura |
+| Código del template copiado al repositorio | Se partió de esa base y los cambios se hacen con `speckit.implement`, como pidió el profesor |
+| Pruebas e2e | El MVP no tiene e2e: los recorridos se cubren con pruebas de integración en Vitest y jsdom. Pendiente de confirmar con el profesor |
+| Versión de Speckit y constitución | Se mantiene la del repositorio; el profesor agregó la integración de Speckit con Claude el 15-11 |
 
 ## Cómo ejecutar
 
-Requisitos: Node.js 22.22 o superior (también sirven 24.15 o superior y 26) y npm. Con versiones anteriores, `npm test` puede fallar porque `jsdom` las exige.
+Requisitos: Node.js 22.22 o superior y npm.
 
 ```bash
 npm install
 npm run dev      # abre la aplicación en http://localhost:5173/
-npm run check    # lint, formato y pruebas (24 archivos, 73 pruebas)
+npm run check    # lint, formato y pruebas (61 archivos y 323 pruebas al 23-11-2026)
+npm run build    # genera la versión de producción en dist/
 ```
 
-Por ahora la aplicación es el módulo base del template (Entidades y Documentos, sin datos). Las historias de usuario de facturación y pagos se implementan sobre ella; los datos de demostración (HU6) todavía no existen.
+Para probar la aplicación:
 
-## Estado del proyecto
+1. Abre la aplicación y presiona **Cargar demostración** en la pantalla de acceso.
+2. Ingresa con uno de los accesos ficticios de la sección [Datos de demostración](#datos-de-demostración) (por ejemplo, finanzas: `55.555.555-5` / `5555`).
+3. Abre **Guía de uso** en el menú ☰ para un recorrido paso a paso.
 
-- Las especificaciones están en `specs/001-erp-base-module/`.
-- `spec.md` y `data-model.md` están rehechos con este alcance, y en `plan.md` se editó el resumen; después se agregaron las puertas de calidad y una tabla de cobertura a partir de `speckit.analyze` (por confirmar con el profesor). `mer.png` es el diagrama entidad-relación. `tasks.md` tiene las tareas por historia de usuario, armadas siguiendo las reglas de `speckit.tasks`. `quickstart.md` y `research.md` son los del template.
-- El 03-11-2026 se copiaron al repositorio `src/`, `index.html`, `tests/setup/` y las pruebas del template actual (30-10-2026), y se reemplazaron las pruebas antiguas, que venían de una versión anterior del template y no calzaban con el código nuevo. Si el profesor prefiere que el código se genere con `speckit.implement`, se revierte ese commit. Las historias de usuario del módulo (facturación y pagos) todavía no están implementadas.
-- El 02-11-2026 Mauro ejecutó `speckit.analyze` desde OpenCode. El informe identificó decisiones pendientes y diferencias entre los documentos, además de mejoras en pruebas, calidad, accesibilidad y rendimiento. Se solicitaron propuestas de corrección para revisarlas antes de aplicarlas. Sigue pendiente resolver las aclaraciones y validar los ajustes con el grupo.
-- El 03-11-2026 se corrigió la configuración de ESLint y Prettier: `npm run lint` y `npm run format:check` pasan. Con el módulo base, `npm run check` completo también pasa (24 archivos y 73 pruebas). Prettier no revisa `specs/` ni los `.md` (ver `.prettierignore`).
+## Estado del proyecto (23-11-2026)
+
+- **Especificaciones:** `specs/001-erp-base-module/` (facturación y pagos: HU1 a HU10) y `specs/002-payroll-access-control/` (acceso por rol y liquidaciones: HU1 a HU7). Cada una tiene `spec.md`, `plan.md`, `data-model.md`, `tasks.md`, `quickstart.md` y `contracts/`.
+- **Modelo entidad-relación:** `specs/001-erp-base-module/mer.png`, generado desde la sección 13 de `specs/002-payroll-access-control/data-model.md` (MER único del módulo).
+- **Implementación:** todas las historias están implementadas. `npm run check` pasa con 323 pruebas.
+- **Pendiente:** el aviso al superar el límite de crédito (FR-029 de la 001, tarea T026) no está implementado; falta decidir si se implementa o se deja como desarrollo futuro.
 
 ## Registro de decisiones
 
@@ -104,7 +134,20 @@ Por ahora la aplicación es el módulo base del template (Entidades y Documentos
 | 03-11-2026 | Se corrigió la configuración de ESLint y Prettier (error de arranque de ESLint, globales del navegador, `.prettierignore` para documentos y formato de los archivos de `tests/`) y se actualizó `package-lock.json` | Jaime Rivera |
 | 03-11-2026 | Se copió al repositorio el módulo base del template (`src/`, `index.html`, `tests/setup/` y pruebas actuales) y se reemplazaron las pruebas antiguas. Se agregaron los globales de Node para `tests/` en ESLint y un almacenamiento en memoria en `tests/setup/dom.js` para Node 25 o superior. `npm run check` pasa | Jaime Rivera |
 | 03-11-2026 | Revisión de coherencia con el código del template: se corrigieron en `data-model.md` las claves de almacenamiento (`erp.entities`, `erp.documents`) y el campo `document_id`; se registró que el template ya rechaza códigos de tercero duplicados (FR-019 solo queda pendiente para serie-folio); en `tasks.md` se marcaron T001 a T003 y se corrigieron las rutas de validación (`src/validation.js`). Se agregó la sección Cómo ejecutar | Jaime Rivera |
+| 04-11-2026 | Reunión del grupo con el profesor: la minuta de cambios (11 puntos) define los ajustes de interfaz, terceros de tipo personal, centro de costo y liquidaciones; cada integrante toma tareas de la minuta | Grupo (minuta: Carolina Vásquez) |
+| 05-11-2026 | Revisión 3 de la spec 001: terceros con tipo personal, facturas de venta y de compra como documentos separados en la interfaz y movimientos financieros (`erp.movements`); se implementan las HU1 a HU7 | Carolina Vásquez |
+| 11-11-2026 | Nueva spec 002: acceso por RUT y contraseña con roles, liquidación de sueldo como factura de compra a un tercero personal y separación física de las facturas. Se crea en una spec aparte para no mezclarla con la facturación | Javier Ulloa |
+| 16-11-2026 | Las facturas de venta y de compra se guardan en colecciones separadas (`erp.salesInvoices` y `erp.purchaseInvoices`), con migración idempotente desde `erp.documents` | Mauro Aguayo |
+| 16-11-2026 | Se agregan el Flujo de caja y el Resumen financiero del Panel (tareas 7 y 8 de la minuta) | Matías Espinoza |
+| 16-11-2026 | Se especifica la HU8 (guía de uso y mapa de navegación y accesos), tarea 6 de la minuta | Jaime Rivera |
+| 17-11-2026 | Feedback del profesor sobre privacidad (un trabajador no debe ver la información de un colega): se elimina el modo invitado, se agrega el rol finanzas, la demostración se carga desde la pantalla de acceso y se documentan como riesgos la contraseña inicial y el control solo de interfaz. Se hizo con el ciclo completo de Speckit (clarify, plan, tasks, analyze, implement) | Grupo (ejecución: Jaime Rivera) |
+| 17-11-2026 | El RUT del administrador de demostración pasa de `11.111.111-1` a `88.888.888-8`, porque coincidía con el de un proveedor de la demostración | Grupo |
+| 20-11-2026 | La liquidación pasa a ser una entidad propia (`LiquidacionSueldo`, en `erp.payrollSettlements`) con sueldo base, descuentos y bonos, vinculada a su factura de compra; el trabajador ve su desglose y el historial de sus pagos | Matías Espinoza |
 | 21-11-2026 | Mejora de UX en navegación y Panel: se oculta la barra lateral fija para usar ancho completo, se incorpora el menú desplegable "Utilidades & Sesión" (`☰`) adaptado por rol (Accesos y Avisos solo para administrador; Cerrar sesión para todos) con barra de retorno al Panel, y se reorganizan en grilla responsiva los 8 accesos operativos reales dentro del Panel sin agregar opciones vacías. | Elías Zavala |
+| 23-11-2026 | Regla del profesor: todo cambio pasa por los comandos de Speckit. Los cambios hechos sin Speckit (flujo de caja, resumen del Panel y menú ☰) se registran en las specs y tareas, marcados como hechos y con su commit de origen | Jaime Rivera |
+| 23-11-2026 | MER único del módulo (001 + 002) con 8 entidades, ajustado a lo que guarda la aplicación; `mer.png` se regenera desde ese diagrama | Jaime Rivera |
+| 23-11-2026 | Todos los montos se muestran en pesos chilenos con separador de miles, y el trabajador no ve el Flujo de caja ni el Resumen financiero | Jaime Rivera |
+| 23-11-2026 | La guía de uso se abre desde el menú ☰ y muestra solo los pasos de las vistas que el rol puede abrir (11 pasos para administrador y finanzas, 2 para trabajador) | Jaime Rivera |
 
 ## Uso de IA (anexo)
 
@@ -211,8 +254,8 @@ contraseña inicial son los primeros cuatro dígitos del cuerpo del RUT, omitien
 puntos y dígito verificador. Los accesos los crea el administrador; la contraseña
 inicial es inmutable y no puede cambiarse desde la aplicación. La sesión se guarda
 en `sessionStorage` (`erp.session`): se conserva al recargar la pestaña y termina
-al cerrar sesión o al cerrar la pestaña. La última opción del lateral es **Cerrar
-sesión**, sin una opción para volver al acceso desde dentro del ERP.
+al cerrar sesión o al cerrar la pestaña. **Cerrar sesión** es la última opción del menú desplegable ☰ «Utilidades & Sesión»,
+sin una opción para volver al acceso desde dentro del ERP.
 
 Los roles son administrador, finanzas y trabajador:
 
