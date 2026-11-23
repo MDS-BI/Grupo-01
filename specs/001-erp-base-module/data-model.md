@@ -219,79 +219,35 @@ Este módulo simplifica las tablas de Finanzas del modelo ERP base. Esta tabla p
 
 - **RUT (`taxId`).** Es un dato personal. Siguiendo el principio de minimización del GDPR, el MVP no pide correo, teléfono ni dirección, y usa solo datos ficticios.
 - **Límite de crédito (`creditLimit`).** Fijarlo puede discriminar a ciertos clientes. O'Neil (2016, cap. 8) distingue los puntajes de crédito tradicionales, que miran el historial de pagos y son relativamente transparentes y regulados, de los modelos que usan sustitutos (*proxies*) como el código postal, que pueden discriminar. Por eso el criterio del límite debe basarse en el comportamiento de pago del propio tercero (facturas vencidas, monto adeudado) y no en datos como su ubicación o su nombre. Debe documentarse y poder revisarse. El MVP no decide automáticamente: a lo más avisa (FR-029).
-- **Datos de remuneraciones.** La factura de compra a personal asocia montos a trabajadores con solo su período (`YYYY-MM`). No se calculan ni se exponen haberes ni descuentos legales; el RUT de personal es siempre un dato personal.
+- **Datos de remuneraciones.** La liquidación guarda y muestra sueldo base, descuentos y bonos, visibles solo para administrador y finanzas y para el propio trabajador, sin cálculo legal. El RUT de personal es siempre un dato personal.
 - **Análisis futuro de morosidad.** Si más adelante se calcula un puntaje o se predice la morosidad, hay que revisar los tres elementos que O'Neil (2016, Introducción) identifica en un modelo dañino: opacidad (el afectado no entiende cómo se calcula), escala (se aplica a muchas personas) y daño (puede perjudicar a quien se evalúa). También hay que evitar los ciclos de retroalimentación, en que la decisión empeora la situación que el modelo mide.
 - **Almacenamiento.** `localStorage` no es seguro ni cifrado. No debe usarse con datos reales.
 
 ## 11. Almacenamiento
 
-Los datos se guardan en el navegador (`localStorage`) bajo las claves del código del template: `erp.entities` y `erp.documents` (más `erp.schemaVersion`). Los movimientos financieros se guardan en `erp.movements` como registros derivados, regenerables desde las facturas. Los valores de los campos personalizados se guardan dentro del objeto `customFields` de cada registro, sin cambios de esquema. La separación de vistas de la Revisión 4 **no cambia las claves ni el esquema**: venta y compra siguen conviviendo en `erp.documents` y se distinguen por `customFields.tipoFactura`. La carga de datos de demostración (FR-026) usa solo datos ficticios.
+Los datos se guardan en el navegador. En `localStorage`: `erp.entities` (terceros), `erp.salesInvoices` (facturas de venta), `erp.purchaseInvoices` (facturas de compra), `erp.unclassifiedDocuments` (documentos legados sin clasificar), `erp.movements` (movimientos financieros derivados), `erp.payrollSettlements` (liquidaciones de sueldo), `erp.accessRecords` (accesos) y `erp.devNotifications` (avisos al desarrollador). La sesión se guarda en `sessionStorage` bajo `erp.session`. `erp.documents` solo existe como origen de la migración de documentos legados; ya no es el almacenamiento actual de facturas. Los valores de los campos personalizados se guardan dentro de `customFields` de cada registro. La carga de datos de demostración (FR-026) usa solo datos ficticios.
 
 ## 12. Modelo Entidad-Relación (MER)
 
-La imagen está en `mer.png`. Es el mismo diagrama que este código:
+`mer.png` muestra el MER único del módulo (001 + 002). El código de ese diagrama está en la sección 13 de `specs/002-payroll-access-control/data-model.md`.
 
-```mermaid
-erDiagram
-    TERCERO ||--o{ FACTURA : "tiene"
-    FACTURA ||--o{ MOVIMIENTO : "genera"
+Sus 8 entidades son:
 
-    TERCERO {
-        string id PK
-        string entity_id UK "vinculo con facturas"
-        string name
-        string code
-        string taxId "RUT"
-        number creditLimit "solo clientes"
-        string tipoTercero "cliente, proveedor o personal"
-        string createdAt
-        string updatedAt
-    }
-
-    FACTURA {
-        string id PK
-        string entity_id FK "tercero"
-        string series
-        int folio
-        date startDate "emision"
-        date endDate "vencimiento"
-        number subtotal
-        number discount
-        number taxAmount
-        number totalAmount
-        string currency
-        string status "Borrador, Emitida, Pagada"
-        string tipoFactura "venta o compra"
-        string centroCosto "Activo o Consumible, solo compra"
-        string periodoLiquidacion "YYYY-MM, solo compra a personal"
-        string salesOrderId "solo venta, opcional"
-        number montoPagado
-        date fechaPago
-        string createdAt
-        string updatedAt
-    }
-
-    MOVIMIENTO {
-        string id PK
-        string document_id FK "factura origen"
-        string entity_id FK "tercero"
-        date fecha
-        string tipo "cargo, abono o pago"
-        number monto
-        string centroCosto "solo compra"
-        string salesOrderId "solo venta si se ingreso"
-    }
-```
-
-**Nota:** este MER representa el almacenamiento. La separación de la Revisión 4 es una proyección de UI sobre `FACTURA`: dos vistas, dos formularios y dos listados que fijan `tipoFactura`. No hay tablas nuevas ni relaciones nuevas.
+- `TERCERO`
+- `FACTURA_VENTA`
+- `FACTURA_COMPRA`
+- `LIQUIDACION_SUELDO`
+- `MOVIMIENTO`
+- `ACCESO`
+- `SESION`
+- `AVISO_DESARROLLADOR`
 
 ## 13. Notas de extensibilidad y desarrollo futuro
 
 - Los campos base mantienen sus nombres y semántica, para que el almacenamiento, la validación y la integridad referencial sigan intactos.
 - **Etapa 2:** el pago pasa a ser un registro propio (`PAGO`) ligado a la factura, para permitir pagos parciales y varios pagos por factura.
 - **Etapa 3:** plan de cuentas y asientos contables alimentados por las facturas, además de activos fijos y presupuestos.
-- **Etapa 4:** referencias a otros módulos (`customers`, `vendors`, `sales_orders`, `purchase_orders`), backend real, roles y permisos.
-- **Etapa 5:** si el volumen o los permisos lo justifican, separar el almacenamiento en dos colecciones (`salesInvoices` y `purchaseInvoices`) o en dos tablas con reglas propias. En el MVP la separación es visual y funcional, no física.
+- **Etapa 4:** referencias a otros módulos (`customers`, `vendors`, `sales_orders`, `purchase_orders`) y backend real con permisos en servidor.
 
 ## Fuentes
 
@@ -302,4 +258,4 @@ erDiagram
 
 ## Nota de supersedencia por 002 (2026-11-16)
 
-El modelo de almacenamiento �nico de documentos queda supersedido por 002-payroll-access-control: las facturas se separan f�sicamente en erp.salesInvoices (venta) y erp.purchaseInvoices (compra), con erp.unclassifiedDocuments para documentos legados sin tipo. La liquidaci�n de sueldo no es una entidad nueva: es una proyecci�n de la factura de compra a un tercero personal. Los campos y validaciones base de  01 se mantienen sin cambios.
+El modelo de almacenamiento único de documentos queda supersedido por `002-payroll-access-control`: las facturas se separan físicamente en `erp.salesInvoices` (venta) y `erp.purchaseInvoices` (compra), con `erp.unclassifiedDocuments` para documentos legados sin tipo. La liquidación de sueldo no es una entidad nueva: es una proyección de la factura de compra a un tercero personal. Los campos y validaciones base de `001` se mantienen sin cambios.
