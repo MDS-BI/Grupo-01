@@ -38,6 +38,9 @@
         <h2 id="utilities-menu-title" class="utilities-menu-title">
           Utilidades &amp; Sesión
         </h2>
+        <button id="menu-guide" class="menu-item" type="button" hidden>
+          Guía de uso
+        </button>
         <button
           id="menu-access"
           class="menu-item"
@@ -323,6 +326,9 @@
                 <span class="qa-label">Buscar</span>
               </button>
             </div>
+            <button id="qa-guide" class="guide-shortcut" type="button" hidden>
+              ¿Primera vez? Ver la guía
+            </button>
 
             <h2 class="section-heading">Resumen financiero</h2>
             <div class="stats summary-stats">
@@ -758,6 +764,24 @@
           </section>
         </main>
       </div>
+      <section
+        id="guide-panel"
+        class="guide-panel"
+        role="dialog"
+        aria-modal="false"
+        aria-labelledby="guide-title"
+        hidden
+      >
+        <h2 id="guide-title">Guía de uso</h2>
+        <p id="guide-step-indicator" class="guide-step-indicator"></p>
+        <div id="guide-body" class="guide-body"></div>
+        <div class="guide-actions">
+          <button id="guide-prev" type="button">Anterior</button>
+          <button id="guide-next" type="button">Siguiente</button>
+          <button id="guide-go" type="button">Ir a</button>
+          <button id="guide-close" type="button">Cerrar</button>
+        </div>
+      </section>
     </div>
     <template id="invoice-fields">
       <div class="form-field">

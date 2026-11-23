@@ -96,6 +96,7 @@ describe('T147 - menú de utilidades y grilla del Panel', () => {
     expect(byId('utilities-menu').hidden).toBe(true);
     expect(byId('menu-separator').hidden).toBe(false);
     expect(visibleMenuIds()).toEqual([
+      'menu-guide',
       'menu-access',
       'menu-dev-notifications',
       'menu-logout',
@@ -120,7 +121,7 @@ describe('T147 - menú de utilidades y grilla del Panel', () => {
       expect(byId('menu-access').hidden).toBe(true);
       expect(byId('menu-dev-notifications').hidden).toBe(true);
       expect(byId('menu-separator').hidden).toBe(true);
-      expect(visibleMenuIds()).toEqual(['menu-logout']);
+      expect(visibleMenuIds()).toEqual(['menu-guide', 'menu-logout']);
       expect(byId('menu-logout').textContent.trim()).toBe('Cerrar sesión');
     }
   });
@@ -136,7 +137,7 @@ describe('T147 - menú de utilidades y grilla del Panel', () => {
     expect(byId('utilities-overlay').hidden).toBe(false);
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
     expect(byId('utilities-menu').classList.contains('is-open')).toBe(true);
-    expect(document.activeElement).toBe(byId('menu-access'));
+    expect(document.activeElement).toBe(byId('menu-guide'));
 
     document.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })

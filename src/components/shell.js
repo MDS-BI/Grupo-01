@@ -29,6 +29,10 @@ const FINANCE_MODULES = [
   'search',
 ];
 
+export const NAV_MODULES = Object.freeze([
+  ...new Set([...ADMIN_MODULES, ...FINANCE_MODULES, 'payroll-worker']),
+]);
+
 const MENU_TRANSITION_MS = 180;
 let activeEscapeHandler = null;
 
@@ -62,7 +66,7 @@ function renderLogo(container, moduleName) {
   container.append(svg);
 }
 
-function navLabel(config, module) {
+export function navLabel(config, module) {
   const labels = config.labels || {};
   if (module === 'dashboard') return labels.dashboard || 'Panel';
   if (module === 'entities') return labels.entities || 'Entidades';
@@ -93,7 +97,13 @@ function registerEscapeHandler(closeMenu) {
   document.addEventListener('keydown', activeEscapeHandler);
 }
 
-export function createShell({ config, session, onNavigate, onLogout }) {
+export function createShell({
+  config,
+  session,
+  onNavigate,
+  onLogout,
+  onOpenGuide,
+}) {
   const brandName = document.getElementById('brand-name');
   const brandLogo = document.getElementById('brand-logo');
 
@@ -147,6 +157,7 @@ export function createShell({ config, session, onNavigate, onLogout }) {
   const menuToggle = document.getElementById('menu-toggle');
   const utilitiesMenu = document.getElementById('utilities-menu');
   const utilitiesOverlay = document.getElementById('utilities-overlay');
+  const menuGuide = document.getElementById('menu-guide');
   const menuAccess = document.getElementById('menu-access');
   const menuDevNotifications = document.getElementById(
     'menu-dev-notifications'
@@ -190,9 +201,12 @@ export function createShell({ config, session, onNavigate, onLogout }) {
     utilitiesMenu.classList.add('is-open');
     if (utilitiesOverlay) utilitiesOverlay.classList.add('is-open');
 
-    const firstOption = [menuAccess, menuDevNotifications, menuLogout].find(
-      (button) => button && !button.hidden
-    );
+    const firstOption = [
+      menuGuide,
+      menuAccess,
+      menuDevNotifications,
+      menuLogout,
+    ].find((button) => button && !button.hidden);
     if (firstOption) firstOption.focus();
   }
 
@@ -207,6 +221,16 @@ export function createShell({ config, session, onNavigate, onLogout }) {
 
   if (utilitiesOverlay) utilitiesOverlay.onclick = () => closeMenu();
 
+  if (menuGuide) {
+    menuGuide.hidden = !session;
+    menuGuide.onclick =
+      session && onOpenGuide
+        ? () => {
+            closeMenu();
+            onOpenGuide(menuGuide);
+          }
+        : null;
+  }
   const isAdmin = Boolean(session) && session.role === 'administrador';
   if (menuAccess) {
     menuAccess.hidden = !isAdmin;

@@ -45,6 +45,7 @@ import { refreshPayrollWorker } from './components/payroll-worker.js';
 import { renderPayrollList } from './components/payroll-list.js';
 import { initPayrollForm } from './components/payroll-form.js';
 import { initDevNotifications } from './components/dev-notifications.js';
+import { createTutorial } from './components/tutorial.js';
 import { resolveAdminSettlements } from './payroll.js';
 import { validateSettlement } from './validation.js';
 import { loadMovements } from './movements.js';
@@ -150,6 +151,7 @@ const state = {
   migration: null,
   accessAdmin: null,
   login: null,
+  tutorial: null,
 };
 
 function byId(id) {
@@ -355,13 +357,29 @@ function clearRestrictedViews() {
 }
 
 function applySession(session) {
+  state.tutorial?.close({ returnFocus: false });
   state.session = session;
   state.shell = createShell({
     config: state.config,
     session,
     onNavigate: showModule,
     onLogout: handleLogout,
+    onOpenGuide: (opener) => state.tutorial?.open(0, opener),
   });
+  state.tutorial = createTutorial({
+    config: state.config,
+    root: byId('guide-panel'),
+    session,
+    canAccess,
+    onNavigate: showModule,
+  });
+  const qaGuide = byId('qa-guide');
+  if (qaGuide) {
+    qaGuide.hidden = !canAccess('dashboard', session);
+    qaGuide.onclick = qaGuide.hidden
+      ? null
+      : () => state.tutorial?.open(0, qaGuide);
+  }
   clearRestrictedViews();
   refreshInvoiceStatusNotice();
 }

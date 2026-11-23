@@ -235,6 +235,20 @@ es idempotente por `documentId` y usa la marca
 tercero" se eliminó del panel porque duplicaba a "Abrir gestión de
 entidades/terceros".
 
+### Guía de uso
+
+Con sesión iniciada, la opción **Guía de uso** del menú desplegable ☰
+«Utilidades & Sesión» abre un panel no modal para los tres roles. El Panel también
+muestra **¿Primera vez? Ver la guía**, solo para administrador y finanzas; sin
+sesión no aparece ninguna entrada de la guía.
+
+El recorrido se filtra por rol: administrador y finanzas ven Panel, Terceros,
+Facturas de venta, Facturas de compra, Emitir y pagar, Liquidaciones de sueldo,
+Movimientos financieros, Flujo de caja, Seguimiento, el menú ☰ y Cuidados. El
+trabajador ve solo Mi liquidación y Cuidados. La guía usa los permisos existentes,
+permite "Anterior", "Siguiente"/"Finalizar", "Ir a" y "Cerrar", devuelve el foco
+al control que la abrió y no modifica datos, sesión ni almacenamiento.
+
 ### Datos de demostración
 
 En un navegador sin datos, usar **Cargar demostración** desde la pantalla de

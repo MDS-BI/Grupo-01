@@ -8,16 +8,17 @@
 
 ## Flujo de Usuario Principal
 
-0. Si es su primera vez, abra la **Guía de uso** (botón del marco general o acceso del home) y siga sus 8 pasos; usa los mismos pasos que esta lista y no modifica datos (HU8, pendiente de implementar: ver T079 a T088 de `tasks.md`).
-1. Cargue los datos de demostración desde el home cuando el módulo esté vacío (HU6).
-2. En el home revise los KPIs: total por cobrar, total por pagar y facturas vencidas, y use los accesos directos.
-3. Cree un tercero (cliente, proveedor o personal) con nombre, código, RUT, tipo y, si es cliente, límite de crédito.
-4. Abra **Facturas de venta** y cree una factura de venta a un cliente (con `salesOrderId` opcional); la factura nace en Borrador. El formulario no muestra centro de costo ni período de liquidación.
-5. Abra **Facturas de compra** y cree una factura de compra a un proveedor o a un personal (con centro de costo Activo/Consumible y, si es personal, período de liquidación `YYYY-MM`); la factura nace en Borrador. El formulario no muestra orden de venta.
-6. Use **Editar** en cada listado. Compruebe que el folio y las fechas son de solo lectura. Seleccione **Emitida** y guarde. En compras, pruebe guardar sin centro de costo para comprobar la validación y luego emita con **Activo** o **Consumible**.
-7. Vuelva a **Editar**, seleccione **Pagada** e ingrese el monto igual al total y la fecha de pago. En **Movimientos financieros**, compruebe la emisión y el pago, con la orden de venta o el centro de costo según el tipo de factura.
-8. Abra el seguimiento para ver la deuda por tercero y las facturas vencidas (vencida = vencimiento anterior a hoy).
-9. Elimine un tercero con facturas y compruebe la confirmación y el borrado en cascada de facturas y movimientos.
+0. Abra la aplicación. Sin sesión válida solo aparece la pantalla de acceso: no existe invitado ni "Continuar sin iniciar sesión". Si quiere datos ficticios, use **Cargar demostración** desde esa pantalla; la carga no crea sesión ni abre vistas.
+1. Ingrese con RUT y contraseña. El rol se obtiene del registro: administrador y finanzas abren el Panel; el trabajador abre **Mi liquidación**. El menú desplegable ☰ «Utilidades & Sesión» muestra las utilidades permitidas y **Cerrar sesión** al final.
+2. Si es su primera vez, abra la **Guía de uso** desde el menú ☰ para los tres roles. En administrador y finanzas también está disponible como **¿Primera vez? Ver la guía** en el Panel. El panel es no modal, filtra los pasos por rol, termina siempre en **Cuidados** y no modifica datos, sesión ni almacenamiento.
+3. En el Panel revise los KPIs, el Resumen financiero (solo administrador y finanzas) y use los accesos directos.
+4. Cree un tercero (cliente, proveedor o personal) con nombre, código, RUT, tipo y, si es cliente, límite de crédito.
+5. Abra **Facturas de venta** y cree una factura de venta a un cliente (con `salesOrderId` opcional); la factura nace en Borrador. El formulario no muestra centro de costo ni período de liquidación.
+6. Abra **Facturas de compra** y cree una factura de compra a un proveedor o a un personal (con centro de costo Activo/Consumible y, si es personal, período de liquidación `YYYY-MM`); la factura nace en Borrador. El formulario no muestra orden de venta.
+7. Use **Editar** en cada listado. Compruebe que el folio y las fechas son de solo lectura. Seleccione **Emitida** y guarde. En compras, pruebe guardar sin centro de costo para comprobar la validación y luego emita con **Activo** o **Consumible**.
+8. Vuelva a **Editar**, seleccione **Pagada** e ingrese el monto igual al total y la fecha de pago. En **Movimientos financieros**, compruebe la emisión y el pago, con la orden de venta o el centro de costo según el tipo de factura.
+9. Abra el seguimiento para ver la deuda por tercero y las facturas vencidas (vencida = vencimiento anterior a hoy).
+10. Elimine un tercero con facturas y compruebe la confirmación y el borrado en cascada de facturas y movimientos.
 
 ## Validación
 
