@@ -536,3 +536,26 @@ Task: "T036 Crear src/components/invoice-status-notice.js"
 3. Completar Phase 13 (US4) y verificar que el cambio del administrador/finanzas se refleje en US3.
 4. Completar Phase 14 (US6) y comprobar la demo desde el login.
 5. Cerrar con Phase 15 y `npm run check` + `npm run build`.
+
+---
+
+## Phase 16: Cambio de navegación del 2026-11-21 (commit `d4d9eed`)
+
+**Propósito**: registrar las tareas ya implementadas por Elías Zavala para reemplazar la barra lateral fija por el menú desplegable «Utilidades & Sesión» con botón ☰, y reorganizar los accesos operativos en una grilla del Panel según el rol, conforme a la sesión de Clarifications del 2026-11-23.
+
+**⚠️ Conservación**: T001–T141 se mantienen con su ID y estado. Las nuevas tareas T142–T147 se agregan sin renumerar ni desmarcar ninguna tarea anterior y sin cambiar permisos ni otras reglas.
+
+**Checkpoint de la fase**: el menú ☰ muestra «Control de accesos» y «Avisos al desarrollador» solo al administrador, «Cerrar sesión» es la última opción para los tres roles, el trabajador solo tiene «Cerrar sesión» en el menú, y el Panel presenta en grilla los ocho accesos operativos según el rol.
+
+- [X] T142 [P] [US1] Agregar en `index.html` el botón `#menu-toggle` (☰) en la cabecera, `#utilities-overlay`, `#utilities-menu` con el título «Utilidades & Sesión», las opciones `#menu-access`, `#menu-dev-notifications`, `#menu-separator` y `#menu-logout` como última opción, y `#back-bar` con `#back-to-dashboard`, manteniendo `#sidebar` oculto. Nota: implementada en d4d9eed por Elías Zavala.
+- [X] T143 [US1] Implementar en `src/components/shell.js` la apertura y cierre accesible del menú ☰ (`aria-expanded`, foco en el primer ítem visible, Escape y overlay), la visibilidad por rol (`#menu-access` y `#menu-dev-notifications` solo para administrador; `#menu-logout` para administrador, finanzas y trabajador como última opción) y la navegación de retorno al Panel desde `#back-to-dashboard`, sin alterar la matriz de permisos. Nota: implementada en d4d9eed por Elías Zavala.
+- [X] T144 [US1] Reorganizar en `index.html` y `src/components/dashboard.js` los ocho accesos operativos del Panel en la grilla `.quick-actions` (`qa-manage-entities`, `qa-new-invoice-sale`, `qa-new-invoice-purchase`, `qa-new-payroll`, `qa-tracking`, `qa-cashflow`, `qa-movements` y `qa-search`), actualizando etiquetas y bindings y conservando `qa-new-payroll` solo para administrador y finanzas. Nota: implementada en d4d9eed por Elías Zavala.
+- [X] T145 [P] [US1] Actualizar `src/styles.css` para usar ancho completo sin barra lateral fija y dar estilo responsivo al botón ☰, el overlay, el menú desplegable, el separador, la opción de cierre, la barra de retorno y la grilla `.quick-actions` en escritorio y móvil. Nota: implementada en d4d9eed por Elías Zavala.
+- [X] T146 [P] [US1] Registrar en `README.md` el cambio de navegación del 21-11-2026: menú «Utilidades & Sesión» adaptado por rol y grilla responsiva de los ocho accesos del Panel. Nota: implementada en d4d9eed por Elías Zavala.
+- [ ] T147 [P] [US1] Crear `tests/integration/navigation-menu.test.js` que verifique por rol las opciones del menú ☰ (administrador: «Control de accesos», «Avisos al desarrollador» y «Cerrar sesión» como última; finanzas y trabajador: solo «Cerrar sesión») y la grilla del Panel con los ocho accesos operativos para administrador y finanzas, incluyendo apertura/cierre con `aria-expanded`, foco, Escape, retorno al Panel y ausencia de grilla para el trabajador, sin modificar la matriz de permisos.
+
+### Dependencias del cambio de navegación
+
+- T142, T143, T145, T146 y T147 pueden ejecutarse en paralelo por archivos distintos.
+- T144 comparte `index.html` con T142 y debe ejecutarse después de T142.
+- T147 es la prueba de verificación independiente de Phase 16 y depende del resultado de T142–T146 para ejecutarse contra la implementación final.
