@@ -94,16 +94,16 @@ describe('HU5 - vista de seguimiento', () => {
     initApp(userConfig);
     document.getElementById('nav-tracking').click();
 
-    expect(document.getElementById('tracking-cobrar').textContent).toBe('520');
-    expect(document.getElementById('tracking-pagar').textContent).toBe('250');
+    expect(document.getElementById('tracking-cobrar').textContent).toBe('$520');
+    expect(document.getElementById('tracking-pagar').textContent).toBe('$250');
     expect(document.getElementById('tracking-vencidas').textContent).toBe('1');
 
     const trackingText =
       document.getElementById('tracking-by-entity').textContent;
     expect(trackingText).toContain('Entidad C_1');
-    expect(trackingText).toContain('Total por cobrar: 520');
+    expect(trackingText).toContain('Total por cobrar: $520');
     expect(trackingText).toContain('Facturas vencidas: 1');
     expect(trackingText).toContain('Entidad P_1');
-    expect(trackingText).toContain('Total por pagar: 250');
+    expect(trackingText).toContain('Total por pagar: $250');
   });
 });

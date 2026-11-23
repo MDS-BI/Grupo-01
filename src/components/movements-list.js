@@ -1,3 +1,5 @@
+import { formatCurrencyCLP } from '../format.js';
+
 function fila(movement, entities) {
   const entity = (entities || []).find(
     (item) => item.entity_id === movement.entity_id
@@ -18,7 +20,7 @@ function fila(movement, entities) {
 
   const monto = document.createElement('p');
   monto.className = 'record-total';
-  monto.textContent = `Monto: ${movement.monto}`;
+  monto.textContent = `Monto: ${formatCurrencyCLP(movement.monto)}`;
   item.append(monto);
 
   for (const key of ['centroCosto', 'salesOrderId']) {

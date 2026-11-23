@@ -1,6 +1,7 @@
 import { loadDocuments, loadEntities } from '../storage.js';
 import { loadMovements } from '../movements.js';
 import { computeDashboardSummary } from '../summary.js';
+import { formatCurrencyCLP } from '../format.js';
 
 function setText(id, value) {
   const element = document.getElementById(id);
@@ -66,10 +67,10 @@ export function refreshDashboard() {
 
   setText('stat-entities', String(entities.length));
   setText('stat-documents', String(documents.length));
-  setText('summary-saldo', String(summary.saldo));
-  setText('summary-deuda', String(summary.deuda));
-  setText('summary-caja', String(summary.caja));
-  setText('kpi-por-cobrar', String(summary.totalPorCobrar));
-  setText('kpi-por-pagar', String(summary.totalPorPagar));
+  setText('summary-saldo', formatCurrencyCLP(summary.saldo));
+  setText('summary-deuda', formatCurrencyCLP(summary.deuda));
+  setText('summary-caja', formatCurrencyCLP(summary.caja));
+  setText('kpi-por-cobrar', formatCurrencyCLP(summary.totalPorCobrar));
+  setText('kpi-por-pagar', formatCurrencyCLP(summary.totalPorPagar));
   setText('kpi-vencidas', String(summary.vencidas.length));
 }

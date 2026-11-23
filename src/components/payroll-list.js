@@ -1,9 +1,4 @@
-const money = (value) =>
-  Number(value || 0).toLocaleString('es-CL', {
-    style: 'currency',
-    currency: 'CLP',
-    maximumFractionDigits: 0,
-  });
+import { formatCurrencyCLP } from '../format.js';
 
 const valueOf = (settlement, key, fallbackKey) =>
   settlement?.[key] ?? settlement?.[fallbackKey] ?? '';
@@ -56,7 +51,7 @@ export function renderPayrollList(container, options = {}) {
       entity?.name || '',
       entity?.taxId || '',
       valueOf(settlement, 'periodo', 'customFields') || '',
-      money(valueOf(settlement, 'monto', 'totalAmount')),
+      formatCurrencyCLP(valueOf(settlement, 'monto', 'totalAmount')),
       valueOf(settlement, 'estado', 'status') || '',
       valueOf(settlement, 'fechaPago', 'customFields') || 'Sin pago registrado',
       documentId || '',

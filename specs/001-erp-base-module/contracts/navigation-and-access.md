@@ -1,6 +1,6 @@
 # Contrato de Navegación y Accesos (mapa de uso y guía de uso)
 
-**Rama**: `001-erp-base-module` · **Fecha**: 2026-11-16 · **Revisado**: 2026-11-18 (acceso obligatorio de `002`) · **Relacionado con**: `spec.md` (HU8, FR-020 a FR-022 y FR-031 a FR-036), `contracts/invoice-views.md`, `tasks.md` (Fase 12) y `002-payroll-access-control/contracts/access-and-session.md`
+**Rama**: `001-erp-base-module` · **Fecha**: 2026-11-16 · **Revisado**: 2026-11-23 (HU9/HU10 y restricción de roles FR-045) · **Relacionado con**: `spec.md` (HU8 a HU10, FR-020 a FR-022, FR-031 a FR-036, FR-037 a FR-046), `contracts/invoice-views.md`, `tasks.md` (Fases 12 y 13 a 15) y `002-payroll-access-control/contracts/access-and-session.md`
 
 ## Propósito
 
@@ -10,11 +10,12 @@ Documentar por dónde se navega el módulo y cómo se llega a cada función, y d
 
 | Vista | Módulo (`data-module`) | Botón del menú | Sección | Qué se puede hacer | Usuario principal (spec) |
 |---|---|---|---|---|---|
-| Panel (home) | `dashboard` | `#nav-dashboard` | `#view-dashboard` | Ver los KPIs (total por cobrar, total por pagar y facturas vencidas), usar los accesos rápidos y cargar los datos de demostración cuando el módulo está vacío | Gerencia |
+| Panel (home) | `dashboard` | `#nav-dashboard` | `#view-dashboard` | Ver los KPIs (total por cobrar, total por pagar y facturas vencidas), el Resumen financiero (Saldo neto, Deuda pendiente y Caja neta), usar los accesos rápidos y cargar los datos de demostración cuando el módulo está vacío | Gerencia, administrador y finanzas |
 | Terceros | `entities` | `#nav-entities` | `#view-entities` | Crear, editar y eliminar terceros (cliente, proveedor o personal); fijar el límite de crédito de un cliente | Encargado de cobranzas, encargado de pagos, responsable de remuneraciones |
 | Facturas de venta | `invoice-sale` | `#nav-invoice-sale` | `#view-invoice-sale` | Crear, editar y eliminar facturas de venta; emitirlas y registrar su pago; indicar la orden de venta | Encargado de cobranzas, contador |
 | Facturas de compra | `invoice-purchase` | `#nav-invoice-purchase` | `#view-invoice-purchase` | Crear, editar y eliminar facturas de compra; elegir el centro de costo al emitir; indicar el período de liquidación si el tercero es personal; registrar el pago | Encargado de pagos, responsable de remuneraciones, contador |
 | Movimientos financieros | `movements` | `#nav-movements` | `#view-movements` | Consultar los movimientos generados por emisiones y pagos (solo lectura) | Contador |
+| Flujo de caja | `cashflow` | `#nav-cashflow` | `#view-cashflow` | Consultar las facturas Pagadas como ingresos y egresos, con su fecha de pago, tercero, documento, monto, totales y estado vacío; es de solo lectura | Administrador y finanzas |
 | Seguimiento | `tracking` | `#nav-tracking` | `#view-tracking` | Ver la deuda por tercero y las facturas vencidas | Gerencia |
 | Buscar | `search` | `#nav-search` | `#view-search` | Buscar registros | Todos |
 
@@ -32,6 +33,7 @@ Notas:
 | Nueva factura de compra | `#qa-new-invoice-purchase` | Facturas de compra |
 | Gestión de terceros | `#qa-manage-entities` | Terceros |
 | Abrir seguimiento | `#qa-tracking` | Seguimiento |
+| Abrir flujo de caja | `#qa-cashflow` | Flujo de caja |
 | Buscar registros | `#qa-search` | Buscar |
 | Cargar datos de demostración | `#qa-load-demo` | Acción (no cambia de vista); solo visible con el módulo vacío |
 | ¿Primera vez? Ver la guía | `#qa-guide` | Abre la guía de uso (HU8, pendiente de implementar) |
@@ -57,6 +59,7 @@ La funcionalidad `002-payroll-access-control` reemplaza el ingreso opcional/invi
 - No existe "Continuar sin iniciar sesión" ni el rol `invitado` (`erp.session` con rol `invitado`). Sin sesión válida no se muestra ninguna vista de negocio: los enlaces directos y las recargas vuelven a la pantalla de acceso (`view-login`) sin exponer datos.
 - El acceso reconoce tres roles desde el registro de acceso: `administrador` (RRHH), `finanzas` y `trabajador`. El formulario solo pide RUT y contraseña, sin selector de rol; el rol se obtiene del registro tras validar las credenciales y se muestra en la cabecera (`session-role`). El administrador abre Panel; finanzas abre Panel; el trabajador abre Mi liquidación.
 - El `administrador` conserva todas las funciones, incluidos administrar accesos (también los de rol `finanzas`) y los Avisos para el desarrollador. `finanzas` ve y edita toda la facturación (terceros, facturas de venta y compra, liquidaciones, movimientos, flujo de caja, seguimiento y búsqueda), sin gestionar accesos ni ver avisos. El `trabajador` ve solo su propia liquidación vigente, en modo de solo lectura.
+- Flujo de caja (`cashflow`) y Resumen financiero del Panel (`#summary-saldo`, `#summary-deuda` y `#summary-caja`) son exclusivos de `administrador` y `finanzas`. El rol `trabajador` no ve `#nav-cashflow`, `#qa-cashflow` ni los indicadores; un enlace directo o acceso rápido se resuelve a `payroll-worker` y no carga datos de estas vistas en el DOM (FR-045, SC-011).
 - "Cargar demostración" (`login-demo-load`) se ejecuta desde la pantalla de acceso: precarga los datos ficticios sin abrir vistas del módulo ni crear sesión (`erp.session`). Sustituye al acceso rápido `#qa-load-demo` del home para cargar la demostración.
 - `nav-logout` ("Cerrar sesión") es la acción de sesión: última opción del lateral para los tres roles, separada visualmente del menú. No existe "Iniciar sesión" (`#nav-login`) dentro del ERP. Al usarlo se elimina `erp.session` (`sessionStorage`), vuelve al acceso y se ocultan el lateral y la indicación del rol anterior; la sesión termina también al cerrar la pestaña.
 - Toda vista de negocio del mapa exige sesión iniciada con credenciales válidas: Panel, Terceros, Facturas de venta, Facturas de compra, Movimientos, Seguimiento y Buscar, además de Liquidaciones de sueldo, Accesos y Avisos para el desarrollador según el rol. Las vistas no permitidas por rol se ocultan y se bloquean también si se intenta navegar directamente.

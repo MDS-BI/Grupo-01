@@ -73,8 +73,8 @@ describe('US3 - panel de inicio', () => {
 
   it('los KPIs del home se calculan sobre las facturas con el módulo financiero', () => {
     initApp(userConfig);
-    expect(document.getElementById('kpi-por-cobrar').textContent).toBe('0');
-    expect(document.getElementById('kpi-por-pagar').textContent).toBe('0');
+    expect(document.getElementById('kpi-por-cobrar').textContent).toBe('$0');
+    expect(document.getElementById('kpi-por-pagar').textContent).toBe('$0');
     expect(document.getElementById('kpi-vencidas').textContent).toBe('0');
   });
 
@@ -84,10 +84,16 @@ describe('US3 - panel de inicio', () => {
     initApp(userConfig);
 
     const porCobrar = Number(
-      document.getElementById('kpi-por-cobrar').textContent
+      document
+        .getElementById('kpi-por-cobrar')
+        .textContent.replace(/[$]/g, '')
+        .replace(/\./g, '')
     );
     const porPagar = Number(
-      document.getElementById('kpi-por-pagar').textContent
+      document
+        .getElementById('kpi-por-pagar')
+        .textContent.replace(/[$]/g, '')
+        .replace(/\./g, '')
     );
     const vencidas = Number(
       document.getElementById('kpi-vencidas').textContent

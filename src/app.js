@@ -49,6 +49,7 @@ import { resolveAdminSettlements } from './payroll.js';
 import { validateSettlement } from './validation.js';
 import { loadMovements } from './movements.js';
 import { computeDebtSummary } from './tracking.js';
+import { formatCurrencyCLP } from './format.js';
 import { loadDemoData } from './demo-data.js';
 import {
   focusSearchInput,
@@ -264,8 +265,8 @@ function refreshTracking() {
     entities,
     documents
   );
-  setText('tracking-cobrar', String(totalPorCobrar));
-  setText('tracking-pagar', String(totalPorPagar));
+  setText('tracking-cobrar', formatCurrencyCLP(totalPorCobrar));
+  setText('tracking-pagar', formatCurrencyCLP(totalPorPagar));
   setText('tracking-vencidas', String(vencidas.length));
   renderTrackingView(byId('tracking-by-entity'), entities, documents);
   const empty = byId('tracking-empty');
@@ -325,6 +326,34 @@ function refreshInvoiceStatusNotice() {
   });
 }
 
+function clearRestrictedViews() {
+  if (!canAccess('dashboard', state.session)) {
+    for (const id of [
+      'summary-saldo',
+      'summary-deuda',
+      'summary-caja',
+      'kpi-por-cobrar',
+      'kpi-por-pagar',
+      'kpi-vencidas',
+    ]) {
+      setText(id, '');
+    }
+  }
+  if (!canAccess('cashflow', state.session)) {
+    setText('cashflow-content', '');
+  }
+  if (!canAccess('tracking', state.session)) {
+    for (const id of [
+      'tracking-cobrar',
+      'tracking-pagar',
+      'tracking-vencidas',
+      'tracking-by-entity',
+    ]) {
+      setText(id, '');
+    }
+  }
+}
+
 function applySession(session) {
   state.session = session;
   state.shell = createShell({
@@ -333,6 +362,7 @@ function applySession(session) {
     onNavigate: showModule,
     onLogout: handleLogout,
   });
+  clearRestrictedViews();
   refreshInvoiceStatusNotice();
 }
 

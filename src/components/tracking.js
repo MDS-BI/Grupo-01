@@ -1,4 +1,5 @@
 import { computeDebtSummary } from '../tracking.js';
+import { formatCurrencyCLP } from '../format.js';
 
 function filaTercero(entry) {
   const item = document.createElement('li');
@@ -12,12 +13,12 @@ function filaTercero(entry) {
 
   const cobrar = document.createElement('p');
   cobrar.className = 'record-total';
-  cobrar.textContent = `Total por cobrar: ${entry.porCobrar}`;
+  cobrar.textContent = `Total por cobrar: ${formatCurrencyCLP(entry.porCobrar)}`;
   item.append(cobrar);
 
   const pagar = document.createElement('p');
   pagar.className = 'record-total';
-  pagar.textContent = `Total por pagar: ${entry.porPagar}`;
+  pagar.textContent = `Total por pagar: ${formatCurrencyCLP(entry.porPagar)}`;
   item.append(pagar);
 
   if (entry.vencidas > 0) {

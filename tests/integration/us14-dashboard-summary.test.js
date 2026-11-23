@@ -131,9 +131,52 @@ describe('Panel - resumen financiero y accesos rapidos', () => {
 
     initApp(config);
 
-    expect(text('summary-saldo')).toBe('400');
-    expect(text('summary-deuda')).toBe('600');
-    expect(text('summary-caja')).toBe('500');
+    expect(text('summary-saldo')).toBe('$400');
+    expect(text('summary-deuda')).toBe('$600');
+    expect(text('summary-caja')).toBe('$500');
+    expect(text('kpi-por-cobrar')).toBe('$500');
+    expect(text('kpi-por-pagar')).toBe('$100');
+  });
+
+  it('muestra montos CLP con separador de miles y signo negativo delante del peso', () => {
+    const cliente = addEntity(
+      {
+        name: 'Cliente Grande',
+        code: 'CL-G',
+        customFields: { tipoTercero: 'cliente' },
+      },
+      config
+    );
+    const proveedor = addEntity(
+      {
+        name: 'Proveedor Grande',
+        code: 'PV-G',
+        customFields: { tipoTercero: 'proveedor' },
+      },
+      config
+    );
+
+    createInvoice({
+      entity: cliente,
+      tipoFactura: 'venta',
+      folio: 10,
+      total: 1240000,
+      pay: true,
+    });
+    createInvoice({
+      entity: proveedor,
+      tipoFactura: 'compra',
+      folio: 11,
+      total: 2430000,
+    });
+
+    initApp(config);
+
+    expect(text('summary-caja')).toBe('$1.240.000');
+    expect(text('summary-saldo')).toBe('-$2.430.000');
+    expect(text('summary-deuda')).toBe('$2.430.000');
+    expect(text('kpi-por-cobrar')).toBe('$0');
+    expect(text('kpi-por-pagar')).toBe('$2.430.000');
   });
 
   it('redirige los botones de accion rapida a sus vistas y formularios', () => {

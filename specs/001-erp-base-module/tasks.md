@@ -525,28 +525,28 @@ Depende de las Tareas 3 y 6 de esa versión (etiquetas Cliente/Factura y ciclo d
 
 ### Pruebas primero: formato CLP
 
-- [ ] T099 [P] [US10] Escribir primero las pruebas de formato CLP del Panel en `tests/integration/us14-dashboard-summary.test.js`: `#summary-saldo`, `#summary-deuda`, `#summary-caja`, `#kpi-por-cobrar` y `#kpi-por-pagar` deben mostrar separador de miles y conservar el signo negativo delante de `$`, con ejemplos normativos `$1.240.000` y `-$2.430.000` (FR-046, SC-012)
-- [ ] T100 [P] [US9] Escribir primero las pruebas de formato CLP del Flujo de caja en `tests/integration/cashflow-format.test.js`: `#cashflow-ingresos`, `#cashflow-egresos`, `#cashflow-neto` y la columna Monto de `#cashflow-table` deben usar `$1.240.000` y conservar el signo en `-$2.430.000` (FR-046, SC-012)
-- [ ] T101 [P] [US9] Escribir primero las pruebas de formato CLP de Movimientos financieros en `tests/integration/movements-format.test.js`: el monto renderizado por `src/components/movements-list.js` debe usar separador de miles y signo delante de `$` para valores negativos (FR-046, SC-012)
-- [ ] T102 [P] [US10] Escribir primero las pruebas de formato CLP de Seguimiento en `tests/integration/tracking-format.test.js`: los totales por cobrar y por pagar renderizados por `src/components/tracking.js` deben usar `$1.240.000` y `-$2.430.000` cuando corresponda (FR-046, SC-012)
+- [X] T099 [P] [US10] Escribir primero las pruebas de formato CLP del Panel en `tests/integration/us14-dashboard-summary.test.js`: `#summary-saldo`, `#summary-deuda`, `#summary-caja`, `#kpi-por-cobrar` y `#kpi-por-pagar` deben mostrar separador de miles y conservar el signo negativo delante de `$`, con ejemplos normativos `$1.240.000` y `-$2.430.000` (FR-046, SC-012)
+- [X] T100 [P] [US9] Escribir primero las pruebas de formato CLP del Flujo de caja en `tests/integration/cashflow-format.test.js`: `#cashflow-ingresos`, `#cashflow-egresos`, `#cashflow-neto` y la columna Monto de `#cashflow-table` deben usar `$1.240.000` y conservar el signo en `-$2.430.000` (FR-046, SC-012)
+- [X] T101 [P] [US9] Escribir primero las pruebas de formato CLP de Movimientos financieros en `tests/integration/movements-format.test.js`: el monto renderizado por `src/components/movements-list.js` debe usar separador de miles y signo delante de `$` para valores negativos (FR-046, SC-012)
+- [X] T102 [P] [US10] Escribir primero las pruebas de formato CLP de Seguimiento en `tests/integration/tracking-format.test.js`: los totales por cobrar y por pagar renderizados por `src/components/tracking.js` deben usar `$1.240.000` y `-$2.430.000` cuando corresponda (FR-046, SC-012)
 
 ### Implementación pendiente: formato CLP
 
-- [ ] T103 [US10] Crear `src/format.js` con `formatCurrencyCLP(value)` usando `Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' })` o equivalente que produzca exactamente `$1.240.000` y `-$2.430.000`, y reutilizarlo también desde `src/components/payroll-list.js` para alinear Mi liquidación (FR-046, SC-012; depende de T099–T102)
-- [ ] T104 [US10] Actualizar `src/components/dashboard.js` para formatear con `formatCurrencyCLP` los valores escritos en `#summary-saldo`, `#summary-deuda`, `#summary-caja`, `#kpi-por-cobrar` y `#kpi-por-pagar`, dejando `#kpi-vencidas` como recuento (FR-046, SC-012; depende de T103)
-- [ ] T105 [US9] Actualizar `src/components/cashflow.js` para formatear con `formatCurrencyCLP` las tarjetas `#cashflow-ingresos`, `#cashflow-egresos`, `#cashflow-neto` y cada celda de la columna Monto de `#cashflow-table` (FR-046, SC-012; depende de T103)
-- [ ] T106 [US9] Actualizar `src/components/movements-list.js` para formatear con `formatCurrencyCLP` el monto de cada movimiento financiero (FR-046, SC-012; depende de T103)
-- [ ] T107 [US10] Actualizar `src/components/tracking.js` para formatear con `formatCurrencyCLP` los textos «Total por cobrar» y «Total por pagar» del Seguimiento (FR-046, SC-012; depende de T103)
+- [X] T103 [US10] Crear `src/format.js` con `formatCurrencyCLP(value)` usando `Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' })` o equivalente que produzca exactamente `$1.240.000` y `-$2.430.000`, y reutilizarlo también desde `src/components/payroll-list.js` para alinear Mi liquidación (FR-046, SC-012; depende de T099–T102)
+- [X] T104 [US10] Actualizar `src/components/dashboard.js` para formatear con `formatCurrencyCLP` los valores escritos en `#summary-saldo`, `#summary-deuda`, `#summary-caja`, `#kpi-por-cobrar` y `#kpi-por-pagar`, dejando `#kpi-vencidas` como recuento (FR-046, SC-012; depende de T103)
+- [X] T105 [US9] Actualizar `src/components/cashflow.js` para formatear con `formatCurrencyCLP` las tarjetas `#cashflow-ingresos`, `#cashflow-egresos`, `#cashflow-neto` y cada celda de la columna Monto de `#cashflow-table` (FR-046, SC-012; depende de T103)
+- [X] T106 [US9] Actualizar `src/components/movements-list.js` para formatear con `formatCurrencyCLP` el monto de cada movimiento financiero (FR-046, SC-012; depende de T103)
+- [X] T107 [US10] Actualizar `src/components/tracking.js` para formatear con `formatCurrencyCLP` los textos «Total por cobrar» y «Total por pagar» del Seguimiento (FR-046, SC-012; depende de T103)
 
 ### Pruebas primero: acceso por rol
 
-- [ ] T108 [P] [US9] Escribir primero pruebas en `tests/integration/navigation-menu.test.js` con sesión de `trabajador`: `#nav-cashflow` y `#qa-cashflow` deben estar ocultos, `#view-cashflow` no debe hacerse visible, `canAccess('cashflow', session)` debe ser `false` y `resolveRoute('cashflow', session)` debe devolver `payroll-worker` sin datos del módulo (FR-045, SC-011)
-- [ ] T109 [P] [US10] Escribir primero pruebas en `tests/integration/navigation-menu.test.js` con sesión de `trabajador`: `#view-dashboard` debe permanecer oculto y `#summary-saldo`, `#summary-deuda`, `#summary-caja` y sus tarjetas no deben mostrarse ni contener valores del Resumen financiero (FR-045, SC-011)
+- [X] T108 [P] [US9] Escribir primero pruebas en `tests/integration/navigation-menu.test.js` con sesión de `trabajador`: `#nav-cashflow` y `#qa-cashflow` deben estar ocultos, `#view-cashflow` no debe hacerse visible, `canAccess('cashflow', session)` debe ser `false` y `resolveRoute('cashflow', session)` debe devolver `payroll-worker` sin datos del módulo (FR-045, SC-011)
+- [X] T109 [P] [US10] Escribir primero pruebas en `tests/integration/navigation-menu.test.js` con sesión de `trabajador`: `#view-dashboard` debe permanecer oculto y `#summary-saldo`, `#summary-deuda`, `#summary-caja` y sus tarjetas no deben mostrarse ni contener valores del Resumen financiero (FR-045, SC-011)
 
 ### Verificación y documentación pendiente
 
-- [ ] T110 [P] [US9] Verificar en `src/app.js` y `src/components/shell.js` que `ACCESS_MATRIX` y los listados de menú mantengan `cashflow` y `dashboard` vedados al rol `trabajador`, ejecutar `npm run check` y comprobar en `npm run dev` que un acceso directo a Flujo de caja o Panel redirige a `payroll-worker` sin exponer datos (FR-045, SC-011; depende de T108 y T109)
-- [ ] T111 [P] [US10] Actualizar `specs/001-erp-base-module/contracts/navigation-and-access.md` para documentar `#view-cashflow`, el acceso `#nav-cashflow`, el acceso rápido `#qa-cashflow`, el Resumen financiero del Panel y la excepción de roles: solo `administrador` y `finanzas`, nunca `trabajador` (FR-036, FR-045)
+- [X] T110 [P] [US9] Verificar en `src/app.js` y `src/components/shell.js` que `ACCESS_MATRIX` y los listados de menú mantengan `cashflow` y `dashboard` vedados al rol `trabajador`, ejecutar `npm run check` y comprobar en `npm run dev` que un acceso directo a Flujo de caja o Panel redirige a `payroll-worker` sin exponer datos (FR-045, SC-011; depende de T108 y T109)
+- [X] T111 [P] [US10] Actualizar `specs/001-erp-base-module/contracts/navigation-and-access.md` para documentar `#view-cashflow`, el acceso `#nav-cashflow`, el acceso rápido `#qa-cashflow`, el Resumen financiero del Panel y la excepción de roles: solo `administrador` y `finanzas`, nunca `trabajador` (FR-036, FR-045)
 
 
 

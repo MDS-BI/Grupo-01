@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { initApp } from '../../src/app.js';
+import { canAccess, initApp, resolveRoute } from '../../src/app.js';
 import { userConfig } from '../../src/module-config.js';
 import { addEntity } from '../../src/storage.js';
 import { saveAccessRecords } from '../../src/access-storage.js';
-import { saveSession } from '../../src/session.js';
+import { loadSession, saveSession } from '../../src/session.js';
 import {
   loadAppMarkup,
   setupAdminSession,
@@ -209,5 +209,39 @@ describe('T147 - menú de utilidades y grilla del Panel', () => {
     expect(byId('view-payroll-worker').hidden).toBe(false);
     expect(byId('qa-new-payroll').closest('#view-dashboard')).not.toBeNull();
     expect(visibleQuickActionIds()).toEqual([]);
+  });
+
+  it('oculta Flujo de caja al trabajador y bloquea la navegación directa', () => {
+    setupWorkerSession();
+    const session = loadSession();
+    initApp(userConfig);
+
+    expect(canAccess('cashflow', session)).toBe(false);
+    expect(resolveRoute('cashflow', session)).toBe('payroll-worker');
+    expect(byId('nav-cashflow').hidden).toBe(true);
+    expect(byId('qa-cashflow').closest('[hidden]')).not.toBeNull();
+
+    byId('nav-cashflow').click();
+
+    expect(byId('view-cashflow').hidden).toBe(true);
+    expect(byId('view-payroll-worker').hidden).toBe(false);
+    expect(byId('cashflow-content').textContent).not.toContain('Ingresos');
+  });
+
+  it('oculta el Resumen financiero del Panel al trabajador', () => {
+    setupWorkerSession();
+    initApp(userConfig);
+
+    expect(byId('view-dashboard').hidden).toBe(true);
+    for (const id of ['summary-saldo', 'summary-deuda', 'summary-caja']) {
+      expect(byId(id).closest('[hidden]')).not.toBeNull();
+      expect(byId(id).textContent).toBe('');
+    }
+    expect(visibleQuickActionIds()).toEqual([]);
+
+    byId('nav-dashboard').click();
+
+    expect(byId('view-dashboard').hidden).toBe(true);
+    expect(byId('view-payroll-worker').hidden).toBe(false);
   });
 });

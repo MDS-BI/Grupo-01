@@ -1,4 +1,5 @@
 ﻿import { computeCashflow } from '../cashflow.js';
+import { formatCurrencyCLP } from '../format.js';
 import { loadMovements } from '../movements.js';
 import { loadDocuments, loadEntities } from '../storage.js';
 
@@ -29,7 +30,7 @@ export function renderCashflowView(container) {
     card.className = 'stat-card';
     const val = document.createElement('span');
     val.id = id;
-    val.textContent = String(value);
+    val.textContent = formatCurrencyCLP(value);
     const lab = document.createElement('span');
     lab.textContent = label;
     card.append(val, lab);
@@ -78,7 +79,7 @@ export function renderCashflowView(container) {
       createCell(row.categoria),
       createCell(row.tercero),
       createCell(row.documento),
-      createCell(String(row.monto))
+      createCell(formatCurrencyCLP(row.signo * row.monto))
     );
     tbody.append(tr);
   }
