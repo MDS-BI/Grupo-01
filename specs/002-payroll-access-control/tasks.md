@@ -1,12 +1,16 @@
-# Tareas: Acceso a liquidaciones de sueldo por RUT y contraseña
+# Tareas: Absorción del rol finanzas en el rol administrador y creación de liquidaciones de sueldo
 
 **Entrada**: Documentos de diseño en `specs/002-payroll-access-control/`
 
 **Prerrequisitos**: `plan.md`, `spec.md`, `research.md`, `data-model.md`, `contracts/`, `quickstart.md`
 
-**Pruebas**: La Constitución (principio II) y la especificación exigen pruebas unitarias y de integración para autenticación, roles y aislamiento. Las tareas de prueba se escriben antes o junto con la implementación.
+**Fecha de esta lista**: 2026-11-23 (reemplaza la lista histórica de `002`, ya completada y conservada en el historial de Git)
 
-**Organización**: Las tareas se agrupan por historia de usuario. Los identificadores `[US1]`…`[US7]` mapean a `spec.md`. El orden de fases sigue la prioridad: P1 (US1, US2, US5, US7) → P2 (US3, US4) → P3 (US6). US5 se ejecuta antes de US3/US4 porque provee el formulario de factura de compra que reutiliza la edición de liquidaciones. Phase 10 agrupa las correcciones de la revisión de seguridad y privacidad sin modificar T001–T078. Phase 11–15 incorporan la revisión del 2026-11-19: entidad persistente `LiquidacionSueldo`, desglose e historial de pagos.
+**Pruebas**: La Constitución (principio II) y `plan.md` exigen pruebas unitarias y de integración para roles, guardas, creación de liquidaciones y búsqueda por RUT; las tareas de prueba se escriben antes o junto con la implementación de cada fase.
+
+**Restricción del cambio**: no se crean ramas ni archivos nuevos; todas las tareas modifican archivos existentes sobre `main`, dentro de la funcionalidad `002-payroll-access-control`.
+
+**Organización**: las tareas se agrupan por historia de usuario (`[US1]`, `[US2]`, `[US3]` de `spec.md`). El orden de fases es P1 → P2: US2 (absorción) se ejecuta primero porque Foundational elimina `finanzas` de la configuración y la autenticación, y sus pruebas de integración deben actualizarse para mantener la suite en verde; US1 es la capacidad nueva principal (🎯 MVP); US3 complementa el listado.
 
 ## Formato: `[ID] [P?] [Story] Descripción`
 
@@ -18,544 +22,246 @@
 
 - Aplicación de un solo proyecto: `src/`, `tests/` e `index.html` en la raíz del repositorio.
 - Claves de almacenamiento: `erp.salesInvoices`, `erp.purchaseInvoices`, `erp.unclassifiedDocuments`, `erp.payrollSettlements`, `erp.accessRecords`, `erp.devNotifications`, `erp.migration.payrollSettlements`, `sessionStorage: erp.session`.
-- Roles canónicos tras la revisión: `administrador`, `finanzas` y `trabajador`; `invitado` queda eliminado. Las tareas históricas que mencionan `invitado` se conservan y se corrigen en Phase 10.
+- Roles canónicos tras este cambio: `administrador` y `trabajador`; el rol `finanzas` se elimina por completo (FR-001).
+- Credenciales de demostración: administrador `88.888.888-8` / `8888`; trabajadores `22.222.222-2` / `2222` y `45.000.000-0` / `4500`. Se elimina el acceso `55.555.555-5` / `5555`.
 
 ---
 
 ## Phase 1: Setup (Infraestructura compartida)
 
-**Propósito**: preparar constantes, contenedores, estilos y bootstrap de pruebas sin alterar aún el comportamiento actual.
+**Propósito**: registrar la línea base y fijar los artefactos de diseño antes de tocar código.
 
-- [X] T001 [P] Agregar en `src/module-config.js` las constantes de roles (`ROLES`, `administrador`, `trabajador`), etiquetas de las vistas nuevas, claves de almacenamiento de accesos/sesión y las credenciales ficticias de demostración (`DEMO_ACCESS`). Nota: superada por T083 y T098.
-- [X] T002 [P] Agregar en `index.html` los contenedores vacíos y ocultos `#view-login`, `#view-payroll-worker`, `#view-payroll-admin`, `#view-access`, `#view-dev-notifications`, `#view-invoice-sale` y `#view-invoice-purchase`, y sus botones de navegación; conservar temporalmente `#view-documents` hasta completar US5.
-- [X] T003 [P] Agregar en `src/styles.css` los estilos de pantalla de acceso, tarjeta de liquidación, tablas de accesos/avisos, estados vacíos y clases de separación visual `invoice-view--sale` / `invoice-view--purchase`. Nota: superada por T097.
-- [X] T004 [P] Extender `tests/setup/dom.js` para limpiar también `sessionStorage` y las marcas `erp.migration.invoiceSplit` y `erp.schemaVersion` entre pruebas.
+- [ ] T001 Ejecutar `npm run check` en la raíz del repositorio para registrar la línea base (ESLint, formato Prettier y `vitest run`) antes del cambio.
+- [ ] T002 [P] Revisar `specs/002-payroll-access-control/contracts/payroll-views.md` y `specs/002-payroll-access-control/data-model.md` para fijar la matriz de dos roles (`administrador`, `trabajador`) y las entidades `AccessRecord`, `Entity` y `LiquidacionSueldo` antes de implementar.
 
 ---
 
 ## Phase 2: Foundational (Prerrequisitos bloqueantes)
 
-**Propósito**: núcleo de almacenamiento separado, autenticación, sesión y guardas que TODAS las historias necesitan.
+**Propósito**: dejar el núcleo de roles con solo `administrador` y `trabajador`; TODAS las historias dependen de esta fase.
 
 **⚠️ CRÍTICO**: ninguna historia puede completarse hasta terminar esta fase.
 
-**Orden TDD**: las pruebas T005–T009 se escriben primero y deben fallar; luego se implementan T010–T017.
+**Orden TDD**: las pruebas T003–T005 se escriben primero y deben fallar; luego se implementan T006–T008.
 
 ### Pruebas fundacionales
 
-- [X] T005 [P] Crear `tests/unit/auth.test.js` con normalización de RUT (puntos, guion, K minúscula, espacios), derivación de contraseña inicial, RUT inválido, no registrado, duplicado, inactivo, vínculo roto, contraseña incorrecta y reconocimiento automático del rol registrado.
-- [X] T006 [P] Crear `tests/unit/session.test.js` con guardado/lectura/limpieza en `sessionStorage`, sesión inválida por acceso inactivo, por cambio de rol y por `entityId` roto. Nota: superada por T091.
-- [X] T007 [P] Crear `tests/unit/access-storage.test.js` con creación de accesos de trabajador y administrador, contraseña inicial, RUT duplicado, tercero ya vinculado, desactivación, reactivación, restablecimiento y protección del último administrador. Nota: superada por T083.
-- [X] T008 [P] Crear `tests/unit/invoice-storage-separation.test.js` con escritura en la colección correcta, lecturas sin mezcla, actualización sin cambio de colección, eliminación y `loadDocuments()` como unión sin no clasificados; incluir el caso de mismo folio permitido entre venta y compra.
-- [X] T009 [P] Crear `tests/integration/invoice-migration.test.js` con migración de una colección única, ejecución doble sin duplicados, documentos sin tipo a `erp.unclassifiedDocuments` y conservación de la colección legada si falla.
+- [ ] T003 [P] Actualizar `tests/unit/finanzas-role.test.js` para verificar que `ROLES` ya no incluye `finanzas`, que `validateAccessRecord` lo rechaza con `ROLE_INVALID` y que `authenticate` no lo reconoce como rol válido (debe fallar hasta completar T006 y T007).
+- [ ] T004 [P] Actualizar `tests/unit/auth.test.js` y `tests/unit/session.test.js` para esperar solo los roles `administrador` y `trabajador`, incluido el rechazo de un registro o una sesión con rol `finanzas`.
+- [ ] T005 [P] Actualizar `tests/unit/module-config.test.js` para las constantes de roles y las credenciales de demostración sin `finanzas` ni el par `55.555.555-5` / `5555`.
 
 ### Implementación fundacional
 
-- [X] T010 Actualizar `src/storage.js`: agregar `STORAGE_KEYS.salesInvoices`, `purchaseInvoices`, `unclassifiedDocuments`, `accessRecords`, `devNotifications`, `migration.invoiceSplit`; elevar `SCHEMA_VERSION` a `2.0.0` y crear los helpers `loadSaleInvoices`, `saveSaleInvoices`, `loadPurchaseInvoices`, `savePurchaseInvoices`, `loadUnclassifiedDocuments` y `saveUnclassifiedDocuments`.
-- [X] T011 Implementar `migrateLegacyDocuments()` en `src/storage.js`: separar `erp.documents` por `customFields.tipoFactura`, enviar los documentos sin tipo a `erp.unclassifiedDocuments`, evitar duplicados por `document_id`, verificar el total migrado, conservar la colección legada si falla y marcar `erp.migration.invoiceSplit = 'done'`.
-- [X] T012 Redirigir en `src/storage.js` `addDocument`, `updateDocument`, `deleteDocument`, `deleteDocumentsForEntity`, `saveDocuments` y `clearAll` a las colecciones separadas, manteniendo `loadDocuments()` como vista unificada de solo lectura (venta + compra, sin no clasificados), conservando la limpieza de movimientos y rechazando tipos distintos de `venta`/`compra`.
-- [X] T013 [P] Crear `src/auth.js` con `normalizeRut(input)`, `initialPassword(rut)`, `validateAccessRecord(record, { entities, existing })` y `authenticate({ rut, password, records, entities })`, reutilizando `isValidRutChileno` de `src/validation.js`. Nota: superada por T083 y T099.
-- [X] T014 [P] Crear `src/session.js` con `loadSession`, `saveSession`, `clearSession` e `isSessionValid(session, { records, entities })`, usando `sessionStorage` bajo `erp.session` y degradando a memoria si no está disponible. Nota: superada por T083 y T091.
-- [X] T015 [P] Crear `src/access-storage.js` con `loadAccessRecords`, `saveAccessRecords`, `createAccessRecord`, `updateAccessRecord`, `deactivateAccessRecord`, `reactivateAccessRecord`, `resetPassword`, `countActiveAdmins`, `loadDevNotifications`, `appendDevNotification` y `clearDevNotifications`; usar `generateId` de `src/utils.js` para las notificaciones y `accessId` canónico como clave de acceso; emitir `console.error` al registrar una notificación.
-- [X] T016 Agregar en `src/app.js` `canAccess(view, session)` y `resolveRoute(view, session)` con la matriz de `contracts/payroll-views.md`, y aplicar la guarda al inicio de `showModule` redirigiendo a la vista permitida con un mensaje. Nota: superada por T094.
-- [X] T017 Actualizar `src/components/shell.js` para recibir la sesión y mostrar solo los módulos permitidos: administrador con toda la navegación y trabajador solo con “Mi liquidación” y “Cerrar sesión”. Nota: superada por T095 y T103.
-- [X] T018 Actualizar las pruebas existentes que dependen del almacenamiento único (`tests/integration/foundation.test.js`, `tests/integration/demo-data.test.js`, `tests/integration/movements.test.js`) para que usen las colecciones separadas; no tocar aún las pruebas de vistas genéricas.
+- [ ] T006 Actualizar `src/module-config.js`: eliminar `finanzas` de `ROLES` y de `demoAccess`, dejando `administrador` (`88.888.888-8` / `8888`) y los trabajadores `22.222.222-2` / `2222` y `45.000.000-0` / `4500`.
+- [ ] T007 Actualizar `src/auth.js`: restringir `validateAccessRecord` y el mensaje `ROLE_INVALID` a `administrador` y `trabajador`, exigir `entityId` personal únicamente a `trabajador`, y rechazar en `authenticate` cualquier registro almacenado con rol `finanzas`.
+- [ ] T008 Actualizar `src/session.js`: aplicar `isSessionValid` a los dos roles vigentes y rechazar las sesiones con rol `finanzas`.
 
-**Checkpoint**: almacenamiento separado, autenticación, sesión y guardas listos y cubiertos por pruebas. Las historias pueden comenzar.
+**Checkpoint**: configuración, autenticación y sesión sin `finanzas`, cubiertas por las pruebas fundacionales. Las historias pueden comenzar.
 
 ---
 
-## Phase 3: User Story 1 - Acceder con RUT y contraseña (Priority: P1) 🎯 MVP
+## Phase 3: User Story 2 - Absorber el rol finanzas en el rol administrador (Priority: P1)
 
-**Goal**: tarjeta centrada con RUT y contraseña, rol detectado desde el acceso, sin modo invitado, rol en la cabecera y acción de sesión al final del lateral.
+**Goal**: eliminar el rol `finanzas` de accesos, sesiones, matriz de acceso, datos de demostración y navegación, dejando al administrador con todas las funciones operativas y las gestiones de accesos y avisos (FR-001).
 
-**Independent Test**: con un acceso de administrador y otro de trabajador registrados, ingresar las credenciales correctas lleva a la vista del rol registrado; no existe acceso sin sesión y las credenciales incorrectas se rechazan.
+**Independent Test**: con la demostración cargada, el administrador ingresa con su RUT y accede a panel, terceros, facturas de venta y compra, liquidaciones, movimientos, flujo de caja, seguimiento y búsqueda; no existe sesión, vista ni opción de menú para el rol `finanzas`.
 
-### Pruebas de User Story 1
+### Pruebas para User Story 2 ⚠️
 
-- [X] T019 [P] [US1] Crear `tests/integration/login-roles.test.js` que cubra los escenarios revisados de US1, incluida la recuperación de sesión al recargar. Nota: superada por T079 y T080.
+> **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-### Implementación de User Story 1
+- [ ] T009 [P] [US2] Actualizar `tests/integration/finanzas-permissions.test.js` para verificar que el administrador opera panel, terceros, facturas de venta y compra, liquidaciones, movimientos, flujo de caja, seguimiento y búsqueda, y que no existe acceso ni sesión de `finanzas`.
+- [ ] T010 [P] [US2] Actualizar `tests/integration/access-admin-finanzas.test.js` para verificar que `#access-role` solo ofrece `trabajador` y `administrador`, sin la opción `finanzas`, y que el acceso de administrador se crea sin `#access-entity`.
+- [ ] T011 [P] [US2] Actualizar `tests/integration/login-roles.test.js` para cubrir los dos roles vigentes y el rechazo del RUT `55.555.555-5` como acceso inexistente con notificación al desarrollador.
+- [ ] T012 [P] [US2] Actualizar `tests/integration/navigation-menu.test.js` y `tests/integration/us3-dashboard.test.js` para la navegación del menú ☰ y la grilla del Panel sin la columna `finanzas`, con `#menu-access` y `#menu-dev-notifications` solo para administrador.
+- [ ] T013 [P] [US2] Actualizar `tests/unit/demo-data-ruts.test.js` y `tests/integration/demo-data.test.js` para la demostración sin el acceso de `finanzas`, conservando la idempotencia y el RUT del administrador distinto de los terceros.
 
-- [X] T020 [P] [US1] Crear `src/components/login.js` con el formulario de acceso (RUT, contraseña, Ingresar, Continuar sin iniciar sesión, mensaje `role="alert"` y aviso académico al pie). Nota: superada por T079, T080 y T092.
-- [X] T021 [US1] Reemplazar el contenido de `#view-login` en `index.html` con el marcado de `src/components/login.js` (`login-rut`, `login-password`, `login-submit`, `login-guest`, `login-error`, `login-warning`, `login-no-accesses`). Nota: superada por T079, T092 y T093.
-- [X] T022 [US1] Integrar el login en `src/app.js`: al iniciar sin sesión válida ocultar el espacio de trabajo y mostrar `#view-login`; al enviar, llamar a `authenticate`, guardar la sesión con `saveSession` y navegar con `resolveRoute`.
-- [X] T023 [US1] Implementar en `src/app.js` la recuperación de sesión al recargar con `loadSession` + `isSessionValid`, y descartar la sesión cuando el acceso ya no existe, está inactivo o cambió de rol.
-- [X] T024 [US1] Mostrar en `src/components/login.js` los mensajes diferenciados para credenciales incorrectas, acceso inactivo, RUT inválido, RUT no registrado y vínculo roto, sin revelar si el RUT existe cuando la causa es la contraseña.
+### Implementación para User Story 2
 
-**Checkpoint**: US1 funciona sola y es la base de autenticación para el resto.
+- [ ] T014 [US2] Actualizar `src/app.js`: eliminar la columna `finanzas` de `ACCESS_MATRIX` y la rama `session.role === 'finanzas'` de `resolveRoute`, dejando al administrador con acceso a todas las vistas operativas y a `access` / `dev-notifications`, y al trabajador solo con `payroll-worker`.
+- [ ] T015 [US2] Actualizar `src/components/shell.js`: eliminar `FINANCE_MODULES` y la etiqueta `Rol: Finanzas` de `roleNames`, manteniendo `ADMIN_MODULES` para el administrador y «Cerrar sesión» como última opción.
+- [ ] T016 [P] [US2] Actualizar `src/components/dashboard.js` para mostrar `qa-new-payroll` solo a la sesión de administrador.
+- [ ] T017 [US2] Actualizar `src/demo-data.js` para quitar el acceso de finanzas `55.555.555-5` / `5555` conservando la idempotencia de la carga.
+- [ ] T018 [P] [US2] Actualizar `index.html` para eliminar la opción `finanzas` del selector estático `#access-role`.
+- [ ] T019 [US2] Actualizar `src/components/access-admin.js` para ofrecer solo `trabajador` y `administrador` en `#access-role`, ocultar y limpiar `#access-entity` cuando el rol no requiera tercero personal, y mostrar el rol vigente en `#access-list`.
+- [ ] T020 [US2] Actualizar `src/components/payroll-list.js` para quitar las ramas de finanzas y dejar la edición de liquidaciones exclusiva del administrador.
+- [ ] T021 [P] [US2] Verificar en `src/components/invoice-status-notice.js` que el aviso de migración fallida y de documentos no clasificados se muestra solo al administrador, retirando cualquier referencia a `finanzas`.
+- [ ] T022 [US2] Actualizar `README.md` con los roles vigentes, las credenciales de demostración sin `finanzas` y la nota de que el rol fue absorbido por el administrador.
 
----
-
-## Phase 4: User Story 2 - Administrar accesos de trabajadores y administradores (Priority: P1)
-
-**Goal**: el administrador crea, activa, desactiva y restablece accesos por RUT, con contraseña inicial derivada del RUT y protección del último administrador.
-
-**Independent Test**: desde una sesión de administrador se crea un acceso de trabajador, se entra con su RUT y contraseña inicial, se desactiva y se verifica que ya no permite entrar.
-
-### Pruebas de User Story 2
-
-- [X] T025 [P] [US2] Crear `tests/integration/access-admin.test.js` que cubra los diez escenarios de US2, el bloqueo a trabajadores y la prueba de que un cambio de estado o contraseña aplica en el siguiente intento de acceso sin reiniciar. Nota: superada por T086.
-
-### Implementación de User Story 2
-
-- [X] T026 [P] [US2] Crear `src/components/access-admin.js` con el formulario de creación (rol, RUT, tercero personal, contraseña inicial de solo lectura) y la lista de accesos con RUT, rol, tercero, estado y fecha de creación. Nota: superada por T086, T099 y T100.
-- [X] T027 [US2] Reemplazar el contenido de `#view-access` en `index.html` con el marcado de `src/components/access-admin.js` (`access-form`, `access-role`, `access-rut`, `access-entity`, `access-password`, `access-list`, `access-actions`). Nota: superada por T086, T100 y T101.
-- [X] T028 [US2] Integrar `#view-access` en `src/app.js`: renderizar la lista, filtrar terceros personales sin acceso activo, conectar crear/activar/desactivar/restablecer y refrescar tras cada cambio.
-- [X] T029 [US2] Registrar en `src/access-storage.js` una notificación al desarrollador cuando se rechaza un RUT duplicado o se desactiva un acceso, y mostrar el error correspondiente en `src/components/access-admin.js`.
-- [X] T030 [US2] Implementar en `src/components/access-admin.js` la bandera `dirty` del formulario y exponerla para que el cierre de sesión pueda pedir confirmación.
-
-**Checkpoint**: US1 y US2 funcionan juntas; el administrador ya puede gobernar los accesos.
+**Checkpoint**: la absorción está completa; la suite no contiene sesiones, vistas ni datos de `finanzas`.
 
 ---
 
-## Phase 5: User Story 5 - Separar facturas de venta y de compra (Priority: P1)
+## Phase 4: User Story 1 - Crear liquidaciones de sueldo con alta automática de trabajador (Priority: P1) 🎯 MVP
 
-**Goal**: facturas de venta y de compra separadas física y visualmente, con migración idempotente, aviso de incidencias y sin vista genérica de documentos.
+**Goal**: pestaña aparte de creación de liquidaciones que reutiliza el formulario de facturas con «RUT» y «Nombre completo» en lugar de «Tercero»; con RUT nuevo se crean la entidad personal, el acceso `trabajador` con contraseña inicial y el settlement vinculado (FR-002, FR-003, FR-004, FR-006).
 
-**Independent Test**: una factura de venta y una de compra viven en colecciones distintas y solo aparecen en su vista, formulario y listado; la liquidación nunca muestra una factura de venta.
+**Independent Test**: con la demostración cargada, el administrador ingresa un RUT nuevo y un nombre completo en la pestaña de creación; el sistema crea el trabajador con su contraseña inicial, el trabajador nuevo ingresa con esos datos y ve su liquidación; un RUT inválido o duplicado se rechaza sin crear nada.
 
-### Pruebas de User Story 5
+### Pruebas para User Story 1 ⚠️
 
-- [X] T031 [P] [US5] Crear `tests/integration/invoice-separation.test.js` que verifique las dos vistas, la ausencia de la vista genérica, el filtrado por tipo en cada listado, el tipo fijado por el formulario y la ausencia de facturas de venta en la liquidación.
+> **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-### Implementación de User Story 5
+- [ ] T023 [P] [US1] Actualizar `tests/unit/payroll-settlements-storage.test.js` con la creación de un settlement directo por RUT nuevo sin factura de compra previa, sus campos (`settlementId`, `entityId`, `periodo`, desglose, `monto`, `estado`, `fechaPago`) y su idempotencia.
+- [ ] T024 [US1] Actualizar `tests/integration/payroll-admin.test.js` con los escenarios de creación: formulario con «RUT» y «Nombre completo» en lugar de «Tercero», alta de entidad personal + acceso `trabajador` + settlement en un solo guardado, rechazo de RUT inválido o con conflicto de acceso sin crear registros parciales y vínculo al trabajador existente cuando el RUT ya tiene acceso activo.
+- [ ] T025 [US1] Actualizar `tests/integration/login-roles.test.js` (después de T011, mismo archivo) para que el trabajador nuevo ingrese con la contraseña inicial de los primeros 4 dígitos del cuerpo del RUT y vea su liquidación en `payroll-worker`.
 
-- [X] T032 [P] [US5] Crear `src/components/invoice-form.js` como fábrica compartida de formularios de factura con configuración por tipo, inyección de `customFields.tipoFactura` y filtrado de terceros (`cliente` para venta; `proveedor` o `personal` para compra).
-- [X] T033 [P] [US5] Crear `src/components/invoice-list.js` como fábrica compartida de listados con columnas configurables por tipo y acciones de editar/eliminar.
-- [X] T034 [P] [US5] Crear `src/components/invoice-sale-form.js` e `src/components/invoice-sale-list.js` con las columnas y campos propios de venta (`salesOrderId`) y la clase visual `invoice-view--sale`.
-- [X] T035 [P] [US5] Crear `src/components/invoice-purchase-form.js` e `src/components/invoice-purchase-list.js` con las columnas y campos propios de compra (`centroCosto`, `periodoLiquidacion`) y la clase visual `invoice-view--purchase`.
-- [X] T036 [P] [US5] Crear `src/components/invoice-status-notice.js` para mostrar el aviso de migración fallida y la cantidad de documentos no clasificados, indicando que no se muestran como liquidaciones.
-- [X] T037 [US5] Reemplazar `#view-documents` en `index.html` por `#view-invoice-sale` y `#view-invoice-purchase` con sus formularios, selectores de edición, listados, estados vacíos y el contenedor `#invoice-status-notice` (`invoice-sale-form`, `invoice-sale-edit`, `invoice-sale-list`, `invoice-sale-empty`, `invoice-purchase-form`, `invoice-purchase-edit`, `invoice-purchase-list`, `invoice-purchase-empty`).
-- [X] T038 [US5] Reescribir en `src/app.js` los manejadores de documentos para usar las fábricas de venta/compra, fijar el tipo por vista, eliminar `documents` de `VIEWS`/`VIEW_ELEMENTS`, actualizar las acciones rápidas y renderizar `#invoice-status-notice` con el resultado de la migración.
-- [X] T039 [US5] Actualizar `src/components/dashboard.js` e `index.html` para que las acciones rápidas y los contadores usen las vistas de factura de venta/compra y no `#qa-new-document` ni `#nav-documents`. Nota: superada por T090 y T096.
-- [X] T040 [US5] Eliminar `src/components/document-form.js` y `src/components/document-list.js`, y actualizar o retirar las pruebas que dependen de la vista genérica (`tests/integration/us10-documents.test.js`, `tests/integration/us13-shell.test.js`).
+### Implementación para User Story 1
 
-**Checkpoint**: separación física y visual completa; la liquidación solo puede apoyarse en compras.
+- [ ] T026 [US1] Actualizar `index.html` con la pestaña/vista de creación de liquidaciones (contenedor, campos «RUT» y «Nombre completo», botones de guardar y cancelar, y mensaje de error con `role="alert"`) reutilizando las clases del formulario de facturas.
+- [ ] T027 [P] [US1] Actualizar `src/validation.js` con la validación de nombre completo y la comprobación de RUT del alta, reutilizando `isValidRutChileno` y `makeError` existentes.
+- [ ] T028 [P] [US1] Actualizar `src/components/invoice-form.js` con un modo de `createInvoiceForm` que sustituya el campo «Tercero» por «RUT» y «Nombre completo», conservando el resto del formulario, sus validaciones y su feedback.
+- [ ] T029 [US1] Actualizar `src/payroll.js` con la función de alta que crea la entidad personal (`addEntity` de `src/storage.js`), el acceso `trabajador` con contraseña inicial (`createAccessRecord` de `src/access-storage.js`) y la `LiquidacionSueldo` vinculada al RUT nuevo (`savePayrollSettlements` de `src/storage.js`), sin dejar registros parciales si alguna validación falla y registrando la incidencia con `appendDevNotification` cuando corresponda.
+- [ ] T030 [US1] Actualizar `src/app.js` con la ruta de la pestaña de creación, la guarda de administrador según `ACCESS_MATRIX` y el flujo de guardado que refresca el listado y mantiene la bandera `dirty`.
+- [ ] T031 [US1] Actualizar `src/components/shell.js` con la entrada de navegación «Nueva liquidación» visible solo para el administrador.
 
----
-
-## Phase 6: User Story 3 - Consultar mi única liquidación (Priority: P2)
-
-**Goal**: el trabajador ve en modo solo lectura únicamente su liquidación vigente, sin navegación administrativa ni datos de otros.
-
-**Independent Test**: con dos trabajadores con liquidaciones distintas, cada uno ve solo la suya; no hay acciones de edición y no se expone nada del otro.
-
-### Pruebas de User Story 3
-
-- [X] T041 [P] [US3] Crear `tests/unit/payroll.test.js` con `resolveWorkerSettlement` (período más reciente, desempate por `startDate` y `createdAt`, tercero no personal, sin liquidación) y `resolveAdminSettlements` (filtros por tercero/RUT y período).
-- [X] T042 [P] [US3] Crear `tests/integration/payroll-worker.test.js` que cubra los cinco escenarios de US3, el aislamiento entre dos trabajadores y el bloqueo de vistas administrativas.
-
-### Implementación de User Story 3
-
-- [X] T043 [P] [US3] Crear `src/payroll.js` con `resolveWorkerSettlement({ entityId, purchaseInvoices, entities })` y `resolveAdminSettlements({ purchaseInvoices, entities, filters })` según `contracts/payroll-views.md`.
-- [X] T044 [P] [US3] Crear `src/components/payroll-worker.js` que renderice la tarjeta de solo lectura con período, trabajador, RUT, monto, estado, fecha de pago y estado vacío.
-- [X] T045 [US3] Reemplazar el contenido de `#view-payroll-worker` en `index.html` con el marcado de `src/components/payroll-worker.js` (`payroll-worker-card`, `payroll-worker-period`, `payroll-worker-name`, `payroll-worker-rut`, `payroll-worker-amount`, `payroll-worker-status`, `payroll-worker-paid-at`, `payroll-worker-empty`, `payroll-worker-warning`).
-- [X] T046 [US3] Integrar `#view-payroll-worker` en `src/app.js`: mostrar solo con rol `trabajador`, resolver la liquidación por `session.entityId` y no renderizar botones de edición, eliminación ni creación.
-- [X] T047 [US3] Manejar en `src/app.js` y `src/components/payroll-worker.js` el vínculo roto o el `entityId` inválido: cerrar la sesión, volver al login, mostrar un mensaje claro y registrar la notificación al desarrollador.
-
-**Checkpoint**: el trabajador tiene su apartado exclusivo y aislado.
+**Checkpoint**: el administrador crea liquidaciones por RUT y el trabajador nuevo accede con su contraseña inicial.
 
 ---
 
-## Phase 7: User Story 4 - Ver y editar las liquidaciones de todos (Priority: P2)
+## Phase 5: User Story 3 - Ver y editar liquidaciones con búsqueda por RUT (Priority: P2)
 
-**Goal**: el administrador lista, filtra y edita las liquidaciones de todos los trabajadores con el formulario de factura de compra y asocia cada RUT con su acceso.
+**Goal**: pestaña aparte de listado de liquidaciones con selección, edición de cualquiera y cuadro de búsqueda por RUT que filtra mientras se escribe (FR-005).
 
-**Independent Test**: con liquidaciones de dos trabajadores, el administrador las ve, filtra, edita una, asocia un acceso y el cambio se refleja en la vista del trabajador correspondiente.
+**Independent Test**: con dos trabajadores con liquidaciones distintas, el administrador escribe un RUT en el buscador y el listado se filtra mientras escribe; edita una liquidación y comprueba el reflejo en la vista del trabajador correspondiente.
 
-### Pruebas de User Story 4
+### Pruebas para User Story 3 ⚠️
 
-- [X] T048 [P] [US4] Crear `tests/integration/payroll-admin.test.js` que cubra los seis escenarios de US4, los filtros, la edición válida, el rechazo de una edición inválida, la asociación RUT↔acceso y la reflexión del cambio en la vista del trabajador. Nota: superada por T085.
+> **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-### Implementación de User Story 4
+- [ ] T032 [US3] Actualizar `tests/integration/payroll-admin.test.js` (después de T024, mismo archivo) con el escenario de búsqueda por RUT que filtra el listado mientras se escribe, el estado vacío «No hay liquidaciones que coincidan con el filtro.» y la edición de cualquier liquidación reflejada en el trabajador.
 
-- [X] T049 [P] [US4] Crear `src/components/payroll-list.js` con la tabla de liquidaciones (trabajador, RUT, período, monto, estado, fecha de pago, acción Editar) y los filtros `payroll-filter-worker` y `payroll-filter-period`.
-- [X] T050 [P] [US4] Crear `src/components/payroll-form.js` que reutilice `src/components/invoice-purchase-form.js` para editar período, monto, estado, fechas y datos de pago, respetando las validaciones y el ciclo de vida de `001`.
-- [X] T051 [US4] Reemplazar el contenido de `#view-payroll-admin` en `index.html` con el marcado de `src/components/payroll-list.js` y `src/components/payroll-form.js` (`payroll-admin-list`, `payroll-admin-empty`, `payroll-form`, `payroll-form-submit`, `payroll-form-errors`).
-- [X] T052 [US4] Integrar `#view-payroll-admin` en `src/app.js`: renderizar la lista completa, aplicar filtros en memoria, cargar la liquidación en el formulario y guardar con `updateDocument` sobre `erp.purchaseInvoices`.
-- [X] T053 [US4] Implementar en `src/components/payroll-list.js` la acción para asociar la liquidación con un acceso de trabajador activo cuyo RUT coincida, o para crear el acceso desde la vista de liquidaciones; reflejar la asociación en `AccessRecord.entityId` y mostrar el error cuando el RUT no coincida. Nota: superada por T085 y T104.
-- [X] T054 [US4] Mostrar en `src/components/payroll-list.js` una advertencia cuando el RUT del tercero no tenga un acceso de trabajador activo asociado, y explicar cómo corregirlo desde Acciones o desde la factura de compra.
-- [X] T055 [US4] Verificar en `src/app.js` que, tras guardar una edición, el refresco de `#view-payroll-worker` del trabajador correspondiente refleje el cambio sin reiniciar la aplicación. Nota: superada por T104.
-- [X] T056 [US4] Implementar en `src/components/payroll-form.js` la bandera `dirty` y exponerla para que el cierre de sesión pueda pedir confirmación.
+### Implementación para User Story 3
 
-**Checkpoint**: administrador y trabajador ven la misma fuente de verdad con permisos distintos.
+- [ ] T033 [US3] Actualizar `index.html` con el cuadro de búsqueda por RUT en la pestaña de liquidaciones, con etiqueta asociada y `role="search"`.
+- [ ] T034 [US3] Actualizar `src/components/payroll-list.js` con el filtro por RUT mientras se escribe, conservando el filtro por período y el orden existentes.
+- [ ] T035 [US3] Actualizar `src/app.js` con la suscripción del evento `input` del buscador al refresco del listado (`refreshPayrollAdmin`) sin recargar la vista.
+
+**Checkpoint**: las tres historias funcionan de forma independiente y verificable.
 
 ---
 
-## Phase 8: User Story 6 - Cerrar sesión, notificar incidencias y usar datos de demostración (Priority: P3)
+## Phase 6: Polish & Cross-Cutting Concerns
 
-**Goal**: cierre de sesión seguro, registro visible de incidencias para el desarrollador y datos ficticios idempotentes con credenciales documentadas.
+**Purpose**: verificación automatizada y manual, y coherencia de la documentación.
 
-**Independent Test**: iniciar sesión, cerrar sesión y comprobar que se vuelve al login; cerrar la pestaña y comprobar que no se recupera la sesión; cargar la demostración y entrar con los RUT ficticios.
-
-### Pruebas de User Story 6
-
-- [X] T057 [P] [US6] Crear `tests/integration/session-lifecycle.test.js` con recarga que conserva la sesión, cierre de sesión que la elimina, cierre de pestaña simulado que la descarta y confirmación por cambios sin guardar.
-- [X] T058 [P] [US6] Crear `tests/integration/dev-notifications.test.js` con registro de RUT inválido, no registrado, inactivo, duplicado y vínculo roto, ausencia de registro por contraseña incorrecta, emisión de `console.error`, panel solo para administrador y limpieza con confirmación.
-- [X] T059 [P] [US6] Extender `tests/integration/demo-data.test.js` para verificar un administrador, dos trabajadores, terceros personales, liquidaciones, credenciales documentadas y carga idempotente sin duplicados. Nota: superada por T081 y T088.
-
-### Implementación de User Story 6
-
-- [X] T060 [P] [US6] Crear `src/components/dev-notifications.js` con el panel de avisos (fecha, RUT intentado, rol, motivo, origen) y el botón `dev-notifications-clear` con confirmación.
-- [X] T061 [US6] Reemplazar el contenido de `#view-dev-notifications` en `index.html` y agregar su botón de navegación en `src/components/shell.js`, visible solo para administradores. Nota: superada por T093 y T095.
-- [X] T062 [US6] Agregar en `src/components/shell.js` y `src/app.js` el botón y el flujo de cierre de sesión: consultar las banderas `dirty` de los formularios, confirmar si hay cambios sin guardar, llamar a `clearSession`, ocultar el espacio de trabajo y volver a `#view-login`.
-- [X] T063 [US6] Extender `src/demo-data.js` con los accesos de demostración (`11.111.111-1` / `1111`, `22.222.222-2` / `2222`, `45.000.000-5` / `4500`), sus terceros personales y una liquidación por trabajador, manteniendo la carga idempotente y conservando lo existente. Nota: superada por T081, T088, T089, T098 y T106.
-- [X] T064 [US6] Conectar en `src/components/login.js` y `src/app.js` el botón “Cargar datos de demostración” del login, el mensaje de “no hay accesos registrados” y el estado de carga (`demo-status`). Nota: superada por T082, T090 y T096.
-- [X] T065 [US6] Mostrar en `src/components/login.js`, `src/components/payroll-worker.js`, `src/components/access-admin.js` y `src/components/invoice-status-notice.js` la advertencia de que el control es una restricción de interfaz, que los datos viven en el navegador y que no deben usarse datos reales. Nota: superada por T087 y T108.
-
-**Checkpoint**: todas las historias funcionan y la demostración es reproducible sin datos reales.
-
----
-
-## Phase 9: Polish y preocupaciones transversales
-
-**Propósito**: documentación, limpieza y verificación final.
-
-- [X] T066 [P] Actualizar `README.md` con los RUT y contraseñas de demostración, la advertencia de que el control de acceso es solo de interfaz y la prohibición de usar datos reales. Nota: superada por T087, T108 y T109.
-- [X] T067 [P] Actualizar `specs/001-erp-base-module/plan.md` y `specs/001-erp-base-module/data-model.md` con una nota de que `002` supersede el almacenamiento único por las colecciones separadas.
-- [X] T068 [P] Revisar `src/app.js`, `src/storage.js`, `src/components/shell.js` e `index.html` para eliminar referencias muertas a `erp.documents`, `#view-documents`, `#nav-documents` y `#qa-new-document`, y confirmar que no quedan escrituras a la colección legada después de la migración.
-- [X] T069 [P] Revisar accesibilidad y consistencia en `index.html` y `src/styles.css`: `role="alert"` en errores, etiquetas asociadas, estados vacíos, tablas con `thead`/`tbody` y navegación por teclado.
-- [X] T070 Verificar en `src/app.js` y `src/payroll.js` que la pantalla de acceso aparece en menos de 1 segundo, la autenticación y resolución de liquidación responden en menos de 100 ms y los listados se renderizan en menos de 200 ms con los volúmenes del MVP; registrar la medición.
-- [X] T071 Ejecutar `npm run check` (lint + formato + pruebas) sobre `src/` y `tests/` y corregir cualquier fallo en `src/app.js`, `src/storage.js`, `src/payroll.js`, `src/components/` o `tests/unit/` y `tests/integration/`.
-- [X] T072 Ejecutar los diez escenarios manuales de `specs/002-payroll-access-control/quickstart.md` y registrar el resultado de cada uno.
-- [X] T073 Verificar que la demostración no contiene datos reales y que `README.md`, la pantalla de acceso y las vistas de liquidación muestran la advertencia de seguridad. Nota: superada por T087 y T108.
+- [ ] T036 [P] Ejecutar `npm run check` en la raíz del repositorio y corregir cualquier error de ESLint, formato o pruebas.
+- [ ] T037 Ejecutar `npm run build` y verificar la compilación de producción con Vite.
+- [ ] T038 Ejecutar los escenarios de `specs/002-payroll-access-control/quickstart.md` en el navegador: acceso, creación con RUT nuevo, buscador por RUT, vista del trabajador y riesgos conocidos.
+- [ ] T039 [P] Actualizar `specs/002-payroll-access-control/quickstart.md` con la fecha y los resultados de la validación de esta revisión.
+- [ ] T040 [P] Revisar la coherencia de `specs/002-payroll-access-control/contracts/`, `specs/002-payroll-access-control/data-model.md` y `README.md` con lo implementado.
 
 ---
 
 ## Dependencies & Execution Order
 
-### Dependencias por fase
+### Phase Dependencies
 
-- **Setup (Phase 1)**: sin dependencias; puede comenzar de inmediato.
-- **Foundational (Phase 2)**: depende de Setup; bloquea todas las historias. Las pruebas T005–T009 se escriben antes que T010–T017.
-- **User Stories (Phase 3+)**: dependen de Foundational.
-- **Polish (Phase 9)**: depende de las historias que se quieran entregar.
-- **Revisión (Phase 10)**: depende de Foundational y de las historias US1/US2/US4/US5/US6 que se estén corrigiendo; agrupa pruebas primero y luego las correcciones de implementación y documentación.
+- **Setup (Phase 1)**: sin dependencias; puede iniciar de inmediato.
+- **Foundational (Phase 2)**: depende de Setup; **BLOQUEA** todas las historias.
+- **US2 (Phase 3)**: depende de Foundational; se ejecuta primero entre las historias porque Foundational elimina `finanzas` de la configuración y la autenticación y sus pruebas de integración deben actualizarse para mantener la suite en verde.
+- **US1 (Phase 4)**: depende de Foundational; comparte `src/app.js`, `src/components/shell.js` e `index.html` con US2, por lo que se ejecuta después de US2.
+- **US3 (Phase 5)**: depende de US1; comparte `tests/integration/payroll-admin.test.js`, `src/components/payroll-list.js` y `src/app.js` con las historias anteriores.
+- **Polish (Phase 6)**: depende de todas las historias deseadas.
 
-### Dependencias entre historias
+### User Story Dependencies
 
-- **US1 (P1)**: depende de Foundational. Es la puerta de entrada del resto.
-- **US2 (P1)**: depende de US1 para existir una sesión de administrador; reutiliza `access-storage.js` y `auth.js`.
-- **US5 (P1)**: depende solo de Foundational; puede ejecutarse en paralelo con US2 y es requisito de US4 por `invoice-purchase-form.js`.
-- **US3 (P2)**: depende de US1 y de la separación física de Foundational; puede probarse con accesos y compras creados por API.
-- **US4 (P2)**: depende de US3 por `src/payroll.js` y de US5 por `src/components/invoice-purchase-form.js`.
-- **US6 (P3)**: depende de US1 (cierre de sesión), de US2/US4 (banderas `dirty`) y de `access-storage.js` (notificaciones y demostración).
-- **US7 (P1)**: depende de US1 y US2 para la sesión y la creación del acceso de finanzas; puede ejecutarse en paralelo con US5 tras Foundational. Corrige la matriz de permisos y la visibilidad de módulos.
+- **US2 (P1)**: puede iniciar tras Foundational; sin dependencias de otras historias más allá de las fases fundacionales.
+- **US1 (P1, MVP)**: puede iniciar tras Foundational; requiere US2 para trabajar sobre una navegación y una matriz ya limpias de `finanzas`.
+- **US3 (P2)**: requiere US1 (creación) para tener liquidaciones nuevas que listar y editar.
 
-### Orden recomendado
+### Within Each User Story
 
-```text
-Setup → Foundational → US1 → US2 → US5 → US3 → US4 → US6 → Polish → Revisión (Phase 10)
-```
+- Las pruebas se escriben primero y deben fallar antes de la implementación.
+- Configuración y autenticación antes que guardas y navegación.
+- Formulario y validación antes que el flujo de guardado.
+- Historia completa antes de pasar a la siguiente prioridad.
 
-US2 y US5 pueden avanzar en paralelo tras US1. US3 puede avanzar en paralelo con US2/US5 si se crean accesos por API. US4 requiere US3 y US5. US6 cierra el ciclo.
+### Parallel Opportunities
 
-### Dentro de cada historia
-
-- Las pruebas se escriben antes o junto con la implementación y deben fallar antes de implementar.
-- Primero el módulo de lógica (`auth.js`, `session.js`, `access-storage.js`, `payroll.js`), luego el componente, luego el marcado en `index.html` y finalmente el cableado en `src/app.js`.
-- Cada historia termina con su checkpoint validado de forma independiente.
-
-### Oportunidades de paralelización
-
-- Setup: T001–T004 en paralelo.
-- Foundational: T005–T009 en paralelo; T013, T014 y T015 en paralelo; T010–T012 son secuenciales entre sí.
-- US1: T019 y T020 en paralelo.
-- US2: T025 y T026 en paralelo.
-- US5: T031–T036 en paralelo; T037–T040 son secuenciales.
-- US3: T041–T044 en paralelo.
-- US4: T048–T050 en paralelo.
-- US6: T057–T060 en paralelo.
-- Polish: T066–T069 en paralelo.
-- Revisión (Phase 10): T079–T088 en paralelo por archivos distintos; T089–T090, T098–T101 y T102–T105 son secuenciales por solapamiento de archivos; T106–T109 se ejecutan después de las correcciones de US1/US2/US7.
+- Todas las tareas de Setup marcadas `[P]` pueden ejecutarse en paralelo.
+- Dentro de Foundational, T003–T005 (archivos de prueba distintos) en paralelo.
+- Dentro de US2, T009–T013 (archivos de prueba distintos) en paralelo; T016, T018 y T021 (archivos fuente distintos) en paralelo.
+- Dentro de US1, T027 y T028 (archivos distintos) en paralelo; T023 en paralelo con T024.
+- Dentro de Polish, T036, T039 y T040 pueden prepararse en paralelo (la ejecución de `npm run check` es el cierre).
+- Las historias comparten `src/app.js`, `src/components/shell.js`, `index.html` e `tests/integration/payroll-admin.test.js`: ejecutarlas en secuencia US2 → US1 → US3 para evitar conflictos en esos archivos.
 
 ---
 
-## Parallel Example: User Story 5
+## Parallel Example: User Story 2
 
 ```text
-# Pruebas y componentes en paralelo
-Task: "T031 Crear tests/integration/invoice-separation.test.js"
-Task: "T032 Crear src/components/invoice-form.js"
-Task: "T033 Crear src/components/invoice-list.js"
-Task: "T034 Crear src/components/invoice-sale-form.js e invoice-sale-list.js"
-Task: "T035 Crear src/components/invoice-purchase-form.js e invoice-purchase-list.js"
-Task: "T036 Crear src/components/invoice-status-notice.js"
+# Launch all tests for User Story 2 together (different files):
+Task: "Actualizar tests/integration/finanzas-permissions.test.js"
+Task: "Actualizar tests/integration/access-admin-finanzas.test.js"
+Task: "Actualizar tests/integration/login-roles.test.js"
+Task: "Actualizar tests/integration/navigation-menu.test.js y tests/integration/us3-dashboard.test.js"
+Task: "Actualizar tests/unit/demo-data-ruts.test.js y tests/integration/demo-data.test.js"
+
+# Then implementation (independent files):
+Task: "Actualizar src/components/dashboard.js"
+Task: "Actualizar index.html"
+Task: "Actualizar src/components/invoice-status-notice.js"
+```
+
+---
+
+## Parallel Example: User Story 1
+
+```text
+# Launch tests for User Story 1 together:
+Task: "Actualizar tests/unit/payroll-settlements-storage.test.js"
+Task: "Actualizar tests/integration/payroll-admin.test.js"
+Task: "Actualizar tests/integration/login-roles.test.js"
+
+# Then implementation (independent files first):
+Task: "Actualizar src/validation.js"
+Task: "Actualizar src/components/invoice-form.js"
+# Then dependent flow:
+Task: "Actualizar src/payroll.js"
+Task: "Actualizar src/app.js"
+Task: "Actualizar src/components/shell.js"
 ```
 
 ---
 
 ## Implementation Strategy
 
-### MVP mínimo (US1)
+### MVP First (User Story 1 como capacidad principal)
 
 1. Completar Phase 1: Setup.
-2. Completar Phase 2: Foundational (CRÍTICO, con pruebas T005–T009 primero).
-3. Completar Phase 3: US1 (login por rol).
-4. **DETENERSE y VALIDAR**: probar el login con un acceso creado por API o por prueba.
+2. Completar Phase 2: Foundational (CRÍTICO - bloquea todas las historias).
+3. Completar Phase 3: US2 (absorción, para dejar la matriz y la navegación en dos roles).
+4. Completar Phase 4: US1 (creación con RUT + nombre completo) → 🎯 MVP del cambio.
+5. **PARAR y VALIDAR**: probar US1 de forma independiente con `quickstart.md`.
+6. Completar Phase 5: US3 (listado con buscador por RUT).
 
-### MVP demostrable
+### Incremental Delivery
 
-1. Setup + Foundational.
-2. US1 (login) + US2 (administración de accesos) + US5 (separación de facturas).
-3. Cargar accesos y compras de prueba y demostrar login, alta de accesos y separación.
+1. Setup + Foundational → núcleo de roles listo.
+2. US2 → la suite y la interfaz ya no conocen `finanzas`.
+3. US1 → el administrador crea liquidaciones con alta automática del trabajador (MVP).
+4. US3 → el listado se busca y edita por RUT.
+5. Polish → `npm run check`, `npm run build` y escenarios manuales.
 
-### Entrega incremental
+### Parallel Team Strategy
 
-1. Setup + Foundational → base lista.
-2. US1 → login funcional.
-3. US2 → accesos administrables.
-4. US5 → facturas separadas y aviso de migración.
-5. US3 → vista del trabajador.
-6. US4 → edición y asociación desde el administrador.
-7. US6 → cierre de sesión, avisos y demostración.
-8. Polish → documentación y verificación final.
+Con varios desarrolladores:
 
-### Estrategia con varios desarrolladores
-
-1. Todo el equipo completa Setup + Foundational.
-2. Tras Foundational:
-   - Desarrollador A: US1 y luego US2.
-   - Desarrollador B: US5.
-   - Desarrollador C: US3 y luego US4.
-3. Al terminar US1, integrar y desbloquear US2/US3.
-4. Cerrar con US6 y Polish en conjunto.
+1. El equipo completa Setup + Foundational juntos.
+2. Una vez finalizada Foundational:
+   - Desarrollador A: US2 (absorción).
+   - Desarrollador B: US1 (creación) tras la limpieza de US2, o en paralelo sobre archivos distintos (`src/validation.js`, `src/components/invoice-form.js`, `tests/unit/payroll-settlements-storage.test.js`).
+3. US3 se ejecuta al final sobre los archivos compartidos.
 
 ---
 
 ## Notes
 
-- `[P]` indica archivos distintos sin dependencias pendientes.
-- `[USn]` permite trazar cada tarea a su historia y validarla por separado.
-- Las pruebas son obligatorias por la Constitución (principio II) y por la especificación.
-- Verificar que las pruebas fallan antes de implementar cuando sea posible.
-- Confirmar en cada checkpoint que un trabajador no puede ver datos ajenos ni vistas administrativas.
-- Evitar tareas vagas, conflictos sobre el mismo archivo y dependencias que rompan la independencia de las historias.
-- Phase 10 conserva T001–T078 tal cual; cuando una tarea antigua contradice la revisión, la nueva tarea incluye una nota `corrige T0xx`.
-- El MVP corregido exige US1 sin invitado y US7 con el rol finanzas antes de dar por terminada la revisión.
-- Pruebas e2e: el principio II de la Constitución las espera por defecto, pero `plan.md` registra la desviación heredada de `001` (solo Vitest/jsdom). La cobertura crítica se compensa con pruebas unitarias y de integración en T112–T141.
-
-
-
-## Revisión de HU1 del 2026-11-17
-
-- [X] T074 [US1] Adaptar `src/auth.js` y sus pruebas para reconocer el rol del acceso registrado a partir de RUT y contraseña, conservando los rechazos y notificaciones existentes. Nota: superada por T079, T091 y T094.
-- [X] T075 [US1] Rediseñar `src/components/login.js`, `index.html` y `src/styles.css` con tarjeta centrada, dos campos, dos acciones, aviso académico y lateral oculto sin columna reservada. Nota: superada por T080, T092, T093 y T097.
-- [X] T076 [US1] Mostrar el rol en la cabecera y colocar `nav-login` / `nav-logout` al final del lateral; conservar destinos, funciones y permisos por rol en `src/components/shell.js` y `src/app.js`. Nota: superada por T095 y T103.
-- [X] T077 [US1] Conservar la carga de demostración en el panel de invitado, documentar sus credenciales y actualizar los contratos e instrucciones de uso. Nota: superada por T079, T082, T090, T092 y T096.
-- [X] T078 [US1] Ejecutar pruebas de acceso y sesión, verificaciones completas y build; registrar cualquier limitación de verificación visual.
-
----
-
-## Phase 10: Revisión de seguridad y privacidad (correcciones pendientes)
-
-**Propósito**: eliminar el modo invitado, incorporar el rol `finanzas`, mover la carga de demostración a la pantalla de acceso, corregir los RUT de demostración y documentar los riesgos conocidos.
-
-**⚠️ Conservación**: T001–T078 se mantienen con su ID y estado. Las tareas antiguas que contradicen la revisión se corrigen con nuevas tareas T079 en adelante; no se renumera ni se desmarca ninguna.
-
-### Pruebas de la revisión (TDD — escribir primero; deben fallar)
-
-> **NOTA**: ejecutar estas pruebas antes de las correcciones de implementación y confirmar que fallan por las condiciones nuevas.
-
-- [X] T079 [P] [US1] Crear `tests/integration/no-guest-access.test.js` para verificar que no existen `login-guest`, `nav-login`, `dashboard-guest-note` ni `Rol: Invitado`, que `canAccess`/`resolveRoute` no aceptan `invitado`, y que toda vista distinta de `login` sin sesión redirige a `login` sin exponer datos; retirar `tests/integration/optional-login.test.js`. Nota: corrige T019, T020, T021, T074 y T077, que conservan el modo invitado.
-- [X] T080 [P] [US1] Actualizar `tests/integration/login-roles.test.js` para esperar `login-submit` y `login-demo-load` en lugar de `login-guest`, cubrir administrador, finanzas y trabajador, incluir casos de RUT vacío y contraseña vacía, y comprobar que no hay selector de rol. Nota: corrige T019 y T075.
-- [X] T081 [P] [US6] Crear `tests/unit/demo-data-ruts.test.js` con administrador `88.888.888-8`/`8888`, finanzas `55.555.555-5`/`5555`, trabajadores `22.222.222-2`/`2222` y `45.000.000-0`/`4500`, administrador distinto de todo `taxId` de entidades, ausencia de `11.111.111-1` y `45.000.000-5`, e idempotencia. Nota: corrige T059 y T063.
-- [X] T082 [P] [US6] Crear `tests/integration/demo-from-login.test.js` para pulsar `login-demo-load` desde `view-login`, comprobar que se permanece en el acceso, que `loadSession()` es `null`, que el lateral sigue oculto y que no se muestran datos de negocio; después probar los cuatro RUT. Nota: corrige T064 y T077, que cargaban la demostración desde el panel de invitado.
-- [X] T083 [P] [US2] Crear `tests/unit/finanzas-role.test.js` para verificar que `ROLES` incluye `finanzas`, que `validateAccessRecord` lo acepta sin `entityId` y lo rechaza con `entityId`, que `initialPassword('55.555.555-5')` es `5555`, y que `authenticate` e `isSessionValid` lo reconocen. Nota: corrige T001, T007, T013 y T014.
-- [X] T084 [P] [US7] Crear `tests/integration/finanzas-permissions.test.js` para entrar con `55.555.555-5`, comprobar exactamente los módulos permitidos y denegados de `contracts/payroll-views.md`, editar terceros, facturas, liquidaciones, movimientos y flujo de caja, y bloquear `access`, `dev-notifications` y `payroll-worker`. Nota: nuevo US7 derivado de FR-036 y FR-037.
-- [X] T085 [P] [US7] Actualizar `tests/integration/payroll-admin.test.js` para ejecutar lista, filtros y edición también con sesión de finanzas, y verificar que la acción de asociar un acceso con el RUT quede restringida a administrador. Nota: corrige T048 y T053, que solo consideraban al administrador.
-- [X] T086 [P] [US2] Crear `tests/integration/access-admin-finanzas.test.js` para que el administrador cree un acceso de finanzas desde `#access-role` sin `#access-entity`, verificar la lista con el rol y comprobar que finanzas no puede abrir `view-access`. Nota: corrige T025, T026 y T027, cuyo selector solo ofrecía trabajador y administrador.
-- [X] T087 [P] [US6] Crear `tests/integration/security-warnings.test.js` para verificar en `login-warning`, `access-warning`, `payroll-worker` y `README.md` los textos sobre control solo de interfaz, contraseña inicial sin cambio y prohibición de datos reales. Nota: corrige T065, T066 y T073, que no documentaban el riesgo de contraseña inmutable.
-- [X] T088 [P] [US6] Actualizar `tests/integration/demo-data.test.js` con los cuatro accesos, las credenciales revisadas, la carga desde `login-demo-load`, la idempotencia y la comprobación de que el RUT del administrador no coincide con terceros. Nota: corrige T059 y T063.
-- [X] T089 [US1] Actualizar `tests/setup/domFixture.js`, `tests/unit/auth.test.js`, `tests/unit/access-storage.test.js`, `tests/unit/session.test.js`, `tests/unit/payroll.test.js` y `tests/integration/session-lifecycle.test.js` para sustituir `11.111.111-1`/`1111` por `88.888.888-8`/`8888`, `45.000.000-5` por `45.000.000-0`, agregar una fixture de sesión de finanzas e incluir casos de RUT vacío y contraseña vacía en las pruebas de autenticación. Nota: corrige T063 y las fixtures derivadas de T006/T014.
-- [X] T090 [US7] Actualizar `tests/integration/us3-dashboard.test.js` para retirar expectativas sobre `qa-load-demo` y `dashboard-guest-note`, y verificar que `qa-new-payroll` aparece para administrador y finanzas. Nota: corrige T039, T064 y T077.
-
-### Correcciones de US1: acceso obligatorio y demostración en el acceso
-
-- [X] T091 [US1] Eliminar `GUEST_ROLE`, `createGuestSession` e `isGuestSession` de `src/session.js` y hacer que `isSessionValid` rechace cualquier sesión sin un acceso registrado válido. Nota: corrige T006, T014 y T074.
-- [X] T092 [US1] Reescribir `src/components/login.js` para eliminar `login-guest`, agregar `login-demo-load` y `demo-status`, actualizar `login-no-accesses` con «Cargar demostración» y ampliar `login-warning` con el riesgo de contraseña inicial sin cambio. Nota: corrige T020, T021 y T077.
-- [X] T093 [US1] Actualizar `index.html` para eliminar `nav-login` y `dashboard-guest-note`, dejando `#view-login` como única vista sin sesión y `#nav-logout` como acción de sesión. Nota: corrige T021, T061 y T075.
-- [X] T094 [US1] Actualizar `src/app.js` para eliminar importaciones y ramas de invitado, quitar la columna `invitado` de `ACCESS_MATRIX`, devolver `login` desde `canAccess`/`resolveRoute` sin sesión válida y limpiar la sesión en `showLogin`. Nota: corrige T016, T022 y T074.
-- [X] T095 [US1] Actualizar `src/components/shell.js` para eliminar `GUEST_MODULES`, `onLogin`, `isGuestSession`, la etiqueta `Rol: Invitado` y `nav-login`, dejando `nav-logout` como última opción para las tres sesiones válidas. Nota: corrige T017, T061 y T076.
-- [X] T096 [US1] Actualizar `src/components/dashboard.js` para eliminar `isGuestSession`, `dashboard-guest-note`, `qa-load-demo` y `onLoadDemoData`, y condicionar `qa-new-payroll` a las sesiones de administrador y finanzas. Nota: corrige T039, T064 y T077.
-- [X] T097 [US1] Actualizar `src/styles.css` para retirar los estilos de `#login-guest` y `dashboard-guest-note`, y agregar los estilos de `login-demo-load`, `demo-status` y `session-role`. Nota: corrige T003 y T075.
-
-### Correcciones de US2: rol finanzas en la administración de accesos
-
-- [X] T098 [US2] Extender `src/module-config.js` con `finanzas` en `ROLES`, las credenciales de demostración `88.888.888-8`/`8888` y `55.555.555-5`/`5555`, y el RUT de trabajador canónico `45000000-0`. Nota: corrige T001 y T063.
-- [X] T099 [US2] Actualizar `src/auth.js` para aceptar `finanzas` en `validateAccessRecord`, exigir ausencia de `entityId` para administrador y finanzas, y ajustar el mensaje `ROLE_INVALID` a los tres roles. Nota: corrige T013 y T026.
-- [X] T100 [US2] Actualizar `src/components/access-admin.js` para ofrecer `finanzas` en `#access-role`, ocultar y limpiar `#access-entity` para roles sin tercero personal, y mostrar el rol en `#access-list`; conservar notificaciones y protección del último administrador. Nota: corrige T026 y T027.
-- [X] T101 [US2] Actualizar `index.html` para incluir la opción `finanzas` en el selector estático `#access-role`. Nota: corrige T027.
-
-### Correcciones de US7: permisos de finanzas
-
-- [X] T102 [US7] Ampliar `ACCESS_MATRIX` y `resolveRoute` en `src/app.js` con la columna `finanzas` según `contracts/payroll-views.md`: facturación sí, `access`/`dev-notifications`/`payroll-worker` no, con redirección a `dashboard` o `payroll-admin` según el caso. Nota: nuevo US7; depende de T094.
-- [X] T103 [US7] Agregar `FINANCE_MODULES` en `src/components/shell.js` y la etiqueta `Rol: Finanzas`, sin `access`, `dev-notifications`, `payroll-worker` ni `nav-login`. Nota: nuevo US7; depende de T095.
-- [X] T104 [US7] Ajustar `src/components/payroll-list.js` y `src/app.js` para que finanzas vea, filtre y edite liquidaciones, mientras la acción de asociar un acceso por RUT quede restringida a administrador. Nota: corrige T053 y T055; nuevo US7.
-- [X] T105 [US7] Ajustar `src/components/invoice-status-notice.js` y `src/app.js` para que el aviso de migración y documentos no clasificados se muestre solo al administrador, no a finanzas. Nota: nuevo US7; cubre FR-028.
-
-### Correcciones de US6: demostración y riesgos conocidos
-
-- [X] T106 [US6] Extender `src/demo-data.js` con el acceso de finanzas `55.555.555-5`/`5555`, actualizar el administrador a `88.888.888-8`/`8888`, reemplazar `45.000.000-5` por `45.000.000-0` y hacer que `hasStoredRecords()` también revise `erp.accessRecords`. Nota: corrige T059 y T063.
-- [X] T107 [US6] Conectar en `src/components/login.js` y `src/app.js` el botón `login-demo-load` con `loadDemoData`, actualizar `demo-status`, permanecer en `#view-login`, no crear sesión ni abrir vistas y conservar la carga idempotente. Nota: corrige T064 y T077; depende de T092 y T094.
-- [X] T108 [US6] Actualizar `src/components/login.js`, `src/components/access-admin.js`, `src/components/payroll-worker.js` y `README.md` para documentar como riesgos conocidos la contraseña inicial inmutable y el control de acceso solo de interfaz, además de la prohibición de datos reales. Nota: corrige T065, T066 y T073.
-- [X] T109 [US6] Actualizar `README.md` con los cuatro RUT y contraseñas, la carga de demostración desde la pantalla de acceso, los permisos de finanzas y la nota de que T077 queda superada. Nota: corrige T066 y T077.
-
-### Polish de la revisión
-
-- [X] T110 [P] Actualizar `specs/001-erp-base-module/contracts/navigation-and-access.md` para registrar que `002` reemplaza el ingreso opcional por acceso obligatorio con tres roles. Nota: corrige T067, que solo cubría el almacenamiento.
-- [X] T111 Ejecutar `npm run check`, `npm test -- --run` y `npm run build`; corregir fallos en `src/`, `tests/` y documentación derivados de T079–T110, y verificar los diez escenarios de `specs/002-payroll-access-control/quickstart.md` sin modo invitado. Nota: corrige T071, T072 y T078.
-
-**Checkpoint de la revisión**: sin modo invitado, con demo cargable desde el acceso, tres roles con la matriz de `contracts/payroll-views.md`, riesgos documentados y pruebas T079–T090 ejecutadas antes de las correcciones.
-
----
-
-## Phase 11: Extensión fundacional — `LiquidacionSueldo` y backfill (2026-11-19)
-
-**Propósito**: persistir la liquidación en `erp.payrollSettlements`, crear el backfill idempotente desde `erp.purchaseInvoices` y reemplazar los resolvers basados solo en facturas. Bloquea US3, US4 y US6 de esta revisión.
-
-**⚠️ CRÍTICO**: ninguna tarea de Phase 12–14 puede completarse hasta terminar esta fase.
-
-**Orden TDD**: T112, T114 y T116 se escriben primero y deben fallar antes de T113, T115 y T117.
-
-### Pruebas de la extensión fundacional
-
-- [X] T112 [P] Crear `tests/unit/payroll-settlements-storage.test.js` con `loadPayrollSettlements`, `savePayrollSettlements`, unicidad de `settlementId`, dedupe por `documentId`, inclusión en `clearAll()` y `hasStoredRecords()`, sin cambiar `erp.schemaVersion` (`2.0.0`).
-- [X] T113 Extender `src/storage.js` con `STORAGE_KEYS.payrollSettlements`, `STORAGE_KEYS.migrationPayrollSettlements`, los helpers de carga/guardado y la limpieza de la nueva colección y su marca de migración.
-- [X] T114 [P] Crear `tests/integration/payroll-backfill.test.js` con backfill desde facturas de compra a terceros personales, dedupe por `documentId`, desglose inicial en `0`, respeto de desgloses ya registrados, idempotencia y marca `erp.migration.payrollSettlements`.
-- [X] T115 Implementar `backfillPayrollSettlements()` en `src/storage.js` según `contracts/invoice-separation.md` e invocarlo desde la inicialización junto con `migrateLegacyDocuments()`.
-- [X] T116 [P] Crear `tests/unit/payroll-settlements.test.js` con `resolveWorkerSettlement`, `resolveWorkerPaymentHistory` y `resolveAdminSettlements` sobre `erp.payrollSettlements`, incluyendo desempate por `startDate`/`createdAt`, filtro `Pagada && fechaPago`, orden por `fechaPago` descendente con desempate por `periodo` descendente y filtros por trabajador/RUT y período.
-- [X] T117 Actualizar `src/payroll.js` para que los resolvers usen `settlements` como fuente principal y `purchaseInvoices` solo para desempate y datos de la factura vinculada, según `contracts/payroll-views.md`.
-- [X] T118 [P] Actualizar `src/validation.js` con la validación de `LiquidacionSueldo`: `settlementId` único, `documentId` existente en compras, `entityId` personal, `periodo` `YYYY-MM`, desglose `>= 0`, `monto > 0`, `estado` espejo y `fechaPago` `YYYY-MM-DD` o `null`.
-- [X] T119 [P] Actualizar `tests/setup/dom.js` para limpiar `erp.payrollSettlements` y `erp.migration.payrollSettlements` entre pruebas.
-
-**Checkpoint**: la entidad existe, el backfill es idempotente y los resolvers devuelven última liquidación e historial sin depender de una proyección de la factura.
-
----
-
-## Phase 12: User Story 3 - Consultar mi liquidación y mi historial de pagos (Priority: P2, revisión 2026-11-19)
-
-**Goal**: el trabajador ve primero su última liquidación con sueldo base, descuentos, bonos, monto, estado y fecha, y debajo el historial de sus pagos ordenado por fecha de pago, sin datos ajenos ni acciones de edición.
-
-**Independent Test**: con dos trabajadores y liquidaciones distintas, cada sesión ve solo su última liquidación con desglose y su historial filtrado a `Pagada` con fecha de pago, ordenado de más reciente a más antiguo; Borrador/Emitida no aparecen en el historial.
-
-### Pruebas de User Story 3
-
-- [X] T120 [P] [US3] Actualizar `tests/integration/payroll-worker.test.js` para cubrir los ocho escenarios de HU3: desglose en la última liquidación, historial filtrado y ordenado, estados vacíos, solo lectura, bloqueo de vistas administrativas y aislamiento entre dos trabajadores.
-- [X] T121 [P] [US3] Crear `tests/integration/payroll-settlement-link.test.js` según `contracts/invoice-separation.md`: `documentId` apunta solo a una factura de compra, no se duplica por `documentId`, el historial excluye no pagadas y la última liquidación no exige `Pagada`.
-
-### Implementación de User Story 3
-
-- [X] T122 [P] [US3] Actualizar `src/components/payroll-worker.js` para renderizar el desglose y el historial con los IDs `payroll-worker-base-salary`, `payroll-worker-discounts`, `payroll-worker-bonuses`, `payroll-worker-history` y `payroll-worker-history-empty`, sin botones de edición.
-- [X] T123 [US3] Actualizar `index.html` con los elementos de desglose e historial dentro de `#view-payroll-worker`, incluyendo el mensaje de historial vacío.
-- [X] T124 [US3] Actualizar `src/app.js` para resolver la vista con `resolveWorkerSettlement` y `resolveWorkerPaymentHistory` usando `session.entityId`, sin exponer liquidaciones de otros terceros.
-- [X] T125 [US3] Actualizar `src/styles.css` con estilos de tarjeta de desglose, tabla de historial y estados vacíos, legibles en escritorio y móvil.
-- [X] T126 [US3] Verificar en `tests/integration/payroll-worker.test.js` y `quickstart.md` que la última liquidación pueda estar en Borrador o Emitida, que el historial excluya pagos parciales y que no se muestre desglose en sus filas.
-
-**Checkpoint**: US3 es independientemente verificable y cumple FR-020, FR-042, FR-044, SC-002 y SC-015.
-
----
-
-## Phase 13: User Story 4 - Ver y editar liquidaciones con desglose (Priority: P2, revisión 2026-11-19)
-
-**Goal**: administrador y finanzas listan, filtran y editan `LiquidacionSueldo` junto con su factura de compra vinculada, manteniendo sincronizados `estado`, `fechaPago` y `monto`.
-
-**Independent Test**: con liquidaciones de dos trabajadores, ambos roles ven la lista con `documentId`, filtran por trabajador/RUT y período, editan el desglose, guardan sin saltarse el ciclo de vida y el cambio se refleja en la vista del trabajador correspondiente.
-
-### Pruebas de User Story 4
-
-- [X] T127 [P] [US4] Actualizar `tests/integration/payroll-admin.test.js` con los siete escenarios de HU4, la columna de factura vinculada, la edición del desglose y la sincronización del espejo al editar la factura, ejecutado con administrador y con finanzas.
-
-### Implementación de User Story 4
-
-- [X] T128 [P] [US4] Actualizar `src/components/payroll-list.js` para listar `LiquidacionSueldo` con trabajador, RUT, período, monto, estado, fecha de pago, `documentId` y acción Editar, aplicando filtros en memoria por trabajador/RUT y período.
-- [X] T129 [US4] Actualizar `src/components/payroll-form.js` para editar `periodo`, `sueldoBase`, `descuentos` y `bonos`, reutilizando `src/components/invoice-purchase-form.js` para la factura vinculada y sin crear liquidaciones huérfanas.
-- [X] T130 [US4] Actualizar `src/app.js` para guardar la liquidación, sincronizar `estado`, `fechaPago` y `monto` con `updateDocument` sobre `erp.purchaseInvoices`, actualizar `updatedAt` y refrescar la vista del trabajador.
-- [X] T131 [US4] Ajustar `src/components/payroll-list.js` y `src/app.js` para usar `AccessRecord.entityId === LiquidacionSueldo.entityId` en la asociación RUT↔acceso, manteniéndola restringida al administrador.
-- [X] T132 [US4] Actualizar `index.html` con los campos de desglose en `payroll-form` y la columna de factura vinculada en `payroll-admin-list`.
-
-**Checkpoint**: US3 y US4 comparten la misma fuente de verdad con permisos distintos y sin duplicar la factura.
-
----
-
-## Phase 14: User Story 6 - Demostración con desglose e historial (Priority: P3, revisión 2026-11-19)
-
-**Goal**: la carga de demostración desde el acceso siembra liquidaciones con desglose y al menos dos pagos por trabajador, sin duplicar datos ni iniciar sesión.
-
-**Independent Test**: en un navegador vacío se pulsa «Cargar demostración», se permanece en el login y, al entrar como trabajador, se ven desglose e historial con fechas de pago distintas; cargar dos veces no duplica registros.
-
-### Pruebas de User Story 6
-
-- [X] T133 [P] [US6] Actualizar `tests/unit/demo-data-ruts.test.js` y `tests/integration/demo-data.test.js` para verificar desglose en la liquidación vigente de cada trabajador y al menos dos liquidaciones pagadas con fechas distintas.
-
-### Implementación de User Story 6
-
-- [X] T134 [US6] Actualizar `src/demo-data.js` para sembrar `erp.payrollSettlements` con desglose y al menos dos liquidaciones pagadas por trabajador, manteniendo la idempotencia y `hasStoredRecords()`.
-- [X] T135 [US6] Actualizar `src/module-config.js` para exponer la clave `erp.payrollSettlements` y la marca `erp.migration.payrollSettlements` en la configuración de demostración y migración.
-- [X] T136 [US6] Actualizar `tests/integration/demo-from-login.test.js` para comprobar que la carga desde el login siembra `erp.payrollSettlements` sin crear sesión ni abrir vistas.
-
-**Checkpoint**: la demostración cubre desglose e historial sin duplicados y sin modo invitado.
-
----
-
-## Phase 15: Polish y verificación de la revisión 2026-11-19
-
-**Propósito**: documentación, verificación y cierre de calidad de la revisión de liquidaciones.
-
-- [X] T137 [P] Actualizar `specs/002-payroll-access-control/checklists/requirements.md` para reemplazar la nota obsoleta «sin almacenamiento propio» por la referencia a `LiquidacionSueldo` en `erp.payrollSettlements`.
-- [X] T138 [P] Actualizar `specs/002-payroll-access-control/plan.md` para reflejar que `tasks.md` fue regenerado con Phase 11–15 y que la desviación e2e sigue registrada.
-- [X] T139 [P] Actualizar `README.md` y `quickstart.md` para documentar `erp.payrollSettlements`, desglose, historial pagado y backfill idempotente.
-- [X] T140 Ejecutar `npm run check` y `npm run build`, corrigiendo fallos derivados de T112–T139 en `src/`, `tests/` y documentación.
-- [X] T141 Ejecutar los escenarios de `quickstart.md` para desglose, historial ordenado, backfill idempotente y aislamiento entre trabajadores, registrando el resultado de cada uno.
-
-**Checkpoint final**: spec, plan, tasks, contratos y código describen la misma entidad persistente y la misma vista del trabajador.
-
----
-
-## Dependencias de la revisión 2026-11-19
-
-- **Phase 11** depende de la revisión de datos de `data-model.md` y `contracts/`; bloquea Phase 12, Phase 13 y Phase 14.
-- **US3 (Phase 12)** depende de Phase 11 por los resolvers y del acceso de US1 por la sesión; es prerrequisito directo de US4.
-- **US4 (Phase 13)** depende de US3 y de US5 por `invoice-purchase-form.js`; finanzas hereda los permisos definidos en US7.
-- **US6 (Phase 14)** depende de Phase 11 y US3 para sembrar desglose e historial válidos.
-- **Phase 15** depende de Phase 11–14.
-
-### Oportunidades de paralelización (revisión 2026-11-19)
-
-- Phase 11: T112, T114, T116, T118 y T119 en paralelo por archivos distintos; T113 → T115 → T117 son secuenciales por solapamiento en `src/storage.js` y `src/payroll.js`.
-- US3: T120 y T121 en paralelo; luego T122 en paralelo con T125; T123, T124 y T126 son secuenciales por solapamiento en `index.html`, `src/app.js` y pruebas.
-- US4: T127 y T128 en paralelo; T129, T130, T131 y T132 se ordenan por dependencia de formulario, guardado, asociación y marcado.
-- US6: T133 y T136 en paralelo; T134 y T135 después de T133.
-- Phase 15: T137, T138 y T139 en paralelo; T140 y T141 al final.
-
-### Estrategia incremental (revisión 2026-11-19)
-
-1. Completar Phase 11 y validar el backfill dos veces seguidas.
-2. Completar Phase 12 (US3) y detenerse a validar desglose e historial con dos trabajadores.
-3. Completar Phase 13 (US4) y verificar que el cambio del administrador/finanzas se refleje en US3.
-4. Completar Phase 14 (US6) y comprobar la demo desde el login.
-5. Cerrar con Phase 15 y `npm run check` + `npm run build`.
-
----
-
-## Phase 16: Cambio de navegación del 2026-11-21 (commit `d4d9eed`)
-
-**Propósito**: registrar las tareas ya implementadas por Elías Zavala para reemplazar la barra lateral fija por el menú desplegable «Utilidades & Sesión» con botón ☰, y reorganizar los accesos operativos en una grilla del Panel según el rol, conforme a la sesión de Clarifications del 2026-11-23.
-
-**⚠️ Conservación**: T001–T141 se mantienen con su ID y estado. Las nuevas tareas T142–T147 se agregan sin renumerar ni desmarcar ninguna tarea anterior y sin cambiar permisos ni otras reglas.
-
-**Checkpoint de la fase**: el menú ☰ muestra «Control de accesos» y «Avisos al desarrollador» solo al administrador, «Cerrar sesión» es la última opción para los tres roles, el trabajador solo tiene «Cerrar sesión» en el menú, y el Panel presenta en grilla los ocho accesos operativos según el rol.
-
-- [X] T142 [P] [US1] Agregar en `index.html` el botón `#menu-toggle` (☰) en la cabecera, `#utilities-overlay`, `#utilities-menu` con el título «Utilidades & Sesión», las opciones `#menu-access`, `#menu-dev-notifications`, `#menu-separator` y `#menu-logout` como última opción, y `#back-bar` con `#back-to-dashboard`, manteniendo `#sidebar` oculto. Nota: implementada en d4d9eed por Elías Zavala.
-- [X] T143 [US1] Implementar en `src/components/shell.js` la apertura y cierre accesible del menú ☰ (`aria-expanded`, foco en el primer ítem visible, Escape y overlay), la visibilidad por rol (`#menu-access` y `#menu-dev-notifications` solo para administrador; `#menu-logout` para administrador, finanzas y trabajador como última opción) y la navegación de retorno al Panel desde `#back-to-dashboard`, sin alterar la matriz de permisos. Nota: implementada en d4d9eed por Elías Zavala.
-- [X] T144 [US1] Reorganizar en `index.html` y `src/components/dashboard.js` los ocho accesos operativos del Panel en la grilla `.quick-actions` (`qa-manage-entities`, `qa-new-invoice-sale`, `qa-new-invoice-purchase`, `qa-new-payroll`, `qa-tracking`, `qa-cashflow`, `qa-movements` y `qa-search`), actualizando etiquetas y bindings y conservando `qa-new-payroll` solo para administrador y finanzas. Nota: implementada en d4d9eed por Elías Zavala.
-- [X] T145 [P] [US1] Actualizar `src/styles.css` para usar ancho completo sin barra lateral fija y dar estilo responsivo al botón ☰, el overlay, el menú desplegable, el separador, la opción de cierre, la barra de retorno y la grilla `.quick-actions` en escritorio y móvil. Nota: implementada en d4d9eed por Elías Zavala.
-- [X] T146 [P] [US1] Registrar en `README.md` el cambio de navegación del 21-11-2026: menú «Utilidades & Sesión» adaptado por rol y grilla responsiva de los ocho accesos del Panel. Nota: implementada en d4d9eed por Elías Zavala.
-- [X] T147 [P] [US1] Crear `tests/integration/navigation-menu.test.js` que verifique por rol las opciones del menú ☰ (administrador: «Control de accesos», «Avisos al desarrollador» y «Cerrar sesión» como última; finanzas y trabajador: solo «Cerrar sesión») y la grilla del Panel con los ocho accesos operativos para administrador y finanzas, incluyendo apertura/cierre con `aria-expanded`, foco, Escape, retorno al Panel y ausencia de grilla para el trabajador, sin modificar la matriz de permisos.
-
-### Dependencias del cambio de navegación
-
-- T142, T143, T145, T146 y T147 pueden ejecutarse en paralelo por archivos distintos.
-- T144 comparte `index.html` con T142 y debe ejecutarse después de T142.
-- T147 es la prueba de verificación independiente de Phase 16 y depende del resultado de T142–T146 para ejecutarse contra la implementación final.
+- `[P]` = archivos distintos, sin dependencias pendientes.
+- `[Story]` vincula la tarea con la historia de usuario para trazabilidad.
+- Cada historia debe poder completarse y verificarse de forma independiente.
+- Verificar que las pruebas fallan antes de implementar.
+- Confirmar después de cada tarea o grupo lógico con `npm run check`.
+- Detenerse en cada checkpoint para validar la historia de forma independiente.
+- Evitar: tareas vagas, conflictos en el mismo archivo y dependencias entre historias que rompan la independencia.

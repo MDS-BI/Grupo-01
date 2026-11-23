@@ -5,12 +5,12 @@
 
 ## 1. Resolución de la liquidación
 
-La liquidación se registra en la entidad persistida `LiquidacionSueldo`, almacenada en `localStorage` bajo la clave `erp.payrollSettlements` (versión de esquema `2.0.0`). Cada registro se vincula por `documentId` a una factura de compra a un tercero de tipo personal; la factura sigue siendo el comprobante de pago y la entidad guarda el desglose. El trabajador ve la última liquidación con su desglose y, debajo, el historial de sus pagos.
+La liquidación se registra en la entidad persistida `LiquidacionSueldo`, almacenada en `localStorage` bajo la clave `erp.payrollSettlements` (versión de esquema `2.0.0`). Cada registro se vincula por `entityId` a un tercero de tipo personal y, cuando existe, por `documentId` a una factura de compra; el alta directa con RUT nuevo crea la liquidación sin factura (`documentId: null`). La factura de compra sigue siendo el comprobante de pago y la entidad guarda el desglose. El trabajador ve la última liquidación con su desglose y, debajo, el historial de sus pagos.
 
 ```js
 {
   settlementId: "set_abc123",        // único
-  documentId: "doc_abc123",          // FK a PurchaseInvoice.document_id
+  documentId: "doc_abc123",          // FK a PurchaseInvoice.document_id; null en el alta directa
   entityId: "ent_abc123",            // tercero personal
   periodo: "2026-11",                // YYYY-MM
   sueldoBase: 1000000,
@@ -24,13 +24,13 @@ La liquidación se registra en la entidad persistida `LiquidacionSueldo`, almace
 }
 ```
 
-`estado`, `fechaPago` y `monto` reflejan la factura de compra vinculada y se sincronizan al editarla.
+`estado`, `fechaPago` y `monto` reflejan la factura de compra vinculada cuando la liquidación tiene factura; sin factura (`documentId: null`), se guardan y editan en la propia liquidación.
 
 ```js
 resolveWorkerSettlement({ entityId, settlements, purchaseInvoices }): LiquidacionSueldo | null
 resolveWorkerPaymentHistory({ entityId, settlements }): LiquidacionSueldo[]
 resolveAdminSettlements({ settlements, purchaseInvoices, entities, filters }): LiquidacionSueldo[]
-// También se usa con sesión de rol `finanzas`; el trabajador nunca la invoca.
+// También se usa con sesión de rol `administrador`; el trabajador nunca la invoca.
 ```
 
 **Regla de la última liquidación del trabajador**:
@@ -44,7 +44,7 @@ resolveAdminSettlements({ settlements, purchaseInvoices, entities, filters }): L
 2. Ordenar por `fechaPago` descendente y desempatar por `periodo` descendente.
 3. Cada fila muestra fecha de pago, período, monto y estado; el desglose solo aparece en la última liquidación.
 
-**Regla del administrador y de finanzas**:
+**Regla del administrador**:
 1. Incluir todas las `LiquidacionSueldo`, cada una con su factura de compra vinculada.
 2. Aplicar filtros opcionales por `entityId`/RUT y por `periodo`.
 3. Ordenar por período descendente y luego por nombre de trabajador.
@@ -81,13 +81,13 @@ resolveAdminSettlements({ settlements, purchaseInvoices, entities, filters }): L
 - Si la sesión no tiene un `entityId` válido, se cierra la sesión y se vuelve al login con un mensaje.
 - No se muestra la navegación administrativa.
 
-## 3. Vista del administrador y de finanzas: "Liquidaciones de sueldo"
+## 3. Vista del administrador: "Liquidaciones de sueldo"
 
 **Elementos requeridos en `index.html`**:
 
 | Elemento | ID | Función |
 |---|---|---|
-| Vista | `view-payroll-admin` | Solo administrador y finanzas. |
+| Vista | `view-payroll-admin` | Solo administrador. |
 | Filtro por trabajador/RUT | `payroll-filter-worker` | Selector o texto. |
 | Filtro por período | `payroll-filter-period` | `YYYY-MM` o selector. |
 | Lista | `payroll-admin-list` | Tabla de liquidaciones. |
@@ -107,14 +107,38 @@ resolveAdminSettlements({ settlements, purchaseInvoices, entities, filters }): L
 - Acción "Editar".
 
 **Comportamiento**:
-- Solo se muestra con sesión de rol `administrador` o `finanzas`.
+- Solo se muestra con sesión de rol `administrador`.
 - La lista incluye todas las `LiquidacionSueldo` y su factura de compra vinculada por `documentId`.
 - Los filtros se aplican en memoria y no modifican los datos.
 - "Editar" carga la liquidación y su factura vinculada: permite modificar el desglose (`periodo`, `sueldoBase`, `descuentos`, `bonos`) y, en el formulario de compra, período, monto, estado, fechas y datos de pago.
 - Al guardar se sincronizan `estado`, `fechaPago` y `monto` con la factura y se actualiza `updatedAt`.
 - El formulario respeta el ciclo de vida y las validaciones de `001`.
 - Al guardar, la vista del trabajador correspondiente refleja el cambio en el siguiente refresco.
-- No se permite crear una liquidación desde esta vista sin su factura de compra a un tercero personal; para eso se usa la vista de facturas de compra.
+- La pestaña de creación registra la liquidación sin factura de compra previa, junto con la entidad personal y el acceso del trabajador cuando el RUT es nuevo. Al editar una liquidación que ya tiene factura de compra, el formulario carga factura y liquidación juntos y la factura sigue siendo el comprobante de pago; si la liquidación no tiene factura (`documentId: null`), el formulario edita directamente la entidad en `erp.payrollSettlements` (desglose, monto, estado y fecha de pago) sin espejo.
+
+### 3.1 Pestaña de creación de liquidaciones
+
+**Elementos requeridos en `index.html`**:
+
+| Elemento | ID | Función |
+|---|---|---|
+| Vista | `view-payroll-create` | Pestaña «Nueva liquidación»; solo administrador. |
+| Menú | `nav-payroll-create` | Entrada «Nueva liquidación» del lateral; solo administrador. |
+| Formulario | `payroll-create-form` | Reutiliza la fábrica `createInvoiceForm` en modo creación (factura de compra). |
+| RUT | `payroll-create-rut` | Texto; sustituye al selector «Tercero». Acepta puntos, guion y K. |
+| Nombre completo | `payroll-create-name` | Texto; sustituye al selector «Tercero». |
+| Título | `payroll-create-title` | «Nueva liquidación de sueldo». |
+| Guardar | `payroll-create-submit` | Guarda la liquidación y, si el RUT es nuevo, el alta completa. |
+| Cancelar | `payroll-create-cancel` | Limpia el formulario. |
+| Errores | `payroll-create-errors` | `role="alert"`; errores de validación. |
+
+**Comportamiento**:
+- Solo se muestra con sesión de rol `administrador`; la guarda vive en la matriz de la sección 5.
+- El formulario conserva los campos del formulario de facturas (período, monto, estado y datos de pago) pero muestra «RUT» y «Nombre completo» en lugar del selector «Tercero».
+- Si el RUT es nuevo y válido: se crea la entidad personal (`Entity` con `tipoTercero = personal`), el acceso con rol `trabajador` y contraseña inicial de los primeros 4 dígitos del cuerpo del RUT, y la `LiquidacionSueldo` con `documentId: null`, `estado: "Borrador"`, `fechaPago: null` y `createdAt`/`updatedAt` actuales.
+- Si el RUT ya tiene un acceso activo: no se crean entidad ni acceso nuevos; la liquidación se registra vinculada a la entidad y al acceso existentes.
+- Si el RUT es inválido, pertenece a un tercero que no es personal, o el acceso ya existe inactivo o duplicado, se muestra el error en `payroll-create-errors` y no se crea ningún registro (ni entidad, ni acceso, ni liquidación); la misma atomicidad aplica cuando falla cualquier otro paso de validación.
+- «Cancelar» limpia los campos y errores sin guardar.
 
 ## 4. Asociación RUT ↔ acceso de trabajador
 
@@ -142,26 +166,27 @@ resolveRoute(view, session): string
 
 **Matriz de acceso**:
 
-| Vista | Administrador | Finanzas | Trabajador |
-|---|---|---|---|
-| `login` | Solo sin sesión | Solo sin sesión | Solo sin sesión |
-| `dashboard` | Sí | Sí | No |
-| `entities` | Sí | Sí | No |
-| `invoice-sale` | Sí | Sí | No |
-| `invoice-purchase` | Sí | Sí | No |
-| `payroll-admin` | Sí | Sí | No |
-| `access` | Sí | No | No |
-| `dev-notifications` | Sí | No | No |
-| `movements` | Sí | Sí | No |
-| `cashflow` | Sí | Sí | No |
-| `tracking` | Sí | Sí | No |
-| `search` | Sí | Sí | No |
-| `payroll-worker` | No | No | Sí |
+| Vista | Administrador | Trabajador |
+|---|---|---|
+| `login` | Solo sin sesión | Solo sin sesión |
+| `dashboard` | Sí | No |
+| `entities` | Sí | No |
+| `invoice-sale` | Sí | No |
+| `invoice-purchase` | Sí | No |
+| `payroll-admin` | Sí | No |
+| `payroll-create` | Sí | No |
+| `access` | Sí | No |
+| `dev-notifications` | Sí | No |
+| `movements` | Sí | No |
+| `cashflow` | Sí | No |
+| `tracking` | Sí | No |
+| `search` | Sí | No |
+| `payroll-worker` | No | Sí |
 
 **Comportamiento**:
 - Si un trabajador intenta una vista no permitida, se redirige a `payroll-worker` y se muestra un mensaje claro.
-- Si un administrador o finanzas intenta `payroll-worker`, se redirige a `payroll-admin`.
-- Si finanzas intenta `access` o `dev-notifications`, se redirige a `dashboard` y se muestra un mensaje claro.
+- Si el administrador intenta `payroll-worker`, se redirige a `payroll-admin`.
+- Si el trabajador intenta `access` o `dev-notifications`, se redirige a `payroll-worker` y se muestra un mensaje claro.
 - Si no hay sesión, cualquier vista distinta de `login` redirige a `login`; no existe modo invitado ni navegación sin autenticar.
 - Las guardas se aplican tanto en la navegación visible como en las funciones que cargan datos.
 
@@ -178,14 +203,17 @@ resolveRoute(view, session): string
 | Administrador sin liquidaciones | "No hay liquidaciones registradas." | Liquidaciones |
 | Sin resultados de filtro | "No hay liquidaciones que coincidan con el filtro." | Liquidaciones |
 | Error de validación al guardar | Mensaje específico del campo | Formulario |
+| RUT inválido en la creación | "El RUT ingresado no es válido." | Nueva liquidación |
+| Nombre completo ausente | "Ingresa el nombre completo del trabajador." | Nueva liquidación |
+| Conflicto de acceso en la creación | "El RUT tiene un acceso inactivo o duplicado, o pertenece a un tercero que no es personal." | Nueva liquidación |
 | Último administrador | "No puedes desactivar el último administrador activo." | Accesos |
 
 ## 7. Pruebas de contrato
 
 - `tests/integration/login-roles.test.js`: roles registrados, credenciales válidas, RUT inválido, inactivo y vínculo roto; sin modo invitado.
-- `tests/integration/demo-data.test.js`: carga desde el acceso, credenciales de administrador, finanzas y trabajadores, idempotencia y RUT del administrador distinto de los terceros.
+- `tests/integration/demo-data.test.js`: carga desde el acceso, credenciales de administrador y trabajadores, idempotencia y RUT del administrador distinto de los terceros.
 - `tests/integration/payroll-worker.test.js`: última liquidación con desglose, historial filtrado y ordenado sin exigir `Pagada` para la última, estado vacío, solo lectura y aislamiento entre dos trabajadores.
-- `tests/integration/payroll-admin.test.js`: lista completa de `LiquidacionSueldo` con su factura vinculada, filtros, edición del desglose, sincronización de `estado`/`fechaPago`/`monto` y reflejo en la vista del trabajador, tanto con administrador como con finanzas; bloqueo de accesos y avisos para finanzas.
+- `tests/integration/payroll-admin.test.js`: lista completa de `LiquidacionSueldo` con su factura vinculada, filtros por RUT y período, edición del desglose, sincronización de `estado`/`fechaPago`/`monto` y reflejo en la vista del trabajador con sesión de administrador; alta de liquidación con RUT nuevo y buscador por RUT en el listado.
 - `tests/integration/session-lifecycle.test.js`: recarga conserva la sesión, cierre de sesión la elimina y cierre de pestaña la descarta.
 - `tests/integration/access-admin.test.js`: creación, duplicado, contraseña inicial, desactivación, reactivación, último administrador y restablecimiento.
 - `tests/integration/dev-notifications.test.js`: registro de incidencias y panel del administrador.
