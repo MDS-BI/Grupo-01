@@ -4,7 +4,7 @@
 
 **Creada**: 2026-10-29
 
-**Estado**: Borrador (Revisión 6 — 2026-11-23, registro retroactivo de las HU9 y HU10 implementadas en `ec14932` y de la mejora pendiente de formato de montos; Revisión 5 — 2026-11-16, se agrega la HU8 de guía de uso y tutorial; Revisión 4 — 2026-11-11, clarify de separación aplicado)
+**Estado**: Borrador (Revisión 7 — 2026-11-23, actualización de la HU8 y del contrato de navegación al acceso obligatorio, el menú ☰ y las vistas nuevas; Revisión 6 — 2026-11-23, registro retroactivo de las HU9 y HU10 implementadas en `ec14932` y de la mejora pendiente de formato de montos; Revisión 5 — 2026-11-16, se agrega la HU8 de guía de uso y tutorial; Revisión 4 — 2026-11-11, clarify de separación aplicado)
 
 **Entrada**: Módulo de facturación y pagos, por cobrar y por pagar, para un sistema ERP (solo frontend), construido sobre el template `Speckit_Template`.
 
@@ -30,6 +30,10 @@
 - Q: ¿Qué roles pueden ver el Flujo de caja y el Resumen financiero del Panel? → A: Solo administrador y finanzas, según los roles de `specs/002-payroll-access-control`; el trabajador no ve ninguna de las dos vistas ni sus accesos, y se bloquea el acceso directo.
 - Q: ¿Cómo deben mostrarse los montos del Panel, Flujo de caja, Movimientos y Seguimiento? → A: En pesos chilenos con separador de miles, igual que en Mi liquidación; los ejemplos normativos son `$1.240.000` y `-$2.430.000` para valores negativos. Esta mejora está pendiente de implementación (FR-046).
 - Q: ¿En qué orden cronológico deben aparecer las filas del Flujo de caja cuando digo “ordenadas por fecha”? → A: De la fecha de pago más antigua a la más reciente (ascendente), coincidente con el orden de `ec14932`.
+- Q: ¿Desde dónde se abre la guía de uso y para qué perfiles? → A: Solo con sesión iniciada: desde la opción «Guía de uso» del menú desplegable ☰ «Utilidades & Sesión» para administrador, finanzas y trabajador, y desde «¿Primera vez? Ver la guía» del Panel solo para administrador y finanzas.
+- Q: ¿Qué pasos muestra la guía a cada perfil? → A: Administrador y finanzas recorren Panel, Terceros, Facturas de venta, Facturas de compra, Emitir y pagar, Liquidaciones de sueldo, Movimientos, Flujo de caja, Seguimiento y el menú ☰; Accesos y Avisos al desarrollador se mencionan solo al administrador. El trabajador recorre solo Mi liquidación y Cuidados. Todos los recorridos terminan en Cuidados.
+- Q: ¿Qué debe explicar el último paso «Cuidados»? → A: Que los datos son ficticios, que la contraseña inicial son los primeros 4 dígitos del RUT y que el control de acceso es solo de interfaz.
+- Q: ¿Cómo debe cambiar el contrato de navegación? → A: El mapa de accesos agrega la columna «Roles con acceso» y reemplaza toda mención a la barra lateral y a la carga de demostración desde el Panel por el menú ☰ y la carga desde la pantalla de acceso.
 
 ## Usuarios
 
@@ -44,11 +48,11 @@
 - **Responsable de remuneraciones:** registra facturas de compra dirigidas al personal, como instrumento de las liquidaciones de sueldo.
 - **Integrante del equipo (demostración):** carga los datos de ejemplo y guarda referencias a otros módulos (HU6).
 
-**Roles de acceso aplicables a las vistas nuevas (spec 002):** el administrador y el rol finanzas ven el Flujo de caja (HU9) y el Resumen financiero del Panel (HU10); el trabajador no ve ninguna de las dos vistas ni sus accesos. Para el resto de la spec 001 se mantiene la descripción anterior de usuarios por función.
+**Roles de acceso aplicables a las vistas nuevas (spec 002):** el acceso es obligatorio para administrador, finanzas y trabajador. El administrador y el rol finanzas ven el Flujo de caja (HU9), el Resumen financiero del Panel (HU10) y la guía de uso desde el Panel; el trabajador no ve ninguna de las dos vistas ni sus accesos, pero sí puede abrir la guía desde el menú ☰. Para el resto de la spec 001 se mantiene la descripción anterior de usuarios por función.
 
 ## Manejo de riesgos de datos y sesgos
 
-- **RUT:** es un dato personal. El MVP no tiene perfiles de usuario, pero una versión futura debería limitar su visualización al personal de finanzas. Esto aplica también a los terceros de tipo personal (trabajadores), cuyo RUT es siempre un dato personal.
+- **RUT:** es un dato personal. La 001 no define perfiles propios, pero el acceso obligatorio de la 002 distingue administrador, finanzas y trabajador; una versión futura debería limitar su visualización al personal de finanzas. Esto aplica también a los terceros de tipo personal (trabajadores), cuyo RUT es siempre un dato personal.
 - **Límite de crédito:** si se fija con criterios subjetivos, puede discriminar a ciertos clientes. Los criterios deben documentarse y, en el futuro, el límite debería calcularse con una fórmula estandarizada y transparente. El límite de crédito solo aplica a terceros de tipo cliente.
 - **Datos de remuneraciones:** las liquidaciones de sueldo asocian montos a trabajadores. En el MVP la factura de compra es solo el instrumento o comprobante del pago (con un período obligatorio en formato `YYYY-MM` cuando el tercero es de tipo personal); no se calculan ni se exponen haberes, descuentos legales (AFP, salud) ni imponibilidad, que quedan fuera del alcance.
 - **Datos de demostración:** deben ser ficticios.
@@ -186,22 +190,22 @@ Como usuario del módulo (cobranzas, pagos, contabilidad o gerencia), quiero una
 
 ### Historia de Usuario 8 - Guía de uso y tutorial: navegación, accesos y primer recorrido (Prioridad: P2)
 
-Como persona que usa el módulo por primera vez (encargado de cobranzas, encargado de pagos, contador, gerencia o un integrante del equipo que lo muestra en una demostración), quiero una guía paso a paso y un mapa de accesos que me indiquen por dónde se navega y cómo se hace el primer flujo (tercero, factura, emisión, pago, movimientos y seguimiento), para empezar a usar el módulo sin ayuda y sin leer la especificación.
+Como persona con sesión iniciada que usa el módulo por primera vez (administrador, finanzas o trabajador), quiero una guía paso a paso y un mapa de accesos que me indiquen por dónde se navega en el menú ☰ y cómo se hace el primer flujo disponible para mi rol, para empezar a usar el módulo sin ayuda y sin leer la especificación.
 
-**Por qué esta prioridad**: el módulo funciona sin la guía, por eso no es P1. Pero reduce el tiempo de aprendizaje (SC-001 y SC-005) y permite que cualquier integrante del grupo muestre el flujo completo en la presentación sin depender de quien lo construyó. Va como historia independiente de la HU7: la HU7 define el marco y el menú; la HU8 explica cómo usarlos.
+**Por qué esta prioridad**: el módulo funciona sin la guía, por eso no es P1. Pero reduce el tiempo de aprendizaje (SC-001 y SC-005) y permite que cualquier integrante del equipo muestre en la presentación el flujo correspondiente a su rol sin depender de quien lo construyó. Va como historia independiente de la HU7: la HU7 define el marco y el menú desplegable ☰ «Utilidades & Sesión»; la HU8 explica cómo usarlos.
 
-**Prueba independiente**: abrir la aplicación con el módulo vacío, abrir la guía, recorrer los pasos con "Siguiente" y con "Ir a la vista", cerrarla y comprobar que los datos no cambiaron. Repetir con los datos de demostración cargados. Aparte, comparar el mapa de accesos documentado en `contracts/navigation-and-access.md` con el menú real de la aplicación.
+**Prueba independiente**: iniciar sesión con cada rol, abrir la guía desde el menú ☰, recorrer sus pasos con "Siguiente" y con "Ir a la vista", cerrarla y comprobar que los datos y la sesión no cambiaron. Repetir con los datos de demostración cargados desde la pantalla de acceso. Aparte, comparar el mapa de accesos documentado en `contracts/navigation-and-access.md` con el menú real de la aplicación.
 
 **Escenarios de aceptación**:
 
-1. **Dada** cualquier vista del módulo, **cuando** miro el marco general, **entonces** veo el botón "Guía de uso" y, al usarlo, se abre la guía en el primer paso.
-2. **Dado** el home, **cuando** reviso sus accesos, **entonces** hay un acceso "¿Primera vez? Ver la guía" que abre la misma guía.
-3. **Dada** la guía abierta, **cuando** uso "Siguiente" y "Anterior", **entonces** avanzo y retrocedo por los pasos y veo en qué paso estoy (por ejemplo, "Paso 3 de 8"); en el primer paso no hay "Anterior" y en el último "Siguiente" pasa a ser "Finalizar".
-4. **Dado** un paso que explica una vista, **cuando** elijo "Ir a" esa vista, **entonces** la aplicación navega a ella sin recargar la página y la guía sigue abierta en el mismo paso.
-5. **Dado** el módulo vacío, **cuando** llego al paso de datos de demostración, **entonces** la guía explica cómo cargarlos y avisa que son ficticios y que `localStorage` no es seguro, por lo que no deben usarse datos reales.
-6. **Dada** la guía abierta, **cuando** la cierro con el botón "Cerrar" o con la tecla Esc, **entonces** desaparece, el foco vuelve al botón "Guía de uso" y me quedo en la vista donde estaba.
-7. **Dado** cualquier estado de los datos (vacío o con demostración), **cuando** recorro la guía completa, **entonces** no se crea, modifica ni elimina ningún tercero, factura ni movimiento.
-8. **Dado** el mapa de accesos documentado, **cuando** lo comparo con el menú de la aplicación, **entonces** cada vista del menú aparece en el mapa y cada vista del mapa existe en el menú.
+1. **Dada** una sesión válida y cualquier vista del módulo, **cuando** abro el menú desplegable ☰ «Utilidades & Sesión» y elijo "Guía de uso", **entonces** la guía se abre en el primer paso del recorrido de mi rol; está disponible para administrador, finanzas y trabajador.
+2. **Dado** el Panel con sesión de administrador o finanzas, **cuando** uso "¿Primera vez? Ver la guía", **entonces** se abre la misma guía; el trabajador no ve ese acceso porque su vista inicial es Mi liquidación.
+3. **Dada** la guía abierta, **cuando** uso "Siguiente" y "Anterior", **entonces** avanzo y retrocedo solo por los pasos permitidos para mi rol y veo "Paso n de m"; en el primero no hay "Anterior" y en el último "Siguiente" pasa a ser "Finalizar". El recorrido de administrador y finanzas incluye Panel, Terceros, Facturas de venta, Facturas de compra, Emitir y pagar, Liquidaciones de sueldo, Movimientos, Flujo de caja, Seguimiento y el menú ☰, y termina en Cuidados; Accesos y Avisos al desarrollador se mencionan solo al administrador. El recorrido del trabajador es Mi liquidación y Cuidados.
+4. **Dado** un paso que explica una vista permitida, **cuando** elijo "Ir a" esa vista, **entonces** la aplicación navega a ella sin recargar la página y la guía sigue abierta en el mismo paso; los pasos del menú ☰ y Cuidados no ofrecen "Ir a".
+5. **Dado** el paso final "Cuidados", **cuando** lo leo, **entonces** se explica que los datos son ficticios, que la contraseña inicial son los primeros 4 dígitos del RUT y que el control de acceso es solo de interfaz; la carga de demostración se hace desde la pantalla de acceso y no desde la guía ni desde el Panel.
+6. **Dada** la guía abierta, **cuando** la cierro con el botón "Cerrar" o con la tecla Esc, **entonces** desaparece, el foco vuelve al control que la abrió (opción del menú ☰ o acceso del Panel) y me quedo en la vista donde estaba.
+7. **Dado** cualquier estado de los datos (vacío o con demostración), **cuando** recorro la guía completa, **entonces** no se crea, modifica ni elimina ningún tercero, factura, movimiento ni acceso, y no se inicia ni cierra sesión.
+8. **Dado** el mapa de accesos documentado, **cuando** lo comparo con el menú desplegable ☰, **entonces** cada vista del menú aparece en el mapa con sus "Roles con acceso", cada vista del mapa existe en el menú para al menos un rol y no aparece ninguna referencia a la barra lateral ni a la carga de demostración desde el Panel.
 
 ---
 
@@ -269,10 +273,10 @@ Como administrador o integrante de finanzas, quiero que el Panel muestre tres in
 - ¿Qué pasa si la fecha de vencimiento es igual a la de emisión? Se acepta, porque la regla exige que sea igual o posterior.
 - ¿Qué pasa al eliminar un tercero con facturas pendientes de pago? Se eliminan también sus facturas, por lo que el sistema debería pedir confirmación antes.
 - ¿Qué pasa si el usuario borra los datos del navegador? Se pierden todos los registros, porque se guardan en `localStorage`.
-- ¿Qué pasa si se abre la guía y la persona navega por el menú por su cuenta? La guía no bloquea el menú ni la vista: sigue abierta en su paso actual y se puede cerrar cuando se quiera.
-- ¿Qué pasa si se abre la guía con un formulario a medio llenar? Abrir, avanzar o cerrar la guía no modifica lo escrito. "Ir a" una vista se comporta igual que navegar por el menú.
+- ¿Qué pasa si se abre la guía y la persona navega por el menú ☰ por su cuenta? La guía no bloquea el menú ni la vista: sigue abierta en su paso actual y se puede cerrar cuando se quiera.
+- ¿Qué pasa si se abre la guía con un formulario a medio llenar? Abrir, avanzar o cerrar la guía no modifica lo escrito. "Ir a" una vista se comporta igual que navegar por el menú ☰.
 - ¿Qué pasa si el módulo cambia sus etiquetas en `module-config.js` (por ejemplo, Tercero o Factura)? Los textos de la guía toman esos términos de la configuración y no los repiten escritos a mano.
-- ¿Qué pasa si se integra el inicio de sesión por rol propuesto en `specs/002-payroll-access-control`? Para HU9 y HU10 ya está decidido: Flujo de caja y Resumen financiero del Panel son visibles solo para administrador y finanzas; el trabajador no los ve. El mapa de accesos de la HU8 debe sumar qué rol accede a cada vista y la guía debe revisarse para reflejar esta excepción.
+- ¿Qué pasa si se abre la guía sin sesión o con un rol que no puede abrir una vista? La guía solo existe con sesión iniciada: el menú ☰ ofrece "Guía de uso" a administrador, finanzas y trabajador, y el Panel ofrece "¿Primera vez? Ver la guía" solo a administrador y finanzas. Los pasos se filtran por rol y nunca muestran "Ir a" una vista no permitida; Accesos y Avisos al desarrollador solo se mencionan al administrador.
 - ¿Qué pasa si no hay facturas Pagadas? El Flujo de caja muestra un estado vacío claro, con ingresos, egresos y neto en cero.
 - ¿Qué pasa si una factura de compra Pagada corresponde a un tercero de tipo personal? Aparece como Egreso con la categoría «Liquidación de sueldo», sin exponer haberes, descuentos ni bonos.
 - ¿Qué pasa si un trabajador intenta abrir Flujo de caja o el Resumen financiero del Panel, aunque conozca la ruta? La acción se bloquea con un mensaje claro y no se muestran datos del módulo.
@@ -339,12 +343,12 @@ Como administrador o integrante de finanzas, quiero que el Panel muestre tres in
 
 **Guía de uso y tutorial**
 
-- **FR-031**: El sistema DEBE ofrecer una guía de uso accesible desde el marco general en cualquier vista (botón "Guía de uso") y desde el home (acceso "¿Primera vez? Ver la guía"). La guía NO es una vista del menú: las vistas fijas de FR-020 no cambian.
-- **FR-032**: La guía DEBE ser un recorrido paso a paso en español, con "Anterior", "Siguiente" (en el último paso, "Finalizar") e indicador del paso actual, que cubra: home y KPIs, terceros, facturas de venta, facturas de compra, emisión y pago, movimientos financieros, seguimiento y datos de demostración. Los términos del módulo (Tercero, Factura) se toman de la configuración, no se escriben a mano.
-- **FR-033**: Cada paso que explica una vista DEBE ofrecer un acceso directo "Ir a" esa vista, que navega sin recargar la página (FR-022). La guía DEBE poder cerrarse en cualquier momento con un botón o con la tecla Esc, sin cambiar la vista en que se encuentra la persona.
-- **FR-034**: La guía NO DEBE crear, modificar ni eliminar datos ni agregar claves de almacenamiento: es solo orientación. Funciona igual con el módulo vacío y con los datos de demostración.
-- **FR-035**: La guía DEBE poder usarse con teclado y ser legible por un lector de pantalla: panel con rol de diálogo y título asociado, foco que pasa a la guía al abrirla y vuelve al botón "Guía de uso" al cerrarla.
-- **FR-036**: La navegación y los accesos del módulo DEBEN estar documentados en `specs/001-erp-base-module/contracts/navigation-and-access.md`, con cada vista, cómo se llega a ella, qué se puede hacer y qué usuario del spec la usa. Mientras el MVP no tenga perfiles, las vistas originales están disponibles para cualquier persona que abra la aplicación; las vistas de HU9 y HU10 son la excepción documentada: solo están disponibles para administrador y finanzas, según los roles de `specs/002-payroll-access-control`, y el trabajador no las ve. El contrato debe incorporar la vista Flujo de caja y esta restricción por rol.
+- **FR-031**: El sistema DEBE ofrecer la guía de uso solo con sesión iniciada: como opción "Guía de uso" del menú desplegable ☰ «Utilidades & Sesión» para administrador, finanzas y trabajador, y como acceso "¿Primera vez? Ver la guía" del Panel para administrador y finanzas. La guía NO es una vista del menú ni está disponible en la pantalla de acceso; las vistas fijas de FR-020 no cambian.
+- **FR-032**: La guía DEBE ser un recorrido paso a paso en español, con "Anterior", "Siguiente" (en el último paso, "Finalizar") e indicador "Paso n de m" calculado por rol. Para administrador y finanzas DEBE cubrir, en ese orden: Panel, Terceros, Facturas de venta, Facturas de compra, Emitir y pagar, Liquidaciones de sueldo, Movimientos, Flujo de caja, Seguimiento y el menú ☰, seguidos de Cuidados; Accesos y Avisos al desarrollador DEBEN mencionarse solo al administrador. Para trabajador DEBE cubrir solo Mi liquidación y Cuidados. Los términos del módulo (Tercero, Factura) se toman de la configuración, no se escriben a mano.
+- **FR-033**: Cada paso que explica una vista permitida DEBE ofrecer un acceso directo "Ir a" esa vista, que navega sin recargar la página (FR-022) y mantiene la guía abierta en el mismo paso; los pasos del menú ☰ y Cuidados NO DEBEN ofrecer "Ir a". La guía DEBE poder cerrarse en cualquier momento con un botón o con la tecla Esc, sin cambiar la vista en que se encuentra la persona.
+- **FR-034**: La guía NO DEBE crear, modificar ni eliminar datos, accesos ni sesiones, ni agregar claves de almacenamiento: es solo orientación. La carga de demostración NO DEBE hacerse desde la guía ni desde el Panel; se ejecuta desde la pantalla de acceso. La guía funciona igual con el módulo vacío y con los datos de demostración.
+- **FR-035**: La guía DEBE poder usarse con teclado y ser legible por un lector de pantalla: panel con rol de diálogo y título asociado, foco que pasa a la guía al abrirla y vuelve al control que la abrió (opción del menú ☰ o acceso del Panel) al cerrarla.
+- **FR-036**: La navegación y los accesos del módulo DEBEN estar documentados en `specs/001-erp-base-module/contracts/navigation-and-access.md`, con cada vista, cómo se llega a ella desde el menú desplegable ☰, qué se puede hacer, qué roles pueden abrirla y qué usuario del spec la usa. El mapa DEBE incluir una columna "Roles con acceso", cubrir Liquidaciones de sueldo, Accesos, Avisos al desarrollador, Mi liquidación y Flujo de caja, y NO DEBE describir una barra lateral ni la carga de demostración desde el Panel. Las vistas de HU9 y HU10 siguen siendo la excepción documentada: solo están disponibles para administrador y finanzas, según los roles de `specs/002-payroll-access-control`, y el trabajador no las ve.
 
 **Flujo de caja**
 
@@ -386,8 +390,8 @@ Como administrador o integrante de finanzas, quiero que el Panel muestre tres in
 - **SC-004**: Los datos siguen disponibles después de recargar la página.
 - **SC-005**: Con los datos de demostración, el flujo completo (tercero, factura, emisión, pago, movimiento financiero y seguimiento) se puede mostrar en menos de 5 minutos, navegando desde el home y el menú.
 - **SC-006**: El 100% de las emisiones y pagos registrados tiene su movimiento financiero correspondiente, conciliado en monto.
-- **SC-007**: Una persona nueva que sigue la guía puede recorrerla completa en menos de 5 minutos y, con sus indicaciones, registrar un tercero y emitir su primera factura en menos de 3 minutos (complementa SC-001).
-- **SC-008**: El 100% de los pasos de la guía lleva a una vista que existe en el menú, y el mapa de accesos documentado coincide con las vistas reales del menú (verificable con una prueba automatizada).
+- **SC-007**: El 100% de las personas nuevas que inician sesión puede recorrer la guía completa de su rol en menos de 5 minutos; administrador y finanzas pueden, además, registrar un tercero y emitir su primera factura en menos de 3 minutos con sus indicaciones (complementa SC-001).
+- **SC-008**: En el 100% de los roles, cada paso de la guía lleva a una vista que ese rol puede abrir desde el menú ☰ o es el paso final "Cuidados", y el mapa de accesos documentado coincide con las vistas reales del menú y su columna "Roles con acceso" (verificable con una prueba automatizada).
 - **SC-009**: El 100% de las facturas Pagadas aparece exactamente una vez en el Flujo de caja, con la clasificación y categoría correctas y en orden ascendente por fecha de pago.
 - **SC-010**: En el 100% de los casos de prueba, los tres indicadores del Resumen financiero coinciden con las fórmulas Saldo neto = por cobrar − por pagar, Deuda pendiente = por cobrar + por pagar y Caja neta = ingresos − egresos del Flujo de caja.
 - **SC-011**: En el 100% de las pruebas de rol, administrador y finanzas ven Flujo de caja y Resumen financiero, mientras que el trabajador no los ve ni puede abrirlos por acceso directo o enlace.
@@ -395,7 +399,7 @@ Como administrador o integrante de finanzas, quiero que el Panel muestre tres in
 
 ## Supuestos
 
-- El MVP es solo frontend: los datos se guardan en el navegador, hay un solo usuario por navegador y no hay inicio de sesión ni perfiles propios de la 001; las excepciones de rol para HU9 y HU10 se toman de la spec 002.
+- El MVP es solo frontend: los datos se guardan en el navegador y hay un solo usuario por navegador. La 001 no define perfiles propios; el inicio de sesión obligatorio y los roles administrador, finanzas y trabajador se toman de la spec 002.
 - Hay un solo tipo de entidad base (Tercero, con tipo cliente/proveedor/personal) y dos tipos de documento separados: Factura de Venta y Factura de Compra, cada uno con su listado y reglas propias. Decidido 2026-11-05: la separación formal de documentos reemplaza el debate "documento único con tipo" (el ayudante lo había recomendado).
 - La separación entre facturas de venta y de compra es visual y funcional, no de almacenamiento: dos vistas, dos formularios y dos listados independientes con columnas propias, sobre un único documento con `tipoFactura`. La vista de venta muestra `sales_order_id`; la de compra muestra `centroCosto` y `periodoLiquidacion`. La UI no reutiliza la vista genérica de documentos. Decidido 2026-11-11 (clarify).
 - Las facturas de compra llevan centro de costo con valores Activos/Consumible, obligatorio al emitir y usado solo como atributo de reporte (sin desglose en KPIs). Decidido 2026-11-05 y reafirmado en el clarify del mismo día.
@@ -413,8 +417,8 @@ Como administrador o integrante de finanzas, quiero que el Panel muestre tres in
 - El RUT se valida con formato chileno y dígito verificador módulo 11 (decidido 2026-11-03, Q2). No se exige unicidad del RUT.
 - El límite de crédito genera un aviso con confirmación explícita al emitir, sin bloqueo (decidido 2026-11-03, Q3).
 - La unicidad de factura se define por (tipo de documento, serie, folio), dentro de cada tipo.
-- La guía de uso (HU8) es transversal al marco general (HU7): se abre desde un botón del marco y desde el home, no es una entrada del menú, no guarda datos y no registra si la persona ya la vio (no agrega claves de `localStorage`). Decidido 2026-11-16 (Jaime, tarea 6 de la minuta de cambios).
-- El mapa de accesos (`contracts/navigation-and-access.md`) describe el MVP original de la 001: un solo usuario por navegador y todas las vistas disponibles. Para HU9 y HU10 sí se aplican los roles de `specs/002-payroll-access-control`: solo administrador y finanzas ven Flujo de caja y Resumen financiero; el trabajador no los ve. Decidido 2026-11-23.
+- La guía de uso (HU8) es transversal al marco general (HU7): solo existe con sesión iniciada, se abre desde la opción "Guía de uso" del menú desplegable ☰ «Utilidades & Sesión» para los tres roles y desde el Panel solo para administrador y finanzas; no guarda datos y no registra si la persona ya la vio (no agrega claves de `localStorage`). Decidido 2026-11-23.
+- El mapa de accesos (`contracts/navigation-and-access.md`) describe el estado actual de la app con el menú desplegable ☰ y la columna "Roles con acceso", e incluye la carga de demostración desde la pantalla de acceso. Solo administrador y finanzas ven Flujo de caja y Resumen financiero; el trabajador no los ve. Decidido 2026-11-23.
 - La vista "Buscar" existe en el menú desde el template, pero FR-020 y FR-022 listan siete vistas (ahora con flujo de caja) y no la incluyen. El mapa de accesos la incluye porque existe; falta que el grupo decida si se agrega a FR-020 y FR-022 o se retira del menú. *(Por confirmar.)*
 - Quedan fuera del MVP: pagos como registro propio, plan de cuentas y asientos, activos fijos, presupuestos, conciliación bancaria y cálculo de remuneraciones (haberes y descuentos legales).
 - Las HU9 y HU10 se registran retroactivamente el 2026-11-23: ya fueron implementadas por Matías el 2026-11-16 en el commit `ec14932` (tareas 7 y 8 de la minuta), sin haber pasado por Speckit. Los IDs nuevos se agregan a continuación de los existentes, sin renumerar.
