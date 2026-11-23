@@ -316,6 +316,8 @@ La liquidación no cambia de estado de forma independiente: toda transición se 
 
 ## 13. Modelo Entidad-Relación
 
+MER único de los módulos 001 y 002, ajustado a los registros que realmente persiste `src/storage.js`.
+
 ```mermaid
 erDiagram
     ACCESO ||--o| TERCERO : "trabajador referencia"
@@ -326,6 +328,7 @@ erDiagram
     FACTURA_COMPRA ||--o{ MOVIMIENTO : "genera"
     FACTURA_VENTA ||--o{ MOVIMIENTO : "genera"
     ACCESO ||--o| SESION : "inicia"
+    ACCESO |o--o{ AVISO_DESARROLLADOR : "accessId (puede no existir)"
 
     ACCESO {
         string accessId PK "RUT canonico"
@@ -345,11 +348,13 @@ erDiagram
     }
 
     TERCERO {
+        string id "copia de entity_id"
         string entity_id PK
         string name
         string code
         string taxId "RUT"
         string tipoTercero "cliente, proveedor o personal"
+        number creditLimit "solo clientes"
         string createdAt
         string updatedAt
     }
@@ -361,10 +366,15 @@ erDiagram
         int folio
         date startDate
         date endDate
+        number subtotal
+        number discount
         number totalAmount
+        string currency
         string status
         string tipoFactura "venta"
         string salesOrderId
+        number montoPagado
+        date fechaPago
     }
 
     FACTURA_COMPRA {
@@ -374,7 +384,10 @@ erDiagram
         int folio
         date startDate
         date endDate
+        number subtotal
+        number discount
         number totalAmount
+        string currency
         string status
         string tipoFactura "compra"
         string centroCosto
@@ -405,17 +418,30 @@ erDiagram
         date fecha
         string tipo
         number monto
+        string centroCosto "solo compra"
+        string salesOrderId "solo venta"
     }
 
     AVISO_DESARROLLADOR {
         string id PK
         string timestamp
-        string accessId
+        string accessId FK "RUT intentado; puede no existir en ACCESO"
         string role
         string reason
         string origin
     }
 ```
+
+### Dónde se guarda cada entidad
+
+- **TERCERO**: `erp.entities` en `localStorage`.
+- **FACTURA_VENTA**: `erp.salesInvoices` en `localStorage`.
+- **FACTURA_COMPRA**: `erp.purchaseInvoices` en `localStorage`.
+- **LIQUIDACION_SUELDO**: `erp.payrollSettlements` en `localStorage`.
+- **MOVIMIENTO**: `erp.movements` en `localStorage`.
+- **ACCESO**: `erp.accessRecords` en `localStorage`.
+- **AVISO_DESARROLLADOR**: `erp.devNotifications` en `localStorage`.
+- **SESION**: `erp.session` en `sessionStorage`.
 
 ## 14. Notas de extensibilidad
 
