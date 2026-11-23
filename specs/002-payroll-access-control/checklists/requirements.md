@@ -1,7 +1,7 @@
-# Specification Quality Checklist: Absorción del rol finanzas en el rol administrador y creación de liquidaciones de sueldo
+# Specification Quality Checklist: Acceso a liquidaciones de sueldo por RUT y contraseña
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
-**Created**: 2026-11-23
+**Created**: 2026-11-11
 **Feature**: [spec.md](../spec.md)
 
 ## Content Quality
@@ -31,6 +31,7 @@
 
 ## Notes
 
-- Se generó la especificación para: eliminar el rol «finanzas» y absorberlo en «administrador», y que el administrador cree liquidaciones de sueldo desde una pestaña con formulario de facturas que pide RUT y nombre completo, con alta automática de trabajador (rol `trabajador`, contraseña inicial de los primeros 4 dígitos del RUT) y pestaña de listado/edición con buscador por RUT.
-- Se identificaron 3 marcadores `[NEEDS CLARIFICATION]` pendientes en el FR-006/alcance de la creación automática de la entidad personal, la migración de accesos previos con rol finanzas y la exigencia de factura de compra para la liquidación.
-- Validación del checklist en la sesión del 2026-11-23: los ítems de Content Quality, métricas de Success Criteria y cobertura de escenarios se marcan como cumplidos preliminarmente; el ítem de clarificaciones queda abierto hasta que el usuario responda.
+- El almacenamiento del navegador y la separación física de facturas aparecen como restricciones explícitas del alcance solicitado por el usuario (MVP solo frontend, sin backend); no se usan para prescribir frameworks, librerías ni detalles de implementación en los requisitos ni en los criterios de éxito.
+- No se requirieron marcadores `[NEEDS CLARIFICATION]`: se documentaron supuestos razonables para la creación de accesos, la contraseña inicial, la persistencia de la sesión, el alcance de la liquidación visible, la asociación RUT-acceso y la migración de la colección única.
+- Se resolvió la contradicción entre "entidad LiquidacionSueldo" y "reutilizar la factura de compra": la especificación adopta la recomendación más reciente del usuario y persiste `LiquidacionSueldo` en `erp.payrollSettlements`, vinculada por `documentId` a una factura de compra a tercero personal.
+- Validación realizada el 2026-11-11 (revisión tras incorporar RUT + contraseña, selección de rol, sesión por pestaña, notificaciones al desarrollador y separación física/visual): los 16 ítems del checklist pasan.

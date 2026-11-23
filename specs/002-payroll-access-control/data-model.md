@@ -9,7 +9,7 @@ El modelo agrega credenciales de acceso, una sesión por pestaña y una entidad 
 
 | Concepto | Tipo | Para qué existe |
 |---|---|---|
-| **Acceso (AccessRecord)** | Registro de credencial | Identifica a un administrador o trabajador por RUT y contraseña; el rol finanzas fue absorbido en el administrador. |
+| **Acceso (AccessRecord)** | Registro de credencial | Identifica a un administrador, finanzas o trabajador por RUT y contraseña. |
 | **Sesión (Session)** | Registro efímero en `sessionStorage` | Mantiene el rol y el vínculo mientras la pestaña está abierta. |
 | **Notificación al desarrollador (DevNotification)** | Registro local de incidencia | Diagnostica RUT inválidos, duplicados, inactivos o con vínculo roto. |
 | **Tercero (Entity)** | Registro de datos maestros existente | Contraparte; el tercero de tipo personal es el trabajador de la liquidación. |
@@ -25,8 +25,8 @@ Credencial de entrada del MVP. Se guarda en `erp.accessRecords`.
 | Campo | Tipo | Descripción | Restricciones |
 |---|---|---|---|
 | `accessId` | string | RUT canónico del usuario; clave primaria | Obligatorio, único, válido según `isValidRutChileno`, forma `CUERPO-DV` sin puntos. |
-| `role` | string | Rol del usuario | Obligatorio. Valores: `administrador` (RRHH) y `trabajador`. |
-| `entityId` | string \| null | `entity_id` del tercero personal asociado | Obligatorio para `trabajador`; debe existir y tener `tipoTercero = personal`. `null` para `administrador`. |
+| `role` | string | Rol del usuario | Obligatorio. Valores: `administrador` (RRHH), `finanzas`, `trabajador`. |
+| `entityId` | string \| null | `entity_id` del tercero personal asociado | Obligatorio para `trabajador`; debe existir y tener `tipoTercero = personal`. `null` para `administrador` y `finanzas`. |
 | `password` | string | Contraseña del MVP | Obligatoria, exactamente 4 dígitos. Al crear o restablecer debe ser igual a los primeros 4 dígitos del cuerpo del RUT. |
 | `active` | boolean | Estado del acceso | Obligatorio. `true` por defecto. |
 | `createdAt` | string | Fecha de creación (ISO 8601) | Obligatorio. |
@@ -36,7 +36,7 @@ Credencial de entrada del MVP. Se guarda en `erp.accessRecords`.
 - `accessId` es único entre todos los accesos, comparado en forma canónica.
 - Un `entityId` puede tener como máximo un acceso con `active = true`.
 - Debe existir al menos un acceso con `role = administrador` y `active = true`.
-- Un acceso de administrador no puede tener `entityId`; un trabajador debe tener uno válido y personal.
+- Un acceso de administrador o de finanzas no puede tener `entityId`.
 - Un acceso de trabajador no puede quedar sin `entityId` ni apuntar a un tercero que no sea personal.
 - La contraseña inicial y la restablecida se derivan del RUT; no se acepta otra en la creación. Sin cambio de contraseña en el MVP, es un riesgo conocido documentado.
 - En los datos de demostración, el `accessId` del administrador (`88.888.888-8`) no puede coincidir con el `taxId` de ningún `Entity`.
@@ -49,8 +49,8 @@ Registro efímero en `sessionStorage` bajo `erp.session`. No se guarda en `local
 | Campo | Tipo | Descripción | Restricciones |
 |---|---|---|---|
 | `accessId` | string | RUT canónico del acceso autenticado | Obligatorio. |
-| `role` | string | Rol de la sesión | Obligatorio. Valores: `administrador` y `trabajador`. |
-| `entityId` | string \| null | Tercero personal asociado | Obligatorio para `trabajador`; `null` para `administrador`. |
+| `role` | string | Rol de la sesión | Obligatorio. Valores: `administrador`, `finanzas`, `trabajador`. |
+| `entityId` | string \| null | Tercero personal asociado | Obligatorio para `trabajador`; `null` para `administrador` y `finanzas`. |
 | `startedAt` | string | Inicio de la sesión (ISO 8601) | Obligatorio. |
 
 **Ciclo de vida**:
@@ -70,40 +70,40 @@ Registro local en `erp.devNotifications`.
 | `id` | string | Identificador único | Obligatorio, generado automáticamente. |
 | `timestamp` | string | Fecha y hora del intento (ISO 8601) | Obligatorio. |
 | `accessId` | string | RUT intentado, normalizado si es posible | Obligatorio; puede ser el texto original si el RUT es inválido. |
-| `role` | string | Rol del acceso relacionado con el intento | Obligatorio. Valores: `administrador`, `trabajador` o `desconocido`. |
+| `role` | string | Rol del acceso relacionado con el intento | Obligatorio. Valores: `administrador`, `finanzas`, `trabajador` o `desconocido`. |
 | `reason` | string | Motivo del rechazo | Obligatorio. Valores: `INVALID_RUT`, `INACTIVE`, `DUPLICATE`, `BROKEN_ENTITY_LINK`, `NOT_FOUND`. |
 | `origin` | string | Origen del intento | Obligatorio. Valor inicial: `login`. |
 
 **Reglas**:
 - Se registra una notificación por cada intento rechazado por las razones indicadas.
 - No se registra una notificación por contraseña incorrecta ni por rol incompatible; esos son errores del usuario, no incidencias del desarrollador.
-- El panel de avisos solo es visible para administradores.
+- El panel de avisos solo es visible para administradores; el rol `finanzas` no puede abrirlo.
 - Las notificaciones no se eliminan automáticamente en el MVP; el administrador puede limpiarlas con confirmación.
 
 ## 5. Entidad: LiquidacionSueldo (Liquidación de sueldo)
 
-Se guarda en `erp.payrollSettlements`, de forma aditiva a las colecciones de facturas. Cada registro se vincula por `entityId` a un `Entity` personal y, cuando se crea desde una factura de compra, por `documentId` a un `PurchaseInvoice`; el alta directa con RUT nuevo crea la liquidación sin factura (`documentId: null`). La factura de compra sigue siendo el comprobante de pago; la entidad propia guarda el desglose registrado. No se introduce cálculo legal ni de haberes: `sueldoBase`, `descuentos` y `bonos` solo se registran y se muestran.
+Se guarda en `erp.payrollSettlements`, de forma aditiva a las colecciones de facturas. Cada registro se vincula por `documentId` a un `PurchaseInvoice` y por `entityId` a un `Entity` personal. La factura de compra sigue siendo el comprobante de pago; la entidad propia guarda el desglose registrado. No se introduce cálculo legal ni de haberes: `sueldoBase`, `descuentos` y `bonos` solo se registran y se muestran.
 
 | Campo | Tipo | Descripción | Restricciones |
 |---|---|---|---|
 | `settlementId` | string | Identificador único de la liquidación | Obligatorio, único en `erp.payrollSettlements`. |
-| `documentId` | string \| null | FK a `PurchaseInvoice.document_id` | `null` en el alta directa con RUT nuevo; cuando existe, la factura debe ser de compra y estar vinculada. Una sola liquidación por `documentId` distinto de `null`. |
+| `documentId` | string | FK a `PurchaseInvoice.document_id` | Obligatorio; la factura debe existir. Una sola liquidación por `documentId`. |
 | `entityId` | string | `entity_id` del tercero personal | Obligatorio; debe existir y tener `customFields.tipoTercero === 'personal'`; coincide con `PurchaseInvoice.entity_id`. |
 | `periodo` | string | Período de la liquidación | Obligatorio, `YYYY-MM`; no posterior a la emisión de la factura vinculada. |
 | `sueldoBase` | number | Sueldo base registrado | Obligatorio, `>= 0`; solo se registra y muestra, sin cálculo legal. |
 | `descuentos` | number | Descuentos registrados | Obligatorios, `>= 0`; solo se registran y muestran. |
 | `bonos` | number | Bonos registrados | Obligatorios, `>= 0`; solo se registran y muestran. |
-| `monto` | number | Monto de la liquidación | Obligatorio, `> 0`; refleja `PurchaseInvoice.totalAmount` cuando hay factura; en el alta directa, el monto registrado en el formulario. |
-| `estado` | string | Estado del ciclo de vida | Obligatorio. Valores: `Borrador` \| `Emitida` \| `Pagada`; refleja `PurchaseInvoice.status`; en el alta directa inicia en `Borrador`. |
-| `fechaPago` | string \| null | Fecha de pago | `YYYY-MM-DD` o `null`; refleja `customFields.fechaPago` de la factura vinculada; en el alta directa inicia en `null`. |
+| `monto` | number | Monto de la liquidación | Obligatorio, `> 0`; refleja `PurchaseInvoice.totalAmount`. |
+| `estado` | string | Estado del ciclo de vida | Obligatorio. Valores: `Borrador` \| `Emitida` \| `Pagada`; refleja `PurchaseInvoice.status`. |
+| `fechaPago` | string \| null | Fecha de pago | `YYYY-MM-DD` o `null`; refleja `customFields.fechaPago` de la factura vinculada. |
 | `createdAt` | string | Fecha de creación (ISO 8601) | Obligatorio. |
 | `updatedAt` | string | Fecha de última actualización (ISO 8601) | Obligatorio. |
 
 **Invariantes**:
-- `settlementId` es único y existe como máximo una `LiquidacionSueldo` por `documentId` distinto de `null`.
+- `settlementId` es único y existe como máximo una `LiquidacionSueldo` por `documentId`.
 - `entityId` debe corresponder a un `Entity` con `customFields.tipoTercero === 'personal'`.
-- Si hay factura vinculada, esta debe tener `customFields.tipoFactura === 'compra'` y `entity_id === entityId`.
-- `estado`, `fechaPago` y `monto` son espejo de `status`, `customFields.fechaPago` y `totalAmount` de la factura vinculada cuando existe; se sincronizan cuando la factura se edita. Sin factura (`documentId: null`), los tres campos pertenecen a la liquidación y se editan directamente en `erp.payrollSettlements`.
+- La factura vinculada debe tener `customFields.tipoFactura === 'compra'` y `entity_id === entityId`.
+- `estado`, `fechaPago` y `monto` son espejo de `status`, `customFields.fechaPago` y `totalAmount` de la factura vinculada; se sincronizan cuando la factura se edita.
 - No se calculan haberes, AFP, salud, descuentos legales ni imponibilidad; los valores del desglose se muestran tal como se registraron.
 - El nombre y el RUT del trabajador se obtienen de `Entity.name` y `Entity.taxId`, y las fechas de emisión y vencimiento de la factura vinculada, sin duplicarlos en la colección.
 
@@ -121,7 +121,7 @@ Se guarda en `erp.payrollSettlements`, de forma aditiva a las colecciones de fac
 4. Desempatar por `periodo` descendente.
 5. Cada fila muestra fecha de pago, período, monto y estado; el desglose (`sueldoBase`, `descuentos`, `bonos`) se muestra solo en la liquidación vigente.
 
-**Regla del administrador**: el administrador (absorbente del rol finanzas) listan y edita la entidad `LiquidacionSueldo` junto con su factura de compra vinculada, sin límite de período, y puede filtrar por trabajador/RUT y por período. La asociación con el acceso del trabajador usa `AccessRecord.entityId === LiquidacionSueldo.entityId`, no `PurchaseInvoice.entity_id`. El trabajador ve solo sus propias liquidaciones, en modo solo lectura.
+**Regla del administrador y de finanzas**: ambos listan y editan la entidad `LiquidacionSueldo` junto con su factura de compra vinculada, sin límite de período, y pueden filtrar por trabajador/RUT y por período. La asociación con el acceso del trabajador usa `AccessRecord.entityId === LiquidacionSueldo.entityId`, no `PurchaseInvoice.entity_id`. El trabajador ve solo sus propias liquidaciones, en modo solo lectura.
 
 ## 6. Entidades de facturación (existentes, con separación física)
 
@@ -186,10 +186,10 @@ Se mantiene el contrato de `001`. Se genera a partir de las facturas y no se edi
 ## 9. Relaciones
 
 - Un `AccessRecord` de trabajador referencia exactamente un `Entity` personal por `entityId`.
-- Un `AccessRecord` de administrador no referencia ningún `Entity`; un `AccessRecord` de trabajador referencia uno personal.
+- Un `AccessRecord` de administrador o de finanzas no referencia ningún `Entity`.
 - Un `Entity` personal puede tener cero o un `AccessRecord` activo.
 - Una `PurchaseInvoice` pertenece a un `Entity`; si el tercero es personal, es el comprobante de pago de una liquidación.
-- Una `LiquidacionSueldo` pertenece a un `Entity` personal por `entityId` y, cuando `documentId` no es `null`, se vincula a exactamente una `PurchaseInvoice`.
+- Una `LiquidacionSueldo` pertenece a un `Entity` personal por `entityId` y se vincula a exactamente una `PurchaseInvoice` por `documentId`.
 - Una `PurchaseInvoice` a personal tiene como máximo una `LiquidacionSueldo`.
 - Un `AccessRecord` de trabajador se asocia a sus liquidaciones por `AccessRecord.entityId === LiquidacionSueldo.entityId`, no por `PurchaseInvoice.entity_id`.
 - Una `Session` de trabajador filtra sus liquidaciones por `session.entityId`.
@@ -201,9 +201,9 @@ Se mantiene el contrato de `001`. Se genera a partir de las facturas y no se edi
 
 **Acceso**
 - RUT válido, único y normalizado.
-- Rol en `{administrador, trabajador}`. El rol `finanzas` fue absorbido en el administrador.
+- Rol en `{administrador, finanzas, trabajador}`.
 - Trabajador: `entityId` obligatorio, existente y de tipo personal; ve solo sus propias liquidaciones (vigente e historial).
-- Administrador: `entityId` debe ser `null`. El administrador conserva accesos y avisos del desarrollador; no existe rol `finanzas`.
+- Administrador y finanzas: `entityId` debe ser `null`. El administrador conserva accesos y avisos del desarrollador; finanzas no.
 - Contraseña de exactamente 4 dígitos; al crear o restablecer, igual a los primeros 4 dígitos del cuerpo del RUT.
 - No se puede desactivar ni eliminar el último administrador activo.
 - No se puede tener dos accesos activos para el mismo `entityId`.
@@ -216,12 +216,12 @@ Se mantiene el contrato de `001`. Se genera a partir de las facturas y no se edi
 - Un trabajador debe conservar un `entityId` válido y personal para filtrar sus liquidaciones.
 
 **Liquidación**
-- `settlementId` único; una sola liquidación por `documentId` distinto de `null`.
+- `settlementId` único; una sola liquidación por `documentId`.
 - `entityId` obligatorio, existente y de tipo personal.
-- Si hay factura vinculada, esta debe existir, tener `customFields.tipoFactura === 'compra'` y el mismo `entity_id`.
-- `periodo` en `YYYY-MM`, no posterior a la emisión de la factura cuando existe factura vinculada.
+- La factura vinculada debe existir, tener `customFields.tipoFactura === 'compra'` y el mismo `entity_id`.
+- `periodo` en `YYYY-MM`, no posterior a la emisión de la factura.
 - `sueldoBase`, `descuentos` y `bonos` mayores o iguales que `0`; `monto` mayor que `0`.
-- `estado` en `{Borrador, Emitida, Pagada}`, espejo de `status`; `fechaPago` (`YYYY-MM-DD` o `null`) espejo de `customFields.fechaPago`; `monto` espejo de `totalAmount`. Los tres se sincronizan al editar la factura. Cuando `documentId` es `null`, los tres campos se guardan y editan en la propia liquidación, sin espejo.
+- `estado` en `{Borrador, Emitida, Pagada}`, espejo de `status`; `fechaPago` (`YYYY-MM-DD` o `null`) espejo de `customFields.fechaPago`; `monto` espejo de `totalAmount`. Los tres se sincronizan al editar la factura.
 - Para marcar Pagada se requiere `montoPagado = totalAmount` y `fechaPago` en la factura.
 - No se introduce cálculo legal: el desglose solo se registra y se muestra.
 - La liquidación vigente es la primera tras ordenar por `periodo` descendente, `startDate` descendente y `createdAt` descendente; no se exige estado `Pagada`.
@@ -235,13 +235,13 @@ Se mantiene el contrato de `001`. Se genera a partir de las facturas y no se edi
 
 **Permisos por rol**
 
-| Funcionalidad | Administrador (RRHH) | Trabajador |
-|---|---|---|
-| Terceros, facturas de venta y compra, movimientos, flujo de caja, seguimiento y búsqueda | Ver y editar | Sin acceso |
-| Liquidaciones de todos los trabajadores | Ver y editar `LiquidacionSueldo` y su factura vinculada | Solo las propias, solo lectura: vigente con desglose e historial de pagos |
-| Administración de accesos | Sí | No |
-| Avisos del desarrollador | Sí | No |
-| Cargar demostración desde la pantalla de acceso | Sí, como acción previa a la autenticación | Sí, como acción previa a la autenticación |
+| Funcionalidad | Administrador (RRHH) | Finanzas | Trabajador |
+|---|---|---|---|
+| Terceros, facturas de venta y compra, movimientos, flujo de caja, seguimiento y búsqueda | Ver y editar | Ver y editar | Sin acceso |
+| Liquidaciones de todos los trabajadores | Ver y editar `LiquidacionSueldo` y su factura vinculada | Ver y editar `LiquidacionSueldo` y su factura vinculada | Solo las propias, solo lectura: vigente con desglose e historial de pagos |
+| Administración de accesos (incluidos accesos de finanzas) | Sí | No | No |
+| Avisos del desarrollador | Sí | No | No |
+| Cargar demostración desde la pantalla de acceso | Sí, como acción previa a la autenticación | Sí, como acción previa a la autenticación | Sí, como acción previa a la autenticación |
 
 ## 11. Transiciones de estado
 
@@ -323,7 +323,7 @@ erDiagram
     ACCESO ||--o| TERCERO : "trabajador referencia"
     TERCERO ||--o{ FACTURA_COMPRA : "recibe"
     TERCERO ||--o{ LIQUIDACION_SUELDO : "pertenece"
-    FACTURA_COMPRA |o--o| LIQUIDACION_SUELDO : "documentId FK"
+    FACTURA_COMPRA ||--o| LIQUIDACION_SUELDO : "documentId FK"
     TERCERO ||--o{ FACTURA_VENTA : "recibe"
     FACTURA_COMPRA ||--o{ MOVIMIENTO : "genera"
     FACTURA_VENTA ||--o{ MOVIMIENTO : "genera"
@@ -332,7 +332,7 @@ erDiagram
 
     ACCESO {
         string accessId PK "RUT canonico"
-        string role "administrador o trabajador"
+        string role "administrador, finanzas o trabajador"
         string entityId FK "solo trabajador; igual a LiquidacionSueldo.entityId"
         string password "4 digitos MVP"
         boolean active
@@ -398,7 +398,7 @@ erDiagram
 
     LIQUIDACION_SUELDO {
         string settlementId PK
-        string documentId FK "PurchaseInvoice.document_id; null en alta directa"
+        string documentId FK "PurchaseInvoice.document_id"
         string entityId FK "tercero personal"
         string periodo "YYYY-MM"
         number sueldoBase

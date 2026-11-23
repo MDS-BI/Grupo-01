@@ -30,7 +30,7 @@ La separación de facturas es **física** y **lógica/visual**:
 - La nueva colección no cambia la versión de esquema: `erp.schemaVersion` sigue siendo `'2.0.0'`.
 - Un registro de venta nunca se muestra en la vista de compra, en la liquidación del trabajador ni en la lista del administrador.
 - Un registro de compra nunca se muestra en la vista de venta.
-- Las vistas de venta y compra están disponibles para `administrador`; el trabajador no puede abrirlas. El rol `finanzas` fue absorbido en el administrador.
+- Las vistas de venta y compra están disponibles para `administrador` y `finanzas`; el trabajador no puede abrirlas.
 
 ## 3. API de `src/storage.js`
 

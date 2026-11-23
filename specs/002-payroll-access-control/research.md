@@ -22,7 +22,7 @@ La comparación de accesos se hace siempre con la forma canónica. La visualizac
 
 ## 2. Contraseña inicial
 
-**Decisión.** La contraseña inicial son los primeros 4 dígitos del cuerpo del RUT, sin puntos ni dígito verificador. Ejemplo: `12.345.678-5` → `1234`. La regla se aplica al crear un acceso de trabajador o de administrador y al restablecer la contraseña. El sistema verifica que la contraseña guardada coincida exactamente con esos 4 dígitos al crear el acceso.
+**Decisión.** La contraseña inicial son los primeros 4 dígitos del cuerpo del RUT, sin puntos ni dígito verificador. Ejemplo: `12.345.678-5` → `1234`. La regla se aplica al crear un acceso de trabajador, de finanzas o de administrador y al restablecer la contraseña. El sistema verifica que la contraseña guardada coincida exactamente con esos 4 dígitos al crear el acceso.
 
 **Justificación.** Es la regla explícita del usuario y es fácil de explicar en la demostración. No se exige cambio obligatorio en el primer ingreso porque el usuario no lo pidió y el MVP no tiene backend.
 
@@ -37,7 +37,7 @@ La comparación de accesos se hace siempre con la forma canónica. La visualizac
 
 **Decisión.** Se crea la entidad persistente `LiquidacionSueldo`, guardada bajo la clave `erp.payrollSettlements` de `localStorage`; el esquema se mantiene en `2.0.0`. Sus campos son `settlementId`, `documentId` (FK a `PurchaseInvoice.document_id`), `entityId` del tercero personal, `periodo` (`YYYY-MM`), `sueldoBase`, `descuentos`, `bonos`, `monto`, `estado` (`Borrador` | `Emitida` | `Pagada`), `fechaPago`, `createdAt` y `updatedAt`.
 
-La factura de compra vinculada sigue siendo el comprobante de pago. Los campos `estado`, `fechaPago` y `monto` de la liquidación son un espejo de la factura y se sincronizan al editarla; el desglose (`sueldoBase`, `descuentos` y `bonos`) se registra en la entidad. No se calculan haberes, descuentos legales, AFP, salud ni imponibilidad: los valores del desglose son los registrados por remuneraciones o por el administrador (rol absorbente del finanzas).
+La factura de compra vinculada sigue siendo el comprobante de pago. Los campos `estado`, `fechaPago` y `monto` de la liquidación son un espejo de la factura y se sincronizan al editarla; el desglose (`sueldoBase`, `descuentos` y `bonos`) se registra en la entidad. No se calculan haberes, descuentos legales, AFP, salud ni imponibilidad: los valores del desglose son los registrados por remuneraciones o finanzas.
 
 **Justificación.** El desglose necesita valores registrados explícitamente y el historial necesita liquidaciones identificables, no solo una proyección del estado actual de la factura. El vínculo por `documentId` conserva la trazabilidad con movimientos, seguimiento y la colección `erp.purchaseInvoices`, sin convertir la factura en el lugar donde se inventan los componentes del sueldo.
 
@@ -115,7 +115,8 @@ Cada registro conserva `customFields.tipoFactura` como invariante y para compati
 ## 8. Guardas de rol y navegación
 
 **Decisión.** `app.js` mantiene una función `resolveRoute(view, session)` que devuelve la vista permitida o la vista de acceso. `shell.js` recibe la sesión y muestra solo los módulos permitidos:
-- **Administrador (RRHH)**: panel, terceros, facturas de venta, facturas de compra, liquidaciones, accesos, avisos, movimientos, seguimiento y búsqueda; absorbe en su función las operaciones que antes correspondían al rol `finanzas`.
+- **Administrador (RRHH)**: panel, terceros, facturas de venta, facturas de compra, liquidaciones, accesos, avisos, movimientos, seguimiento y búsqueda. Puede crear accesos de rol `finanzas`.
+- **Finanzas**: panel, terceros, facturas de venta, facturas de compra, liquidaciones, movimientos, flujo de caja, seguimiento y búsqueda, con permisos de edición. No ve accesos ni avisos del desarrollador.
 - **Trabajador**: solo "Mi liquidación" y "Cerrar sesión". No ve datos de otros trabajadores ni de terceros.
 
 No existe rol invitado ni sesión sin credenciales: cualquier vista distinta de `login` sin sesión válida redirige al acceso. Toda acción de edición, eliminación o administración verifica el rol antes de ejecutarse. Las vistas no permitidas se ocultan y, si se intenta navegar por código o por URL, se redirige a la vista permitida con un mensaje.
@@ -125,19 +126,20 @@ No existe rol invitado ni sesión sin credenciales: cualquier vista distinta de 
 **Alternativas consideradas.**
 - Ocultar solo los botones: insuficiente, porque una llamada directa a la vista podría seguir mostrando datos.
 - Duplicar guardas en cada componente: más código y más riesgo de inconsistencia.
-- Un único rol con permisos amplios: incumple el feedback de privacidad, porque el trabajador no debe ver datos ajenos.
+- Un único rol con permisos amplios: incumple el feedback de privacidad, porque finanzas no debe administrar accesos ni ver avisos del desarrollador y el trabajador no debe ver datos ajenos.
 
 ## 9. Datos de demostración
 
 **Decisión.** La demostración incluye:
 - Un administrador (RRHH): RUT `88.888.888-8`, contraseña `8888`.
+- Un acceso de finanzas: RUT `55.555.555-5`, contraseña `5555`.
 - Dos trabajadores: RUT `22.222.222-2` / `2222` y `45.000.000-0` / `4500`.
 - Terceros personales asociados y, para cada trabajador, una liquidación vigente con `sueldoBase`, `descuentos` y `bonos` registrados, además de al menos dos liquidaciones `Pagadas` con `fechaPago` distinta. Cada liquidación tiene su `documentId` vinculado a una factura de compra de ejemplo.
 - Facturas de venta y de compra de ejemplo para demostrar la separación.
 
 El RUT del administrador no coincide con el RUT de ningún tercero: se descarta `11.111.111-1` porque pertenece a un tercero proveedor. La carga se inicia desde el botón «Cargar demostración» de la pantalla de acceso, sin abrir vistas del módulo ni iniciar sesión. Es idempotente: si ya existen accesos, facturas o liquidaciones con el mismo `documentId`, no duplica y conserva lo existente. Siembra en `erp.payrollSettlements` y registra la marca de backfill cuando corresponda. Los RUT y contraseñas se documentan en `README.md`.
 
-**Justificación.** Permite demostrar los dos roles, el desglose de la última liquidación y un historial con más de un pago ordenado por fecha. Los RUT son ficticios y válidos según el módulo 11; mantener el RUT del administrador distinto de los terceros evita confundir al personal de RRHH con un trabajador o proveedor.
+**Justificación.** Permite demostrar los tres roles, el desglose de la última liquidación y un historial con más de un pago ordenado por fecha. Los RUT son ficticios y válidos según el módulo 11; mantener el RUT del administrador distinto de los terceros evita confundir al personal de RRHH con un trabajador o proveedor.
 
 **Alternativas consideradas.**
 - Generar RUT aleatorios: dificulta la repetición de la demostración.
@@ -166,7 +168,7 @@ El RUT del administrador no coincide con el RUT de ningún tercero: se descarta 
 
 ## 11. Acceso obligatorio y carga de demostración
 
-**Decisión.** No existe modo invitado. La pantalla de acceso ofrece «Ingresar» y «Cargar demostración»; esta última siembra los datos ficticios y permanece en el acceso, sin crear sesión ni mostrar vistas de negocio. Toda vista del módulo exige una sesión válida de `administrador` o `trabajador`.
+**Decisión.** No existe modo invitado. La pantalla de acceso ofrece «Ingresar» y «Cargar demostración»; esta última siembra los datos ficticios y permanece en el acceso, sin crear sesión ni mostrar vistas de negocio. Toda vista del módulo exige una sesión válida de `administrador`, `finanzas` o `trabajador`.
 
 **Justificación.** Responde al feedback de privacidad: eliminar la puerta de entrada sin credenciales evita que cualquier persona vea información de terceros o trabajadores, y permite arrancar en un navegador vacío sin reintroducir el invitado por otro nombre.
 
@@ -188,15 +190,3 @@ El RUT del administrador no coincide con el RUT de ningún tercero: se descarta 
 - No registrar marca de migración: repetiría el backfill y dificultaría diagnosticar el estado del navegador; rechazada.
 
 La verificación automatizada de estas decisiones se ejecuta con `npm run check` (ESLint, comprobación de formato con Prettier y `vitest run`).
-
-## 13. Absorción del rol finanzas y alta de liquidaciones con RUT + nombre completo
-
-**Decisión.** Se elimina el rol `finanzas` por completo del sistema y se absorbe en el rol `administrador`, que pasa a operar todas las vistas y funciones que antes correspondían a finanzas (panel, terceros, facturas de venta y compra, liquidaciones, movimientos, flujo de caja, seguimiento y búsqueda), sin crear un rol nuevo paralelo. La creación de una liquidación de sueldo con RUT nuevo se registra directamente como settlement vinculado al RUT del trabajador: el sistema crea la entidad personal (Tercero) asociada, el acceso con rol `trabajador` y la contraseña inicial de los primeros 4 dígitos del cuerpo del RUT, y registra la liquidación con ese RUT.
-
-**Justificación.** Las decisiones del usuario (clarificación Session 2026-11-23 del spec) unifican el rol operativo en `administrador` (RRHH) y simplifican el alta de remuneraciones a un solo flujo: el RUT identifica al trabajador/persona y el settlement se crea directamente, sin paso intermedio de factura de compra.
-
-**Alternativas consideradas.**
-- Mantener `finanzas` como valor reservado: no elimina la duplicidad operativa y deja ramas muertas en validación y navegación.
-- Exigir factura de compra previa para el alta del settlement: complica el flujo y no fue aceptado por el usuario.
-- Crear el acceso sin entidad personal: rompe la restricción de rol trabajador existente (entidad personal obligatoria).
-- Mantener dos roles operativos (finanzas y administrador): contradice la decisión de absorción entregada por el usuario.
