@@ -477,6 +477,77 @@ Depende de las Tareas 3 y 6 de esa versión (etiquetas Cliente/Factura y ciclo d
 - [ ] **Tarea 16:** Verificar la integridad referencial y el borrado en cascada: impedir facturas sin cliente válido y eliminar las facturas asociadas al eliminar un cliente.
 - [ ] **Tarea 17:** Ejecutar `npx vitest run`, corregir los fallos y validar con `npm run dev` el flujo completo: crear cliente -> registrar factura en Borrador -> emitir factura -> visualizar la deuda del cliente.
 
+---
+
+## Fase 13: US9 (HU9) - Flujo de caja (Revisión 6, 2026-11-23; Prioridad: P2)
+
+**Propósito**: registrar retroactivamente el Flujo de caja implementado en `ec14932` y dejar explícitas las verificaciones pendientes de formato y acceso por rol. La etiqueta `US9` equivale a la HU9 del `spec.md`.
+
+**Prueba independiente**: con facturas de venta y compra en estado Pagada, incluida una de personal, se abre Flujo de caja y se comprueban filas, orden por fecha de pago, etiquetas, totales y ausencia de facturas Borrador o Emitida.
+
+### Pruebas de US9 implementadas
+
+- [X] T089 [P] [US9] Actualizar `tests/integration/us14-dashboard-summary.test.js` para abrir `#qa-cashflow`, comprobar que `#view-cashflow` queda visible y validar que la Caja neta del Panel coincide con el neto calculado desde facturas Pagadas, entidades y movimientos reales (FR-039, FR-044, SC-010; implementada en ec14932 por Matías Espinoza)
+
+### Implementación de US9 implementada
+
+- [X] T090 [US9] Crear `src/cashflow.js` con `computeCashflow(documents, entities, movements)`: filtrar solo facturas `Pagada`, clasificar venta como Ingreso «Cobro factura de venta», compra como Egreso «Factura de compra» y compra de `personal` como «Liquidación de sueldo», ordenar por fecha de pago ascendente y calcular `ingresos`, `egresos` y `neto` sin exponer haberes, descuentos ni bonos (FR-037 a FR-039, SC-009; implementada en ec14932 por Matías Espinoza)
+- [X] T091 [US9] Crear `src/components/cashflow.js` con `renderCashflowView(container)`: tabla de solo lectura con columnas Fecha, Tipo, Categoría, Tercero, Documento (serie-folio) y Monto, tarjetas de Ingresos, Egresos y Neto, y estado vacío `#cashflow-empty` cuando no hay facturas Pagadas (FR-037, FR-039, FR-040; implementada en ec14932 por Matías Espinoza)
+- [X] T092 [US9] Agregar en `index.html` la vista `#view-cashflow`, el acceso `#nav-cashflow` y el acceso rápido `#qa-cashflow`, y conectarlos en `src/app.js` (`VIEWS`, `ACCESS_MATRIX`, navegación y render de la vista) y en `src/components/shell.js` (`ADMIN_MODULES`, `FINANCE_MODULES` y `navLabel`) sin mostrar la entrada al rol `trabajador` (FR-037, FR-045, SC-011; implementada en ec14932 por Matías Espinoza)
+- [X] T093 [P] [US9] Agregar en `src/styles.css` los estilos de la tabla `#cashflow-table`, las tarjetas `.cashflow-summary` y el estado vacío del Flujo de caja, manteniendo el marco visual de HU7 (FR-037, FR-039; implementada en ec14932 por Matías Espinoza)
+- [X] T094 [P] [US9] Actualizar `README.md` para mencionar el acceso al Flujo de caja desde el menú y el Panel (FR-037; implementada en ec14932 por Matías Espinoza)
+
+---
+
+## Fase 14: US10 (HU10) - Resumen financiero del Panel (Revisión 6, 2026-11-23; Prioridad: P2)
+
+**Propósito**: registrar retroactivamente los tres indicadores financieros del Panel implementados en `ec14932`, complementando los KPIs de HU7 sin reemplazarlos. La etiqueta `US10` equivale a la HU10 del `spec.md`.
+
+**Prueba independiente**: con facturas Emitidas y Pagadas, se abre el Panel y se comprueban Saldo neto, Deuda pendiente y Caja neta junto a los KPIs existentes, sus fórmulas y la actualización tras registrar pagos.
+
+### Pruebas de US10 implementadas
+
+- [X] T095 [P] [US10] Ampliar `tests/integration/us14-dashboard-summary.test.js` con entidades, facturas de venta/compra/personal en estado Pagada y facturas Emitidas, y comprobar que `#summary-saldo` es `400`, `#summary-deuda` es `600` y `#summary-caja` es `500`, además de los accesos rápidos del Panel (FR-041 a FR-044, SC-010; implementada en ec14932 por Matías Espinoza)
+
+### Implementación de US10 implementada
+
+- [X] T096 [US10] Crear `src/summary.js` con `computeDashboardSummary(entities, documents, movements)`: reutilizar `computeDebtSummary` y `computeCashflow` para devolver `saldo = por cobrar - por pagar`, `deuda = por cobrar + por pagar` y `caja = neto`, junto a `ingresos`, `egresos`, totales y vencidas (FR-042 a FR-044, SC-010; implementada en ec14932 por Matías Espinoza)
+- [X] T097 [US10] Actualizar `src/components/dashboard.js` para llamar a `computeDashboardSummary` desde `refreshDashboard()` y escribir `#summary-saldo`, `#summary-deuda` y `#summary-caja` sin sustituir `#kpi-por-cobrar`, `#kpi-por-pagar` ni `#kpi-vencidas` (FR-041 a FR-044; implementada en ec14932 por Matías Espinoza)
+- [X] T098 [US10] Agregar en `index.html` el marcado del Resumen financiero con `#summary-saldo`, `#summary-deuda` y `#summary-caja`, y completar `src/styles.css` con sus tarjetas para que el Panel muestre cero o estado vacío claro sin datos (FR-041, FR-044, FR-045; implementada en ec14932 por Matías Espinoza)
+
+---
+
+## Fase 15: Formato CLP y verificación de roles (Revisión 6, 2026-11-23; FR-045 y FR-046)
+
+**Propósito**: cerrar la mejora pendiente de formato de montos en pesos chilenos y verificar la excepción de acceso de las HU9/HU10 frente al rol `trabajador`. Estas tareas quedan sin marcar; las de prueba se ejecutan antes que sus implementaciones o verificaciones correspondientes.
+
+**Dependencias**: T099–T102 pueden avanzar en paralelo; T103 crea el formateador compartido; T104–T107 dependen de T103 y tocan archivos distintos; T108–T109 preceden a T110; T111 puede avanzar en paralelo con las pruebas.
+
+### Pruebas primero: formato CLP
+
+- [ ] T099 [P] [US10] Escribir primero las pruebas de formato CLP del Panel en `tests/integration/us14-dashboard-summary.test.js`: `#summary-saldo`, `#summary-deuda`, `#summary-caja`, `#kpi-por-cobrar` y `#kpi-por-pagar` deben mostrar separador de miles y conservar el signo negativo delante de `$`, con ejemplos normativos `$1.240.000` y `-$2.430.000` (FR-046, SC-012)
+- [ ] T100 [P] [US9] Escribir primero las pruebas de formato CLP del Flujo de caja en `tests/integration/cashflow-format.test.js`: `#cashflow-ingresos`, `#cashflow-egresos`, `#cashflow-neto` y la columna Monto de `#cashflow-table` deben usar `$1.240.000` y conservar el signo en `-$2.430.000` (FR-046, SC-012)
+- [ ] T101 [P] [US9] Escribir primero las pruebas de formato CLP de Movimientos financieros en `tests/integration/movements-format.test.js`: el monto renderizado por `src/components/movements-list.js` debe usar separador de miles y signo delante de `$` para valores negativos (FR-046, SC-012)
+- [ ] T102 [P] [US10] Escribir primero las pruebas de formato CLP de Seguimiento en `tests/integration/tracking-format.test.js`: los totales por cobrar y por pagar renderizados por `src/components/tracking.js` deben usar `$1.240.000` y `-$2.430.000` cuando corresponda (FR-046, SC-012)
+
+### Implementación pendiente: formato CLP
+
+- [ ] T103 [US10] Crear `src/format.js` con `formatCurrencyCLP(value)` usando `Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' })` o equivalente que produzca exactamente `$1.240.000` y `-$2.430.000`, y reutilizarlo también desde `src/components/payroll-list.js` para alinear Mi liquidación (FR-046, SC-012; depende de T099–T102)
+- [ ] T104 [US10] Actualizar `src/components/dashboard.js` para formatear con `formatCurrencyCLP` los valores escritos en `#summary-saldo`, `#summary-deuda`, `#summary-caja`, `#kpi-por-cobrar` y `#kpi-por-pagar`, dejando `#kpi-vencidas` como recuento (FR-046, SC-012; depende de T103)
+- [ ] T105 [US9] Actualizar `src/components/cashflow.js` para formatear con `formatCurrencyCLP` las tarjetas `#cashflow-ingresos`, `#cashflow-egresos`, `#cashflow-neto` y cada celda de la columna Monto de `#cashflow-table` (FR-046, SC-012; depende de T103)
+- [ ] T106 [US9] Actualizar `src/components/movements-list.js` para formatear con `formatCurrencyCLP` el monto de cada movimiento financiero (FR-046, SC-012; depende de T103)
+- [ ] T107 [US10] Actualizar `src/components/tracking.js` para formatear con `formatCurrencyCLP` los textos «Total por cobrar» y «Total por pagar» del Seguimiento (FR-046, SC-012; depende de T103)
+
+### Pruebas primero: acceso por rol
+
+- [ ] T108 [P] [US9] Escribir primero pruebas en `tests/integration/navigation-menu.test.js` con sesión de `trabajador`: `#nav-cashflow` y `#qa-cashflow` deben estar ocultos, `#view-cashflow` no debe hacerse visible, `canAccess('cashflow', session)` debe ser `false` y `resolveRoute('cashflow', session)` debe devolver `payroll-worker` sin datos del módulo (FR-045, SC-011)
+- [ ] T109 [P] [US10] Escribir primero pruebas en `tests/integration/navigation-menu.test.js` con sesión de `trabajador`: `#view-dashboard` debe permanecer oculto y `#summary-saldo`, `#summary-deuda`, `#summary-caja` y sus tarjetas no deben mostrarse ni contener valores del Resumen financiero (FR-045, SC-011)
+
+### Verificación y documentación pendiente
+
+- [ ] T110 [P] [US9] Verificar en `src/app.js` y `src/components/shell.js` que `ACCESS_MATRIX` y los listados de menú mantengan `cashflow` y `dashboard` vedados al rol `trabajador`, ejecutar `npm run check` y comprobar en `npm run dev` que un acceso directo a Flujo de caja o Panel redirige a `payroll-worker` sin exponer datos (FR-045, SC-011; depende de T108 y T109)
+- [ ] T111 [P] [US10] Actualizar `specs/001-erp-base-module/contracts/navigation-and-access.md` para documentar `#view-cashflow`, el acceso `#nav-cashflow`, el acceso rápido `#qa-cashflow`, el Resumen financiero del Panel y la excepción de roles: solo `administrador` y `finanzas`, nunca `trabajador` (FR-036, FR-045)
+
 
 
 
