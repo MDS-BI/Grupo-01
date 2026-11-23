@@ -1,6 +1,6 @@
 # Quickstart: Acceso a liquidaciones de sueldo por RUT y contraseña
 
-**Funcionalidad**: `002-payroll-access-control` · **Fecha**: 2026-11-11 · **Revisado**: 2026-11-17 · 2026-11-19 (`LiquidacionSueldo`, desglose e historial) · 2026-11-23 (absorción del rol finanzas y creación de liquidaciones con RUT + nombre completo)
+**Funcionalidad**: `002-payroll-access-control` · **Fecha**: 2026-11-11 · **Revisado**: 2026-11-17 · 2026-11-19 (`LiquidacionSueldo`, desglose e historial)
 **Relacionado con**: `spec.md`, `plan.md`, `data-model.md` y `contracts/`
 
 ## 1. Requisitos previos
@@ -64,6 +64,7 @@ En un navegador sin datos, seleccionar **Cargar demostración** en la pantalla d
 | Rol | RUT | Contraseña inicial | Trabajador asociado |
 |---|---|---|---|
 | Administrador (RRHH) | `88.888.888-8` | `8888` | — |
+| Finanzas | `55.555.555-5` | `5555` | — |
 | Trabajador | `22.222.222-2` | `2222` | Ana Pérez Soto |
 | Trabajador | `45.000.000-0` | `4500` | Bruno Soto Vega |
 
@@ -82,11 +83,11 @@ Las liquidaciones se guardan en `erp.payrollSettlements` (esquema `2.0.0`) vincu
 3. Pulsar «Cargar demostración» y comprobar que se permanece en el acceso, sin sesión ni datos de negocio visibles.
 4. Ingresar `88.888.888-8` / `8888` y comprobar el Panel y «Rol: Administrador» en la cabecera.
 5. Comprobar que «Cerrar sesión» es la última opción del lateral y utilizarla.
-6. Ingresar `88.888.888-8` / `8888` y comprobar el Panel, «Rol: Administrador», la facturación y el acceso a las liquidaciones (absorbidas del rol finanzas) y la ausencia de accesos y avisos del desarrollador fuera de su función.
+6. Ingresar `55.555.555-5` / `5555` y comprobar el Panel, «Rol: Finanzas», el acceso a la facturación y la ausencia de accesos y avisos del desarrollador.
 7. Cerrar sesión, ingresar `22.222.222-2` / `2222` y comprobar Mi liquidación y «Rol: Trabajador».
 8. Cerrar sesión e intentar abrir una vista del módulo por enlace directo; verificar que se vuelve al acceso.
 
-**Resultado esperado**: cada rol (administrador o trabajador) llega a su vista, el administrador no ve avisos del desarrollador en las vistas operativas salvo que gestione accesos, y no se muestran datos antes de autenticar.
+**Resultado esperado**: cada rol llega a su vista, finanzas no ve administración ni avisos, y no se muestran datos antes de autenticar.
 
 ### Escenario 2: credenciales inválidas y rol registrado
 
@@ -102,16 +103,16 @@ Las liquidaciones se guardan en `erp.payrollSettlements` (esquema `2.0.0`) vincu
 1. Entrar como administrador.
 2. Abrir **Accesos**.
 3. Crear un acceso de trabajador con un RUT nuevo y un tercero personal.
-4. Crear un acceso de trabajador con un RUT nuevo y un tercero personal.
+4. Crear un acceso de rol `finanzas` con un RUT nuevo y sin tercero personal.
 5. Verificar que la contraseña inicial mostrada son los primeros 4 dígitos del RUT en ambos accesos.
 6. Cerrar sesión e ingresar con el RUT del trabajador; comprobar que solo ve su liquidación.
-7. Cerrar sesión e ingresar con el RUT del administrador; comprobar que ve facturación y no ve accesos ni avisos.
+7. Cerrar sesión e ingresar con el RUT de finanzas; comprobar que ve facturación y no ve accesos ni avisos.
 8. Volver a entrar como administrador, desactivar el acceso del trabajador y probar su login.
 9. Verificar que el acceso inactivo se rechaza y queda una notificación visible solo para el administrador.
 10. Reactivar el acceso y verificar que vuelve a funcionar.
 11. Intentar desactivar el último administrador activo y verificar que el sistema lo impide.
 
-**Resultado esperado**: los accesos de trabajador y administrador se crean, activan, desactivan y restablecen según las reglas; el administrador conserva la gestión de accesos y los avisos.
+**Resultado esperado**: los accesos de trabajador y finanzas se crean, activan, desactivan y restablecen según las reglas; el administrador conserva la gestión de accesos y los avisos.
 
 ### Escenario 4: vista del trabajador
 
@@ -125,7 +126,7 @@ Las liquidaciones se guardan en `erp.payrollSettlements` (esquema `2.0.0`) vincu
 
 **Resultado esperado**: cada trabajador ve solo su última liquidación con desglose y el historial de sus pagos efectivos, en modo solo lectura.
 
-### Escenario 5: edición del administrador
+### Escenario 5: edición del administrador y de finanzas
 
 1. Entrar como administrador y abrir **Liquidaciones de sueldo**.
 2. Verificar que aparecen las liquidaciones de ambos trabajadores con RUT, período, monto y estado, leídas desde `erp.payrollSettlements` y vinculadas por `documentId`.
@@ -133,11 +134,11 @@ Las liquidaciones se guardan en `erp.payrollSettlements` (esquema `2.0.0`) vincu
 4. Editar una liquidación: cambiar sueldo base, descuentos o bonos, y guardar un cambio válido. Comprobar que los campos persisten en la entidad sin calcular haberes ni descuentos legales.
 5. Editar la factura de compra vinculada y verificar que `estado`, `fechaPago` y `monto` de la liquidación se sincronizan; comprobar que la vista del trabajador refleja ambos cambios.
 6. Cerrar sesión, entrar como el trabajador correspondiente y verificar el cambio en su liquidación vigente y en el historial si el pago cambió.
-7. Entrar como administrador, editar otra liquidación y su desglose, y verificar que el cambio se refleja en la vista del trabajador.
+7. Entrar como finanzas, editar otra liquidación y su desglose, y verificar que el cambio se refleja en la vista del trabajador.
 8. Intentar guardar una edición inválida y verificar que se rechaza.
-9. Verificar que el administrador no puede abrir los Avisos del desarrollador desde las vistas operativas.
+9. Verificar que finanzas no puede abrir **Accesos** ni **Avisos del desarrollador**.
 
-**Resultado esperado**: el administrador ve y edita todas las liquidaciones y su desglose, sin permisos de administración adicionales; `estado`, `fechaPago` y `monto` permanecen sincronizados con la factura vinculada y los cambios se reflejan en la vista del trabajador.
+**Resultado esperado**: administrador y finanzas ven y editan todas las liquidaciones y su desglose, sin permisos de administración para finanzas; `estado`, `fechaPago` y `monto` permanecen sincronizados con la factura vinculada y los cambios se reflejan en la vista del trabajador.
 
 ### Escenario 6: sesión por pestaña
 
@@ -186,15 +187,14 @@ Las liquidaciones se guardan en `erp.payrollSettlements` (esquema `2.0.0`) vincu
 
 **Resultado esperado**: la carga es idempotente y conserva lo existente.
 
-### Escenario 10: liquidaciones del administrador y riesgos conocidos
+### Escenario 10: permisos de finanzas y riesgos conocidos
 
-1. Entrar como administrador (`88.888.888-8` / `8888`) y abrir **Liquidaciones de sueldo**.
-2. Crear una liquidación con un RUT nuevo y nombre completo usando el formulario de la pestaña de creación que reutiliza el de facturas pidiendo RUT y nombre completo; verificar que se crea la entidad personal (Tercero), el acceso con rol `trabajador` y la contraseña inicial de los primeros 4 dígitos del RUT, y el settlement vinculado.
-3. En el listado, usar el buscador por RUT y filtrar mientras se escribe; editar una liquidación y su desglose y comprobar la sincronización con la factura vinculada.
-4. Verificar que el menú ofrece **Accesos** y **Avisos del desarrollador** solo para la función de administración y que un enlace directo desde las vistas operativas se bloquea.
-5. Verificar que la interfaz advierte que el control es solo de interfaz y que la contraseña inicial no se puede cambiar.
+1. Entrar como `55.555.555-5` / `5555`.
+2. Recorrer terceros, facturas de venta y compra, movimientos, flujo de caja, seguimiento y búsqueda; verificar que se pueden ver y editar.
+3. Verificar que el menú no ofrece **Accesos** ni **Avisos del desarrollador** y que un enlace directo a esas vistas se bloquea.
+4. Verificar que la interfaz advierte que el control es solo de interfaz y que la contraseña inicial no se puede cambiar.
 
-**Resultado esperado**: el administrador absorbe las funciones operativas que tenía finanzas y administra liquidaciones y accesos con permisos completos; los riesgos conocidos del MVP quedan visibles para el usuario.
+**Resultado esperado**: finanzas opera toda la facturación sin permisos de administración, y los riesgos conocidos del MVP quedan visibles para el usuario.
 
 ### Escenario 11: historial de pagos solo pagadas y más reciente primero
 
@@ -215,14 +215,14 @@ Las liquidaciones se guardan en `erp.payrollSettlements` (esquema `2.0.0`) vincu
 | SC-001 | Cronometrar desde abrir la aplicación hasta llegar a la vista del rol. |
 | SC-002 | Entrar con dos trabajadores distintos y comprobar que cada uno ve solo su liquidación vigente con desglose y su historial de pagados, sin datos del otro; aplicar el escenario 11 para revisar el filtro y el orden. |
 | SC-003 | Probar RUT inválido, inactivo, duplicado y con vínculo roto; revisar el panel de avisos como administrador. |
-| SC-004 | Probar los RUT de los dos roles y comprobar que la cabecera y la navegación corresponden al rol registrado. |
+| SC-004 | Probar los RUT de los tres roles y comprobar que la cabecera y la navegación corresponden al rol registrado. |
 | SC-005 | Recargar, cerrar sesión y cerrar pestaña; comprobar el comportamiento de la sesión. |
-| SC-006 | Cronometrar la búsqueda y edición de una liquidación como administrador. |
-| SC-007 | Cronometrar la carga de la demostración desde el acceso y verificar las credenciales de los dos roles, el RUT distinto del administrador y al menos dos pagos con `fechaPago` distinta por trabajador. |
+| SC-006 | Cronometrar la búsqueda y edición de una liquidación como administrador y como finanzas. |
+| SC-007 | Cronometrar la carga de la demostración desde el acceso y verificar las credenciales de los tres roles, el RUT distinto del administrador y al menos dos pagos con `fechaPago` distinta por trabajador. |
 | SC-008 | Revisar `localStorage` y las dos vistas de factura. |
 | SC-009 | Desactivar o restablecer un acceso y probar el login siguiente. |
 | SC-010 | Intentar abrir datos de otro trabajador o vistas administrativas con sesión de trabajador. |
-| SC-011 | Verificar que el administrador usa toda la facturación y las liquidaciones, y que los accesos y avisos del desarrollador se concentran en su función. |
+| SC-011 | Verificar que finanzas usa toda la facturación y que accesos y avisos se bloquean. |
 | SC-012 | Abrir vistas por enlace directo sin sesión y comprobar que se vuelve al acceso sin datos. |
 | SC-013 | Revisar los RUT de demostración y confirmar que el del administrador no está entre los terceros. |
 | SC-014 | Revisar spec, README, contratos e interfaz para confirmar los dos riesgos conocidos documentados. |
@@ -279,7 +279,7 @@ equivalentes sobre DOM simulado (Vitest + jsdom): acceso por rol y sesión
 carga de demostración (`demo-data.test.js`), guardas por rol (`role-guards.test.js`),
 administración de accesos (`access-admin.test.js`), vista del trabajador y su desglose
 (`payroll-worker.test.js`), historial pagado (`payroll-history.test.js`), edición del
-administrador (`payroll-admin.test.js`), ciclo de sesión
+administrador y finanzas (`payroll-admin.test.js`), ciclo de sesión
 (`session-lifecycle.test.js`), separación y migración de facturas
 (`invoice-separation.test.js`, `invoice-migration.test.js`) y backfill de liquidaciones
 (`payroll-backfill.test.js`). El 2026-11-19 se ejecutaron los escenarios de cierre con
@@ -310,8 +310,8 @@ La revisión actual consolidó `LiquidacionSueldo` como entidad persistente, act
 - Umbral de renderizado: el presupuesto documentado para listados es de 200 ms; `tests/integration/performance.test.js` usa ese valor para el renderizado de 500 entidades.
 - Escenarios de cierre: 4 archivos y 17 pruebas aprobadas para desglose, historial ordenado, backfill idempotente y aislamiento entre trabajadores.
 
-La revisión visual manual en escritorio y móvil no se ejecutó en este entorno. Para hacerla, abrir con `npm run dev`, pulsar «Cargar demostración» desde el acceso y probar administrador (`88.888.888-8` / `8888`) y ambos trabajadores; comprobar que el lateral se oculta al salir, que el rol de la cabecera se actualiza, que la última liquidación muestra su desglose y que el historial solo incluye pagos ordenados de más reciente a más antiguo.
+La revisión visual manual en escritorio y móvil no se ejecutó en este entorno. Para hacerla, abrir con `npm run dev`, pulsar «Cargar demostración» desde el acceso y probar administrador (`88.888.888-8` / `8888`), finanzas (`55.555.555-5` / `5555`) y ambos trabajadores; comprobar que el lateral se oculta al salir, que el rol de la cabecera se actualiza, que la última liquidación muestra su desglose y que el historial solo incluye pagos ordenados de más reciente a más antiguo.
 
 ## Revisión de diseño del 2026-11-17
 
-Los artefactos de planeación se actualizaron para eliminar el modo invitado, absorber el rol finanzas en el administrador, mover «Cargar demostración» al acceso, corregir los RUT de demostración y agregar la creación de liquidaciones con RUT + nombre completo. La verificación automatizada de la revisión anterior de HU1 registró 236 pruebas aprobadas de 237 en 45 archivos; la única falla fue `tests/integration/performance.test.js` (renderizado de 500 terceros en 135,83 ms frente al umbral de 100 ms), ya presente en `main`, y ESLint conservó cinco advertencias por variables sin uso. Ese resultado corresponde al código previo y no valida los cambios de esta revisión.
+Los artefactos de planeación se actualizaron para eliminar el modo invitado, agregar el rol finanzas, mover «Cargar demostración» al acceso y corregir los RUT de demostración. La verificación automatizada de la revisión anterior de HU1 registró 236 pruebas aprobadas de 237 en 45 archivos; la única falla fue `tests/integration/performance.test.js` (renderizado de 500 terceros en 135,83 ms frente al umbral de 100 ms), ya presente en `main`, y ESLint conservó cinco advertencias por variables sin uso. Ese resultado corresponde al código previo y no valida los cambios de esta revisión.
