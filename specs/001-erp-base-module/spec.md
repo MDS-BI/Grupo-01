@@ -20,7 +20,7 @@
 
 ### Session 2026-11-11
 
-- Q: ¿La separación entre facturas de venta y facturas de compra debe ser solo visual o también de almacenamiento? → A: Debe ser visual y funcional: dos vistas independientes, dos formularios independientes y dos listados con columnas propias; el almacenamiento sigue siendo un único documento con `tipoFactura`, pero la UI no reutiliza la vista genérica. La factura de venta muestra `sales_order_id`; la de compra muestra `centroCosto` y `periodoLiquidacion`.
+- Q: ¿La separación entre facturas de venta y facturas de compra debe ser solo visual o también de almacenamiento? → A: Debe ser visual y funcional: dos vistas independientes, dos formularios independientes y dos listados con columnas propias; el almacenamiento sigue siendo un único documento con `tipoFactura`, pero la UI no reutiliza la vista genérica. La factura de venta muestra `salesOrderId`; la de compra muestra `centroCosto` y `periodoLiquidacion`. **Nota (2026-11-23): esta respuesta quedó superada por la spec 002; desde el 2026-11-16 las facturas de venta y de compra se guardan en colecciones separadas `erp.salesInvoices` y `erp.purchaseInvoices`. El alcance visual y funcional se mantiene.**
 
 ### Session 2026-11-23
 
@@ -34,6 +34,11 @@
 - Q: ¿Qué pasos muestra la guía a cada perfil? → A: Administrador y finanzas recorren Panel, Terceros, Facturas de venta, Facturas de compra, Emitir y pagar, Liquidaciones de sueldo, Movimientos, Flujo de caja, Seguimiento y el menú ☰; Accesos y Avisos al desarrollador se mencionan solo al administrador. El trabajador recorre solo Mi liquidación y Cuidados. Todos los recorridos terminan en Cuidados.
 - Q: ¿Qué debe explicar el último paso «Cuidados»? → A: Que los datos son ficticios, que la contraseña inicial son los primeros 4 dígitos del RUT y que el control de acceso es solo de interfaz.
 - Q: ¿Cómo debe cambiar el contrato de navegación? → A: El mapa de accesos agrega la columna «Roles con acceso» y reemplaza toda mención a la barra lateral y a la carga de demostración desde el Panel por el menú ☰ y la carga desde la pantalla de acceso.
+- Q: ¿Dónde se almacenan las facturas de venta y de compra después de la spec 002? → A: Desde el 2026-11-16 se guardan en colecciones separadas `erp.salesInvoices` y `erp.purchaseInvoices`; FR-006 y el supuesto de almacenamiento se actualizan, y la respuesta del 2026-11-11 queda registrada como superada.
+- Q: ¿Qué visibilidad tiene el RUT y qué datos guarda y muestra la liquidación de sueldo? → A: El RUT es visible solo para administrador, finanzas y el propio trabajador. La entidad `LiquidacionSueldo` de la 002 guarda y muestra sueldo base, descuentos y bonos, visibles solo para esos mismos perfiles, sin cálculo legal (AFP, salud).
+- Q: ¿Qué modelo de acceso reemplaza al supuesto de un solo usuario por navegador? → A: Login obligatorio con los roles `administrador`, `finanzas` y `trabajador` definidos en la spec 002.
+- Q: ¿Qué rol usa cada usuario descrito en la spec 001? → A: Encargado de cobranzas, encargado de pagos a proveedores, contador y gerencia usan `finanzas`; el responsable de remuneraciones (RRHH) usa `administrador`; el trabajador usa `trabajador`; el integrante del equipo usa cualquier rol tras cargar la demostración desde el acceso.
+- Q: ¿Cómo se llama el campo de trazabilidad de la factura de venta en FR-006? → A: `salesOrderId`.
 
 ## Usuarios
 
@@ -50,11 +55,21 @@
 
 **Roles de acceso aplicables a las vistas nuevas (spec 002):** el acceso es obligatorio para administrador, finanzas y trabajador. El administrador y el rol finanzas ven el Flujo de caja (HU9), el Resumen financiero del Panel (HU10) y la guía de uso desde el Panel; el trabajador no ve ninguna de las dos vistas ni sus accesos, pero sí puede abrir la guía desde el menú ☰. Para el resto de la spec 001 se mantiene la descripción anterior de usuarios por función.
 
+| Usuario | Rol de acceso (spec 002) |
+|---|---|
+| Encargado de cobranzas | `finanzas` |
+| Encargado de pagos a proveedores | `finanzas` |
+| Contador | `finanzas` |
+| Gerencia | `finanzas` |
+| Responsable de remuneraciones (RRHH) | `administrador` |
+| Trabajador | `trabajador` |
+| Integrante del equipo (demostración) | Cualquier rol, tras cargar la demostración desde el acceso |
+
 ## Manejo de riesgos de datos y sesgos
 
-- **RUT:** es un dato personal. La 001 no define perfiles propios, pero el acceso obligatorio de la 002 distingue administrador, finanzas y trabajador; una versión futura debería limitar su visualización al personal de finanzas. Esto aplica también a los terceros de tipo personal (trabajadores), cuyo RUT es siempre un dato personal.
+- **RUT:** es un dato personal. Con el acceso obligatorio de la 002, su visualización está limitada a administrador, finanzas y al propio trabajador; ya no es una versión futura. Esto aplica también a los terceros de tipo personal (trabajadores), cuyo RUT es siempre un dato personal.
 - **Límite de crédito:** si se fija con criterios subjetivos, puede discriminar a ciertos clientes. Los criterios deben documentarse y, en el futuro, el límite debería calcularse con una fórmula estandarizada y transparente. El límite de crédito solo aplica a terceros de tipo cliente.
-- **Datos de remuneraciones:** las liquidaciones de sueldo asocian montos a trabajadores. En el MVP la factura de compra es solo el instrumento o comprobante del pago (con un período obligatorio en formato `YYYY-MM` cuando el tercero es de tipo personal); no se calculan ni se exponen haberes, descuentos legales (AFP, salud) ni imponibilidad, que quedan fuera del alcance.
+- **Datos de remuneraciones:** la entidad `LiquidacionSueldo` de la 002 guarda y muestra sueldo base, descuentos y bonos de las liquidaciones de sueldo, visibles solo para administrador, finanzas y el propio trabajador. El sistema NO calcula haberes ni descuentos legales (AFP, salud), que quedan fuera del alcance.
 - **Datos de demostración:** deben ser ficticios.
 - **Almacenamiento:** `localStorage` no es seguro, por lo que el MVP no debe usarse con datos reales.
 
@@ -80,7 +95,7 @@ Como encargado de cobranzas, de pagos o de remuneraciones, quiero registrar terc
 
 ### Historia de Usuario 2 - Emitir facturas de venta (Prioridad: P1)
 
-Como encargado de cobranzas, quiero registrar una factura de venta a un cliente, con su número, fecha de emisión, fecha de vencimiento, monto total y, si corresponde, su referencia a la orden de venta (`sales_order_id`), y pasarla de Borrador a Emitida, para tener registrada la deuda que me debe.
+Como encargado de cobranzas, quiero registrar una factura de venta a un cliente, con su número, fecha de emisión, fecha de vencimiento, monto total y, si corresponde, su referencia a la orden de venta (`salesOrderId`), y pasarla de Borrador a Emitida, para tener registrada la deuda que me debe.
 
 **Por qué esta prioridad**: es el núcleo de las cuentas por cobrar y la funcionalidad que más se usa en el día a día.
 
@@ -93,7 +108,7 @@ Como encargado de cobranzas, quiero registrar una factura de venta a un cliente,
 3. **Dada** una fecha de vencimiento anterior a la de emisión, **cuando** intento guardar la factura, **entonces** el sistema la rechaza.
 4. **Dado** que intento crear una factura de venta asociada a un tercero que no es de tipo cliente, **cuando** intento guardarla, **entonces** el sistema la rechaza.
 5. **Dada** una factura de venta Emitida, **cuando** intento devolverla a Borrador, **entonces** el sistema lo impide.
-6. **Dada** una factura de venta Emitida, **cuando** consulto al cliente, **entonces** veo la factura con su monto total, su fecha de vencimiento y, si se ingresó, su `sales_order_id`.
+6. **Dada** una factura de venta Emitida, **cuando** consulto al cliente, **entonces** veo la factura con su monto total, su fecha de vencimiento y, si se ingresó, su `salesOrderId`.
 7. **Dado** que la factura de venta tiene una referencia de orden de venta ingresada, **cuando** reviso el documento o sus movimientos, **entonces** puedo rastrear la trazabilidad entre la factura y la orden de venta.
 
 ---
@@ -264,7 +279,7 @@ Como administrador o integrante de finanzas, quiero que el Panel muestre tres in
 - ¿Qué pasa si se intenta abrir o editar una factura de compra desde la vista de facturas de venta (o una de venta desde la de compra)? Cada vista filtra por su `tipoFactura` y no muestra ni permite editar documentos del otro tipo; el documento solo se abre desde su vista correspondiente.
 - ¿Qué pasa si se intenta editar o eliminar un movimiento financiero? El sistema lo impide: los movimientos se generan automáticamente por las emisiones y los pagos, y son de solo lectura.
 - ¿Qué pasa si se elimina una factura que tiene movimientos financieros? Se eliminan también sus movimientos asociados, manteniendo la consistencia de la tabla.
-- ¿Qué pasa si se ingresa un `sales_order_id` que no sigue la referencia del módulo de Ventas? El MVP valida solo que no esté vacío cuando se ingresa; la validación contra la entidad de Ventas llega cuando ese módulo defina su identificador compartido.
+- ¿Qué pasa si se ingresa un `salesOrderId` que no sigue la referencia del módulo de Ventas? El MVP valida solo que no esté vacío cuando se ingresa; la validación contra la entidad de Ventas llega cuando ese módulo defina su identificador compartido.
 - ¿Qué pasa si se intenta registrar una factura de venta para un proveedor, o una de compra para un cliente? El sistema lo rechaza: el tipo de documento define qué tipos de tercero puede usar.
 - ¿Qué pasa si se requiere liquidar el sueldo de un trabajador? Se registra una factura de compra dirigida a ese tercero de tipo personal, que actúa como instrumento o comprobante de la liquidación, con su período obligatorio en formato `YYYY-MM`; los cálculos de haberes y descuentos legales quedan fuera del MVP.
 - ¿Qué pasa si se ingresa un período de liquidación con formato incorrecto o posterior a la fecha de emisión? El sistema lo rechaza: el período debe ser un mes válido (`YYYY-MM`) igual o anterior a la fecha de emisión.
@@ -297,10 +312,10 @@ Como administrador o integrante de finanzas, quiero que el Panel muestre tres in
 
 **Facturas de venta**
 
-- **FR-006**: El sistema DEBE separar de forma visual y funcional la factura de venta y la factura de compra: cada tipo DEBE tener su propia vista, su propio formulario y su propio listado con columnas propias. La UI NO DEBE reutilizar una vista genérica de documentos para ninguno de los dos tipos: el tipo de factura queda fijado por la vista desde la que se crea y no se elige en el formulario. El almacenamiento continúa siendo un único documento con `tipoFactura`; la separación es de interfaz y de flujo, no de almacenamiento. El listado de facturas de venta DEBE mostrar `sales_order_id`; el de facturas de compra DEBE mostrar `centroCosto` y `periodoLiquidacion`.
+- **FR-006**: El sistema DEBE separar de forma visual y funcional la factura de venta y la factura de compra: cada tipo DEBE tener su propia vista, su propio formulario y su propio listado con columnas propias. La UI NO DEBE reutilizar una vista genérica de documentos para ninguno de los dos tipos: el tipo de factura queda fijado por la vista desde la que se crea y no se elige en el formulario. Desde el 2026-11-16 (spec 002), las facturas de venta y de compra se guardan en colecciones separadas `erp.salesInvoices` y `erp.purchaseInvoices`; la separación es de interfaz, de flujo y de almacenamiento. El listado de facturas de venta DEBE mostrar `salesOrderId`; el de facturas de compra DEBE mostrar `centroCosto` y `periodoLiquidacion`.
 - **FR-007**: Una factura de venta solo puede asociarse a un tercero de tipo cliente.
-- **FR-008**: Cada factura de venta DEBE tener folio (entero positivo), serie opcional, moneda (única en el MVP: CLP), fecha de emisión, fecha de vencimiento (igual o posterior a la de emisión), monto total y campo `sales_order_id` opcional para trazabilidad hacia el módulo de Ventas. El monto total puede ser cero en Borrador; para emitir DEBE ser mayor que cero.
-- **FR-009**: El `sales_order_id` es texto libre no vacío cuando se ingresa; toda factura de venta que lo lleve DEBE poder rastrear esa referencia desde el documento y desde sus movimientos financieros.
+- **FR-008**: Cada factura de venta DEBE tener folio (entero positivo), serie opcional, moneda (única en el MVP: CLP), fecha de emisión, fecha de vencimiento (igual o posterior a la de emisión), monto total y campo `salesOrderId` opcional para trazabilidad hacia el módulo de Ventas. El monto total puede ser cero en Borrador; para emitir DEBE ser mayor que cero.
+- **FR-009**: El `salesOrderId` es texto libre no vacío cuando se ingresa; toda factura de venta que lo lleve DEBE poder rastrear esa referencia desde el documento y desde sus movimientos financieros.
 - **FR-010**: El sistema DEBE rechazar una factura de venta cuyo descuento sea mayor que su subtotal.
 - **FR-011**: Toda factura nueva DEBE iniciar en estado Borrador. El sistema DEBE permitir solo las transiciones Borrador → Emitida → Pagada. No se puede retroceder y Pagada es el estado final. Estas transiciones aplican a ambos tipos de documento.
 
@@ -318,7 +333,7 @@ Como administrador o integrante de finanzas, quiero que el Panel muestre tres in
 **Movimientos financieros**
 
 - **FR-017**: El sistema DEBE mantener una tabla de movimientos financieros, generada automáticamente y de solo lectura, con granularidad de **un movimiento por evento**: cada emisión de factura de venta crea un movimiento de cargo, cada emisión de compra un movimiento de abono, y cada pago un movimiento de contrapartida correspondiente. NO se generan movimientos por líneas de detalle ni movimientos acumulativos por factura.
-- **FR-018**: Cada movimiento DEBE registrar al menos: fecha, tipo de documento, referencia al documento, tercero, monto, centro de costo (compras), `sales_order_id` (ventas, si se ingresó) y la factura que lo originó.
+- **FR-018**: Cada movimiento DEBE registrar al menos: fecha, tipo de documento, referencia al documento, tercero, monto, centro de costo (compras), `salesOrderId` (ventas, si se ingresó) y la factura que lo originó.
 - **FR-019**: El sistema DEBE mostrar un listado de movimientos financieros y NO DEBE permitir editarlos ni eliminarlos de forma manual.
 
 **UI y navegación**
@@ -336,7 +351,7 @@ Como administrador o integrante de finanzas, quiero que el Panel muestre tres in
 **Datos**
 
 - **FR-026**: El sistema DEBE conservar los datos al recargar la página y ofrecer una carga de datos de demostración.
-- **FR-027**: El sistema DEBE permitir registrar en terceros y facturas una referencia a otros módulos del ERP (mientras CRM, Ventas y Compras no definan un identificador compartido, la referencia es un campo de texto libre obligatorio solo cuando se ingresa; nada obligatorio por defecto). El `sales_order_id` sigue esta misma regla.
+- **FR-027**: El sistema DEBE permitir registrar en terceros y facturas una referencia a otros módulos del ERP (mientras CRM, Ventas y Compras no definan un identificador compartido, la referencia es un campo de texto libre obligatorio solo cuando se ingresa; nada obligatorio por defecto). El `salesOrderId` sigue esta misma regla.
 - **FR-028**: El sistema DEBE validar el RUT: debe cumplir el formato chileno (partes numéricas + dígito verificador, posible K) con dígito verificador correcto según módulo 11. No se exige unicidad del RUT entre terceros.
 - **FR-029**: Al emitir una factura de venta que supera el límite de crédito del cliente, el sistema DEBE avisar y exigir una confirmación explícita antes de emitir; no bloquea la emisión.
 - **FR-030**: El sistema DEBE evitar duplicados: el código de tercero ya es único en el módulo base, y la combinación (tipo de documento, serie, folio) DEBE ser única dentro de su tipo.
@@ -372,9 +387,9 @@ Como administrador o integrante de finanzas, quiero que el Panel muestre tres in
 ### Entidades Clave
 
 - **Tercero**: cliente, proveedor o personal. Tiene nombre, código, RUT, tipo y, si es cliente, límite de crédito. Un tercero tiene cero o muchas facturas.
-- **Factura de venta**: documento separado de cuentas por cobrar. Tiene su propia vista, su propio formulario y su propio listado, con columna `sales_order_id`. Tiene serie, folio, fecha de emisión, fecha de vencimiento, montos, moneda, estado, monto pagado, fecha de pago y `sales_order_id` opcional. Pertenece a un solo tercero de tipo cliente.
+- **Factura de venta**: documento separado de cuentas por cobrar. Tiene su propia vista, su propio formulario y su propio listado, con columna `salesOrderId`. Tiene serie, folio, fecha de emisión, fecha de vencimiento, montos, moneda, estado, monto pagado, fecha de pago y `salesOrderId` opcional. Pertenece a un solo tercero de tipo cliente.
 - **Factura de compra**: documento separado de cuentas por pagar. Tiene su propia vista, su propio formulario y su propio listado, con columnas `centroCosto` y `periodoLiquidacion`. Tiene serie, folio, fecha de emisión, fecha de vencimiento, montos, moneda, estado, monto pagado, fecha de pago, centro de costo (Activo/Consumible, solo atributo de reporte) y, si el tercero es de tipo personal, un período obligatorio de liquidación en formato `YYYY-MM`. Pertenece a un solo tercero de tipo proveedor o personal. Ambos tipos de factura comparten el ciclo Borrador → Emitida → Pagada.
-- **Movimiento financiero**: registro de solo lectura, generado automáticamente por emisiones y pagos. Tiene fecha, tipo (cargo/abono/pago), referencia al documento y al tercero, monto, centro de costo o `sales_order_id` según corresponda. Pertenece a una sola factura.
+- **Movimiento financiero**: registro de solo lectura, generado automáticamente por emisiones y pagos. Tiene fecha, tipo (cargo/abono/pago), referencia al documento y al tercero, monto, centro de costo o `salesOrderId` según corresponda. Pertenece a una sola factura.
 - **Vistas del marco de UI**: home (KPIs y accesos directos), terceros, facturas de venta, facturas de compra, movimientos financieros, flujo de caja y seguimiento, todas viviendo en un layout común con menú desacoplado.
 - **Guía de uso**: componente de orientación del marco general (HU8). No es una vista del menú, no guarda datos y no agrega entidades ni claves de almacenamiento.
 - **Flujo de caja**: vista derivada y de solo lectura sobre facturas Pagadas. No agrega registros propios: presenta fecha de pago, tipo, categoría, tercero, documento (serie-folio) y monto, y calcula ingresos, egresos y neto.
@@ -399,11 +414,11 @@ Como administrador o integrante de finanzas, quiero que el Panel muestre tres in
 
 ## Supuestos
 
-- El MVP es solo frontend: los datos se guardan en el navegador y hay un solo usuario por navegador. La 001 no define perfiles propios; el inicio de sesión obligatorio y los roles administrador, finanzas y trabajador se toman de la spec 002.
+- El MVP es solo frontend: los datos se guardan en el navegador, con login obligatorio y los roles `administrador`, `finanzas` y `trabajador` definidos en la spec 002.
 - Hay un solo tipo de entidad base (Tercero, con tipo cliente/proveedor/personal) y dos tipos de documento separados: Factura de Venta y Factura de Compra, cada uno con su listado y reglas propias. Decidido 2026-11-05: la separación formal de documentos reemplaza el debate "documento único con tipo" (el ayudante lo había recomendado).
-- La separación entre facturas de venta y de compra es visual y funcional, no de almacenamiento: dos vistas, dos formularios y dos listados independientes con columnas propias, sobre un único documento con `tipoFactura`. La vista de venta muestra `sales_order_id`; la de compra muestra `centroCosto` y `periodoLiquidacion`. La UI no reutiliza la vista genérica de documentos. Decidido 2026-11-11 (clarify).
+- La separación entre facturas de venta y de compra es visual, funcional y de almacenamiento: dos vistas, dos formularios y dos listados independientes con columnas propias, sobre las colecciones separadas `erp.salesInvoices` y `erp.purchaseInvoices` desde el 2026-11-16 (spec 002). La vista de venta muestra `salesOrderId`; la de compra muestra `centroCosto` y `periodoLiquidacion`. La UI no reutiliza la vista genérica de documentos. Decidido 2026-11-11 (clarify); superado en almacenamiento por la spec 002.
 - Las facturas de compra llevan centro de costo con valores Activos/Consumible, obligatorio al emitir y usado solo como atributo de reporte (sin desglose en KPIs). Decidido 2026-11-05 y reafirmado en el clarify del mismo día.
-- La trazabilidad de las facturas de venta hacia Ventas se implementa con el campo `sales_order_id` (texto libre no vacío cuando se ingresa, consistente con FR-027). Decidido 2026-11-05.
+- La trazabilidad de las facturas de venta hacia Ventas se implementa con el campo `salesOrderId` (texto libre no vacío cuando se ingresa, consistente con FR-027). Decidido 2026-11-05.
 - La tabla de movimientos financieros es de solo lectura, se genera automáticamente por emisiones y pagos con granularidad de un movimiento por evento, y es un registro trazable: los KPIs del home y el seguimiento se calculan sobre las facturas, no sobre la tabla. Decidido 2026-11-05 (clarify).
 - La factura de compra dirigida al personal es el instrumento/comprobante de la liquidación de sueldo, con un período obligatorio en formato `YYYY-MM` (no posterior a la fecha de emisión); el cálculo de haberes, AFP, salud e imponibilidad queda fuera del MVP. Decidido 2026-11-05 y precisado en el clarify del mismo día.
 - La arquitectura de UI (marco general, home con KPIs y accesos directos, menú desacoplado) es transversal al módulo y se especifica como HU7. El menú desacoplado es un componente estático con vistas fijas del módulo; un menú configurable por módulo queda fuera del MVP. Decidido 2026-11-05 y precisado en el clarify del mismo día.
