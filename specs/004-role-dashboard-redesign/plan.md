@@ -4,7 +4,7 @@
 
 **Input**: Feature specification from `/specs/004-role-dashboard-redesign/spec.md`
 
-**Note**: Plan completado por `/speckit.plan`; sus decisiones se detallan en `research.md`, `data-model.md`, `contracts/` y `quickstart.md`. `tasks.md` se genera después con `/speckit.tasks`.
+**Note**: Plan completado por `/speckit.plan`; sus decisiones se detallan en `research.md`, `data-model.md`, `contracts/` y `quickstart.md`. `tasks.md` ya generado por `/speckit.tasks`; verificar si corresponde.
 
 ## Summary
 
@@ -72,7 +72,7 @@ specs/004-role-dashboard-redesign/
 │   └── trend-chart.md
 ├── checklists/
 │   └── requirements.md  # Salida previa de /speckit.checklist
-└── tasks.md             # Salida futura de /speckit.tasks; no creada aquí
+└── tasks.md             # Generado por /speckit.tasks
 ```
 
 ### Source Code (repository root)
@@ -87,8 +87,9 @@ src/
 ├── session.js
 ├── styles.css
 ├── cashflow.js
-├── summary.js
-├── tracking.js
+   ├── summary.js
+   ├── finance.js
+   ├── tracking.js
 ├── movements.js
 ├── format.js
 ├── utils.js
