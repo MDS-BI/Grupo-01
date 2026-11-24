@@ -982,7 +982,17 @@ function refreshPayrollCreateList() {
   const form = state.payrollCreateForm;
   if (!form) return;
   const entities = loadEntities();
-  const documents = loadDocuments();
+  const personalIds = new Set(
+    entities
+      .filter((entity) => entity?.customFields?.tipoTercero === 'personal')
+      .map((entity) => entity.entity_id)
+  );
+  const documents = loadDocuments().filter(
+    (document) =>
+      document?.customFields?.tipoFactura === 'compra' &&
+      document?.customFields?.periodoLiquidacion &&
+      personalIds.has(document?.entity_id)
+  );
   const names = new Map(
     entities.map(({ entity_id, name }) => [entity_id, name])
   );
@@ -1074,6 +1084,7 @@ function initInvoiceForms(config) {
       onEdit: editDocument,
       onDelete: requestDeleteDocument,
       onFilter: () => refreshPayrollCreateList(),
+      hideThirdParty: true,
       extraFields: [
         {
           key: 'rut',

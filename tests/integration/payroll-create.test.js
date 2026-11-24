@@ -10,6 +10,7 @@ import {
   loadPayrollSettlements,
   loadPurchaseInvoices,
 } from '../../src/storage.js';
+import { loadDemoData } from '../../src/demo-data.js';
 import { userConfig } from '../../src/module-config.js';
 import {
   invoiceField,
@@ -110,6 +111,37 @@ describe('payroll-create: alta integral de liquidaciones', () => {
     expect(nameField.required).toBe(true);
     expect(form.textContent).toContain('RUT');
     expect(form.textContent).toContain('Nombre completo');
+  });
+
+  it('no muestra el selector de tercero en la vista de creación', () => {
+    byId('nav-payroll-create').click();
+
+    const thirdParty = byId('payroll-create-form').querySelector(
+      '[data-field="entity_id"]'
+    );
+    expect(thirdParty).not.toBeNull();
+    expect(thirdParty.closest('.form-field').hidden).toBe(true);
+    expect(byId('payroll-create-filter').closest('.form-field').hidden).toBe(
+      true
+    );
+  });
+
+  it('no muestra facturas de compra a proveedores en la lista de la vista de creación', () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    loadAppMarkup();
+    expect(loadDemoData(userConfig).ok).toBe(true);
+    setupAdminSession();
+    initApp(userConfig);
+    byId('nav-payroll-create').click();
+
+    const captions = Array.from(
+      byId('payroll-create-list').querySelectorAll('caption'),
+      (caption) => caption.textContent
+    );
+    expect(captions).toContain('Ana Pérez Soto');
+    expect(captions).toContain('Bruno Soto Vega');
+    expect(captions).not.toContain('Proveedores del Sur S.A.');
   });
 
   it('crea liquidación, tercero personal y acceso trabajador con la contraseña inicial', () => {

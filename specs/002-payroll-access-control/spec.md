@@ -57,6 +57,8 @@
 - **Trabajador:** inicia sesión con su RUT y contraseña y consulta únicamente su última liquidación y el historial de sus propios pagos, sin poder modificarlos ni ver los de otros.
 - **Integrante del equipo (demostración):** carga accesos y liquidaciones ficticias desde la pantalla de acceso para mostrar el flujo completo.
 
+> **Superseded by `003-payroll-tabs-roles`**: el administrador ya no conserva todas las funciones; su alcance queda en «Crear liquidación de sueldo», «Gestionar liquidaciones de sueldo» y «Control de accesos». Pierde terceros, facturas, movimientos, flujo de caja, seguimiento, búsqueda y avisos al desarrollador. Finanzas conserva su facturación, pero ve liquidaciones en solo lectura y sin «Asociar acceso».
+
 ## Manejo de riesgos de datos y sesgos
 
 - **Contraseña inicial (riesgo conocido del MVP):** todos los accesos, incluidos administrador y finanzas, usan como contraseña los primeros 4 dígitos del cuerpo del RUT y el MVP no ofrece cambio de contraseña. Cualquier persona que conozca el RUT de un compañero puede iniciar sesión como ese trabajador; se documenta como riesgo aceptado solo para demostración con datos ficticios.
@@ -315,6 +317,8 @@ Como integrante de finanzas, quiero ver y editar toda la facturación del módul
 - **FR-022**: El administrador y el rol finanzas DEBEN poder ver todas las liquidaciones de todos los trabajadores, con trabajador, RUT, período, monto y estado; el trabajador SOLO DEBE ver las suyas.
 - **FR-023**: El administrador y el rol finanzas DEBEN poder filtrar la lista de liquidaciones por trabajador o RUT y por período.
 - **FR-024**: El administrador y el rol finanzas DEBEN poder editar una liquidación existente mediante el formulario de factura de compra y el desglose de `LiquidacionSueldo`, respetando el ciclo de vida y las validaciones del módulo; esta funcionalidad NO DEBE permitir saltarse esas reglas.
+
+> **Superseded by `003-payroll-tabs-roles`**: solo el administrador edita; finanzas ve el listado en modo solo lectura. La vista única de liquidaciones se divide en dos pestañas —«Crear liquidación de sueldo» (solo administrador) y «Gestionar liquidaciones de sueldo» (administración + lectura de finanzas)—, con búsqueda por RUT en vivo y sin botón.
 - **FR-025**: El administrador DEBE poder asociar el RUT de una liquidación con su acceso de trabajador desde la vista de liquidaciones, seleccionando un acceso activo cuyo RUT coincida o creándolo si no existe. La asociación DEBE usar el tercero personal como vínculo (`AccessRecord.entityId === LiquidacionSueldo.entityId`) y DEBE reflejarse en el apartado del trabajador.
 - **FR-026**: El trabajador NO DEBE poder ver, editar, eliminar ni abrir liquidaciones de otros terceros, ni acceder a la administración de accesos, a la vista global de facturas o a otros módulos administrativos; todo intento DEBE bloquearse con un mensaje claro.
 
@@ -336,6 +340,8 @@ Como integrante de finanzas, quiero ver y editar toda la facturación del módul
 - **FR-037**: El sistema DEBE impedir que el rol `finanzas` gestione accesos o consulte los avisos del desarrollador, y DEBE impedir que el rol `trabajador` vea la información de otros trabajadores o terceros, invoque funciones de administración o consulte esos avisos.
 - **FR-038**: Toda vista del módulo DEBE exigir una sesión iniciada con credenciales válidas; un enlace directo o una recarga sin sesión DEBE volver a la pantalla de acceso sin mostrar datos de negocio.
 - **FR-039**: Los avisos del desarrollador DEBEN estar disponibles únicamente para el rol `administrador`, incluidos los avisos por RUT inválido, duplicado, inactivo o con vínculo roto.
+
+> **Superseded by `003-payroll-tabs-roles`**: el panel de avisos deja de estar disponible para cualquier rol; se conservan el registro local y `console.error`.
 - **FR-040**: En los datos de demostración, el RUT del administrador NO DEBE coincidir con el RUT de ningún tercero; DEBE usarse `88.888.888-8` en lugar de `11.111.111-1`.
 - **FR-041**: La contraseña inicial de todos los roles (primeros 4 dígitos del cuerpo del RUT, sin opción de cambio) y el carácter solo de interfaz del control de acceso DEBEN documentarse como riesgos conocidos del MVP en la sección de riesgos de datos.
 - **FR-042**: El historial de pagos del trabajador DEBE incluir únicamente las liquidaciones de su tercero personal con estado Pagada y fecha de pago registrada, ordenadas por `fechaPago` descendente con desempate por período descendente; NO DEBE incluir liquidaciones en Borrador o Emitida, pagos parciales ni datos de otros trabajadores.

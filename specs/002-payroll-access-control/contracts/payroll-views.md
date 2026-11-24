@@ -83,6 +83,8 @@ resolveAdminSettlements({ settlements, purchaseInvoices, entities, filters }): L
 
 ## 3. Vista del administrador y de finanzas: "Liquidaciones de sueldo"
 
+> **Superseded by `003-payroll-tabs-roles`**: esta vista única se expresa ahora como dos pestañas: `#view-payroll-create` (solo administrador, con RUT/nombre sin selector de tercero) y `#view-payroll-admin` (administrador con edición; finanzas solo lectura, sin «Editar» ni «Asociar»). Se añade `#payroll-filter-rut` con filtrado en vivo sin botón; se conservan los filtros de trabajador y período.
+
 **Elementos requeridos en `index.html`**:
 
 | Elemento | ID | Función |

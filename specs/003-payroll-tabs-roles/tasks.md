@@ -131,9 +131,9 @@
 
 **Purpose**: Marcar en 002 lo que esta feature contradice, sin reescribir el documento.
 
-- [ ] T029 [US3] Añadir notas puntuales «Superseded by 003-payroll-tabs-roles» en `specs/002-payroll-access-control/spec.md` sobre: alcance del administrador (pierde facturas/entidades/movimientos/flujo de caja/seguimiento/búsqueda y avisos), tabla/matriz de permisos y la vista única de liquidaciones (FR-012, FR-013)
-- [ ] T030 [US3] Añadir la misma nota en `specs/002-payroll-access-control/contracts/payroll-views.md` para la interfaz de la vista `payroll-admin` (una sola vista ⇒ dos pestañas + lectura finanzas)
-- [ ] T031 [US3] Verificar en `specs/002-payroll-access-control/spec.md` que 002 sigue legible como histórico (sin reescritura; solo notas agregadas)
+- [X] T029 [US3] Añadir notas puntuales «Superseded by 003-payroll-tabs-roles» en `specs/002-payroll-access-control/spec.md` sobre: alcance del administrador (pierde facturas/entidades/movimientos/flujo de caja/seguimiento/búsqueda y avisos), tabla/matriz de permisos y la vista única de liquidaciones (FR-012, FR-013)
+- [X] T030 [US3] Añadir la misma nota en `specs/002-payroll-access-control/contracts/payroll-views.md` para la interfaz de la vista `payroll-admin` (una sola vista ⇒ dos pestañas + lectura finanzas)
+- [X] T031 [US3] Verificar en `specs/002-payroll-access-control/spec.md` que 002 sigue legible como histórico (sin reescritura; solo notas agregadas)
 
 **Checkpoint**: FR-018 cumplido; 002 coherente con 003.
 
@@ -143,12 +143,13 @@
 
 **Purpose**: Verificación transversal y cierre.
 
-- [ ] T032 [P] Revisar `tests/integration/dev-notifications.test.js` en `tests/integration/dev-notifications.test.js`: el registro local/consola sigue funcionando pero el panel no es visible para ningún rol (FR-020). Nota: la parte de pruebas antiguas se adelantó en T041.
-- [ ] T033 [P] Revisar `tests/integration/access-admin-finanzas.test.js` y `tests/integration/login-roles.test.js` en `tests/integration/`: ajustar solo lo que esta funcionalidad cambia explícitamente (matriz de admin/finanzas); verificar además que `tests/integration/payroll-worker.test.js` sigue en verde **sin cambios** (FR-015)
-- [ ] T040 [P] Extender `tests/integration/performance.test.js` con una prueba del filtro por RUT: con los datos de demostración como volumen de referencia, el listado se filtra en menos de 1 s (SC-003, FR-008)
+- [X] T032 [P] Revisar `tests/integration/dev-notifications.test.js` en `tests/integration/dev-notifications.test.js`: el registro local/consola sigue funcionando pero el panel no es visible para ningún rol (FR-020). Nota: la parte de pruebas antiguas se adelantó en T041.
+- [X] T033 [P] Revisar `tests/integration/access-admin-finanzas.test.js` y `tests/integration/login-roles.test.js` en `tests/integration/`: ajustar solo lo que esta funcionalidad cambia explícitamente (matriz de admin/finanzas); verificar además que `tests/integration/payroll-worker.test.js` sigue en verde **sin cambios** (FR-015)
+- [X] T040 [P] Extender `tests/integration/performance.test.js` con una prueba del filtro por RUT: con los datos de demostración como volumen de referencia, el listado se filtra en menos de 1 s (SC-003, FR-008)
 - [ ] T034 Ejecutar los escenarios A–D de `specs/003-payroll-tabs-roles/quickstart.md` manualmente contra `npm run dev` y confirmar SC-001…SC-005
-- [ ] T035 Ejecutar `npm run check` (lint + format + `npm test -- --run`) y corregir cualquier regresión hasta dejarlo en verde (SC-006)
-- [ ] T036 Confirmar que ningún archivo fue reescrito completo: revisar `git diff --stat` y comprobar que los cambios en `src/app.js`, `src/components/*.js`, `index.html` son aditivos/quirúrgicos (FR-019)
+- [X] T035 Ejecutar `npm run check` (lint + format + `npm test -- --run`) y corregir cualquier regresión hasta dejarlo en verde (SC-006)
+- [X] T036 Confirmar que ningún archivo fue reescrito completo: revisar `git diff --stat` y comprobar que los cambios en `src/app.js`, `src/components/*.js`, `index.html` son aditivos/quirúrgicos (FR-019)
+- [X] T042 Vista Crear liquidación de sueldo: ocultar el selector «Tercero» (el trabajador se define solo con RUT y nombre, FR-002/FR-003) y no mostrar facturas de compra a proveedores en la lista de esa vista (FR-012)
 
 **Checkpoint**: Feature completa y verificada.
 

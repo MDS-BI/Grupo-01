@@ -102,7 +102,7 @@ Como usuario del módulo, quiero que cada rol vea exactamente los módulos que l
 **Pestaña de creación (administrador)**
 
 - **FR-001**: El sistema DEBE ofrecer una pestaña «Crear liquidación de sueldo» visible únicamente para el rol `administrador`, que reutiliza el formulario existente de factura de compra.
-- **FR-002**: Ese formulario DEBE incluir, además de los campos existentes, los campos obligatorios «RUT» y «Nombre completo» del trabajador.
+- **FR-002**: Ese formulario DEBE incluir, además de los campos existentes, los campos obligatorios «RUT» y «Nombre completo» del trabajador. El selector de tercero existente no se muestra en esta vista de creación: el trabajador se define únicamente mediante esos dos campos.
 - **FR-003**: Al guardar con un RUT nuevo, el sistema DEBE crear automáticamente un tercero de tipo personal y un acceso activo con rol `trabajador`, cuya contraseña inicial serán los primeros 4 dígitos del cuerpo del RUT, según la regla ya existente.
 - **FR-004**: Al guardar con un RUT ya registrado, el sistema DEBE crear o actualizar únicamente la liquidación de sueldo asociada a ese tercero, sin generar ninguna entidad, tercero ni acceso duplicado.
 - **FR-005**: El RUT DEBE validarse y normalizarse con las reglas ya establecidas; un RUT inválido, campos vacíos o vínculos incompatibles DEBEN bloquear el guardado con un mensaje claro y sin crear registros parciales.

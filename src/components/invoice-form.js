@@ -27,6 +27,7 @@ export function createInvoiceForm({
   onDelete,
   onFilter,
   extraFields = [],
+  hideThirdParty = false,
   formTitle,
   submitLabel,
   newLabel,
@@ -51,6 +52,16 @@ export function createInvoiceForm({
   );
   form.querySelector('[data-label="entity_id"]').textContent =
     config.labels.entity;
+  const thirdPartyField = form
+    .querySelector('[data-label="entity_id"]')
+    .closest('.form-field');
+  if (hideThirdParty) {
+    thirdPartyField.hidden = true;
+    const thirdPartyFilter = root
+      .querySelector('[data-invoice-filter]')
+      ?.closest('.form-field');
+    if (thirdPartyFilter) thirdPartyFilter.hidden = true;
+  }
   root.querySelector('[data-edit-label]').textContent =
     `Editar ${invoiceLabel}`;
   const newButton = root.querySelector('[data-new-invoice]');
@@ -313,6 +324,10 @@ export function createInvoiceForm({
   }
 
   function focus() {
+    if (hideThirdParty) {
+      (extraInputs[0] ?? form.querySelector('[data-field="folio"]'))?.focus();
+      return;
+    }
     entitySelect.focus();
   }
 
