@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { initApp, appState } from '../../src/app.js';
+import { appState, canAccess, initApp, resolveRoute } from '../../src/app.js';
 import { userConfig } from '../../src/module-config.js';
 import { addEntity } from '../../src/storage.js';
 import {
@@ -42,7 +42,7 @@ describe('US6 - avisos para el desarrollador', () => {
     expect(error).toHaveBeenCalled();
   });
 
-  it('muestra fecha, RUT, rol, motivo y origen en el panel del administrador', () => {
+  it('registra fecha, RUT, rol, motivo y origen sin exponer el panel al administrador', () => {
     appendDevNotification({
       accessId: '22222222-2',
       role: 'trabajador',
@@ -51,13 +51,18 @@ describe('US6 - avisos para el desarrollador', () => {
     });
     setupAdminSession();
     initApp(userConfig);
-    byId('nav-dev-notifications').click();
 
-    expect(byId('view-dev-notifications').hidden).toBe(false);
     const text = byId('dev-notifications-list').textContent;
     expect(text).toContain('22222222-2');
     expect(text).toContain('Acceso inactivo');
     expect(text).toContain('login');
+    expect(typeof loadDevNotifications()[0].timestamp).toBe('string');
+    expect(byId('nav-dev-notifications')).toBeNull();
+    expect(canAccess('dev-notifications', appState.session)).toBe(false);
+    expect(resolveRoute('dev-notifications', appState.session)).toBe(
+      'payroll-admin'
+    );
+    expect(byId('view-dev-notifications').hidden).toBe(true);
   });
 
   it('no muestra el panel al trabajador', () => {
@@ -86,8 +91,8 @@ describe('US6 - avisos para el desarrollador', () => {
       startedAt: new Date().toISOString(),
     });
     initApp(userConfig);
-    byId('nav-dev-notifications').click();
 
+    expect(byId('nav-dev-notifications')).toBeNull();
     expect(byId('view-payroll-worker').hidden).toBe(false);
     expect(byId('view-dev-notifications').hidden).toBe(true);
   });
@@ -101,7 +106,8 @@ describe('US6 - avisos para el desarrollador', () => {
     });
     setupAdminSession();
     initApp(userConfig);
-    byId('nav-dev-notifications').click();
+
+    expect(byId('view-dev-notifications').hidden).toBe(true);
 
     vi.spyOn(window, 'confirm').mockReturnValue(false);
     byId('dev-notifications-clear').click();

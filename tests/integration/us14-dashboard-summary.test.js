@@ -2,7 +2,11 @@
 import { initApp } from '../../src/app.js';
 import { getConfig } from '../../src/module-config.js';
 import { addDocument, addEntity, updateDocument } from '../../src/storage.js';
-import { loadAppMarkup, setupAdminSession } from '../setup/domFixture.js';
+import {
+  loadAppMarkup,
+  setupAdminSession,
+  setupFinanzasSession,
+} from '../setup/domFixture.js';
 
 const config = getConfig();
 
@@ -180,6 +184,7 @@ describe('Panel - resumen financiero y accesos rapidos', () => {
   });
 
   it('redirige los botones de accion rapida a sus vistas y formularios', () => {
+    setupFinanzasSession();
     initApp(config);
 
     const accesos = [
@@ -203,5 +208,24 @@ describe('Panel - resumen financiero y accesos rapidos', () => {
     expect(document.getElementById('invoice-sale-form')).toBeTruthy();
     document.getElementById('qa-new-invoice-purchase').click();
     expect(document.getElementById('invoice-purchase-form')).toBeTruthy();
+
+    loadAppMarkup();
+    localStorage.clear();
+    setupAdminSession();
+    initApp(config);
+
+    for (const [, view] of accesos.filter(
+      ([button]) => button !== 'qa-new-payroll'
+    )) {
+      document.getElementById(`nav-${view}`).click();
+      expect(document.getElementById(`view-${view}`).hidden).toBe(true);
+      expect(document.getElementById('view-payroll-admin').hidden).toBe(false);
+    }
+
+    document.getElementById('qa-create-payroll').click();
+    expect(document.getElementById('view-payroll-create').hidden).toBe(false);
+    document.getElementById('nav-dashboard').click();
+    document.getElementById('qa-new-payroll').click();
+    expect(document.getElementById('view-payroll-admin').hidden).toBe(false);
   });
 });

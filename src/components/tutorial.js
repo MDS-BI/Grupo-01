@@ -10,6 +10,13 @@ const STEP_DEFINITIONS = [
       `Revisa los KPIs, el Resumen financiero, el menú ☰ y los accesos rápidos del ${navLabel(config, 'dashboard')}.`,
   },
   {
+    id: 'payroll-create',
+    module: 'payroll-create',
+    title: (config) => navLabel(config, 'payroll-create'),
+    text: () =>
+      'Crea una liquidación de sueldo y alta automáticamente el acceso del trabajador con la contraseña inicial derivada de su RUT.',
+  },
+  {
     id: 'entities',
     module: 'entities',
     title: (config) => config.labels.entities || 'Terceros',
@@ -45,6 +52,13 @@ const STEP_DEFINITIONS = [
       `La ${config.labels.document || 'Factura'} de compra dirigida a personal es el comprobante de la liquidación; no se calculan haberes ni descuentos.`,
   },
   {
+    id: 'access',
+    module: 'access',
+    title: (config) => navLabel(config, 'access'),
+    text: () =>
+      'Asocia, activa, desactiva y cambia el rol de los accesos desde Control de accesos; esta utilidad es solo del administrador.',
+  },
+  {
     id: 'movements',
     module: 'movements',
     title: (config) => navLabel(config, 'movements'),
@@ -70,7 +84,7 @@ const STEP_DEFINITIONS = [
     title: () => 'Menú ☰ «Utilidades & Sesión»',
     text: ({ role }) =>
       role === 'administrador'
-        ? 'En el menú ☰ «Utilidades & Sesión» puedes abrir Control de accesos, consultar Avisos al desarrollador y cerrar sesión. Las dos primeras opciones son solo del administrador.'
+        ? 'En el menú ☰ «Utilidades & Sesión» puedes abrir Control de accesos y cerrar sesión. Control de accesos es solo del administrador.'
         : 'En el menú ☰ «Utilidades & Sesión» puedes usar "Cerrar sesión"; las utilidades de administración no están disponibles para tu rol.',
   },
   {

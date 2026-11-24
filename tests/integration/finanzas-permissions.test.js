@@ -26,7 +26,12 @@ const FINANCE_MODULES = [
   'search',
 ];
 
-const DENIED_MODULES = ['access', 'dev-notifications', 'payroll-worker'];
+const DENIED_MODULES = [
+  'access',
+  'dev-notifications',
+  'payroll-create',
+  'payroll-worker',
+];
 
 function seedFinanceAccess() {
   const now = new Date().toISOString();
@@ -111,11 +116,16 @@ describe('US7 - permisos del rol finanzas', () => {
     }
     for (const module of DENIED_MODULES) {
       expect(canAccess(module, session)).toBe(false);
-      expect(byId(`nav-${module}`).hidden).toBe(true);
+      if (module === 'dev-notifications') {
+        expect(byId('nav-dev-notifications')).toBeNull();
+      } else {
+        expect(byId(`nav-${module}`).hidden).toBe(true);
+      }
     }
 
     expect(resolveRoute('access', session)).toBe('dashboard');
     expect(resolveRoute('dev-notifications', session)).toBe('dashboard');
+    expect(resolveRoute('payroll-create', session)).toBe('dashboard');
     expect(resolveRoute('payroll-worker', session)).toBe('payroll-admin');
   });
 
@@ -126,7 +136,11 @@ describe('US7 - permisos del rol finanzas', () => {
     expect(byId('view-access').hidden).toBe(true);
     expect(byId('view-dashboard').hidden).toBe(false);
 
-    byId('nav-dev-notifications').click();
+    expect(byId('nav-dev-notifications')).toBeNull();
+    expect(canAccess('dev-notifications', appState.session)).toBe(false);
+    expect(resolveRoute('dev-notifications', appState.session)).toBe(
+      'dashboard'
+    );
     expect(byId('view-dev-notifications').hidden).toBe(true);
     expect(byId('view-dashboard').hidden).toBe(false);
 

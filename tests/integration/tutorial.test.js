@@ -14,6 +14,15 @@ const byId = (id) => document.getElementById(id);
 
 const ADMIN_STEPS = [
   'panel',
+  'payroll-create',
+  'payroll-admin',
+  'access',
+  'menu',
+  'cuidados',
+];
+
+const FINANCE_STEPS = [
+  'panel',
   'entities',
   'invoice-sale',
   'invoice-purchase',
@@ -212,7 +221,7 @@ describe('T112 - guía de uso por rol', () => {
     byId('guide-next').click();
     byId('guide-go').click();
 
-    expect(byId('view-entities').hidden).toBe(false);
+    expect(byId('view-payroll-create').hidden).toBe(false);
     expect(byId('qa-guide').hidden).toBe(false);
 
     byId('guide-close').click();
@@ -224,7 +233,7 @@ describe('T112 - guía de uso por rol', () => {
   it('sigue el recorrido del contrato para cada rol', () => {
     for (const [setup, expected] of [
       [setupAdminSession, ADMIN_STEPS],
-      [setupFinanzasSession, ADMIN_STEPS],
+      [setupFinanzasSession, FINANCE_STEPS],
       [setupWorkerSession, WORKER_STEPS],
     ]) {
       resetApp();
@@ -237,14 +246,16 @@ describe('T112 - guía de uso por rol', () => {
     }
   });
 
-  it('menciona Accesos y Avisos solo al administrador y describe Mi liquidación al trabajador', () => {
+  it('menciona Accesos solo al administrador y describe Mi liquidación al trabajador', () => {
     setupAdminSession();
     initApp(userConfig);
     openGuideFromMenu();
     while (currentStep() !== 'menu') byId('guide-next').click();
 
     expect(byId('guide-body').textContent).toContain('Control de accesos');
-    expect(byId('guide-body').textContent).toContain('Avisos al desarrollador');
+    expect(byId('guide-body').textContent).not.toContain(
+      'Avisos al desarrollador'
+    );
 
     resetApp();
     setupFinanzasSession();
@@ -283,7 +294,7 @@ describe('T112 - guía de uso por rol', () => {
     byId('guide-next').click();
     byId('guide-go').click();
 
-    expect(byId('view-entities').hidden).toBe(false);
+    expect(byId('view-payroll-create').hidden).toBe(false);
 
     byId('guide-close').click();
 

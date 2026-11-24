@@ -55,6 +55,7 @@
 - [X] T038 En `resolveRoute` de `src/app.js`, si el `administrador` intenta abrir una vista no permitida, redirigir a `payroll-admin` con mensaje claro (hoy cae en `login`); test de integración en `tests/integration/no-guest-access.test.js` para el escenario 4 de la US3 (FR-016, SC-004)
 - [X] T039 En `src/components/dashboard.js`, limitar el Panel del administrador a los accesos rápidos «Crear liquidación de sueldo» y «Gestionar liquidaciones de sueldo»; test escrito primero (debe fallar) en `tests/integration/us3-dashboard.test.js` (FR-013, US3 esc. 1)
 - [X] T010 Ejecutar `npm test -- --run tests/integration/navigation-menu.test.js tests/integration/no-guest-access.test.js tests/integration/us3-dashboard.test.js` y llevar a verde corrigiendo solo lo marcado en T003/T004/T037/T038/T039
+- [X] T041 Actualizar las suites heredadas afectadas por la nueva matriz (tutorial, tutorial-steps, us13-shell, us14-dashboard, invoice-separation, cashflow-format, tracking, us11-search, finanzas-permissions y dev-notifications) para que reflejen FR-012, FR-013 y FR-020
 
 **Checkpoint**: Fundacional listo — las historias pueden empezar en paralelo.
 
@@ -113,7 +114,7 @@
 
 **Tests primero** ⚠️:
 
-- [ ] T024 [P] [US3] Añadir tests de solo lectura en `tests/integration/finanzas-permissions.test.js`: finanzas busca por RUT en el listado pero NO hay acción «Editar»/«Asociar» invocable; no llega a `payroll-create` ni a `access` (FR-011, SC-005)
+- [ ] T024 [P] [US3] Añadir tests de solo lectura en `tests/integration/finanzas-permissions.test.js`: finanzas busca por RUT en el listado pero NO hay acción «Editar»/«Asociar» invocable; no llega a `payroll-create` ni a `access` (FR-011, SC-005). Nota: la parte de pruebas antiguas se adelantó en T041.
 - [ ] T025 [P] [US3] Añadir test de integración en `tests/integration/payroll-admin.test.js`: `renderPayrollList` con `canEdit: false` no renderiza el botón «Editar»; con `canEdit: true` lo renderiza (default actual)
 
 **Implementation**:
@@ -142,7 +143,7 @@
 
 **Purpose**: Verificación transversal y cierre.
 
-- [ ] T032 [P] Revisar `tests/integration/dev-notifications.test.js` en `tests/integration/dev-notifications.test.js`: el registro local/consola sigue funcionando pero el panel no es visible para ningún rol (FR-020)
+- [ ] T032 [P] Revisar `tests/integration/dev-notifications.test.js` en `tests/integration/dev-notifications.test.js`: el registro local/consola sigue funcionando pero el panel no es visible para ningún rol (FR-020). Nota: la parte de pruebas antiguas se adelantó en T041.
 - [ ] T033 [P] Revisar `tests/integration/access-admin-finanzas.test.js` y `tests/integration/login-roles.test.js` en `tests/integration/`: ajustar solo lo que esta funcionalidad cambia explícitamente (matriz de admin/finanzas); verificar además que `tests/integration/payroll-worker.test.js` sigue en verde **sin cambios** (FR-015)
 - [ ] T040 [P] Extender `tests/integration/performance.test.js` con una prueba del filtro por RUT: con los datos de demostración como volumen de referencia, el listado se filtra en menos de 1 s (SC-003, FR-008)
 - [ ] T034 Ejecutar los escenarios A–D de `specs/003-payroll-tabs-roles/quickstart.md` manualmente contra `npm run dev` y confirmar SC-001…SC-005

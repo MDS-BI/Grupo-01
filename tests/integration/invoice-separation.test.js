@@ -10,7 +10,7 @@ import {
 import {
   invoiceField as field,
   loadAppMarkup,
-  setupAdminSession,
+  setupFinanzasSession,
   submit,
 } from '../setup/domFixture.js';
 
@@ -57,7 +57,7 @@ describe('Punto 5 - facturas de venta y compra', () => {
 
   beforeEach(() => {
     loadAppMarkup();
-    setupAdminSession();
+    setupFinanzasSession();
     client = createThirdParty('cliente', '76.000.001-9');
     supplier = createThirdParty('proveedor', '76.000.002-7');
     initApp();

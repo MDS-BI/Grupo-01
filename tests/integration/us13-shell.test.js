@@ -2,7 +2,11 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { initApp } from '../../src/app.js';
 import { DEFAULT_CONFIG, userConfig } from '../../src/module-config.js';
 import { addEntity } from '../../src/storage.js';
-import { loadAppMarkup, setupAdminSession } from '../setup/domFixture.js';
+import {
+  loadAppMarkup,
+  setupAdminSession,
+  setupFinanzasSession,
+} from '../setup/domFixture.js';
 
 beforeEach(() => {
   loadAppMarkup();
@@ -24,16 +28,21 @@ describe('US13 - shell persistente', () => {
 
     document.getElementById('nav-entities').click();
     expect(
-      document.getElementById('nav-entities').getAttribute('aria-current')
-    ).toBe('page');
-    expect(
-      document.getElementById('nav-dashboard').hasAttribute('aria-current')
+      document.getElementById('nav-entities').hasAttribute('aria-current')
     ).toBe(false);
-    expect(document.getElementById('view-entities').hidden).toBe(false);
+    expect(
+      document.getElementById('nav-payroll-admin').getAttribute('aria-current')
+    ).toBe('page');
+    expect(document.getElementById('view-entities').hidden).toBe(true);
+    expect(document.getElementById('view-payroll-admin').hidden).toBe(false);
     expect(document.getElementById('view-dashboard').hidden).toBe(true);
   });
 
   it('conserva los datos al navegar entre módulos', () => {
+    loadAppMarkup();
+    localStorage.clear();
+    sessionStorage.clear();
+    setupFinanzasSession();
     addEntity({ name: 'Acme', code: 'AC-1' }, DEFAULT_CONFIG);
     initApp(DEFAULT_CONFIG);
 
@@ -52,6 +61,10 @@ describe('US13 - shell persistente', () => {
   });
 
   it('mantiene el menú constante entre las vistas fijas del módulo y navega sin recargar', () => {
+    loadAppMarkup();
+    localStorage.clear();
+    sessionStorage.clear();
+    setupFinanzasSession();
     initApp(userConfig);
 
     const modulos = [
@@ -80,6 +93,10 @@ describe('US13 - shell persistente', () => {
   });
 
   it('navega entre facturas de venta y compra con listados separados (FR-006)', () => {
+    loadAppMarkup();
+    localStorage.clear();
+    sessionStorage.clear();
+    setupFinanzasSession();
     initApp(userConfig);
     const entidad = addEntity(
       {

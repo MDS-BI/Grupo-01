@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { initApp } from '../../src/app.js';
 import { getConfig } from '../../src/module-config.js';
 import { addDocument, addEntity, updateDocument } from '../../src/storage.js';
-import { loadAppMarkup, setupAdminSession } from '../setup/domFixture.js';
+import { loadAppMarkup, setupFinanzasSession } from '../setup/domFixture.js';
 
 const config = getConfig();
 
@@ -50,7 +50,7 @@ function text(id) {
 beforeEach(() => {
   loadAppMarkup();
   localStorage.clear();
-  setupAdminSession();
+  setupFinanzasSession();
 });
 
 describe('T100 - formato CLP del Flujo de caja', () => {

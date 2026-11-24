@@ -20,6 +20,15 @@ const SESSIONS = {
 
 const ADMIN_STEPS = [
   'panel',
+  'payroll-create',
+  'payroll-admin',
+  'access',
+  'menu',
+  'cuidados',
+];
+
+const FINANCE_STEPS = [
+  'panel',
   'entities',
   'invoice-sale',
   'invoice-purchase',
@@ -75,11 +84,13 @@ describe('T113 - catálogo y selección de pasos de la guía', () => {
   it('usa los IDs y el orden del contrato en el catálogo', () => {
     expect(GUIDE_STEPS.map((step) => step.id)).toEqual([
       'panel',
+      'payroll-create',
       'entities',
       'invoice-sale',
       'invoice-purchase',
       'issue-pay',
       'payroll-admin',
+      'access',
       'movements',
       'cashflow',
       'tracking',
@@ -121,7 +132,7 @@ describe('T113 - catálogo y selección de pasos de la guía', () => {
     });
 
     expect(admin.map((step) => step.id)).toEqual(ADMIN_STEPS);
-    expect(finance.map((step) => step.id)).toEqual(ADMIN_STEPS);
+    expect(finance.map((step) => step.id)).toEqual(FINANCE_STEPS);
     expect(worker.map((step) => step.id)).toEqual(WORKER_STEPS);
 
     const denied = getGuideSteps({
@@ -129,11 +140,13 @@ describe('T113 - catálogo y selección de pasos de la guía', () => {
       role: 'administrador',
       session: SESSIONS.administrador,
       canAccess: (view, session) =>
-        view !== 'cashflow' && view !== 'movements' && canAccess(view, session),
+        view !== 'payroll-create' &&
+        view !== 'access' &&
+        canAccess(view, session),
     });
 
-    expect(denied.map((step) => step.id)).not.toContain('cashflow');
-    expect(denied.map((step) => step.id)).not.toContain('movements');
+    expect(denied.map((step) => step.id)).not.toContain('payroll-create');
+    expect(denied.map((step) => step.id)).not.toContain('access');
     expect(denied.map((step) => step.id)).toContain('cuidados');
     expect(denied.map((step) => step.id)).toContain('menu');
   });
@@ -152,6 +165,12 @@ describe('T113 - catálogo y selección de pasos de la guía', () => {
     };
     const steps = getGuideSteps({
       config,
+      role: 'finanzas',
+      session: SESSIONS.finanzas,
+      canAccess,
+    });
+    const adminSteps = getGuideSteps({
+      config,
       role: 'administrador',
       session: SESSIONS.administrador,
       canAccess,
@@ -165,6 +184,9 @@ describe('T113 - catálogo y selección de pasos de la guía', () => {
     expect(entities.text).toContain('Persona');
     expect(invoiceSale.title).toBe('Boletas de venta');
     expect(invoiceSale.text).toContain('Boleta');
+    expect(adminSteps.find((step) => step.id === 'payroll-create').title).toBe(
+      navLabel(config, 'payroll-create')
+    );
   });
 
   it('calcula el indicador, oculta "Ir a" cuando no aplica y no escribe almacenamiento', () => {
@@ -181,28 +203,28 @@ describe('T113 - catálogo y selección de pasos de la guía', () => {
     tutorial.open(0, root);
 
     expect(document.getElementById('guide-step-indicator').textContent).toBe(
-      'Paso 1 de 11'
+      'Paso 1 de 6'
     );
     expect(document.getElementById('guide-go').hidden).toBe(false);
 
     tutorial.next();
 
     expect(document.getElementById('guide-step-indicator').textContent).toBe(
-      'Paso 2 de 11'
+      'Paso 2 de 6'
     );
 
     tutorial.prev();
 
     expect(document.getElementById('guide-step-indicator').textContent).toBe(
-      'Paso 1 de 11'
+      'Paso 1 de 6'
     );
 
-    tutorial.goTo(9);
+    tutorial.goTo(4);
 
     expect(document.getElementById('guide-body').dataset.step).toBe('menu');
     expect(document.getElementById('guide-go').hidden).toBe(true);
 
-    tutorial.goTo(10);
+    tutorial.goTo(5);
 
     expect(document.getElementById('guide-body').dataset.step).toBe('cuidados');
     expect(document.getElementById('guide-go').hidden).toBe(true);
@@ -229,7 +251,7 @@ describe('T113 - catálogo y selección de pasos de la guía', () => {
     }).find((step) => step.id === 'menu');
 
     expect(admin.text).toContain('Control de accesos');
-    expect(admin.text).toContain('Avisos al desarrollador');
+    expect(admin.text).not.toContain('Avisos al desarrollador');
     expect(finance.text).not.toContain('Control de accesos');
     expect(finance.text).not.toContain('Avisos al desarrollador');
     expect(finance.text).toContain('Cerrar sesión');
