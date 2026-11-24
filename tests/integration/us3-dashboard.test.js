@@ -39,6 +39,20 @@ beforeEach(() => {
   setupAdminSession();
 });
 
+function visibleQuickActionIds() {
+  return Array.from(
+    document.querySelectorAll('#view-dashboard .quick-actions button')
+  )
+    .filter((button) => !button.hidden && !button.closest('[hidden]'))
+    .map((button) => button.id);
+}
+
+function quickActionLabel(id) {
+  const button = document.getElementById(id);
+  const label = button?.querySelector('.qa-label');
+  return label ? label.textContent.trim() : null;
+}
+
 describe('US3 - panel de inicio', () => {
   it('muestra estadísticas coherentes con el almacenamiento', () => {
     const entity = addEntity({ name: 'Acme', code: 'AC-1' }, DEFAULT_CONFIG);
@@ -58,6 +72,7 @@ describe('US3 - panel de inicio', () => {
   });
 
   it('las acciones rápidas navegan a la vista correcta', () => {
+    setupFinanceSession();
     initApp(DEFAULT_CONFIG);
 
     document.getElementById('qa-manage-entities').click();
@@ -118,5 +133,39 @@ describe('US3 - panel de inicio', () => {
     expect(document.getElementById('qa-new-payroll').hidden).toBe(false);
     document.getElementById('qa-new-payroll').click();
     expect(document.getElementById('view-payroll-admin').hidden).toBe(false);
+  });
+
+  it('limita el Panel del administrador a crear y gestionar liquidaciones (FR-013)', () => {
+    initApp(DEFAULT_CONFIG);
+
+    expect(visibleQuickActionIds()).toEqual([
+      'qa-create-payroll',
+      'qa-new-payroll',
+    ]);
+    expect(quickActionLabel('qa-create-payroll')).toBe(
+      'Crear liquidación de sueldo'
+    );
+    expect(quickActionLabel('qa-new-payroll')).toBe(
+      'Gestionar liquidaciones de sueldo'
+    );
+    for (const id of [
+      'qa-manage-entities',
+      'qa-new-invoice-sale',
+      'qa-new-invoice-purchase',
+      'qa-tracking',
+      'qa-cashflow',
+      'qa-movements',
+      'qa-search',
+    ]) {
+      expect(document.getElementById(id).hidden).toBe(true);
+    }
+
+    document.getElementById('qa-create-payroll').click();
+    expect(document.getElementById('view-payroll-create').hidden).toBe(false);
+
+    document.getElementById('nav-dashboard').click();
+    document.getElementById('qa-new-payroll').click();
+    expect(document.getElementById('view-payroll-admin').hidden).toBe(false);
+    expect(document.getElementById('view-payroll-create').hidden).toBe(true);
   });
 });

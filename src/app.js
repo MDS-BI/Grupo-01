@@ -78,6 +78,7 @@ const VIEWS = [
   'dashboard',
   'entities',
   ...Object.values(INVOICE_VIEWS).map(({ module }) => module),
+  'payroll-create',
   'payroll-admin',
   'access',
   'dev-notifications',
@@ -91,24 +92,29 @@ const VIEWS = [
 const ACCESS_MATRIX = {
   login: { administrador: true, finanzas: true, trabajador: true },
   dashboard: { administrador: true, finanzas: true, trabajador: false },
-  entities: { administrador: true, finanzas: true, trabajador: false },
-  'invoice-sale': { administrador: true, finanzas: true, trabajador: false },
+  entities: { administrador: false, finanzas: true, trabajador: false },
+  'invoice-sale': { administrador: false, finanzas: true, trabajador: false },
   'invoice-purchase': {
-    administrador: true,
+    administrador: false,
     finanzas: true,
+    trabajador: false,
+  },
+  'payroll-create': {
+    administrador: true,
+    finanzas: false,
     trabajador: false,
   },
   'payroll-admin': { administrador: true, finanzas: true, trabajador: false },
   access: { administrador: true, finanzas: false, trabajador: false },
   'dev-notifications': {
-    administrador: true,
+    administrador: false,
     finanzas: false,
     trabajador: false,
   },
-  movements: { administrador: true, finanzas: true, trabajador: false },
-  cashflow: { administrador: true, finanzas: true, trabajador: false },
-  tracking: { administrador: true, finanzas: true, trabajador: false },
-  search: { administrador: true, finanzas: true, trabajador: false },
+  movements: { administrador: false, finanzas: true, trabajador: false },
+  cashflow: { administrador: false, finanzas: true, trabajador: false },
+  tracking: { administrador: false, finanzas: true, trabajador: false },
+  search: { administrador: false, finanzas: true, trabajador: false },
   'payroll-worker': { administrador: false, finanzas: false, trabajador: true },
 };
 
@@ -129,9 +135,7 @@ export function resolveRoute(view, session) {
   if (session.role === 'finanzas') {
     return view === 'payroll-worker' ? 'payroll-admin' : 'dashboard';
   }
-  if (session.role === 'administrador' && view === 'payroll-worker') {
-    return 'payroll-admin';
-  }
+  if (session.role === 'administrador') return 'payroll-admin';
   return 'login';
 }
 
@@ -561,9 +565,35 @@ function handlePayrollSave(id, values, _previous) {
   }
 }
 
+function showRouteMessage(text) {
+  const message = byId('route-message');
+  if (!message) return;
+  message.textContent = text;
+  message.hidden = false;
+}
+
+function clearRouteMessage() {
+  const message = byId('route-message');
+  if (!message) return;
+  message.textContent = '';
+  message.hidden = true;
+}
+
 function showModule(name) {
   const target = resolveRoute(name, state.session);
   if (!VIEWS.includes(target)) return;
+  const redirected =
+    Boolean(state.session) &&
+    name !== target &&
+    name !== 'login' &&
+    VIEWS.includes(name);
+  if (redirected) {
+    showRouteMessage(
+      'No tienes acceso a esta vista; se muestra tu vista permitida.'
+    );
+  } else {
+    clearRouteMessage();
+  }
   state.currentModule = target;
   const isLogin = target === 'login';
   byId('app').classList.toggle('login-screen', isLogin);
@@ -732,6 +762,8 @@ function handleInvoiceSubmit(tipoFactura, values, editingId) {
 function handleQuickAction(action) {
   if (action === 'new-payroll') {
     showModule('payroll-admin');
+  } else if (action === 'create-payroll') {
+    showModule('payroll-create');
   } else if (
     action === 'new-invoice-sale' ||
     action === 'new-invoice-purchase'

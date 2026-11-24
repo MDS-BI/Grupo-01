@@ -27,7 +27,14 @@ export function initDashboard({ config, onAction }) {
     ['qa-manage-entities', labels.entities || 'Entidades'],
     ['qa-new-invoice-sale', `${documents} de venta`],
     ['qa-new-invoice-purchase', `${documents} de compra`],
-    ['qa-new-payroll', labels.payrollAdmin || 'Liquidaciones de sueldo'],
+    [
+      'qa-create-payroll',
+      labels.payrollCreate || 'Crear liquidación de sueldo',
+    ],
+    [
+      'qa-new-payroll',
+      labels.payrollAdmin || 'Gestionar liquidaciones de sueldo',
+    ],
     ['qa-tracking', 'Seguimiento'],
     ['qa-cashflow', 'Flujo de caja'],
     ['qa-movements', 'Movimientos financieros'],
@@ -38,6 +45,7 @@ export function initDashboard({ config, onAction }) {
   const bindings = [
     ['qa-new-invoice-sale', 'new-invoice-sale'],
     ['qa-new-invoice-purchase', 'new-invoice-purchase'],
+    ['qa-create-payroll', 'create-payroll'],
     ['qa-new-payroll', 'new-payroll'],
     ['qa-cashflow', 'cashflow'],
     ['qa-movements', 'movements'],
@@ -53,11 +61,29 @@ export function initDashboard({ config, onAction }) {
 }
 
 export function setDashboardSession(session) {
+  const role = session?.role;
+  const isAdmin = role === 'administrador';
+
+  const createAction = document.getElementById('qa-create-payroll');
+  if (createAction) createAction.hidden = !isAdmin;
+
   const payrollAction = document.getElementById('qa-new-payroll');
-  if (payrollAction)
-    payrollAction.hidden = !['administrador', 'finanzas'].includes(
-      session?.role
-    );
+  if (payrollAction) {
+    payrollAction.hidden = !['administrador', 'finanzas'].includes(role);
+  }
+
+  for (const id of [
+    'qa-manage-entities',
+    'qa-new-invoice-sale',
+    'qa-new-invoice-purchase',
+    'qa-tracking',
+    'qa-cashflow',
+    'qa-movements',
+    'qa-search',
+  ]) {
+    const button = document.getElementById(id);
+    if (button) button.hidden = isAdmin;
+  }
 }
 
 export function refreshDashboard() {

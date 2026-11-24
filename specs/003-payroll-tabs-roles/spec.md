@@ -44,7 +44,7 @@ Como administrador, quiero una pestaña aparte «Crear liquidación de sueldo» 
 
 ### User Story 2 - Gestionar las liquidaciones desde su pestaña de listado con búsqueda por RUT (Priority: P1)
 
-Como administrador, quiero una pestaña aparte «Liquidaciones de sueldo» con el listado de todas las liquidaciones, un cuadro de búsqueda por RUT que filtra el listado a medida que escribo, y la acción de seleccionar y editar cualquier liquidación, para mantener al día los períodos y montos sin recorrer todo el listado.
+Como administrador, quiero una pestaña aparte «Gestionar liquidaciones de sueldo» con el listado de todas las liquidaciones, un cuadro de búsqueda por RUT que filtra el listado a medida que escribo, y la acción de seleccionar y editar cualquier liquidación, para mantener al día los períodos y montos sin recorrer todo el listado.
 
 **Why this priority**: completa la operación de nómina junto con la US1 y es el segundo entregable central del pedido; es independiente porque puede probarse con liquidaciones ya existentes.
 
@@ -52,7 +52,7 @@ Como administrador, quiero una pestaña aparte «Liquidaciones de sueldo» con e
 
 **Acceptance Scenarios**:
 
-1. **Dado** una sesión de administrador, **cuando** abre la pestaña «Liquidaciones de sueldo», **entonces** ve el listado con trabajador, RUT, período, monto, estado, fecha de pago, factura vinculada y acción «Editar».
+1. **Dado** una sesión de administrador, **cuando** abre la pestaña «Gestionar liquidaciones de sueldo», **entonces** ve el listado con trabajador, RUT, período, monto, estado, fecha de pago, factura vinculada y acción «Editar».
 2. **Dado** el listado completo, **cuando** escribo un RUT (total o parcial) en el cuadro de búsqueda, **entonces** el listado se filtra en vivo mientras escribo, sin necesidad de botón, mostrando solo las liquidaciones cuyo RUT coincida.
 3. **Dado** un RUT que no coincide con ninguna liquidación, **cuando** lo escribo, **entonces** veo un estado vacío claro de «sin resultados».
 4. **Dado** una liquidación seleccionada, **cuando** la edito con valores válidos y guardo, **entonces** los cambios se persisten, se respetan las validaciones y el ciclo de vida existentes, y la vista del trabajador refleja el cambio en el siguiente refresco.
@@ -71,7 +71,7 @@ Como usuario del módulo, quiero que cada rol vea exactamente los módulos que l
 
 **Acceptance Scenarios**:
 
-1. **Dado** una sesión de administrador, **cuando** revisa su navegación y su Panel, **entonces** sus únicas opciones son «Crear liquidación de sueldo» y «Gestionar liquidaciones de sueldo» (más «Control de accesos» como utilidad de sesión), y no ve entidades, facturas, movimientos, flujo de caja, seguimiento, búsqueda ni avisos al desarrollador.
+1. **Dado** una sesión de administrador, **cuando** revisa su navegación y su Panel, **entonces** sus opciones son el Panel (que solo muestra los accesos rápidos a «Crear liquidación de sueldo» y «Gestionar liquidaciones de sueldo»), las dos pestañas de liquidaciones y «Control de accesos» como utilidad de sesión, y no ve entidades, facturas, movimientos, flujo de caja, seguimiento, búsqueda ni avisos al desarrollador.
 2. **Dado** una sesión de finanzas, **cuando** revisa su navegación, **entonces** ve entidades, facturas de venta, facturas de compra, movimientos, flujo de caja, seguimiento, búsqueda y liquidaciones en solo lectura, sin control de accesos ni avisos al desarrollador, y sin capacidad de edición en liquidaciones.
 3. **Dado** una sesión de trabajador, **cuando** ingresa, **entonces** su experiencia no cambia: sigue viendo solo su última liquidación y su historial de pagos, en modo solo lectura.
 4. **Dado** cualquier rol, **cuando** intenta abrir por navegación directa una vista que no le corresponde, **entonces** el sistema redirige a su vista permitida y muestra un mensaje claro, sin exponer datos.
@@ -110,16 +110,16 @@ Como usuario del módulo, quiero que cada rol vea exactamente los módulos que l
 
 **Pestaña de listado (administrador y finanzas)**
 
-- **FR-007**: El sistema DEBE ofrecer una pestaña «Liquidaciones de sueldo» con el listado de todas las liquidaciones y sus columnas actuales (trabajador, RUT, período, monto, estado, fecha de pago, factura vinculada y acción).
+- **FR-007**: El sistema DEBE ofrecer una pestaña «Gestionar liquidaciones de sueldo» con el listado de todas las liquidaciones y sus columnas actuales (trabajador, RUT, período, monto, estado, fecha de pago, factura vinculada y acción); la acción «Asociar acceso» DEBE estar disponible únicamente para el rol `administrador`.
 - **FR-008**: La pestaña DEBE incluir un cuadro de búsqueda por RUT que filtre el listado en vivo a medida que se escribe, sin botón de envío.
 - **FR-009**: La búsqueda vacía DEBE mostrar el listado completo y una búsqueda sin coincidencias DEBE mostrar un estado vacío claro conservando el texto escrito.
 - **FR-010**: Solo el rol `administrador` DEBE poder seleccionar y editar cualquier liquidación desde esta pestaña, con las validaciones y el ciclo de vida ya existentes.
-- **FR-011**: El rol `finanzas` DEBE ver el listado en modo solo lectura y DEBE poder buscar y filtrar por RUT, sin acción de edición ni de creación de liquidaciones.
+- **FR-011**: El rol `finanzas` DEBE ver el listado en modo solo lectura y DEBE poder buscar y filtrar por RUT, sin acción de edición, de creación de liquidaciones ni de «Asociar acceso» (esta última es exclusiva del rol `administrador`).
 
 **Matriz de permisos por rol**
 
 - **FR-012**: El rol `administrador` DEBE tener acceso, como únicos módulos de negocio, a las dos pestañas de liquidaciones; DEBE perder el acceso a entidades, facturas de venta, facturas de compra, movimientos, flujo de caja, seguimiento y búsqueda; DEBE conservar el control de accesos; y DEBE perder el acceso a los avisos al desarrollador.
-- **FR-013**: El Panel y el menú del rol `administrador` DEBEn mostrar únicamente las dos pestañas de liquidaciones («Crear liquidación de sueldo» y «Gestionar liquidaciones de sueldo») más «Control de accesos» como utilidad de sesión; NO DEBEN mostrar avisos al desarrollador ni ningún otro módulo de negocio.
+- **FR-013**: El menú del rol `administrador` DEBE mostrar el Panel, las dos pestañas de liquidaciones («Crear liquidación de sueldo» y «Gestionar liquidaciones de sueldo») y «Control de accesos» como utilidad de sesión, y ningún otro módulo de negocio; el Panel DEBE mostrar únicamente los accesos rápidos a las dos pestañas de liquidaciones; NO DEBE mostrar avisos al desarrollador.
 - **FR-014**: El rol `finanzas` DEBE conservar entidades, movimientos, flujo de caja, seguimiento y búsqueda, además de la creación y consulta de facturas de venta y de compra; DEBE ver las liquidaciones en solo lectura con búsqueda por RUT; y NO DEBE tener control de accesos ni avisos al desarrollador.
 - **FR-015**: El rol `trabajador` NO DEBE verse afectado: conserva su vista exclusiva de última liquidación e historial en modo solo lectura.
 - **FR-016**: Toda vista DEBE exigir sesión iniciada y toda navegación a una vista no permitida DEBE redirigir a la vista permitida del rol con un mensaje claro, sin exponer datos.
@@ -144,7 +144,7 @@ Como usuario del módulo, quiero que cada rol vea exactamente los módulos que l
 
 - **SC-001**: El administrador crea una liquidación con RUT nuevo en una sola pasada por el formulario y, al terminar, existen a la vez la liquidación, el tercero personal y el acceso `trabajador` activo.
 - **SC-002**: La contraseña del acceso recién creado permite ingresar como `trabajador` en el primer intento y muestra únicamente la liquidación de ese trabajador.
-- **SC-003**: Escribir un RUT en el cuadro de búsqueda reduce el listado visible mientras se escribe, sin botón adicional, en menos de un segundo con el volumen del MVP.
+- **SC-003**: Escribir un RUT en el cuadro de búsqueda reduce el listado visible mientras se escribe, sin botón adicional, en menos de un segundo con los datos de demostración como volumen de referencia.
 - **SC-004**: Ningún rol puede abrir una vista que no le corresponde: el 100 % de los intentos de navegación no permitida termina en la vista permitida del rol con mensaje claro.
 - **SC-005**: El rol `finanzas` no dispone de ninguna acción de creación o edición de liquidaciones en la interfaz (0 acciones visibles o invocables).
 - **SC-006**: El 100 % de las pruebas automatizadas existentes sigue en verde después de los cambios (`npm run check` sin fallos), salvo las que esta funcionalidad actualiza de forma explícita.
@@ -154,7 +154,7 @@ Como usuario del módulo, quiero que cada rol vea exactamente los módulos que l
 - El administrador **conserva** el control de accesos, pero **pierde** los avisos al desarrollador; su limitación a liquidaciones aplica a los módulos de negocio (entidades, facturas, movimientos, flujo de caja, seguimiento y búsqueda).
 - El rol `finanzas` **conserva** entidades, movimientos, flujo de caja, seguimiento y búsqueda, además de facturas; el único cambio en su alcance es que pasa a solo lectura en liquidaciones.
 - «Mismo formulario ya existente de facturas» significa reutilizar el formulario de factura de compra actual, extendido con RUT y nombre completo; no se crea un formulario paralelo desde cero.
-- El Panel del administrador queda limitado a las dos pestañas de liquidaciones, manteniendo «Control de accesos» como utilidad de sesión y sin avisos al desarrollador.
+- El menú del administrador conserva el Panel, el cual queda limitado a los accesos rápidos de las dos pestañas de liquidaciones, junto con «Control de accesos» como utilidad de sesión y sin avisos al desarrollador.
 - Los datos de demostración existentes siguen siendo válidos; no se pide regenerarlos, salvo que las pruebas lo requieran.
 - El control de acceso sigue siendo una restricción de interfaz sobre datos del navegador, con la contraseña inicial de los primeros 4 dígitos del RUT documentada como riesgo conocido del MVP, tal como ya está establecido.
 - El trabajo se realiza en la rama `main` de forma local, sin crear ramas nuevas y sin realizar push a ningún remoto.

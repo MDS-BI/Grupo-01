@@ -2,10 +2,53 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { appState, canAccess, initApp, resolveRoute } from '../../src/app.js';
 import { userConfig } from '../../src/module-config.js';
 import { addDocument, addEntity } from '../../src/storage.js';
+import { saveAccessRecords } from '../../src/access-storage.js';
 import { clearSession, loadSession, saveSession } from '../../src/session.js';
-import { loadAppMarkup } from '../setup/domFixture.js';
+import {
+  loadAppMarkup,
+  setupAdminSession,
+  setupFinanzasSession,
+} from '../setup/domFixture.js';
 
 const byId = (id) => document.getElementById(id);
+
+function setupWorkerSession() {
+  const now = new Date().toISOString();
+  const worker = addEntity(
+    {
+      name: 'Ana Pérez Soto',
+      code: 'PE-001',
+      taxId: '22.222.222-2',
+      customFields: { tipoTercero: 'personal' },
+    },
+    userConfig
+  );
+  saveAccessRecords([
+    {
+      accessId: '22.222.222-2',
+      role: 'trabajador',
+      entityId: worker.entity_id,
+      password: '2222',
+      active: true,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ]);
+  saveSession({
+    accessId: '22.222.222-2',
+    role: 'trabajador',
+    entityId: worker.entity_id,
+    startedAt: now,
+  });
+}
+
+function expectVisibleRouteMessage() {
+  const message = byId('route-message');
+  expect(message).not.toBeNull();
+  expect(message.hidden).toBe(false);
+  expect(['alert', 'status']).toContain(message.getAttribute('role'));
+  expect(message.textContent.trim()).not.toBe('');
+}
 
 function businessViews() {
   return Array.from(document.querySelectorAll('main section.view'))
@@ -136,5 +179,49 @@ describe('Acceso obligatorio sin modo invitado', () => {
     expect(visibleViewText()).not.toContain('Dato Confidencial');
     expect(visibleViewText()).not.toContain('7777');
     expect(clearSession()).toBeUndefined();
+  });
+
+  it('payroll-create está denegado a finanzas y trabajador con redirección y mensaje (US1 esc. 7)', () => {
+    setupFinanzasSession();
+    initApp(userConfig);
+
+    byId('nav-payroll-create').click();
+
+    expect(byId('view-payroll-create').hidden).toBe(true);
+    expect(byId('view-dashboard').hidden).toBe(false);
+    expect(appState.currentModule).toBe('dashboard');
+    expectVisibleRouteMessage();
+
+    loadAppMarkup();
+    localStorage.clear();
+    sessionStorage.clear();
+    appState.currentModule = 'dashboard';
+    setupWorkerSession();
+    initApp(userConfig);
+
+    byId('nav-payroll-create').click();
+
+    expect(byId('view-payroll-create').hidden).toBe(true);
+    expect(byId('view-payroll-worker').hidden).toBe(false);
+    expect(appState.currentModule).toBe('payroll-worker');
+    expectVisibleRouteMessage();
+  });
+
+  it('el administrador redirigido desde un módulo de negocio cae en payroll-admin con mensaje (US3 esc. 4, FR-016, SC-004)', () => {
+    setupAdminSession();
+    initApp(userConfig);
+
+    expect(resolveRoute('entities', { role: 'administrador' })).toBe(
+      'payroll-admin'
+    );
+
+    for (const view of ['entities', 'invoice-sale', 'cashflow']) {
+      byId(`nav-${view}`).click();
+
+      expect(byId(`view-${view}`).hidden).toBe(true);
+      expect(byId('view-payroll-admin').hidden).toBe(false);
+      expect(appState.currentModule).toBe('payroll-admin');
+      expectVisibleRouteMessage();
+    }
   });
 });

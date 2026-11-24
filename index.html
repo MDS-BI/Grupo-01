@@ -50,15 +50,6 @@
         >
           Control de accesos
         </button>
-        <button
-          id="menu-dev-notifications"
-          class="menu-item"
-          type="button"
-          data-module="dev-notifications"
-          hidden
-        >
-          Avisos al desarrollador
-        </button>
         <div id="menu-separator" class="menu-separator" hidden></div>
         <button
           id="menu-logout"
@@ -113,21 +104,21 @@
             </button>
           </div>
           <button
+            id="nav-payroll-create"
+            class="nav-item"
+            data-module="payroll-create"
+          >
+            Crear liquidación de sueldo
+          </button>
+          <button
             id="nav-payroll-admin"
             class="nav-item"
             data-module="payroll-admin"
           >
-            Liquidaciones de sueldo
+            Gestionar liquidaciones de sueldo
           </button>
           <button id="nav-access" class="nav-item" data-module="access">
             Accesos
-          </button>
-          <button
-            id="nav-dev-notifications"
-            class="nav-item"
-            data-module="dev-notifications"
-          >
-            Avisos para el desarrollador
           </button>
           <button
             id="nav-payroll-worker"
@@ -155,6 +146,7 @@
           </div>
         </aside>
         <main class="content">
+          <p id="route-message" class="route-message" role="status" hidden></p>
           <section
             id="view-login"
             class="view login-view"
@@ -237,6 +229,27 @@
                 </svg>
                 <span class="qa-label">Documentos de compra</span>
               </button>
+              <button
+                id="qa-create-payroll"
+                class="quick-action"
+                type="button"
+                hidden
+              >
+                <svg
+                  class="qa-icon"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  focusable="false"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+                <span class="qa-label">Crear liquidación de sueldo</span>
+              </button>
               <button id="qa-new-payroll" class="quick-action" type="button">
                 <svg
                   class="qa-icon"
@@ -253,7 +266,7 @@
                   <path d="M3 7V6a2 2 0 0 1 2-2h11" />
                   <circle cx="17" cy="14" r="1" />
                 </svg>
-                <span class="qa-label">Liquidaciones de sueldo</span>
+                <span class="qa-label">Gestionar liquidaciones de sueldo</span>
               </button>
               <button id="qa-tracking" class="quick-action" type="button">
                 <svg
@@ -603,8 +616,10 @@
             </div>
           </section>
 
+          <section id="view-payroll-create" class="view" hidden></section>
+
           <section id="view-payroll-admin" class="view" hidden>
-            <h1 id="payroll-admin-title">Liquidaciones de sueldo</h1>
+            <h1 id="payroll-admin-title">Gestionar liquidaciones de sueldo</h1>
             <div class="invoice-controls">
               <div class="form-field">
                 <label for="payroll-filter-worker"

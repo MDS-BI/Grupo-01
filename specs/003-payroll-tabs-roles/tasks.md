@@ -26,8 +26,8 @@
 
 **Purpose**: Confirmar la base de calidad antes de tocar nada (repositorio ya inicializado; sin scaffolding nuevo).
 
-- [ ] T001 Ejecutar `npm run check` (script en `package.json`) y registrar el estado base en verde como referencia de regresión (SC-006)
-- [ ] T002 [P] Verificar que los documentos de diseño existen en `specs/003-payroll-tabs-roles/` (`plan.md`, `research.md`, `data-model.md`, `contracts/role-module-matrix.md`, `contracts/creation-flow.md`, `contracts/settlement-list.md`, `quickstart.md`)
+- [X] T001 Ejecutar `npm run check` (script en `package.json`) y registrar el estado base en verde como referencia de regresión (SC-006)
+- [X] T002 [P] Verificar que los documentos de diseño existen en `specs/003-payroll-tabs-roles/` (`plan.md`, `research.md`, `data-model.md`, `contracts/role-module-matrix.md`, `contracts/creation-flow.md`, `contracts/settlement-list.md`, `quickstart.md`)
 
 **Checkpoint**: Base de calidad registrada; sin cambios en código aún.
 
@@ -41,17 +41,20 @@
 
 **Tests primero** ⚠️ (escribir y ver FALLAR antes de implementar):
 
-- [ ] T003 [P] Añadir tests de navegación por rol en `tests/integration/navigation-menu.test.js`: administrador ve exactamente `payroll-create`, `payroll-admin` y `access`; finanzas conserva entidades/facturas/movimientos/cashflow/tracking/search + `payroll-admin`; ningún rol ve `dev-notifications` (FR-013, FR-014, FR-020)
-- [ ] T004 [P] Añadir tests de redirección en `tests/integration/no-guest-access.test.js`: `payroll-create` denegado a `finanzas` y `trabajador` ⇒ redirigido a su vista permitida con mensaje (FR-016, US1 esc. 7)
+- [X] T003 [P] Añadir tests de navegación por rol en `tests/integration/navigation-menu.test.js`: administrador ve exactamente `dashboard` (Panel con accesos rápidos solo a crear y gestionar liquidaciones), `payroll-create`, `payroll-admin` y `access`; finanzas conserva entidades/facturas/movimientos/cashflow/tracking/search + `payroll-admin`; ningún rol ve `dev-notifications` (FR-013, FR-014, FR-020)
+- [X] T004 [P] Añadir tests de redirección en `tests/integration/no-guest-access.test.js`: `payroll-create` denegado a `finanzas` y `trabajador` ⇒ redirigido a su vista permitida con mensaje (FR-016, US1 esc. 7)
 
 **Implementation**:
 
-- [ ] T005 [P] Añadir la sección `#view-payroll-create` (vacía, `class="view" hidden`) en `index.html`, junto a `#view-payroll-admin` (~línea 606)
-- [ ] T006 [P] Añadir el botón de navegación `data-module="payroll-create"` («Crear liquidación de sueldo») en el nav de `index.html` (~línea 117, junto a `#nav-payroll-admin`)
-- [ ] T007 Registrar el módulo `payroll-create` en `VIEWS`, en `ACCESS_MATRIX` (`payroll-create: { administrador: true, finanzas: false, trabajador: false }`) y en `resolveRoute` de `src/app.js`
-- [ ] T008 Actualizar `ADMIN_MODULES` a `['payroll-create', 'payroll-admin']` y `navLabel`/labels en `src/components/shell.js` + etiqueta `payrollCreate` en `src/module-config.js`
-- [ ] T009 Quitar `dev-notifications` de la navegación para todos los roles en `index.html` (botones `data-module="dev-notifications"`, ~líneas 57 y 127) manteniendo `appendDevNotification` en `src/access-storage.js` intacto (FR-020)
-- [ ] T010 Ejecutar `npm test -- --run tests/integration/navigation-menu.test.js tests/integration/no-guest-access.test.js` y llevar a verde corrigiendo solo lo marcado en T003/T004
+- [X] T005 [P] Añadir la sección `#view-payroll-create` (vacía, `class="view" hidden`) en `index.html`, junto a `#view-payroll-admin` (~línea 606)
+- [X] T006 [P] Añadir el botón de navegación `data-module="payroll-create"` («Crear liquidación de sueldo») en el nav de `index.html` (~línea 117, junto a `#nav-payroll-admin`)
+- [X] T007 Registrar el módulo `payroll-create` en `VIEWS`, en `ACCESS_MATRIX` (`payroll-create: { administrador: true, finanzas: false, trabajador: false }`) y en `resolveRoute` de `src/app.js`
+- [X] T008 Actualizar `ADMIN_MODULES` a `['dashboard', 'payroll-create', 'payroll-admin', 'access']` (el administrador conserva el Panel y el Control de accesos); añadir la etiqueta `payrollCreate` y renombrar `labels.payrollAdmin` a «Gestionar liquidaciones de sueldo» en `src/module-config.js`, y verificar que `navLabel` en `src/components/shell.js` y el acceso rápido en `src/components/dashboard.js` usan esa etiqueta
+- [X] T009 Quitar `dev-notifications` de la navegación para todos los roles en `index.html` (botones `data-module="dev-notifications"`, ~líneas 57 y 127) y ocultar `menuDevNotifications` para **todos los roles** ajustando `menuSeparator` en `src/components/shell.js` (hoy `hidden = !isAdmin`), manteniendo `appendDevNotification` en `src/access-storage.js` intacto (FR-020)
+- [X] T037 En `ACCESS_MATRIX` de `src/app.js`, poner `administrador: false` en `entities`, `invoice-sale`, `invoice-purchase`, `movements`, `cashflow`, `tracking`, `search` y `dev-notifications` según `contracts/role-module-matrix.md` §1; test escrito primero (debe fallar) en `tests/integration/navigation-menu.test.js` que verifique `canAccess(vista, sesiónDeAdministrador) === false` para cada una de esas vistas (FR-012, US3 esc. 1)
+- [X] T038 En `resolveRoute` de `src/app.js`, si el `administrador` intenta abrir una vista no permitida, redirigir a `payroll-admin` con mensaje claro (hoy cae en `login`); test de integración en `tests/integration/no-guest-access.test.js` para el escenario 4 de la US3 (FR-016, SC-004)
+- [X] T039 En `src/components/dashboard.js`, limitar el Panel del administrador a los accesos rápidos «Crear liquidación de sueldo» y «Gestionar liquidaciones de sueldo»; test escrito primero (debe fallar) en `tests/integration/us3-dashboard.test.js` (FR-013, US3 esc. 1)
+- [X] T010 Ejecutar `npm test -- --run tests/integration/navigation-menu.test.js tests/integration/no-guest-access.test.js tests/integration/us3-dashboard.test.js` y llevar a verde corrigiendo solo lo marcado en T003/T004/T037/T038/T039
 
 **Checkpoint**: Fundacional listo — las historias pueden empezar en paralelo.
 
@@ -65,7 +68,7 @@
 
 **Tests primero** ⚠️ (deben FALLAR antes de la implementación):
 
-- [ ] T011 [P] [US1] Test unitario de flujo de creación en `tests/unit/creation-flow.test.js` (archivo nuevo): RUT nuevo ⇒ `addEntity` + `createAccessRecord` llamados; RUT ya existente personal ⇒ NO se llama `addEntity` ni `createAccessRecord`; RUT con DV inválido o campos vacíos ⇒ `ValidationFailure` sin registros persistidos (FR-003, FR-004, FR-005)
+- [ ] T011 [P] [US1] Test unitario de flujo de creación en `tests/unit/creation-flow.test.js` (archivo nuevo): RUT nuevo ⇒ `addEntity` + `createAccessRecord` llamados; RUT ya existente personal ⇒ NO se llama `addEntity` ni `createAccessRecord`; RUT con DV inválido o campos vacíos ⇒ `ValidationFailure` sin registros persistidos; RUT existente pero no personal o con acceso inactivo ⇒ rechazo sin registros persistidos y la incidencia registrada con `appendDevNotification` (FR-003, FR-004, FR-005)
 - [ ] T012 [P] [US1] Test de integración end-to-end en `tests/integration/payroll-create.test.js` (archivo nuevo): admin abre la pestaña, ve form de compra + «RUT» + «Nombre completo», guarda con RUT nuevo y comprueba liquidación + tercero `personal` + acceso `trabajador` activo con `initialPassword(rut)`; login del nuevo trabajador muestra solo su liquidación (US1 esc. 1, 2, 6)
 
 **Implementation**:
@@ -111,7 +114,7 @@
 **Tests primero** ⚠️:
 
 - [ ] T024 [P] [US3] Añadir tests de solo lectura en `tests/integration/finanzas-permissions.test.js`: finanzas busca por RUT en el listado pero NO hay acción «Editar»/«Asociar» invocable; no llega a `payroll-create` ni a `access` (FR-011, SC-005)
-- [ ] T025 [P] [US3] Añadir test unitario de la flag en `tests/unit/` (junto a los tests de la lista existente, p. ej. `tests/integration/payroll-admin.test.js`): `renderPayrollList` con `canEdit: false` no renderiza el botón «Editar»; con `canEdit: true` lo renderiza (default actual)
+- [ ] T025 [P] [US3] Añadir test de integración en `tests/integration/payroll-admin.test.js`: `renderPayrollList` con `canEdit: false` no renderiza el botón «Editar»; con `canEdit: true` lo renderiza (default actual)
 
 **Implementation**:
 
@@ -140,7 +143,8 @@
 **Purpose**: Verificación transversal y cierre.
 
 - [ ] T032 [P] Revisar `tests/integration/dev-notifications.test.js` en `tests/integration/dev-notifications.test.js`: el registro local/consola sigue funcionando pero el panel no es visible para ningún rol (FR-020)
-- [ ] T033 [P] Revisar `tests/integration/access-admin-finanzas.test.js` y `tests/integration/login-roles.test.js` en `tests/integration/`: ajustar solo lo que esta funcionalidad cambia explícitamente (matriz de admin/finanzas)
+- [ ] T033 [P] Revisar `tests/integration/access-admin-finanzas.test.js` y `tests/integration/login-roles.test.js` en `tests/integration/`: ajustar solo lo que esta funcionalidad cambia explícitamente (matriz de admin/finanzas); verificar además que `tests/integration/payroll-worker.test.js` sigue en verde **sin cambios** (FR-015)
+- [ ] T040 [P] Extender `tests/integration/performance.test.js` con una prueba del filtro por RUT: con los datos de demostración como volumen de referencia, el listado se filtra en menos de 1 s (SC-003, FR-008)
 - [ ] T034 Ejecutar los escenarios A–D de `specs/003-payroll-tabs-roles/quickstart.md` manualmente contra `npm run dev` y confirmar SC-001…SC-005
 - [ ] T035 Ejecutar `npm run check` (lint + format + `npm test -- --run`) y corregir cualquier regresión hasta dejarlo en verde (SC-006)
 - [ ] T036 Confirmar que ningún archivo fue reescrito completo: revisar `git diff --stat` y comprobar que los cambios en `src/app.js`, `src/components/*.js`, `index.html` son aditivos/quirúrgicos (FR-019)
@@ -181,7 +185,7 @@
 - T011 ∥ T012 (dos archivos de test nuevos en US1)
 - T018 ∥ T019 (tests de US2 en paralelo)
 - T024 ∥ T025 (tests de US3 en paralelo)
-- T032 ∥ T033 (Polish, tests distintos)
+- T032 ∥ T033 ∥ T040 (Polish, tests distintos)
 
 ---
 

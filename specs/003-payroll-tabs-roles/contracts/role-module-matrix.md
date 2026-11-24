@@ -38,6 +38,7 @@ resolveRoute(view, role):
 
 - Abrir `payroll-create` como finanzas/trabajador ⇒ redirigido (US1 esc. 7).
 - `dev-notifications` no es alcanzable por ningún rol ⇒ cualquier intento cae en la vista por defecto del rol.
+- **«Mensaje claro»** (toda redirección de esta sección y los rechazos asociados): un elemento en el DOM con `role="alert"` o `role="status"` y **texto no vacío**, visible para el usuario.
 
 ## 3. Acciones dentro de `payroll-admin`
 

@@ -63,6 +63,14 @@ function visibleMenuIds() {
     .map((item) => item.id);
 }
 
+function visibleNavModules() {
+  return Array.from(
+    document.querySelectorAll('.sidebar .nav-item[data-module]')
+  )
+    .filter((button) => !button.hidden)
+    .map((button) => button.dataset.module);
+}
+
 function visibleQuickActionIds() {
   return Array.from(
     byId('view-dashboard').querySelectorAll('.quick-actions button')
@@ -98,13 +106,9 @@ describe('T147 - menú de utilidades y grilla del Panel', () => {
     expect(visibleMenuIds()).toEqual([
       'menu-guide',
       'menu-access',
-      'menu-dev-notifications',
       'menu-logout',
     ]);
     expect(byId('menu-access').textContent.trim()).toBe('Control de accesos');
-    expect(byId('menu-dev-notifications').textContent.trim()).toBe(
-      'Avisos al desarrollador'
-    );
     expect(byId('menu-logout').textContent.trim()).toBe('Cerrar sesión');
     expect(visibleMenuIds().at(-1)).toBe('menu-logout');
   });
@@ -119,7 +123,7 @@ describe('T147 - menú de utilidades y grilla del Panel', () => {
 
       expect(byId('menu-toggle').hidden).toBe(false);
       expect(byId('menu-access').hidden).toBe(true);
-      expect(byId('menu-dev-notifications').hidden).toBe(true);
+      expect(byId('menu-dev-notifications')).toBeNull();
       expect(byId('menu-separator').hidden).toBe(true);
       expect(visibleMenuIds()).toEqual(['menu-guide', 'menu-logout']);
       expect(byId('menu-logout').textContent.trim()).toBe('Cerrar sesión');
@@ -185,20 +189,33 @@ describe('T147 - menú de utilidades y grilla del Panel', () => {
     expect(byId('session-role').hidden).toBe(true);
   });
 
-  it('muestra la grilla de ocho accesos operativos para administrador y finanzas', () => {
-    for (const setup of [setupAdminSession, setupFinanzasSession]) {
-      loadAppMarkup();
-      localStorage.clear();
-      sessionStorage.clear();
-      setup();
-      initApp(userConfig);
+  it('muestra la grilla de ocho accesos operativos para finanzas', () => {
+    setupFinanzasSession();
+    initApp(userConfig);
 
-      expect(byId('view-dashboard').hidden).toBe(false);
-      expect(visibleQuickActionIds()).toEqual(PANEL_ACTIONS);
-      for (const id of PANEL_ACTIONS) {
-        expect(byId(id).hidden).toBe(false);
-      }
-      expect(byId('qa-new-payroll').hidden).toBe(false);
+    expect(byId('view-dashboard').hidden).toBe(false);
+    expect(visibleQuickActionIds()).toEqual(PANEL_ACTIONS);
+    for (const id of PANEL_ACTIONS) {
+      expect(byId(id).hidden).toBe(false);
+    }
+    expect(byId('qa-new-payroll').hidden).toBe(false);
+    expect(byId('qa-create-payroll').hidden).toBe(true);
+  });
+
+  it('muestra en el Panel del administrador solo los accesos de liquidaciones', () => {
+    setupAdminSession();
+    initApp(userConfig);
+
+    expect(byId('view-dashboard').hidden).toBe(false);
+    expect(visibleQuickActionIds()).toEqual([
+      'qa-create-payroll',
+      'qa-new-payroll',
+    ]);
+    expect(byId('qa-create-payroll').hidden).toBe(false);
+    expect(byId('qa-new-payroll').hidden).toBe(false);
+    for (const id of PANEL_ACTIONS) {
+      if (id === 'qa-new-payroll') continue;
+      expect(byId(id).hidden).toBe(true);
     }
   });
 
@@ -244,5 +261,88 @@ describe('T147 - menú de utilidades y grilla del Panel', () => {
 
     expect(byId('view-dashboard').hidden).toBe(true);
     expect(byId('view-payroll-worker').hidden).toBe(false);
+  });
+});
+
+describe('003 - matriz de navegación por rol (T003, T037)', () => {
+  beforeEach(() => {
+    loadAppMarkup();
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  it('el administrador navega exactamente Panel, crear y gestionar liquidaciones y control de accesos', () => {
+    setupAdminSession();
+    initApp(userConfig);
+
+    expect(visibleNavModules()).toEqual([
+      'dashboard',
+      'payroll-create',
+      'payroll-admin',
+      'access',
+    ]);
+  });
+
+  it('finanzas conserva sus módulos de negocio más liquidaciones en solo lectura', () => {
+    setupFinanzasSession();
+    initApp(userConfig);
+
+    expect(visibleNavModules()).toEqual([
+      'dashboard',
+      'entities',
+      'invoice-sale',
+      'invoice-purchase',
+      'payroll-admin',
+      'movements',
+      'cashflow',
+      'tracking',
+      'search',
+    ]);
+  });
+
+  it('ningún rol ve la navegación ni el menú de avisos al desarrollador (FR-020)', () => {
+    for (const setup of [
+      setupAdminSession,
+      setupFinanzasSession,
+      setupWorkerSession,
+    ]) {
+      loadAppMarkup();
+      localStorage.clear();
+      sessionStorage.clear();
+      setup();
+      initApp(userConfig);
+
+      expect(byId('nav-dev-notifications')).toBeNull();
+      expect(byId('menu-dev-notifications')).toBeNull();
+      expect(visibleMenuIds()).not.toContain('menu-dev-notifications');
+      expect(visibleNavModules()).not.toContain('dev-notifications');
+    }
+  });
+
+  it('el administrador pierde el acceso a los módulos de negocio fuera de liquidaciones (FR-012)', () => {
+    setupAdminSession();
+    const session = loadSession();
+    initApp(userConfig);
+
+    const denied = [
+      'entities',
+      'invoice-sale',
+      'invoice-purchase',
+      'movements',
+      'cashflow',
+      'tracking',
+      'search',
+      'dev-notifications',
+    ];
+    for (const view of denied) {
+      expect(canAccess(view, session)).toBe(false);
+      expect(resolveRoute(view, session)).toBe('payroll-admin');
+    }
+
+    const allowed = ['dashboard', 'payroll-create', 'payroll-admin', 'access'];
+    for (const view of allowed) {
+      expect(canAccess(view, session)).toBe(true);
+      expect(resolveRoute(view, session)).toBe(view);
+    }
   });
 });

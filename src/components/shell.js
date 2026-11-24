@@ -7,15 +7,9 @@ const INVOICE_MODULES = Object.values(INVOICE_VIEWS).map(
 
 const ADMIN_MODULES = [
   'dashboard',
-  'entities',
-  ...INVOICE_MODULES,
+  'payroll-create',
   'payroll-admin',
   'access',
-  'dev-notifications',
-  'movements',
-  'cashflow',
-  'tracking',
-  'search',
 ];
 
 const FINANCE_MODULES = [
@@ -74,8 +68,10 @@ export function navLabel(config, module) {
     (view) => view.module === module
   );
   if (view) return `${labels.documents} de ${view.label}`;
+  if (module === 'payroll-create')
+    return labels.payrollCreate || 'Crear liquidación de sueldo';
   if (module === 'payroll-admin')
-    return labels.payrollAdmin || 'Liquidaciones de sueldo';
+    return labels.payrollAdmin || 'Gestionar liquidaciones de sueldo';
   if (module === 'access') return labels.access || 'Accesos';
   if (module === 'dev-notifications')
     return labels.devNotifications || 'Avisos para el desarrollador';
@@ -243,16 +239,11 @@ export function createShell({
         : null;
   }
   if (menuDevNotifications) {
-    menuDevNotifications.hidden = !isAdmin;
-    menuDevNotifications.onclick =
-      isAdmin && onNavigate
-        ? () => {
-            closeMenu();
-            onNavigate('dev-notifications');
-          }
-        : null;
+    menuDevNotifications.hidden = true;
+    menuDevNotifications.onclick = null;
   }
-  if (menuSeparator) menuSeparator.hidden = !isAdmin;
+  if (menuSeparator)
+    menuSeparator.hidden = menuAccess ? menuAccess.hidden : true;
   if (menuLogout) {
     menuLogout.hidden = !session;
     menuLogout.onclick =

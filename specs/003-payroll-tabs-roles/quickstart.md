@@ -47,7 +47,7 @@ npm run test -- --run   # o: npm test -- --run  (suite completa)
 1. Como `finanzas`: nav = entidades, facturas venta/compra, movimientos, flujo de caja, seguimiento, búsqueda, Panel y «Gestionar liquidaciones de sueldo»; **sin** control de accesos ni avisos (FR-014).
 2. En el listado de liquidaciones finanzas: **Esperado** búsqueda por RUT funcional pero **cero acciones** «Editar»/«Asociar» (FR-011, SC-005).
 3. Intento directo (URL/estado interno) a `payroll-create` como finanzas o trabajador: **Esperado** redirección a la vista permitida del rol con mensaje, sin datos (FR-016, esc. 7 de US1).
-4. Intento directo a entidades/facturas/etc. como administrador: **Esperado** redirigido a «Gestionar liquidaciones» con mensaje (esc. 4 de US3).
+4. Intento directo a entidades/facturas/etc. como administrador: **Esperado** redirigido a «Gestionar liquidaciones de sueldo» con mensaje (esc. 4 de US3).
 5. Como `trabajador`: sin cambios; solo su liquidación e historial en lectura (FR-015).
 6. Comprobar que ningún rol puede abrir `dev-notifications`; los avisos siguen en consola/`localStorage` (FR-020).
 

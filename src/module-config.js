@@ -43,6 +43,7 @@ export const LABEL_KEYS = [
   'login',
   'payrollWorker',
   'payrollAdmin',
+  'payrollCreate',
   'access',
   'devNotifications',
 ];
@@ -58,7 +59,8 @@ export const DEFAULT_CONFIG = Object.freeze({
     search: 'Buscar',
     login: 'Acceso',
     payrollWorker: 'Mi liquidación',
-    payrollAdmin: 'Liquidaciones de sueldo',
+    payrollAdmin: 'Gestionar liquidaciones de sueldo',
+    payrollCreate: 'Crear liquidación de sueldo',
     access: 'Accesos',
     devNotifications: 'Avisos para el desarrollador',
   }),
