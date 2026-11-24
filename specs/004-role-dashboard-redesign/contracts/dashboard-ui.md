@@ -82,11 +82,20 @@ La ocultación se aplica en la capa del Panel, no únicamente en `clearRestricte
   - Caja negativa: número y borde en rojo.
   - Vencidas > 0: tarjeta en ámbar.
   - Cero y valores normales: neutro.
-  - Sin mes anterior: `sin dato anterior`, nunca `0 %`.
+  - Sin documento anterior al mes actual: `sin dato anterior`, nunca `0 %`.
 - Variación:
   - Caja: ▲ verde / ▼ rojo.
   - Por pagar y vencidas: ▲ rojo / ▼ verde.
   - Por cobrar: neutro en ambos sentidos.
+- `previousValue` se reconstruye al último día del mes anterior con los datos existentes, sin snapshot ni cambio de modelo:
+  - `cash`: ingresos menos egresos de documentos con `fechaPagoEfectiva <= cutoff`.
+  - `receivable`: suma de facturas de venta emitidas hasta `cutoff` y no pagadas a esa fecha.
+  - `payable`: suma de facturas de compra emitidas hasta `cutoff` y no pagadas a esa fecha.
+  - `overdue`: cantidad de facturas emitidas y no pagadas a `cutoff` con vencimiento anterior a `cutoff`.
+- Reglas de texto de variación:
+  - Si no existe ningún documento con fecha anterior al mes actual, `previousValue` es `null` y se muestra `sin dato anterior`.
+  - Si `previousValue` es `0` y el valor actual no es `0`, no se calcula porcentaje: se muestra solo la flecha con el texto `nuevo`.
+  - La flecha de `nuevo` es ▲ cuando el valor actual es positivo y ▼ cuando es negativo; el color conserva la semántica del indicador.
 - Fórmulas solo en tooltip accesible señalado con ⓘ; la etiqueta visible contiene únicamente el nombre del indicador.
 - Las cuatro tarjetas deben ser visibles sin scroll en 1366x768.
 

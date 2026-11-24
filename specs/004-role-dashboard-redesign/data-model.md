@@ -67,13 +67,34 @@
 | `id` | `'cash' \| 'receivable' \| 'payable' \| 'overdue'` | Identificador estable. |
 | `label` | `string` | `Caja neta`, `Por cobrar`, `Por pagar`, `Facturas vencidas`. |
 | `value` | `number \| string` | Monto CLP o cantidad de facturas vencidas. |
-| `previousValue` | `number \| string \| null` | Valor del mes anterior; `null` si no existe información. |
-| `variationPercent` | `number \| null` | Porcentaje calculado solo si hay mes anterior y base válida. |
+| `previousValue` | `number \| string \| null` | Estado reconstruido al último día del mes anterior con los datos existentes; `null` si no hay documentos anteriores al mes actual. |
+| `variationPercent` | `number \| null` | Porcentaje calculado solo si `previousValue` no es `null`, es distinto de `0` y `value` difiere de él. |
 | `variationDirection` | `'up' \| 'down' \| 'flat' \| 'unknown'` | Dirección de la variación. |
+| `variationText` | `string` | `sin dato anterior`, `<flecha> nuevo`, `<flecha> <porcentaje> %` o `sin cambio`. |
 | `variationTone` | `'favorable' \| 'unfavorable' \| 'neutral'` | Ver tabla de semántica por indicador. |
 | `stateTone` | `'negative' \| 'action' \| 'neutral'` | Caja negativa → rojo; vencidas > 0 → ámbar; resto neutro. |
 | `formulaTooltip` | `string` | Fórmula visible solo en tooltip con ⓘ. |
 | `targetRoute` | `string` | `cashflow`, `invoice-sale`, `invoice-purchase`, `tracking`. |
+
+#### Reconstrucción de `previousValue`
+
+- No se consulta un snapshot histórico ni se agrega almacenamiento: se reconstruye con documentos, entidades y movimientos ya existentes.
+- `cutoff` es el último día del mes calendario inmediatamente anterior al mes de la sesión; `inicioMesActual` es el primer día del mes actual.
+- `fechaEmision` es `startDate`, o `createdAt` si `startDate` no existe.
+- `fechaPagoEfectiva` sigue la precedencia de flujo de caja: movimiento `tipo === 'pago'` con la fecha más reciente, luego `customFields.fechaPago`, luego `endDate` y finalmente `startDate`.
+- `emitidaHastaCutoff` significa `fechaEmision <= cutoff`.
+- `noPagadaACutoff` significa que no existe `fechaPagoEfectiva <= cutoff`; un documento pagado después del cutoff se considera no pagado a esa fecha.
+
+| Indicador | Cálculo de `previousValue` |
+|---|---|
+| `cash` | `ingresos - egresos` de documentos pagados cuya `fechaPagoEfectiva <= cutoff`; la dirección de cada fila es la ya usada por `computeCashflow`. |
+| `receivable` | Suma de `totalAmount` de facturas de venta con `emitidaHastaCutoff` y `noPagadaACutoff`. |
+| `payable` | Suma de `totalAmount` de facturas de compra con `emitidaHastaCutoff` y `noPagadaACutoff`. |
+| `overdue` | Cantidad de facturas con `emitidaHastaCutoff`, `noPagadaACutoff` y `endDate < cutoff`. |
+
+- Si no existe ningún documento con `fechaEmision`, `endDate` o `fechaPagoEfectiva` anterior a `inicioMesActual`, `previousValue` es `null` y la tarjeta muestra `sin dato anterior`.
+- Si `previousValue` es `0` y `value` no es `0`, no se calcula porcentaje: `variationPercent` es `null` y `variationText` es `<flecha> nuevo`.
+- La flecha de `nuevo` es ▲ cuando `value > 0` y ▼ cuando `value < 0`; el color sigue la semántica del indicador, no el signo.
 
 Semántica de variación:
 
@@ -84,7 +105,7 @@ Semántica de variación:
 | `payable` | desfavorable (rojo) | favorable (verde) | neutro |
 | `overdue` | desfavorable (rojo) | favorable (verde) | neutro |
 
-Fórmulas:
+Fórmulas del valor actual:
 
 - `cash`: `ingresos - egresos` de documentos pagados, con pago de movimientos cuando existe.
 - `receivable`: suma de `totalAmount` de facturas de venta en estado `Emitida`.
