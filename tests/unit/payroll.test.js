@@ -171,3 +171,127 @@ describe('payroll: listado del administrador', () => {
     ).toEqual(['doc_2']);
   });
 });
+
+describe('payroll: búsqueda por RUT del administrador', () => {
+  const invoices = [
+    settlement(),
+    settlement({
+      document_id: 'doc_2',
+      entity_id: 'ent_other',
+      customFields: { tipoFactura: 'compra', periodoLiquidacion: '2026-09' },
+    }),
+    settlement({
+      document_id: 'doc_3',
+      entity_id: 'ent_supplier',
+      customFields: { tipoFactura: 'compra', periodoLiquidacion: '2026-10' },
+    }),
+  ];
+
+  it('filtra por RUT parcial con puntos y guion', () => {
+    expect(
+      resolveAdminSettlements({
+        purchaseInvoices: invoices,
+        entities,
+        filters: { rut: '22.222' },
+      }).map((item) => item.document_id)
+    ).toEqual(['doc_1']);
+    expect(
+      resolveAdminSettlements({
+        purchaseInvoices: invoices,
+        entities,
+        filters: { rut: '45.000.000-' },
+      }).map((item) => item.document_id)
+    ).toEqual(['doc_2']);
+  });
+
+  it('filtra por RUT completo insensible a formato y mayúsculas', () => {
+    const kWorker = {
+      entity_id: 'ent_k',
+      name: 'Clara Ruiz',
+      taxId: '12.345.678-k',
+      customFields: { tipoTercero: 'personal' },
+    };
+    const kInvoice = settlement({
+      document_id: 'doc_k',
+      entity_id: 'ent_k',
+    });
+
+    expect(
+      resolveAdminSettlements({
+        purchaseInvoices: [kInvoice],
+        entities: [...entities, kWorker],
+        filters: { rut: '12345678K' },
+      }).map((item) => item.document_id)
+    ).toEqual(['doc_k']);
+    expect(
+      resolveAdminSettlements({
+        purchaseInvoices: invoices,
+        entities,
+        filters: { rut: '45.000.000-0' },
+      }).map((item) => item.document_id)
+    ).toEqual(['doc_2']);
+  });
+
+  it('RUT vacío no filtra y sin coincidencias devuelve []', () => {
+    expect(
+      resolveAdminSettlements({
+        purchaseInvoices: invoices,
+        entities,
+        filters: { rut: '   ' },
+      }).map((item) => item.document_id)
+    ).toEqual(['doc_1', 'doc_2']);
+    expect(
+      resolveAdminSettlements({
+        purchaseInvoices: invoices,
+        entities,
+        filters: { rut: '99.999.999-9' },
+      })
+    ).toEqual([]);
+  });
+
+  it('combina RUT con los filtros existentes en AND', () => {
+    expect(
+      resolveAdminSettlements({
+        purchaseInvoices: invoices,
+        entities,
+        filters: { rut: '22222222-2', period: '2026-09' },
+      })
+    ).toEqual([]);
+    expect(
+      resolveAdminSettlements({
+        purchaseInvoices: invoices,
+        entities,
+        filters: { rut: '45000000-0', period: '2026-09' },
+      }).map((item) => item.document_id)
+    ).toEqual(['doc_2']);
+  });
+
+  it('aplica el filtro RUT también a liquidaciones estructuradas', () => {
+    const structured = [
+      {
+        settlementId: 'set_1',
+        documentId: 'doc_1',
+        entityId: 'ent_worker',
+        periodo: '2026-10',
+        monto: 700000,
+        estado: 'Pagada',
+      },
+      {
+        settlementId: 'set_2',
+        documentId: 'doc_2',
+        entityId: 'ent_other',
+        periodo: '2026-09',
+        monto: 620000,
+        estado: 'Emitida',
+      },
+    ];
+
+    expect(
+      resolveAdminSettlements({
+        settlements: structured,
+        entities,
+        filters: { rut: '45.000.000-0' },
+      }).map((item) => item.settlementId)
+    ).toEqual(['set_2']);
+  });
+});

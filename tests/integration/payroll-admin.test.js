@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { initApp, appState } from '../../src/app.js';
 import { userConfig } from '../../src/module-config.js';
+import { renderPayrollList } from '../../src/components/payroll-list.js';
 import {
   addDocument,
   addEntity,
@@ -174,11 +175,81 @@ describe('US4/US7 - liquidaciones del administrador y de finanzas', () => {
         );
       });
 
-      it('edita el desglose y rechaza un período inválido', () => {
+      it('filtra en vivo por RUT sin botón y conserva el texto sin resultados', () => {
+        const ana = worker('22.222.222-2', 'PE-001', 'Ana Pérez Soto');
+        const bruno = worker('45.000.000-0', 'PE-002', 'Bruno Soto Vega');
+        addSettlement(ana, '2026-10', 700000, 1);
+        addSettlement(bruno, '2026-09', 620000, 2);
+        initApp(userConfig);
+        byId('nav-payroll-admin').click();
+
+        const filter = byId('payroll-filter-rut');
+        expect(filter).not.toBeNull();
+        expect(filter?.parentElement?.textContent).toContain('Buscar por RUT');
+
+        filter.value = '45.000';
+        filter.dispatchEvent(new Event('input'));
+        expect(byId('payroll-admin-list').textContent).toContain(
+          'Bruno Soto Vega'
+        );
+        expect(byId('payroll-admin-list').textContent).not.toContain(
+          'Ana Pérez Soto'
+        );
+
+        filter.value = '99.999';
+        filter.dispatchEvent(new Event('input'));
+        expect(byId('payroll-admin-list').textContent).not.toContain(
+          'Bruno Soto Vega'
+        );
+        expect(byId('payroll-admin-empty').hidden).toBe(false);
+        expect(byId('payroll-admin-empty').textContent).toContain('99.999');
+
+        filter.value = '';
+        filter.dispatchEvent(new Event('input'));
+        expect(byId('payroll-admin-empty').hidden).toBe(true);
+        expect(byId('payroll-admin-list').textContent).toContain(
+          'Ana Pérez Soto'
+        );
+        expect(byId('payroll-admin-list').textContent).toContain(
+          'Bruno Soto Vega'
+        );
+
+        if (role === 'finanzas') {
+          expect(
+            byId('payroll-admin-list').querySelector('[data-action="edit"]')
+          ).toBeNull();
+          return;
+        }
+
+        const editedId =
+          byId('payroll-admin-list').querySelector('tbody tr')?.dataset.id;
+        byId('payroll-admin-list')
+          .querySelector('[data-action="edit"]')
+          .click();
+        byId('payroll-field-sueldoBase').value = '510000';
+        byId('payroll-field-sueldoBase').dispatchEvent(new Event('input'));
+        byId('payroll-form').dispatchEvent(
+          new Event('submit', { bubbles: true, cancelable: true })
+        );
+        expect(
+          loadPayrollSettlements().find(
+            (item) => item.settlementId === editedId
+          ).sueldoBase
+        ).toBe(510000);
+      });
+
+      it('edita el desglose (admin) o lo oculta (finanzas) y valida el período', () => {
         const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
         addSettlement(ana, '2026-10', 700000, 1);
         initApp(userConfig);
         byId('nav-payroll-admin').click();
+
+        if (role === 'finanzas') {
+          expect(
+            byId('payroll-admin-list').querySelector('[data-action="edit"]')
+          ).toBeNull();
+          return;
+        }
 
         byId('payroll-admin-list')
           .querySelector('[data-action="edit"]')
@@ -266,7 +337,7 @@ describe('US4/US7 - liquidaciones del administrador y de finanzas', () => {
       });
     });
 
-    it('finanzas ve y edita liquidaciones, pero no puede asociar un acceso por RUT', () => {
+    it('finanzas ve liquidaciones en solo lectura y no puede asociar un acceso por RUT', () => {
       const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
       addSettlement(ana, '2026-10', 700000, 1);
       setupFinanceSession();
@@ -280,10 +351,11 @@ describe('US4/US7 - liquidaciones del administrador y de finanzas', () => {
         loadAccessRecords().some((item) => item.entityId === ana.entity_id)
       ).toBe(false);
 
-      const editButton = list.querySelector('[data-action="edit"]');
-      expect(editButton).not.toBeNull();
-      editButton.click();
-      expect(byId('payroll-field-periodoLiquidacion').value).toBe('2026-10');
+      expect(list.querySelector('[data-action="edit"]')).toBeNull();
+      expect(
+        loadPayrollSettlements().find((item) => item.entityId === ana.entity_id)
+          .periodo
+      ).toBe('2026-10');
     });
   });
 
@@ -315,5 +387,44 @@ describe('US4/US7 - liquidaciones del administrador y de finanzas', () => {
     });
     initApp(userConfig);
     expect(byId('payroll-worker-amount').textContent).toContain('750');
+  });
+});
+
+describe('renderPayrollList - bandera canEdit', () => {
+  beforeEach(() => {
+    loadAppMarkup();
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  it('oculta Editar con canEdit false y lo muestra por defecto', () => {
+    const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
+    const settlement = {
+      settlementId: 'set_readonly',
+      documentId: 'doc_readonly',
+      entityId: ana.entity_id,
+      periodo: '2026-10',
+      monto: 700000,
+      estado: 'Emitida',
+      fechaPago: null,
+    };
+    const host = byId('payroll-admin-list');
+
+    renderPayrollList(host, {
+      settlements: [settlement],
+      entities: [ana],
+      records: [],
+      canEdit: false,
+      canAssociate: false,
+    });
+    expect(host.querySelector('[data-action="edit"]')).toBeNull();
+
+    renderPayrollList(host, {
+      settlements: [settlement],
+      entities: [ana],
+      records: [],
+      canAssociate: false,
+    });
+    expect(host.querySelector('[data-action="edit"]')).not.toBeNull();
   });
 });

@@ -7,6 +7,7 @@ import {
   loadEntities,
   loadPurchaseInvoices,
   loadSaleInvoices,
+  savePayrollSettlements,
   updateDocument,
 } from '../../src/storage.js';
 import { saveAccessRecords } from '../../src/access-storage.js';
@@ -149,6 +150,53 @@ describe('US7 - permisos del rol finanzas', () => {
     expect(byId('view-payroll-admin').hidden).toBe(false);
   });
 
+  it('busca liquidaciones por RUT en modo solo lectura', () => {
+    const worker = makeEntity({
+      name: 'Ana Pérez Soto',
+      code: 'PE-001',
+      taxId: '22.222.222-2',
+      tipo: 'personal',
+    });
+    const invoice = makeInvoice(worker, {
+      tipo: 'compra',
+      folio: 11,
+      series: 'LIQ',
+      total: 700000,
+      customFields: {
+        periodoLiquidacion: '2026-10',
+        centroCosto: 'Consumible',
+      },
+    });
+    savePayrollSettlements([
+      {
+        settlementId: 'set_finanzas',
+        documentId: invoice.document_id,
+        entityId: worker.entity_id,
+        periodo: '2026-10',
+        sueldoBase: 490000,
+        descuentos: 0,
+        bonos: 210000,
+        monto: 700000,
+        estado: 'Emitida',
+        fechaPago: null,
+      },
+    ]);
+    signInFinance();
+
+    byId('nav-payroll-admin').click();
+    byId('payroll-filter-rut').value = '22.222';
+    byId('payroll-filter-rut').dispatchEvent(new Event('input'));
+
+    const list = byId('payroll-admin-list');
+    expect(list.textContent).toContain('Ana Pérez Soto');
+    expect(list.querySelector('[data-action="edit"]')).toBeNull();
+    expect(list.querySelector('[data-action="associate"]')).toBeNull();
+    expect(canAccess('payroll-create', appState.session)).toBe(false);
+    expect(canAccess('access', appState.session)).toBe(false);
+    expect(resolveRoute('payroll-create', appState.session)).toBe('dashboard');
+    expect(resolveRoute('access', appState.session)).toBe('dashboard');
+  });
+
   it('puede editar terceros y facturas de venta y compra', () => {
     const client = makeEntity({
       name: 'Comercial Ejemplo',
@@ -207,7 +255,7 @@ describe('US7 - permisos del rol finanzas', () => {
     ).toBe('Validado por finanzas');
   });
 
-  it('puede editar liquidaciones y consultar movimientos y flujo de caja', () => {
+  it('ve liquidaciones en solo lectura y consulta movimientos y flujo de caja', () => {
     const supplier = makeEntity({
       name: 'Suministros Ejemplo',
       code: 'PRO-001',
@@ -243,16 +291,15 @@ describe('US7 - permisos del rol finanzas', () => {
 
     byId('nav-payroll-admin').click();
     expect(byId('view-payroll-admin').hidden).toBe(false);
-    expect(byId('payroll-admin-list').textContent).toContain('Ana Pérez Soto');
-    byId('payroll-admin-list').querySelector('[data-action="edit"]').click();
-    expect(byId('payroll-field-periodoLiquidacion').value).toBe('2026-10');
-    byId('payroll-field-totalAmount').value = '750000';
-    submit('payroll-form');
+    const list = byId('payroll-admin-list');
+    expect(list.textContent).toContain('Ana Pérez Soto');
+    expect(list.querySelector('[data-action="edit"]')).toBeNull();
+    expect(list.querySelector('[data-action="associate"]')).toBeNull();
     expect(
       loadPurchaseInvoices().find(
         (item) => item.document_id === settlement.document_id
       ).totalAmount
-    ).toBe(750000);
+    ).toBe(700000);
 
     byId('nav-movements').click();
     expect(byId('view-movements').hidden).toBe(false);

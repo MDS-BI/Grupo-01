@@ -69,16 +69,16 @@
 
 **Tests primero** ⚠️ (deben FALLAR antes de la implementación):
 
-- [ ] T011 [P] [US1] Test unitario de flujo de creación en `tests/unit/creation-flow.test.js` (archivo nuevo): RUT nuevo ⇒ `addEntity` + `createAccessRecord` llamados; RUT ya existente personal ⇒ NO se llama `addEntity` ni `createAccessRecord`; RUT con DV inválido o campos vacíos ⇒ `ValidationFailure` sin registros persistidos; RUT existente pero no personal o con acceso inactivo ⇒ rechazo sin registros persistidos y la incidencia registrada con `appendDevNotification` (FR-003, FR-004, FR-005)
-- [ ] T012 [P] [US1] Test de integración end-to-end en `tests/integration/payroll-create.test.js` (archivo nuevo): admin abre la pestaña, ve form de compra + «RUT» + «Nombre completo», guarda con RUT nuevo y comprueba liquidación + tercero `personal` + acceso `trabajador` activo con `initialPassword(rut)`; login del nuevo trabajador muestra solo su liquidación (US1 esc. 1, 2, 6)
+- [X] T011 [P] [US1] Test unitario de flujo de creación en `tests/unit/creation-flow.test.js` (archivo nuevo): RUT nuevo ⇒ `addEntity` + `createAccessRecord` llamados; RUT ya existente personal ⇒ NO se llama `addEntity` ni `createAccessRecord`; RUT con DV inválido o campos vacíos ⇒ `ValidationFailure` sin registros persistidos; RUT existente pero no personal o con acceso inactivo ⇒ rechazo sin registros persistidos y la incidencia registrada con `appendDevNotification` (FR-003, FR-004, FR-005)
+- [X] T012 [P] [US1] Test de integración end-to-end en `tests/integration/payroll-create.test.js` (archivo nuevo): admin abre la pestaña, ve form de compra + «RUT» + «Nombre completo», guarda con RUT nuevo y comprueba liquidación + tercero `personal` + acceso `trabajador` activo con `initialPassword(rut)`; login del nuevo trabajador muestra solo su liquidación (US1 esc. 1, 2, 6)
 
 **Implementation**:
 
-- [ ] T013 [US1] Añadir la opción opt-in `extraFields` a `createInvoiceForm` en `src/components/invoice-form.js` (inserta RUT y nombre completo requeridos antes del envío; por defecto sin cambios para las vistas de factura existentes, FR-019)
-- [ ] T014 [US1] Completar el marcado de `#view-payroll-create` en `index.html`: título «Crear liquidación de sueldo» (`data-form-title`), `<form>` destino, `data-invoice-feedback` y listado de respaldo, siguiendo el patrón de `#view-invoice-purchase` (líneas 521–560)
-- [ ] T015 [US1] Implementar `handlePayrollCreateSubmit` en `src/app.js` con el orden atómico de `contracts/creation-flow.md`: validar RUT (`normalizeRut`) y nombre → resolver entidad por `customFields.rut` (reusar si `personal`, rechazar si no) → `createAccessRecord` solo si no hay acceso activo → `addDocument` de compra → `refresh()` + feedback; sin registros parciales
-- [ ] T016 [US1] Instanciar `createPurchaseForm` (reutilizado de `src/components/invoice-purchase-form.js`) sobre `#view-payroll-create` con `extraFields: [rut, nombreCompleto]` en `initApp`/`initInvoiceForms` de `src/app.js`, y hacer que `handleQuickAction('new-payroll')` lleve a la nueva pestaña (`src/app.js` ~línea 732)
-- [ ] T017 [US1] Ejecutar `npm test -- --run tests/unit/creation-flow.test.js tests/integration/payroll-create.test.js` y llevar a verde sin tocar los componentes reutilizados más allá de lo marcado
+- [X] T013 [US1] Añadir la opción opt-in `extraFields` a `createInvoiceForm` en `src/components/invoice-form.js` (inserta RUT y nombre completo requeridos antes del envío; por defecto sin cambios para las vistas de factura existentes, FR-019)
+- [X] T014 [US1] Completar el marcado de `#view-payroll-create` en `index.html`: título «Crear liquidación de sueldo» (`data-form-title`), `<form>` destino, `data-invoice-feedback` y listado de respaldo, siguiendo el patrón de `#view-invoice-purchase` (líneas 521–560)
+- [X] T015 [US1] Implementar `handlePayrollCreateSubmit` en `src/app.js` con el orden atómico de `contracts/creation-flow.md`: validar RUT (`normalizeRut`) y nombre → resolver entidad por `customFields.rut` (reusar si `personal`, rechazar si no) → `createAccessRecord` solo si no hay acceso activo → `addDocument` de compra → `refresh()` + feedback; sin registros parciales
+- [X] T016 [US1] Instanciar `createPurchaseForm` (reutilizado de `src/components/invoice-purchase-form.js`) sobre `#view-payroll-create` con `extraFields: [rut, nombreCompleto]` en `initApp`/`initInvoiceForms` de `src/app.js`, y hacer que `handleQuickAction('new-payroll')` lleve a la nueva pestaña (`src/app.js` ~línea 732)
+- [X] T017 [US1] Ejecutar `npm test -- --run tests/unit/creation-flow.test.js tests/integration/payroll-create.test.js` y llevar a verde sin tocar los componentes reutilizados más allá de lo marcado
 
 **Checkpoint**: User Story 1 funcional y verificable de forma independiente (MVP).
 
@@ -92,15 +92,15 @@
 
 **Tests primero** ⚠️:
 
-- [ ] T018 [P] [US2] Añadir tests del filtro RUT en `tests/unit/payroll.test.js`: `resolveAdminSettlements` con `filters.rut` (parcial, completo, vacío ⇒ todo, sin coincidencias ⇒ `[]`, RUT con puntos/guion normalizado) — extiende `src/payroll.js` (FR-008, FR-009)
-- [ ] T019 [P] [US2] Añadir tests de búsqueda en vivo en `tests/integration/payroll-admin.test.js`: `input` en `#payroll-filter-rut` filtra sin botón; estado vacío «sin resultados» conserva el texto; admin ve «Editar» y la edición persiste (US2 esc. 2–5)
+- [X] T018 [P] [US2] Añadir tests del filtro RUT en `tests/unit/payroll.test.js`: `resolveAdminSettlements` con `filters.rut` (parcial, completo, vacío ⇒ todo, sin coincidencias ⇒ `[]`, RUT con puntos/guion normalizado) — extiende `src/payroll.js` (FR-008, FR-009)
+- [X] T019 [P] [US2] Añadir tests de búsqueda en vivo en `tests/integration/payroll-admin.test.js`: `input` en `#payroll-filter-rut` filtra sin botón; estado vacío «sin resultados» conserva el texto; admin ve «Editar» y la edición persiste (US2 esc. 2–5)
 
 **Implementation**:
 
-- [ ] T020 [US2] Añadir el filtro `rut` a `resolveAdminSettlements` en `src/payroll.js` (coincidencia parcial sobre el RUT normalizado del tercero vía `entityId`, en AND con los filtros existentes)
-- [ ] T021 [US2] Añadir el cuadro `#payroll-filter-rut` («Buscar por RUT») en `#view-payroll-admin` dentro de `index.html` (~línea 608, en `.invoice-controls`)
-- [ ] T022 [US2] Leer `#payroll-filter-rut` en `refreshPayrollAdmin` y enganchar el listener `input` (mismo patrón que `payroll-filter-worker`) en `src/app.js` (~línea 840)
-- [ ] T023 [US2] Ejecutar `npm test -- --run tests/unit/payroll.test.js tests/integration/payroll-admin.test.js` y llevar a verde
+- [X] T020 [US2] Añadir el filtro `rut` a `resolveAdminSettlements` en `src/payroll.js` (coincidencia parcial sobre el RUT normalizado del tercero vía `entityId`, en AND con los filtros existentes)
+- [X] T021 [US2] Añadir el cuadro `#payroll-filter-rut` («Buscar por RUT») en `#view-payroll-admin` dentro de `index.html` (~línea 608, en `.invoice-controls`)
+- [X] T022 [US2] Leer `#payroll-filter-rut` en `refreshPayrollAdmin` y enganchar el listener `input` (mismo patrón que `payroll-filter-worker`) en `src/app.js` (~línea 840)
+- [X] T023 [US2] Ejecutar `npm test -- --run tests/unit/payroll.test.js tests/integration/payroll-admin.test.js` y llevar a verde
 
 **Checkpoint**: US1 + US2 funcionan de forma independiente.
 
@@ -114,14 +114,14 @@
 
 **Tests primero** ⚠️:
 
-- [ ] T024 [P] [US3] Añadir tests de solo lectura en `tests/integration/finanzas-permissions.test.js`: finanzas busca por RUT en el listado pero NO hay acción «Editar»/«Asociar» invocable; no llega a `payroll-create` ni a `access` (FR-011, SC-005). Nota: la parte de pruebas antiguas se adelantó en T041.
-- [ ] T025 [P] [US3] Añadir test de integración en `tests/integration/payroll-admin.test.js`: `renderPayrollList` con `canEdit: false` no renderiza el botón «Editar»; con `canEdit: true` lo renderiza (default actual)
+- [X] T024 [P] [US3] Añadir tests de solo lectura en `tests/integration/finanzas-permissions.test.js`: finanzas busca por RUT en el listado pero NO hay acción «Editar»/«Asociar» invocable; no llega a `payroll-create` ni a `access` (FR-011, SC-005). Nota: la parte de pruebas antiguas se adelantó en T041.
+- [X] T025 [P] [US3] Añadir test de integración en `tests/integration/payroll-admin.test.js`: `renderPayrollList` con `canEdit: false` no renderiza el botón «Editar»; con `canEdit: true` lo renderiza (default actual)
 
 **Implementation**:
 
-- [ ] T026 [US3] Añadir la opción `canEdit = true` a `renderPayrollList` en `src/components/payroll-list.js` y condicionar la creación del botón «Editar» (~línea 72) a ella
-- [ ] T027 [US3] Pasar `canEdit: state.session?.role === 'administrador'` y `canAssociate` solo admin en `refreshPayrollAdmin` de `src/app.js` (~línea 445)
-- [ ] T028 [US3] Ejecutar `npm test -- --run tests/integration/finanzas-permissions.test.js tests/integration/payroll-admin.test.js` y llevar a verde
+- [X] T026 [US3] Añadir la opción `canEdit = true` a `renderPayrollList` en `src/components/payroll-list.js` y condicionar la creación del botón «Editar» (~línea 72) a ella
+- [X] T027 [US3] Pasar `canEdit: state.session?.role === 'administrador'` y `canAssociate` solo admin en `refreshPayrollAdmin` de `src/app.js` (~línea 445)
+- [X] T028 [US3] Ejecutar `npm test -- --run tests/integration/finanzas-permissions.test.js tests/integration/payroll-admin.test.js` y llevar a verde
 
 **Checkpoint**: La matriz completa de la US3 queda verificable (admin limitado + finanzas lectura + trabajador sin cambios).
 

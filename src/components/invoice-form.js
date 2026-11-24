@@ -26,6 +26,10 @@ export function createInvoiceForm({
   onEdit,
   onDelete,
   onFilter,
+  extraFields = [],
+  formTitle,
+  submitLabel,
+  newLabel,
 }) {
   const view = getInvoiceView(tipoFactura);
   const form = root.querySelector('form');
@@ -49,10 +53,10 @@ export function createInvoiceForm({
     config.labels.entity;
   root.querySelector('[data-edit-label]').textContent =
     `Editar ${invoiceLabel}`;
-  root.querySelector('[data-new-invoice]').textContent =
-    `Nueva ${invoiceLabel}`;
-  form.querySelector('button[type="submit"]').textContent =
-    `Guardar ${invoiceLabel}`;
+  const newButton = root.querySelector('[data-new-invoice]');
+  newButton.textContent = newLabel || `Nueva ${invoiceLabel}`;
+  const submitButton = form.querySelector('button[type="submit"]');
+  submitButton.textContent = submitLabel || `Guardar ${invoiceLabel}`;
 
   let statusInput = form.querySelector('[data-field="status"]');
   if (!lifecycle) {
@@ -102,6 +106,35 @@ export function createInvoiceForm({
       return input;
     });
 
+  const extraInputs = extraFields.map(
+    ({ key, label, type = 'text', required = true, placeholder = '' }) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'form-field';
+      wrapper.dataset.extraFieldWrapper = key;
+      const labelElement = document.createElement('label');
+      labelElement.textContent = required ? `${label} *` : label;
+      const input = document.createElement('input');
+      input.type = type;
+      input.name = `extra-${key}`;
+      input.dataset.extraField = key;
+      input.placeholder = placeholder;
+      input.id = `${view.module}-field-${key}`;
+      labelElement.htmlFor = input.id;
+      if (required) {
+        input.required = true;
+        input.setAttribute('aria-required', 'true');
+      }
+      const error = document.createElement('div');
+      error.className = 'error';
+      error.dataset.error = key;
+      error.id = `${input.id}-error`;
+      input.setAttribute('aria-describedby', error.id);
+      wrapper.append(labelElement, input, error);
+      submitButton.before(wrapper);
+      return input;
+    }
+  );
+
   const inputs = new Map(
     [...baseInputs, ...customInputs].map((input) => [
       input.dataset.field,
@@ -148,13 +181,17 @@ export function createInvoiceForm({
       error.textContent = '';
       error.classList.remove('visible');
     }
-    for (const input of inputs.values()) input.removeAttribute('aria-invalid');
+    for (const input of [...inputs.values(), ...extraInputs]) {
+      input.removeAttribute('aria-invalid');
+    }
     for (const { field, message } of issues) {
       const key = field.replace(/^customFields\./, '');
-      const input = inputs.get(key);
+      const input =
+        inputs.get(key) ??
+        extraInputs.find((item) => item.dataset.extraField === key);
       const target =
         input && !input.closest('.form-field').hidden
-          ? errors.get(key)
+          ? (errors.get(key) ?? formError)
           : formError;
       target.textContent = [target.textContent, message]
         .filter(Boolean)
@@ -229,7 +266,10 @@ export function createInvoiceForm({
     for (const input of customInputs) {
       input.value = record?.customFields?.[input.dataset.field] ?? '';
     }
-    title.textContent = `${record ? 'Editar' : 'Nueva'} ${invoiceLabel} de ${view.label}`;
+    for (const input of extraInputs) input.value = '';
+    title.textContent =
+      formTitle ||
+      `${record ? 'Editar' : 'Nueva'} ${invoiceLabel} de ${view.label}`;
     feedback.textContent = '';
     showErrors([]);
     updateVisibility();
@@ -262,6 +302,12 @@ export function createInvoiceForm({
     return { ...values, customFields };
   }
 
+  function readExtras() {
+    return Object.fromEntries(
+      extraInputs.map((input) => [input.dataset.extraField, input.value])
+    );
+  }
+
   function reset() {
     setDocument(null);
   }
@@ -285,7 +331,11 @@ export function createInvoiceForm({
   statusInput.onchange = updateVisibility;
   form.onsubmit = (event) => {
     event.preventDefault();
-    onSubmit(readValues(), editing?.document_id);
+    if (extraInputs.length > 0) {
+      onSubmit(readValues(), editing?.document_id, readExtras());
+    } else {
+      onSubmit(readValues(), editing?.document_id);
+    }
   };
 
   reset();

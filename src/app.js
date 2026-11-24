@@ -47,7 +47,7 @@ import { initPayrollForm } from './components/payroll-form.js';
 import { initDevNotifications } from './components/dev-notifications.js';
 import { createTutorial } from './components/tutorial.js';
 import { resolveAdminSettlements } from './payroll.js';
-import { validateSettlement } from './validation.js';
+import { validateDocument, validateSettlement } from './validation.js';
 import { loadMovements } from './movements.js';
 import { computeDebtSummary } from './tracking.js';
 import { formatCurrencyCLP } from './format.js';
@@ -71,7 +71,8 @@ import {
   savePayrollSettlements,
 } from './storage.js';
 import { isSessionValid, loadSession, clearSession } from './session.js';
-import { initialPassword } from './auth.js';
+import { initialPassword, normalizeRut } from './auth.js';
+import { generateId } from './utils.js';
 
 const VIEWS = [
   'login',
@@ -151,6 +152,7 @@ const state = {
   searchTerm: '',
   shell: null,
   invoiceForms: {},
+  payrollCreateForm: null,
   session: null,
   migration: null,
   accessAdmin: null,
@@ -305,6 +307,7 @@ function refresh() {
     form.setEntities(entities);
     renderInvoices(tipoFactura, entities, documents);
   }
+  refreshPayrollCreateList();
   refreshDashboard();
   refreshMovements();
   refreshCashflow();
@@ -434,22 +437,41 @@ function combinedPayrollRecord(settlement) {
 
 function refreshPayrollAdmin() {
   const entities = loadEntities();
+  const payrollSettlements = loadPayrollSettlements();
+  const purchaseInvoices = loadPurchaseInvoices();
   const filters = {
     worker: byId('payroll-filter-worker')?.value || '',
     period: byId('payroll-filter-period')?.value || '',
+    rut: byId('payroll-filter-rut')?.value || '',
   };
   const settlements = resolveAdminSettlements({
-    settlements: loadPayrollSettlements(),
-    purchaseInvoices: loadPurchaseInvoices(),
+    settlements: payrollSettlements,
+    purchaseInvoices,
     entities,
     filters,
   });
+  const hasRecords =
+    resolveAdminSettlements({
+      settlements: payrollSettlements,
+      purchaseInvoices,
+      entities,
+    }).length > 0;
   const empty = byId('payroll-admin-empty');
-  if (empty) empty.hidden = settlements.length > 0;
+  if (empty) {
+    empty.hidden = settlements.length > 0;
+    const message = empty.querySelector('p') || empty;
+    const query =
+      filters.rut.trim() || filters.worker.trim() || filters.period.trim();
+    message.textContent =
+      hasRecords && query
+        ? `Sin resultados para «${query}».`
+        : 'No hay liquidaciones registradas.';
+  }
   renderPayrollList(byId('payroll-admin-list'), {
     settlements,
     entities,
     records: loadAccessRecords(),
+    canEdit: state.session?.role === 'administrador',
     canAssociate: state.session?.role === 'administrador',
     onEdit: editPayrollSettlement,
     onAssociate: associatePayrollAccess,
@@ -457,6 +479,7 @@ function refreshPayrollAdmin() {
 }
 
 function editPayrollSettlement(id) {
+  if (state.session?.role !== 'administrador') return;
   const settlement = findPayrollSettlement(id);
   if (!settlement || !payrollForm) return;
   payrollForm.setDocument(combinedPayrollRecord(settlement));
@@ -494,6 +517,7 @@ function associatePayrollAccess(id) {
 }
 
 function handlePayrollSave(id, values, _previous) {
+  if (state.session?.role !== 'administrador') return;
   const settlement = findPayrollSettlement(id);
   if (!settlement) return;
   const customFields = {
@@ -759,6 +783,218 @@ function handleInvoiceSubmit(tipoFactura, values, editingId) {
   }
 }
 
+export function handlePayrollCreateSubmit(values, extras = {}, deps = {}) {
+  const config = deps.config || state.config || userConfig;
+  const saveEntity = deps.addEntity || addEntity;
+  const registerAccess = deps.createAccessRecord || createAccessRecord;
+  const saveDocument = deps.addDocument || addDocument;
+  const notify = deps.appendDevNotification || appendDevNotification;
+  const entities = deps.entities ?? loadEntities();
+  const accessRecords = deps.accessRecords ?? loadAccessRecords();
+  const documents = deps.documents ?? loadDocuments();
+
+  const rut = normalizeRut(extras.rut);
+  if (!rut) {
+    throw new ValidationFailure([
+      {
+        field: 'rut',
+        code: 'RUT_INVALID',
+        message: 'El RUT ingresado no es válido.',
+      },
+    ]);
+  }
+  const nombreCompleto = String(extras.nombreCompleto ?? '').trim();
+  if (!nombreCompleto) {
+    throw new ValidationFailure([
+      {
+        field: 'nombreCompleto',
+        code: 'REQUIRED',
+        message: 'El nombre completo es obligatorio.',
+      },
+    ]);
+  }
+
+  const existingEntity = entities.find((entity) =>
+    [entity?.customFields?.rut, entity?.taxId].some(
+      (value) => normalizeRut(value) === rut
+    )
+  );
+  if (
+    existingEntity &&
+    existingEntity.customFields?.tipoTercero !== 'personal'
+  ) {
+    notify({
+      accessId: rut,
+      role: 'trabajador',
+      reason: 'ENTITY_NOT_PERSONAL',
+      origin: 'payroll-create',
+    });
+    throw new ValidationFailure([
+      {
+        field: 'rut',
+        code: 'ENTITY_NOT_PERSONAL',
+        message: 'El RUT ya está asociado a un tercero que no es personal.',
+      },
+    ]);
+  }
+
+  const access = accessRecords.find(
+    (record) =>
+      record?.accessId === rut ||
+      (existingEntity && record?.entityId === existingEntity.entity_id)
+  );
+  if (
+    access &&
+    (!access.active ||
+      access.role !== 'trabajador' ||
+      (existingEntity && access.entityId !== existingEntity.entity_id))
+  ) {
+    notify({
+      accessId: rut,
+      role: 'trabajador',
+      reason: access.active ? 'INCOMPATIBLE_ACCESS' : 'INACTIVE_ACCESS',
+      origin: 'payroll-create',
+    });
+    throw new ValidationFailure([
+      {
+        field: 'rut',
+        code: 'ACCESS_CONFLICT',
+        message: access.active
+          ? 'El RUT ya está asociado a otro acceso.'
+          : 'El acceso existe pero está inactivo.',
+      },
+    ]);
+  }
+
+  const candidateEntity = existingEntity ?? {
+    entity_id: generateId('ent'),
+    name: nombreCompleto,
+    code: `RUT-${rut.split('-')[0]}`,
+    taxId: rut,
+    customFields: { tipoTercero: 'personal', rut },
+  };
+  const entitiesForValidation = existingEntity
+    ? entities
+    : [...entities, candidateEntity];
+  const customFields = {
+    ...(values?.customFields ?? {}),
+    tipoFactura: 'compra',
+  };
+  if (!String(customFields.periodoLiquidacion ?? '').trim()) {
+    customFields.periodoLiquidacion = String(values?.startDate ?? '').slice(
+      0,
+      7
+    );
+  }
+  const document = {
+    ...values,
+    entity_id: candidateEntity.entity_id,
+    customFields,
+  };
+  const errors = validateDocument(document, {
+    config,
+    entities: entitiesForValidation,
+    documents,
+  });
+  if (errors.length > 0) throw new ValidationFailure(errors);
+
+  const entity = existingEntity ?? saveEntity(candidateEntity, config);
+  const accessRecord =
+    access ??
+    registerAccess(
+      {
+        accessId: rut,
+        role: 'trabajador',
+        entityId: entity.entity_id,
+        password: initialPassword(rut),
+      },
+      { entities: entitiesForValidation, records: accessRecords }
+    );
+  const savedDocument = saveDocument(
+    { ...document, entity_id: entity.entity_id },
+    config
+  );
+
+  return {
+    entity,
+    access: accessRecord,
+    document: savedDocument,
+    reusedEntity: Boolean(existingEntity),
+    reusedAccess: Boolean(access),
+  };
+}
+
+function ensurePayrollSettlement(document) {
+  const entity = loadEntities().find(
+    (item) => item.entity_id === document.entity_id
+  );
+  if (entity?.customFields?.tipoTercero !== 'personal') return;
+  const settlements = loadPayrollSettlements();
+  const index = settlements.findIndex(
+    (item) => item?.documentId === document.document_id
+  );
+  const previous = settlements[index] ?? {};
+  const now = new Date().toISOString();
+  const record = {
+    ...previous,
+    settlementId: previous.settlementId || generateId('set'),
+    documentId: document.document_id,
+    entityId: document.entity_id,
+    periodo:
+      document.customFields?.periodoLiquidacion ||
+      String(document.startDate || '').slice(0, 7),
+    sueldoBase: previous.sueldoBase ?? 0,
+    descuentos: previous.descuentos ?? 0,
+    bonos: previous.bonos ?? 0,
+    monto: Number(document.totalAmount) || 0,
+    estado: document.status || 'Borrador',
+    fechaPago: document.customFields?.fechaPago || null,
+    createdAt: previous.createdAt || document.createdAt || now,
+    updatedAt: now,
+  };
+  if (index === -1) settlements.push(record);
+  else settlements[index] = record;
+  savePayrollSettlements(settlements);
+}
+
+function submitPayrollCreate(values, editingId, extras = {}) {
+  const form = state.payrollCreateForm;
+  try {
+    const result = handlePayrollCreateSubmit(values, extras);
+    ensurePayrollSettlement(result.document);
+    form?.reset();
+    refresh();
+    form?.setFeedback(
+      result.reusedAccess
+        ? 'Liquidación guardada. El trabajador ya tenía acceso activo.'
+        : 'Liquidación guardada y acceso de trabajador creado.'
+    );
+  } catch (error) {
+    if (error instanceof ValidationFailure) {
+      form?.showErrors(error.errors);
+    } else {
+      throw error;
+    }
+  }
+}
+
+function refreshPayrollCreateList() {
+  const form = state.payrollCreateForm;
+  if (!form) return;
+  const entities = loadEntities();
+  const documents = loadDocuments();
+  const names = new Map(
+    entities.map(({ entity_id, name }) => [entity_id, name])
+  );
+  form.setEntities(entities);
+  form.setOptions(documents, names);
+  renderPurchaseList(byId('payroll-create-list'), documents, names, {
+    filterEntityId: form.getFilter(),
+    onEdit: () => {},
+    onDelete: () => {},
+  });
+}
+
 function handleQuickAction(action) {
   if (action === 'new-payroll') {
     showModule('payroll-admin');
@@ -828,6 +1064,36 @@ function initInvoiceForms(config) {
         renderInvoices(tipoFactura, loadEntities(), loadDocuments()),
     });
   }
+
+  const payrollRoot = byId('view-payroll-create');
+  if (payrollRoot) {
+    state.payrollCreateForm = createPurchaseForm({
+      config,
+      root: payrollRoot,
+      onSubmit: submitPayrollCreate,
+      onEdit: editDocument,
+      onDelete: requestDeleteDocument,
+      onFilter: () => refreshPayrollCreateList(),
+      extraFields: [
+        {
+          key: 'rut',
+          label: 'RUT',
+          type: 'text',
+          required: true,
+          placeholder: 'Ej. 12.345.678-5',
+        },
+        {
+          key: 'nombreCompleto',
+          label: 'Nombre completo',
+          type: 'text',
+          required: true,
+        },
+      ],
+      formTitle: config.labels.payrollCreate,
+      submitLabel: 'Guardar liquidación',
+      newLabel: 'Nueva liquidación',
+    });
+  }
 }
 
 export function initApp(rawConfig = userConfig) {
@@ -869,7 +1135,11 @@ export function initApp(rawConfig = userConfig) {
     },
   });
   devNotifications = initDevNotifications();
-  for (const id of ['payroll-filter-worker', 'payroll-filter-period']) {
+  for (const id of [
+    'payroll-filter-worker',
+    'payroll-filter-rut',
+    'payroll-filter-period',
+  ]) {
     const filter = byId(id);
     if (filter) filter.addEventListener('input', refreshPayrollAdmin);
   }

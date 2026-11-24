@@ -616,7 +616,47 @@
             </div>
           </section>
 
-          <section id="view-payroll-create" class="view" hidden></section>
+          <section
+            id="view-payroll-create"
+            class="view invoice-view invoice-view--purchase"
+            hidden
+          >
+            <h1 id="payroll-create-title">Crear liquidación de sueldo</h1>
+            <div class="invoice-actions">
+              <h2 id="payroll-create-form-title" data-form-title>
+                Crear liquidación de sueldo
+              </h2>
+              <button type="button" data-new-invoice>Nueva liquidación</button>
+            </div>
+            <form
+              id="payroll-create-form"
+              aria-labelledby="payroll-create-form-title"
+              novalidate
+            ></form>
+            <p class="invoice-feedback" role="status" data-invoice-feedback></p>
+            <h2 id="payroll-create-list-title">Liquidaciones registradas</h2>
+            <div class="invoice-controls" hidden>
+              <div class="form-field">
+                <label for="payroll-create-filter"
+                  >Filtrar por trabajador</label
+                >
+                <select id="payroll-create-filter" data-invoice-filter></select>
+              </div>
+              <div class="form-field">
+                <label for="payroll-create-edit" data-edit-label
+                  >Editar liquidación</label
+                >
+                <select id="payroll-create-edit" data-invoice-edit></select>
+              </div>
+              <button type="button" data-load-invoice>Cargar</button>
+              <button type="button" data-delete-invoice>Eliminar</button>
+            </div>
+            <div
+              id="payroll-create-list"
+              aria-labelledby="payroll-create-list-title"
+              data-tipo-factura="compra"
+            ></div>
+          </section>
 
           <section id="view-payroll-admin" class="view" hidden>
             <h1 id="payroll-admin-title">Gestionar liquidaciones de sueldo</h1>
@@ -627,6 +667,14 @@
                 >
                 <input
                   id="payroll-filter-worker"
+                  data-invoice-filter
+                  type="text"
+                />
+              </div>
+              <div class="form-field">
+                <label for="payroll-filter-rut">Buscar por RUT</label>
+                <input
+                  id="payroll-filter-rut"
                   data-invoice-filter
                   type="text"
                 />

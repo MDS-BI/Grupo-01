@@ -8,6 +8,7 @@ export function renderPayrollList(container, options = {}) {
     settlements = [],
     entities = [],
     records = [],
+    canEdit = true,
     canAssociate = true,
     onEdit = () => {},
     onAssociate = () => {},
@@ -69,12 +70,14 @@ export function renderPayrollList(container, options = {}) {
 
     const actions = document.createElement('td');
     actions.className = 'invoice-table-actions';
-    const editButton = document.createElement('button');
-    editButton.type = 'button';
-    editButton.dataset.action = 'edit';
-    editButton.textContent = 'Editar';
-    editButton.addEventListener('click', () => onEdit(settlementId));
-    actions.append(editButton);
+    if (canEdit) {
+      const editButton = document.createElement('button');
+      editButton.type = 'button';
+      editButton.dataset.action = 'edit';
+      editButton.textContent = 'Editar';
+      editButton.addEventListener('click', () => onEdit(settlementId));
+      actions.append(editButton);
+    }
 
     if (canAssociate && !linkedIds.has(entityId)) {
       const associateButton = document.createElement('button');

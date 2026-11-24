@@ -1,4 +1,14 @@
+import { normalizeRut } from './auth.js';
+
 const text = (value) => String(value ?? '');
+
+function normalizeRutSearch(value) {
+  const normalized = normalizeRut(value);
+  return String(normalized ?? value ?? '')
+    .trim()
+    .replace(/[.\s-]/g, '')
+    .toUpperCase();
+}
 
 function isPersonal(entity) {
   return entity?.customFields?.tipoTercero === 'personal';
@@ -175,6 +185,13 @@ export function resolveAdminSettlements({
       });
     }
 
+    const rut = normalizeRutSearch(filters.rut);
+    if (rut) {
+      filtered = filtered.filter((document) =>
+        normalizeRutSearch(byId.get(document?.entity_id)?.taxId).includes(rut)
+      );
+    }
+
     return [...filtered].sort((a, b) => {
       const period = compareDescending(
         a?.customFields?.periodoLiquidacion,
@@ -212,6 +229,13 @@ export function resolveAdminSettlements({
         text(entity?.taxId).toLowerCase().includes(worker)
       );
     });
+  }
+
+  const rut = normalizeRutSearch(filters.rut);
+  if (rut) {
+    filtered = filtered.filter((settlement) =>
+      normalizeRutSearch(byId.get(settlement?.entityId)?.taxId).includes(rut)
+    );
   }
 
   return [...filtered].sort((a, b) => {
