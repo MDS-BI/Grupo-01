@@ -103,11 +103,11 @@ Para probar la aplicación:
 2. Ingresa con uno de los accesos ficticios de la sección [Datos de demostración](#datos-de-demostración) (por ejemplo, finanzas: `55.555.555-5` / `5555`).
 3. Abre **Guía de uso** en el menú ☰ para un recorrido paso a paso.
 
-## Estado del proyecto (23-11-2026)
+## Estado del proyecto (24-11-2026)
 
-- **Especificaciones:** `specs/001-erp-base-module/` (facturación y pagos: HU1 a HU10) y `specs/002-payroll-access-control/` (acceso por rol y liquidaciones: HU1 a HU7). Cada una tiene `spec.md`, `plan.md`, `data-model.md`, `tasks.md`, `quickstart.md` y `contracts/`.
+- **Especificaciones:** `specs/001-erp-base-module/` (facturación y pagos: HU1 a HU10), `specs/002-payroll-access-control/` (acceso por rol y liquidaciones: HU1 a HU7) y `specs/003-payroll-tabs-roles/` (pestañas de liquidación y permisos por rol: HU1 a HU3). Cada una tiene `spec.md`, `plan.md`, `data-model.md`, `tasks.md`, `quickstart.md` y `contracts/`.
 - **Modelo entidad-relación:** `specs/001-erp-base-module/mer.png`, generado desde la sección 13 de `specs/002-payroll-access-control/data-model.md` (MER único del módulo).
-- **Implementación:** todas las historias están implementadas. `npm run check` pasa con 323 pruebas.
+- **Implementación:** todas las historias están implementadas. `npm run check` pasa con 352 pruebas.
 - **Pendiente:** el aviso al superar el límite de crédito (FR-029 de la 001, tarea T026) no está implementado; falta decidir si se implementa o se deja como desarrollo futuro.
 
 ## Registro de decisiones
@@ -148,6 +148,7 @@ Para probar la aplicación:
 | 23-11-2026 | MER único del módulo (001 + 002) con 8 entidades, ajustado a lo que guarda la aplicación; `mer.png` se regenera desde ese diagrama | Jaime Rivera |
 | 23-11-2026 | Todos los montos se muestran en pesos chilenos con separador de miles, y el trabajador no ve el Flujo de caja ni el Resumen financiero | Jaime Rivera |
 | 23-11-2026 | La guía de uso se abre desde el menú ☰ y muestra solo los pasos de las vistas que el rol puede abrir (11 pasos para administrador y finanzas, 2 para trabajador) | Jaime Rivera |
+| 24-11-2026 | Se implementa la spec 003 con el ciclo completo de Speckit (analyze dos veces antes de implementar): el administrador queda limitado al Panel, crear y gestionar liquidaciones y control de accesos; finanzas ve las liquidaciones en solo lectura con búsqueda por RUT; nadie ve los avisos al desarrollador. Se agregaron T041 (pruebas heredadas y guía de uso) y T042 (vista de creación sin selector de tercero ni facturas de proveedores) | Tu nombre |Carolina Vasquez
 
 ## Uso de IA (anexo)
 
