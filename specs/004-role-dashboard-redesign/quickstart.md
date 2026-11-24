@@ -1,0 +1,105 @@
+# Quickstart: Rediseño visual de paneles por rol
+
+**Feature**: `specs/004-role-dashboard-redesign/spec.md`
+
+**Fecha**: 2026-11-24
+
+**Uso**: guía de instalación y verificación manual/automatizada después de implementar las tareas derivadas de este plan.
+
+## Preparación
+
+```powershell
+npm install
+npm install @fontsource/ibm-plex-sans
+npm run dev
+```
+
+- La segunda línea solo es necesaria si `package.json` aún no incluye la dependencia.
+- Vite abre la aplicación en el servidor local indicado en terminal.
+- Para validar tipografía sin internet, cargar la app con la red desactivada o bloquear dominios externos.
+
+## Datos de demostración
+
+| Rol | Acceso | Clave | Perfil esperado |
+|---|---|---|---|
+| Administrador | `88.888.888-8` | `8888` | `Administrador` / `A` |
+| Finanzas | `55.555.555-5` | `5555` | `Finanzas` / `F` |
+| Trabajador Ana | `22.222.222-2` | `2222` | `Ana Pérez Soto` / `AP` |
+| Trabajador Bruno | `45000000-0` | `4500` | `Bruno Soto Vega` / `BS` |
+
+## Verificación global
+
+1. Confirmar que el título de la pestaña y `#brand-name` dicen exactamente `Contabilidad y Finanzas`.
+2. Confirmar que el círculo superior derecho muestra `A`, `F`, `AP` o `BS` según el usuario; nunca `ERP` ni iniciales del módulo.
+3. Confirmar en herramientas de desarrollador que `font-family` resuelve a IBM Plex Sans y que los montos usan cifras de ancho fijo.
+4. Confirmar que la paleta conserva acento `#0f62fe`, fondo gris claro y tarjetas blancas.
+5. Confirmar que los períodos visibles aparecen como texto legible, p. ej. `noviembre 2026`.
+
+## Verificación por rol
+
+### Administrador
+
+1. Iniciar sesión con `88.888.888-8` / `8888`.
+2. En el Panel, confirmar saludo con `Administrador`, mes legible y dos tarjetas: `Crear liquidación de sueldo` y `Gestionar liquidaciones de sueldo`.
+3. Confirmar el resumen de nómina con tres métricas: trabajadores con acceso, liquidaciones del mes actual y liquidaciones en borrador.
+4. Buscar en el DOM las palabras `Resumen financiero`, `Indicadores`, `Deuda pendiente`, `Caja neta`, `Por cobrar`, `Por pagar` y `Facturas vencidas`: ninguna debe aparecer visible.
+5. Confirmar que no existe gráfico SVG de tendencia, alertas financieras ni tabla de movimientos.
+6. Intentar abrir módulos financieros desde navegación: se mantiene la redirección de la spec 003.
+
+### Finanzas
+
+1. Cerrar sesión e iniciar con `55.555.555-5` / `5555`.
+2. Confirmar saludo con `Finanzas` y mes legible.
+3. Confirmar una sola sección de indicadores con exactamente cuatro tarjetas en una fila: `Caja neta`, `Por cobrar`, `Por pagar`, `Facturas vencidas`.
+4. Confirmar que `Deuda pendiente` no aparece y que `Terceros` y `Facturas` son texto secundario.
+5. Probar los tooltips ⓘ: la fórmula aparece solo al enfocar/hover; la etiqueta visible no contiene la fórmula.
+6. Verificar colores:
+   - Caja negativa: número y borde rojos.
+   - Facturas vencidas > 0: tarjeta ámbar y alerta ámbar.
+   - Variación de caja: sube verde, baja rojo.
+   - Variación de por pagar/vencidas: sube rojo, baja verde.
+   - Variación de por cobrar: neutra.
+   - Sin mes anterior: `sin dato anterior`, nunca `0 %`.
+7. Confirmar que cada tarjeta abre su lista filtrada: caja → Flujo de caja, cobrar → ventas, pagar → compras, vencidas → Seguimiento.
+8. Confirmar gráfico SVG al lado de las alertas, con título, descripción, leyenda y seis meses.
+9. Confirmar tabla con máximo cinco movimientos y enlace `Ver todos`.
+10. Contar accesos rápidos: exactamente `Nueva factura de venta`, `Nueva factura de compra`, `Flujo de caja`, `Buscar`, todos en una línea.
+
+### Trabajador
+
+1. Cerrar sesión e iniciar con `22.222.222-2` / `2222`.
+2. Confirmar que la navegación muestra solo `Mi liquidación` y que `#view-dashboard` permanece oculto.
+3. Confirmar banner `¿Primera vez?` arriba de la vista del trabajador.
+4. Confirmar nombre visible, período en texto legible y monto líquido destacado con `$` y separador de miles.
+5. Confirmar que la tabla de desglose aparece solo si hay sueldo base, descuentos o bonos con valor.
+6. Confirmar historial con montos en `$`.
+7. Confirmar ausencia de indicadores, gráfico y alertas financieras.
+
+## Banner y sesión
+
+1. Con administrador, finanzas y trabajador, abrir el banner y verificar que se abre la guía sin modificar datos ni sesión.
+2. Descartar el banner con un rol y recargar la página: permanece oculto para ese rol.
+3. Cambiar a otro rol en la misma pestaña: el banner debe aparecer salvo que ese rol también lo haya descartado.
+4. Verificar en `sessionStorage` la clave `erp.guideDismissed.<role>` y confirmar que `erp.session` no cambió.
+
+## Verificación automática
+
+```powershell
+npm run check
+npm run build
+```
+
+- `npm run check` ejecuta lint, formato y pruebas Vitest.
+- `npm run build` confirma que la fuente local y el SVG propio se empaquetan sin recursos remotos.
+- El resultado esperado es cero errores y cero pruebas fallidas.
+
+## Criterios de salida
+
+- 100 % de roles con solo datos y accesos autorizados.
+- Panel del administrador con dos acciones de liquidación, tres métricas y cero indicadores financieros.
+- Panel de finanzas con cuatro indicadores visibles sin scroll a 1366x768.
+- Sin etiqueta `Deuda pendiente`.
+- Sin `AAAA-MM` en textos visibles.
+- Montos en CLP con `$`, separador de miles y ancho fijo.
+- Nombre del sistema e iniciales correctos en todas las vistas.
+- Todas las pruebas automatizadas pasan.
