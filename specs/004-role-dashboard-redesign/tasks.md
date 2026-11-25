@@ -97,3 +97,15 @@ description: "Generated tasks for feature 004-role-dashboard-redesign"
 - All tasks follow `- [ ] T### [P?] [Story]` with exact file paths.
 - User story tasks have `[US1]`–`[US6]` labels; setup/polish use no story labels.
 - `[P]` used only where files differ.
+
+## Phase 10: Clarificación 2026-11-25 - navegación del menú ☰ de finanzas (US5)
+
+**Independent test**: El menú ☰ de finanzas muestra las ocho opciones en el orden indicado antes de «Guía de uso», cada una abre su vista, y los menús de administrador y trabajador siguen iguales.
+
+- [ ] T037 [P] [US5] Add failing integration test in `tests/integration/finance-hamburger-menu.test.js` asserting that the finance ☰ menu renders, before `#menu-guide`, exactly this ordered section: Terceros (`entities`), Facturas de venta (`invoice-sale`), Facturas de compra (`invoice-purchase`), Movimientos financieros (`movements`), Flujo de caja (`cashflow`), Seguimiento (`tracking`), Liquidaciones de sueldo (`payroll-admin`) and Buscar (`search`), and that each option calls `onNavigate` and opens its existing view, with «Registrar pago» reachable from «Liquidaciones de sueldo».
+- [ ] T038 [P] [US5] Add regression test in `tests/integration/navigation-menu.test.js` asserting that the admin menu remains `menu-guide`, `menu-access`, `menu-logout` and the worker menu remains `menu-guide`, `menu-logout` after the finance navigation section is introduced.
+- [ ] T039 [US5] Implement the finance-only navigation section in `index.html` and `src/components/shell.js`: add a placeholder before `#menu-guide`, render the eight items in the required order through existing `navLabel()`/`onNavigate` wiring and existing menu classes, and leave admin/worker menu branches and `ACCESS_MATRIX` untouched.
+
+## Phase 11: Verificación final
+
+- [ ] T040 Run `npm run check` from repository root `package.json` after T039 and fix any lint, format or test failures caused by the new menu tasks.
