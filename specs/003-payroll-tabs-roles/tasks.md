@@ -236,3 +236,49 @@ Task T016: "Instanciar createPurchaseForm en src/app.js"
 - Commit tras cada fase o grupo lógico (hook opcional `/speckit-git-commit`, local en `main`, sin push)
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
+
+---
+
+## Clarificación 2026-11-24 — tareas nuevas (T043+)
+
+**Alcance**: solo las decisiones registradas en `spec.md` → `Clarifications` → `Session 2026-11-24`. No modificar, renumerar ni desmarcar T001–T042; no tocar la spec 004, el modelo de datos ni las claves `erp.*`.
+
+**Orden de ejecución**: primero las pruebas (T043–T046, deben fallar), luego la implementación (T047–T051) y finalmente T052 (`npm run check`).
+
+### US3 — Facturas vinculadas en solo lectura y pago de liquidaciones `Emitidas` (Priority: P2)
+
+**Goal**: `finanzas` no puede editar ni eliminar, desde ninguna vista, facturas de compra cuyo `documentId` figure en `erp.payrollSettlements`; ve un aviso claro y el `monto` de la liquidación no cambia. Como única escritura sobre liquidaciones y facturas vinculadas, puede registrar el pago de una liquidación `Emitida` (`Pagada`, `montoPagado` igual al total, `fechaPago`), sin modificar el total ni otros campos.
+
+**Independent Test**: con sesión `finanzas`, una factura vinculada no ofrece «Editar» ni «Eliminar» y muestra «solo lectura»; un intento directo no altera `erp.compra` ni `erp.payrollSettlements`. En una liquidación `Emitida`, solo aparece «Registrar pago»; al registrarlo cambian únicamente estado, monto pagado y fecha de pago; estados distintos de `Emitida` y montos distintos del total se rechazan.
+
+**Tests primero** ⚠️ (deben FALLAR antes de implementar):
+
+- [ ] T043 [P] [US3] Añadir test de integración en `tests/integration/finance-linked-invoice.test.js`: crear un tercero personal, una factura de compra y un registro en `erp.payrollSettlements` con `documentId` apuntando a esa factura; iniciar sesión como `finanzas`, abrir `invoice-purchase` y verificar que la fila vinculada NO tiene botones `[data-action="edit"]` ni `[data-action="delete"]`, que muestra un aviso con el texto «solo lectura», y que invocar directamente `editDocument`/`requestDeleteDocument` importados desde `src/app.js` no modifica `erp.compra` ni el `monto` de `erp.payrollSettlements` (FR-011, SC-005, US3 esc. 6)
+- [ ] T044 [P] [US3] Añadir test de integración en `tests/integration/finance-settlement-payment.test.js`: con sesión `finanzas` y una liquidación `Emitida`, verificar que solo existe la acción `data-action="register-payment"` (sin «Editar» ni «Asociar»), que al enviar `fechaPago = '2026-11-24'` se guardan `estado: 'Pagada'`, `montoPagado === totalAmount` y `fechaPago`, y que `totalAmount`, `sueldoBase`, `descuentos`, `bonos`, `periodo`, `entityId` y `documentId` permanecen idénticos; añadir casos de rechazo para una liquidación `Borrador`/`Pagada` y para un monto pagado distinto del total (FR-011, US2 esc. 7, US3 esc. 7, SC-005)
+
+### US1 — Confirmación antes de crear con RUT nuevo (Priority: P1)
+
+**Goal**: antes de guardar una liquidación con un RUT nuevo, el sistema pide confirmación indicando que creará el trabajador y su acceso con contraseña inicial igual a los primeros 4 dígitos del RUT; al cancelar no se persiste ningún registro; con un RUT ya existente no aparece la confirmación.
+
+**Independent Test**: con sesión de `administrador`, enviar el formulario de `payroll-create` con un RUT nuevo: aparece la confirmación con el RUT y los 4 dígitos; al aceptar existen liquidación, tercero y acceso; al cancelar no existen en `erp.payrollSettlements`, `erp.entities` ni `erp.accessRecords`. Repetir con un RUT ya registrado como personal: no se muestra confirmación y solo se crea/actualiza la liquidación.
+
+**Tests primero** ⚠️ (deben FALLAR antes de implementar):
+
+- [ ] T045 [P] [US1] Añadir tests en `tests/integration/payroll-create.test.js` para la confirmación de alta con RUT nuevo: espiar `window.confirm` y verificar que el mensaje contiene «Se creará», el RUT y `initialPassword(RUT)`; al aceptar se crean los tres registros; al cancelar `loadPayrollSettlements()`, `loadEntities()` y `loadAccessRecords()` siguen sin el RUT nuevo; con un RUT ya registrado como personal el confirm NO se invoca (FR-003, SC-001, US1 esc. 2 y 8)
+- [ ] T046 [US1] Actualizar `tests/integration/payroll-create.test.js` y `tests/unit/creation-flow.test.js` para fijar `window.confirm = () => true` en los escenarios heredados de alta, preservando el significado de T011, T012 y T017 y sin desmarcar esas tareas (FR-003, SC-006)
+
+### Implementación
+
+- [ ] T047 [US3] En `src/app.js`, añadir la helper `isLinkedPayrollDocument(id)` que consulte `erp.payrollSettlements` por `documentId` sin cambiar claves ni estructura; usarla en `editDocument` y `requestDeleteDocument` para bloquear a `finanzas`, mostrar en `#view-invoice-purchase [data-invoice-feedback]` el aviso «Esta factura está vinculada a una liquidación: solo lectura para finanzas» y no llamar a `updateDocument`, `deleteDocument` ni `syncSettlementFromDocument`; en `renderInvoices`, pasar `readOnlyIds` calculado desde `erp.payrollSettlements` cuando el rol sea `finanzas`; exportar ambos handlers para el intento directo de T043 (FR-011, FR-019)
+- [ ] T048 [P] [US3] Extender `src/components/invoice-list.js` y `src/components/invoice-purchase-list.js` para aceptar `readOnlyIds` y, solo para esos documentos cuando el rol sea `finanzas`, omitir los botones «Editar»/«Eliminar» y añadir el aviso «solo lectura» en la fila, reutilizando las clases existentes sin alterar la identidad visual de la spec 004 (FR-011, FR-019, SC-005)
+- [ ] T049 [US3] Añadir en `index.html` el bloque oculto `#payroll-payment-form` con `#payroll-payment-fechaPago` (fecha, requerido), `#payroll-payment-submit` («Registrar pago») y `#payroll-payment-cancel`, reutilizando las clases del formulario existente; extender `src/components/payroll-list.js` con `canRegisterPayment` y `onRegisterPayment` y renderizar `data-action="register-payment"` únicamente para liquidaciones `Emitidas` cuando el rol sea `finanzas`, sin renderizar «Editar» ni «Asociar» en ese caso (FR-011, US2 esc. 7, US3 esc. 7)
+- [ ] T050 [US3] En `src/app.js`, pasar `canRegisterPayment: state.session?.role === 'finanzas'` en `refreshPayrollAdmin`, abrir `#payroll-payment-form` desde `onRegisterPayment` y implementar `registerPayrollPayment(id)`: validar estado `Emitida` y `fechaPago`, fijar `montoPagado` igual a `totalAmount`, actualizar `estado: 'Pagada'`, `customFields.montoPagado`, `customFields.fechaPago` y `updatedAt` mediante `updateDocument`/`savePayrollSettlements`, sin tocar el modelo de datos ni las claves `erp.*` (FR-011, FR-019, SC-005)
+- [ ] T051 [US1] En `src/app.js`, invocar `confirmAction` desde `handlePayrollCreateSubmit`/`submitPayrollCreate` solo cuando el RUT normalizado no exista como tercero personal, con un mensaje que indique que se creará el trabajador y su acceso con contraseña inicial `initialPassword(rut)`; si se cancela, devolver sin llamar a `addEntity`, `createAccessRecord`, `addDocument` ni a `savePayrollSettlements` (FR-003, SC-001)
+
+### Verificación final
+
+- [ ] T052 Ejecutar `npm run check` desde la raíz del repositorio (`package.json`) y corregir únicamente las regresiones introducidas por T043–T051 hasta dejar lint, format y `npm test -- --run` en verde (SC-006)
+
+**Dependencias de esta corrección**: T043 ∥ T044 ∥ T045 → T046 → T047 ∥ T048 → T049 → T050 → T051 → T052. US1 y US3 son independientes salvo por `src/app.js`, por eso T047, T050 y T051 son secuenciales.
+
+**Checkpoint**: con T052 en verde, las decisiones de `Session 2026-11-24` quedan verificadas sin haber reescrito T001–T042, la spec 004, el modelo de datos ni las claves `erp.*`.
