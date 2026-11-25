@@ -145,6 +145,50 @@ describe('T147 - menú de utilidades y grilla del Panel', () => {
     }
   });
 
+  it('conserva un solo título y oculta la sección de finanzas (T042)', () => {
+    const cases = [
+      {
+        setup: setupAdminSession,
+        separatorHidden: false,
+        expected: ['menu-guide', 'menu-access', 'menu-logout'],
+      },
+      {
+        setup: setupWorkerSession,
+        separatorHidden: true,
+        expected: ['menu-guide', 'menu-logout'],
+      },
+    ];
+
+    for (const { setup, separatorHidden, expected } of cases) {
+      loadAppMarkup();
+      localStorage.clear();
+      sessionStorage.clear();
+      setup();
+      initApp(userConfig);
+
+      const financeTitle = byId('finance-menu-title');
+      const financeNavigation = byId('finance-menu-navigation');
+      const financeSeparator = byId('finance-menu-separator');
+      expect(financeTitle).not.toBeNull();
+      expect(financeNavigation).not.toBeNull();
+      expect(financeSeparator).not.toBeNull();
+      expect(financeTitle.hidden).toBe(true);
+      expect(financeNavigation.hidden).toBe(true);
+      expect(financeSeparator.hidden).toBe(true);
+      expect(byId('utilities-menu-title').hidden).toBe(false);
+      expect(byId('utilities-menu-title').textContent.trim()).toBe(
+        'Utilidades & Sesión'
+      );
+      expect(byId('menu-separator').hidden).toBe(separatorHidden);
+      expect(visibleMenuIds()).toEqual(expected);
+
+      const menuChildren = Array.from(byId('utilities-menu').children);
+      expect(menuChildren.indexOf(byId('utilities-menu-title'))).toBeLessThan(
+        menuChildren.indexOf(byId('menu-guide'))
+      );
+    }
+  });
+
   it('abre y cierra el menú con aria-expanded, foco y Escape', async () => {
     setupAdminSession();
     initApp(userConfig);

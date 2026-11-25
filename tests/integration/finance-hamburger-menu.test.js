@@ -102,4 +102,36 @@ describe('T037 - menú ☰ de finanzas', () => {
     );
     expect(payrollSubmit?.textContent.trim()).toBe('Registrar pago');
   });
+
+  it('organiza Navegación, separador y Utilidades & Sesión (T041)', () => {
+    const financeTitle = byId('finance-menu-title');
+    const financeSeparator = byId('finance-menu-separator');
+    const utilitiesTitle = byId('utilities-menu-title');
+    const guide = byId('menu-guide');
+
+    expect(financeTitle).not.toBeNull();
+    expect(financeSeparator).not.toBeNull();
+    expect(financeTitle.textContent.trim()).toBe('Navegación');
+    expect(financeTitle.className).toContain('utilities-menu-title');
+    expect(financeSeparator.className).toContain('menu-separator');
+    expect(utilitiesTitle.textContent.trim()).toBe('Utilidades & Sesión');
+
+    const menuChildren = Array.from(byId('utilities-menu').children);
+    expect(menuChildren.indexOf(financeTitle)).toBeLessThan(
+      menuChildren.indexOf(byId('finance-menu-navigation'))
+    );
+    expect(menuChildren.indexOf(byId('finance-menu-navigation'))).toBeLessThan(
+      menuChildren.indexOf(financeSeparator)
+    );
+    expect(menuChildren.indexOf(financeSeparator)).toBeLessThan(
+      menuChildren.indexOf(utilitiesTitle)
+    );
+    expect(menuChildren.indexOf(utilitiesTitle)).toBeLessThan(
+      menuChildren.indexOf(guide)
+    );
+
+    expect(financeTitle.hidden).toBe(false);
+    expect(financeSeparator.hidden).toBe(false);
+    expect(utilitiesTitle.hidden).toBe(false);
+  });
 });

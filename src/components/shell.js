@@ -180,7 +180,11 @@ export function createShell({
   );
   const menuSeparator = document.getElementById('menu-separator');
   const menuLogout = document.getElementById('menu-logout');
+  const financeMenuTitle = document.getElementById('finance-menu-title');
   const financeMenu = document.getElementById('finance-menu-navigation');
+  const financeMenuSeparator = document.getElementById(
+    'finance-menu-separator'
+  );
   const financeMenuButtons = [];
   if (financeMenu) {
     financeMenu.replaceChildren();
@@ -268,7 +272,9 @@ export function createShell({
   }
   const isAdmin = Boolean(session) && session.role === 'administrador';
   const isFinance = Boolean(session) && session.role === 'finanzas';
+  if (financeMenuTitle) financeMenuTitle.hidden = !isFinance;
   if (financeMenu) financeMenu.hidden = !isFinance;
+  if (financeMenuSeparator) financeMenuSeparator.hidden = !isFinance;
   for (const button of financeMenuButtons) {
     button.hidden = !isFinance;
     button.onclick =
