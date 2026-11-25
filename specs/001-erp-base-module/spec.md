@@ -4,7 +4,7 @@
 
 **Creada**: 2026-10-29
 
-**Estado**: Borrador (Revisión 7 — 2026-11-23, actualización de la HU8 y del contrato de navegación al acceso obligatorio, el menú ☰ y las vistas nuevas; Revisión 6 — 2026-11-23, registro retroactivo de las HU9 y HU10 implementadas en `ec14932` y de la mejora pendiente de formato de montos; Revisión 5 — 2026-11-16, se agrega la HU8 de guía de uso y tutorial; Revisión 4 — 2026-11-11, clarify de separación aplicado)
+**Estado**: Borrador (Revisión 8 — 2026-11-25, precisión de FR-029 sobre el aviso por límite de crédito al emitir facturas de venta; Revisión 7 — 2026-11-23, actualización de la HU8 y del contrato de navegación al acceso obligatorio, el menú ☰ y las vistas nuevas; Revisión 6 — 2026-11-23, registro retroactivo de las HU9 y HU10 implementadas en `ec14932` y de la mejora pendiente de formato de montos; Revisión 5 — 2026-11-16, se agrega la HU8 de guía de uso y tutorial; Revisión 4 — 2026-11-11, clarify de separación aplicado)
 
 **Entrada**: Módulo de facturación y pagos, por cobrar y por pagar, para un sistema ERP (solo frontend), construido sobre el template `Speckit_Template`.
 
@@ -39,6 +39,14 @@
 - Q: ¿Qué modelo de acceso reemplaza al supuesto de un solo usuario por navegador? → A: Login obligatorio con los roles `administrador`, `finanzas` y `trabajador` definidos en la spec 002.
 - Q: ¿Qué rol usa cada usuario descrito en la spec 001? → A: Encargado de cobranzas, encargado de pagos a proveedores, contador y gerencia usan `finanzas`; el responsable de remuneraciones (RRHH) usa `administrador`; el trabajador usa `trabajador`; el integrante del equipo usa cualquier rol tras cargar la demostración desde el acceso.
 - Q: ¿Cómo se llama el campo de trazabilidad de la factura de venta en FR-006? → A: `salesOrderId`.
+
+### Session 2026-11-25
+
+- Q: ¿Cuándo se muestra el aviso por límite de crédito y qué información incluye al emitir una factura de venta? → A: Al pasar la factura de Borrador a Emitida, el sistema calcula la deuda pendiente del cliente como la suma de sus facturas de venta Emitidas no pagadas; si esa deuda más el total de la factura que se emite supera el límite de crédito, muestra un aviso con el límite, la deuda actual y el monto en que el total proyectado excedería el límite (deuda actual + total de la factura − límite), y exige confirmación explícita.
+- Q: ¿Qué ocurre al confirmar o cancelar el aviso por límite de crédito? → A: Si se confirma, la factura se emite; si se cancela, sigue en Borrador y no se guarda ningún cambio.
+- Q: ¿Qué sucede si el cliente no tiene límite de crédito? → A: No se muestra ningún aviso por límite de crédito.
+- Q: ¿El aviso por límite de crédito bloquea la emisión de la factura de venta? → A: No: el aviso es informativo y no bloqueante, pero la emisión solo continúa si la persona confirma explícitamente cuando el aviso aplica.
+- Q: ¿Dónde se implementa FR-029 y qué pasa con la tarea T026? → A: La implementación va en el formulario de facturas de venta; T026 queda superada porque nombra `src/components/document-form.js`, que ya no existe. No se cambian el modelo de datos, las claves `erp.*`, las specs 002, 003 y 004 ni la identidad visual. `tasks.md` no se modifica en esta precisión; las tareas nuevas se registran en una corrida posterior de `speckit.tasks`.
 
 ## Usuarios
 
@@ -104,12 +112,15 @@ Como encargado de cobranzas, quiero registrar una factura de venta a un cliente,
 **Escenarios de aceptación**:
 
 1. **Dado** un cliente registrado, **cuando** creo una factura de venta con número, fechas y monto total, **entonces** queda guardada en estado Borrador como documento de tipo venta.
-2. **Dada** una factura de venta en Borrador, **cuando** la emito, **entonces** pasa a estado Emitida, cuenta como deuda por cobrar y el sistema registra un movimiento financiero de cargo.
+2. **Dada** una factura de venta en Borrador, **cuando** la emito, **entonces** pasa a estado Emitida, cuenta como deuda por cobrar y el sistema registra un movimiento financiero de cargo; si aplica el aviso de FR-029, la emisión ocurre solo tras la confirmación explícita.
 3. **Dada** una fecha de vencimiento anterior a la de emisión, **cuando** intento guardar la factura, **entonces** el sistema la rechaza.
 4. **Dado** que intento crear una factura de venta asociada a un tercero que no es de tipo cliente, **cuando** intento guardarla, **entonces** el sistema la rechaza.
 5. **Dada** una factura de venta Emitida, **cuando** intento devolverla a Borrador, **entonces** el sistema lo impide.
 6. **Dada** una factura de venta Emitida, **cuando** consulto al cliente, **entonces** veo la factura con su monto total, su fecha de vencimiento y, si se ingresó, su `salesOrderId`.
 7. **Dado** que la factura de venta tiene una referencia de orden de venta ingresada, **cuando** reviso el documento o sus movimientos, **entonces** puedo rastrear la trazabilidad entre la factura y la orden de venta.
+8. **Dado** un cliente con límite de crédito y facturas de venta Emitidas no pagadas, **cuando** emito una factura cuya deuda actual más su total supera el límite, **entonces** veo un aviso con el límite, la deuda actual y el monto excedido (deuda + total − límite), y la factura permanece en Borrador hasta que confirme.
+9. **Dado** el aviso por límite de crédito, **cuando** confirmo, **entonces** la factura se emite sin que el aviso bloquee la operación; **cuando** cancelo, **entonces** sigue en Borrador y no se guarda ningún cambio.
+10. **Dado** un cliente sin límite de crédito, o cuya deuda más el total de la factura no supera el límite, **cuando** emito la factura, **entonces** no se muestra ningún aviso por límite de crédito.
 
 ---
 
@@ -273,7 +284,7 @@ Como administrador o integrante de finanzas, quiero que el Panel muestre tres in
 - ¿Qué pasa si se registran dos facturas con la misma serie y el mismo folio? El sistema lo rechaza: la combinación (tipo, serie y folio) debe ser única dentro de cada tipo de documento (venta o compra).
 - ¿Qué pasa si el RUT está mal escrito o repetido? El sistema valida el formato y el dígito verificador (módulo 11) y rechaza los RUT inválidos; no exige que el RUT sea único entre terceros.
 - ¿Qué pasa si una factura se emite sin monto total? El sistema lo rechaza: el monto total debe ser mayor que cero al emitir.
-- ¿Qué pasa si las facturas de venta Emitidas de un cliente superan su límite de crédito? El sistema avisa y exige una confirmación explícita, pero no bloquea la emisión.
+- ¿Qué pasa si al emitir una factura de venta la deuda pendiente del cliente más el total de la factura supera su límite de crédito? El sistema calcula la deuda como la suma de sus facturas de venta Emitidas no pagadas, muestra un aviso con el límite, la deuda actual y el monto excedido (deuda + total − límite), y exige una confirmación explícita. Al confirmar, emite la factura; al cancelar, la deja en Borrador sin guardar ningún cambio. El aviso no bloquea la emisión; si el cliente no tiene límite de crédito, no aparece.
 - ¿Qué pasa si se intenta emitir una factura de compra sin centro de costo? El sistema lo rechaza y exige elegir Activo o Consumible.
 - ¿Qué pasa si se intenta asignar centro de costo a una factura de venta? El centro de costo es propio de las compras; el sistema no lo ofrece ni lo almacena en las ventas.
 - ¿Qué pasa si se intenta abrir o editar una factura de compra desde la vista de facturas de venta (o una de venta desde la de compra)? Cada vista filtra por su `tipoFactura` y no muestra ni permite editar documentos del otro tipo; el documento solo se abre desde su vista correspondiente.
@@ -353,7 +364,7 @@ Como administrador o integrante de finanzas, quiero que el Panel muestre tres in
 - **FR-026**: El sistema DEBE conservar los datos al recargar la página y ofrecer una carga de datos de demostración.
 - **FR-027**: El sistema DEBE permitir registrar en terceros y facturas una referencia a otros módulos del ERP (mientras CRM, Ventas y Compras no definan un identificador compartido, la referencia es un campo de texto libre obligatorio solo cuando se ingresa; nada obligatorio por defecto). El `salesOrderId` sigue esta misma regla.
 - **FR-028**: El sistema DEBE validar el RUT: debe cumplir el formato chileno (partes numéricas + dígito verificador, posible K) con dígito verificador correcto según módulo 11. No se exige unicidad del RUT entre terceros.
-- **FR-029**: Al emitir una factura de venta que supera el límite de crédito del cliente, el sistema DEBE avisar y exigir una confirmación explícita antes de emitir; no bloquea la emisión.
+- **FR-029**: Al pasar una factura de venta de Borrador a Emitida, el sistema DEBE calcular la deuda pendiente del cliente como la suma de sus facturas de venta Emitidas no pagadas. Si el cliente tiene un límite de crédito y esa deuda más el total de la factura que se emite supera dicho límite, el sistema DEBE mostrar un aviso con el límite, la deuda actual y el monto en que el total proyectado excedería el límite (deuda actual + total de la factura − límite), y DEBE exigir una confirmación explícita antes de emitir. Si se confirma, la factura DEBE emitirse; si se cancela, DEBE permanecer en Borrador y el sistema NO DEBE guardar ningún cambio. Si el cliente no tiene límite de crédito, el sistema NO DEBE mostrar el aviso. El aviso NO DEBE bloquear la emisión. La implementación DEBE hacerse en el formulario de facturas de venta.
 - **FR-030**: El sistema DEBE evitar duplicados: el código de tercero ya es único en el módulo base, y la combinación (tipo de documento, serie, folio) DEBE ser única dentro de su tipo.
 
 **Guía de uso y tutorial**
@@ -430,7 +441,7 @@ Como administrador o integrante de finanzas, quiero que el Panel muestre tres in
 - No se usan datos reales, porque el almacenamiento del navegador no es seguro.
 - La integración con otros módulos es solo por referencias, sin conexión en vivo. Se acordó usar una referencia de texto libre hasta que CRM, Ventas y Compras definan un identificador compartido.
 - El RUT se valida con formato chileno y dígito verificador módulo 11 (decidido 2026-11-03, Q2). No se exige unicidad del RUT.
-- El límite de crédito genera un aviso con confirmación explícita al emitir, sin bloqueo (decidido 2026-11-03, Q3).
+- Al emitir una factura de venta, el límite de crédito genera un aviso no bloqueante con confirmación explícita cuando la deuda pendiente del cliente (suma de sus facturas de venta Emitidas no pagadas) más el total de la factura supera el límite; sin límite no hay aviso (decidido 2026-11-03, Q3; precisado el 2026-11-25, FR-029).
 - La unicidad de factura se define por (tipo de documento, serie, folio), dentro de cada tipo.
 - La guía de uso (HU8) es transversal al marco general (HU7): solo existe con sesión iniciada, se abre desde la opción "Guía de uso" del menú desplegable ☰ «Utilidades & Sesión» para los tres roles y desde el Panel solo para administrador y finanzas; no guarda datos y no registra si la persona ya la vio (no agrega claves de `localStorage`). Decidido 2026-11-23.
 - El mapa de accesos (`contracts/navigation-and-access.md`) describe el estado actual de la app con el menú desplegable ☰ y la columna "Roles con acceso", e incluye la carga de demostración desde la pantalla de acceso. Solo administrador y finanzas ven Flujo de caja y Resumen financiero; el trabajador no los ve. Decidido 2026-11-23.
