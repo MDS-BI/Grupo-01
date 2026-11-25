@@ -78,10 +78,10 @@ description: "Generated tasks for feature 004-role-dashboard-redesign"
 
 ## Phase 9: Polish
 
-- [ ] T029 Ejecutar `npm run check` completo.
-- [ ] T030 Verificar con `git diff` que no cambian `specs/001`, `specs/002`, `specs/003` ni `data-model.md` (FR-003).
-- [ ] T031 Verificación manual en el navegador según `quickstart.md` con roles administrador, finanzas y trabajador a 1366x768.
-- [ ] T032 Actualizar `README.md`: estado del proyecto, registro de decisiones para 004, nota de ejecutar `npm install` por la nueva dependencia.
+- [X] T029 Ejecutar `npm run check` completo.
+- [X] T030 Verificar con `git diff` que no cambian `specs/001`, `specs/002`, `specs/003` ni `data-model.md` (FR-003).
+- [X] T031 Verificación manual en el navegador según `quickstart.md` con roles administrador, finanzas y trabajador a 1366x768.
+- [X] T032 Actualizar `README.md`: estado del proyecto, registro de decisiones para 004, nota de ejecutar `npm install` por la nueva dependencia.
 
 ## Format validation
 
