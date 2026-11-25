@@ -125,7 +125,7 @@ Cada integrante se hace cargo de una historia: sube su historia al `spec.md`, la
 - [X] T023 [HU2] Rotular `startDate` como "Fecha de emisión" y `endDate` como "Fecha de vencimiento" en `src/module-config.js` **(depende de confirmar la equivalencia con el ayudante)**
 - [X] T024 [HU2] Permitir la transición Borrador → Emitida y bloquear el retroceso en `src/components/document-form.js`
 - [X] T025 [HU2] Exigir el monto total al emitir en `src/validation.js` **(resuelto: obligatorio al emitir; cero solo en Borrador)**
-- [ ] T026 [HU2] Avisar o bloquear cuando las facturas Emitidas de un cliente superan su límite de crédito en `src/components/document-form.js` **(resuelto: aviso con confirmación explícita, sin bloqueo; FR-029)**
+- [ ] T026 [HU2] Avisar o bloquear cuando las facturas Emitidas de un cliente superan su límite de crédito en `src/components/document-form.js` **(resuelto: aviso con confirmación explícita, sin bloqueo; FR-029)** **(superada por T121–T125)**
 - [X] T027 [HU2] Evitar facturas duplicadas con la misma serie y folio en `src/validation.js` **(resuelto: única por (tipo de documento, serie, folio) dentro de su tipo; FR-030)**
 - [X] T056 [HU2] Agregar el campo `salesOrderId` al formulario de facturas de venta (visible solo cuando `tipoFactura` es `venta`) y validar que, si se ingresa, no esté vacío, en `src/components/document-form.js` y `src/validation.js` (FR-009)
 
@@ -572,6 +572,32 @@ Depende de las Tareas 3 y 6 de esa versión (etiquetas Cliente/Factura y ciclo d
 - [X] T118 [P] [HU8] Actualizar `specs/001-erp-base-module/quickstart.md` y `README.md` para describir login obligatorio con roles, demostración cargada desde la pantalla de acceso, menú desplegable ☰, entrada a la guía por rol, pasos filtrados por rol con Cuidados al final y ninguna modificación de datos por la guía (FR-031, FR-036)
 - [X] T119 [HU8] Ejecutar `npm run check` al final y recorrer la guía en `npm run dev` con administrador, finanzas y trabajador, con módulo vacío y con demostración cargada desde el acceso: verificar entradas, pasos por rol, controles, foco, redirecciones y ausencia de cambios en datos o sesión, y comprobar SC-007 y SC-008 (FR-031 a FR-036)
 - [X] T120 [HU8] Corregir FR-035: si al cerrar la guía el control que la abrió ya no está visible (opción «Guía de uso» con el menú ☰ cerrado o acceso del Panel tras «Ir a»), devolver el foco al botón ☰ (`#menu-toggle`); actualizar `spec.md`, `src/components/tutorial.js` y dos casos en `tests/integration/tutorial.test.js`, y verificar con `npm run check`
+
+---
+
+## Fase 17: FR-029 - Aviso por límite de crédito al emitir factura de venta (Revisión 8, 2026-11-25; Prioridad: P1, HU2)
+
+**Propósito**: implementar las decisiones de la sesión de Clarifications del 2026-11-25 sobre FR-029, sin regenerar ni renumerar tareas. T026 queda superada por T121–T125, sin marcarla ni borrarla.
+
+**Prueba independiente**: con un cliente con límite, facturas de venta Emitidas no pagadas y una factura en Borrador, emitir desde `#invoice-sale-form` debe mostrar un aviso con límite, deuda y exceso; confirmar emite la factura y cancelar la deja en Borrador sin cambiar el almacenamiento. Sin límite o sin exceso no debe aparecer el aviso.
+
+**Dependencias**: T121–T123 se escriben primero en el mismo archivo y deben fallar antes de la implementación; T124 depende de esas pruebas; T125 cierra la fase. No se cambian el modelo de datos, las claves `erp.*`, las specs 002, 003 y 004 ni la identidad visual.
+
+### Pruebas primero: FR-029
+
+- [ ] T121 [HU2] Escribir primero en `tests/integration/invoice-credit-limit.test.js` la prueba de que, al emitir desde `#invoice-sale-form` una factura de venta en Borrador para un cliente con límite cuya deuda pendiente (suma de sus facturas de venta Emitidas no pagadas, excluida la factura en edición) más el total supera el límite, se invoca `window.confirm` con un mensaje que contiene el límite, la deuda actual y el exceso calculado como `deuda + total − límite`; usar las ayudas de `tests/setup/domFixture.js` y comprobar que la prueba falla antes de T124
+- [ ] T122 [HU2] Ampliar `tests/integration/invoice-credit-limit.test.js` con los dos desenlaces del aviso: al confirmar (`window.confirm` devuelve `true`) la factura pasa a Emitida y genera su movimiento de cargo; al cancelar (`false`) permanece en Borrador y las colecciones `erp.salesInvoices`, `erp.entities` y `erp.movements` quedan idénticas a su estado inicial
+- [ ] T123 [HU2] Ampliar `tests/integration/invoice-credit-limit.test.js` con los casos sin aviso: un cliente sin `creditLimit` no invoca `window.confirm`, y un cliente con límite cuya deuda más el total es igual o menor al límite tampoco lo invoca y la emisión continúa sin bloqueo
+
+### Implementación: FR-029
+
+- [ ] T124 [HU2] Implementar en `src/components/invoice-sale-form.js` (con los ajustes mínimos que hagan falta en `src/components/invoice-form.js` para propagar el envío, sin tocar `src/storage.js`) la comprobación previa a la emisión: cuando `values.status === 'Emitida'`, calcular la deuda del cliente desde sus facturas de venta Emitidas no pagadas, leer `creditLimit` del tercero y, si existe y `deuda + total > límite`, pedir confirmación explícita reutilizando `window.confirm` o el mecanismo ya existente en `src/app.js` con un mensaje con límite, deuda y exceso; al cancelar NO llamar a `onSubmit` ni escribir almacenamiento, y al confirmar continuar con `onSubmit`. No agregar campos, claves `erp.*` ni cambios de identidad visual
+
+### Cierre de la fase
+
+- [ ] T125 [HU2] Ejecutar `npm run check` (definido en `package.json`) al terminar T124: lint, `format:check` y `npm test -- --run`; verificar que `tests/integration/invoice-credit-limit.test.js` y las pruebas existentes de facturas pasen, y corregir lo que falle sin desmarcar ni renumerar tareas ajenas
+
+**Punto de control**: FR-029 queda cubierto por pruebas primero y por la implementación en el formulario de facturas de venta, con emisión confirmada, cancelación sin cambios y ausencia de aviso cuando no aplica.
 
 
 
