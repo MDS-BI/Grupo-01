@@ -105,6 +105,19 @@ Para probar la aplicación:
 2. Ingresa con uno de los accesos ficticios de la sección [Datos de demostración](#datos-de-demostración) (por ejemplo, finanzas: `55.555.555-5` / `5555`).
 3. Abre **Guía de uso** en el menú ☰ para un recorrido paso a paso.
 
+### Solución de problemas
+
+**«El RUT no está registrado» al ingresar.** Los accesos de demostración no vienen precargados: se crean al presionar **Cargar demostración** y quedan guardados solo en el navegador de quien prueba. Presiona ese botón antes de ingresar.
+
+**«Cargar demostración» muestra «El módulo ya contiene datos o registros previos…».** La demostración solo se carga en un navegador sin datos del módulo. Si antes probaste otra versión del proyecto, u otro proyecto en la misma dirección (`localhost:5173`), quedaron datos guardados y no se crean los accesos de la tabla. Por ejemplo, hasta el 17-11-2026 el administrador de demostración era `11.111.111-1`. Para empezar limpio:
+
+1. Abre la aplicación en una **ventana de incógnito** (`Ctrl + Shift + N` en Chrome o Edge), o
+2. Borra los datos del sitio: `F12` → pestaña **Application** → **Storage** → **Clear site data**, y recarga la página.
+
+Luego presiona **Cargar demostración** e ingresa, por ejemplo, con `88.888.888-8` / `8888`.
+
+**La aplicación no abre o falta la tipografía después de un `git pull`.** Ejecuta `npm install` antes de `npm run dev`: la spec 004 agregó la dependencia `@fontsource/ibm-plex-sans`.
+
 ## Estado del proyecto (24-11-2026)
 
 - **Especificaciones:** `specs/001-erp-base-module/` (facturación y pagos: HU1 a HU10), `specs/002-payroll-access-control/` (acceso por rol y liquidaciones: HU1 a HU7), `specs/003-payroll-tabs-roles/` (pestañas de liquidación y permisos por rol: HU1 a HU3) y `specs/004-role-dashboard-redesign/` (rediseño visual de los paneles por rol y de la gestión de liquidaciones: HU1 a HU7). Cada una tiene `spec.md`, `plan.md`, `data-model.md`, `tasks.md`, `quickstart.md` y `contracts/`.
