@@ -104,7 +104,7 @@ describe('US3 - mi liquidación del trabajador', () => {
     initApp(userConfig);
 
     expect(byId('view-payroll-worker').hidden).toBe(false);
-    expect(byId('payroll-worker-period').textContent).toBe('2026-10');
+    expect(byId('payroll-worker-period').textContent).toBe('octubre 2026');
     expect(byId('payroll-worker-name').textContent).toBe('Ana Pérez Soto');
     expect(byId('payroll-worker-base-salary').textContent).toContain('500');
     expect(byId('payroll-worker-discounts').textContent).toContain('20');
@@ -156,9 +156,9 @@ describe('US3 - mi liquidación del trabajador', () => {
 
     const rows = [...byId('payroll-worker-history').querySelectorAll('tr')];
     expect(rows.map((row) => row.cells[1].textContent)).toEqual([
-      '2026-12',
-      '2026-11',
-      '2026-08',
+      'diciembre 2026',
+      'noviembre 2026',
+      'agosto 2026',
     ]);
     expect(byId('payroll-worker-history-empty').hidden).toBe(true);
     expect(byId('payroll-worker-history-table').hidden).toBe(false);
@@ -236,7 +236,7 @@ describe('US3 - mi liquidación del trabajador', () => {
 
     initApp(userConfig);
 
-    expect(byId('payroll-worker-period').textContent).toBe('2026-11');
+    expect(byId('payroll-worker-period').textContent).toBe('noviembre 2026');
     expect(byId('payroll-worker-status').textContent).toContain('Borrador');
     expect(byId('payroll-worker-paid-at').textContent).toContain('Sin pago');
     expect(byId('payroll-worker-history-empty').hidden).toBe(false);
@@ -265,7 +265,9 @@ describe('US3 - mi liquidación del trabajador', () => {
     expect(byId('payroll-worker-history').querySelectorAll('tr')).toHaveLength(
       1
     );
-    expect(byId('payroll-worker-history').textContent).toContain('2026-09');
+    expect(byId('payroll-worker-history').textContent).toContain(
+      'septiembre 2026'
+    );
   });
 
   it('cierra la sesión y notifica cuando el vínculo del trabajador está roto', () => {
@@ -285,5 +287,65 @@ describe('US3 - mi liquidación del trabajador', () => {
         (note) => note.reason === 'BROKEN_ENTITY_LINK'
       )
     ).toBe(true);
+  });
+  it('destaca el monto líquido con $ y muestra el período legible (HU6)', () => {
+    const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
+    savePayrollSettlements([
+      settlement(ana, {
+        period: '2026-10',
+        amount: 700000,
+        sueldoBase: 500000,
+        descuentos: 20000,
+        bonos: 220000,
+      }),
+    ]);
+    signIn(ana, '22222222-2');
+    initApp(userConfig);
+
+    expect(byId('payroll-worker-amount').textContent).toBe('$700.000');
+    expect(
+      byId('payroll-worker-amount').classList.contains('worker-amount')
+    ).toBe(true);
+    expect(byId('payroll-worker-period').textContent).toBe('octubre 2026');
+    expect(byId('payroll-worker-greeting').textContent).toBe('Hola, Ana');
+    expect(byId('payroll-worker-breakdown').hidden).toBe(false);
+    expect(byId('payroll-worker-base-salary').textContent).toContain(
+      '$500.000'
+    );
+    expect(byId('payroll-worker-history').textContent).toContain('$');
+    expect(byId('payroll-worker-history').textContent).not.toMatch(
+      /\d{4}-\d{2}(?!-)/
+    );
+  });
+
+  it('oculta la tabla de desglose cuando no tiene valores (HU6)', () => {
+    const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
+    savePayrollSettlements([
+      settlement(ana, {
+        amount: 400000,
+        sueldoBase: 0,
+        descuentos: 0,
+        bonos: 0,
+      }),
+    ]);
+    signIn(ana, '22222222-2');
+    initApp(userConfig);
+
+    expect(byId('payroll-worker-breakdown').hidden).toBe(true);
+    expect(byId('payroll-worker-amount').textContent).toBe('$400.000');
+  });
+
+  it('muestra el banner de la guía al trabajador y su descarte se mantiene en la sesión (HU5)', () => {
+    const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
+    savePayrollSettlements([settlement(ana)]);
+    signIn(ana, '22222222-2');
+    initApp(userConfig);
+
+    expect(byId('guide-banner-worker').hidden).toBe(false);
+    byId('guide-dismiss-worker').click();
+    expect(byId('guide-banner-worker').hidden).toBe(true);
+
+    initApp(userConfig);
+    expect(byId('guide-banner-worker').hidden).toBe(true);
   });
 });

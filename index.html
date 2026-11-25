@@ -155,6 +155,25 @@
 
           <section id="view-dashboard" class="view dashboard-view" hidden>
             <h1 id="dashboard-title">Panel</h1>
+            <div
+              id="guide-banner-dashboard"
+              class="guide-banner"
+              role="region"
+              aria-label="Guía de uso"
+              hidden
+            >
+              <button id="qa-guide" class="guide-shortcut" type="button" hidden>
+                ¿Primera vez? Ver la guía
+              </button>
+              <button
+                id="guide-dismiss-dashboard"
+                class="guide-dismiss"
+                type="button"
+                aria-label="Cerrar aviso de la guía"
+              >
+                ✕
+              </button>
+            </div>
             <p id="dashboard-greeting" class="dashboard-greeting"></p>
             <p id="dashboard-month" class="dashboard-month"></p>
             <section
@@ -511,9 +530,6 @@
                 <span class="qa-label">Buscar</span>
               </button>
             </div>
-            <button id="qa-guide" class="guide-shortcut" type="button" hidden>
-              ¿Primera vez? Ver la guía
-            </button>
           </section>
 
           <section id="view-entities" class="view" hidden>
@@ -665,42 +681,77 @@
           </section>
 
           <section id="view-payroll-worker" class="view" hidden>
+            <div
+              id="guide-banner-worker"
+              class="guide-banner"
+              role="region"
+              aria-label="Guía de uso"
+              hidden
+            >
+              <button
+                id="guide-open-worker"
+                class="guide-shortcut"
+                type="button"
+              >
+                ¿Primera vez? Ver la guía
+              </button>
+              <button
+                id="guide-dismiss-worker"
+                class="guide-dismiss"
+                type="button"
+                aria-label="Cerrar aviso de la guía"
+              >
+                ✕
+              </button>
+            </div>
             <h1 id="payroll-worker-title">Mi liquidación</h1>
-            <div id="payroll-worker-card">
-              <h2 id="payroll-worker-period">Sin período asignado</h2>
-              <p id="payroll-worker-name"></p>
-              <p id="payroll-worker-rut"></p>
-              <div class="payroll-breakdown">
-                <p id="payroll-worker-base-salary"></p>
-                <p id="payroll-worker-discounts"></p>
-                <p id="payroll-worker-bonuses"></p>
+            <p id="payroll-worker-greeting" class="dashboard-greeting"></p>
+            <div id="payroll-worker-card" class="worker-card">
+              <div class="worker-hero">
+                <p class="worker-hero-label">Monto líquido</p>
+                <p id="payroll-worker-amount" class="worker-amount"></p>
+                <h2 id="payroll-worker-period" class="worker-period">
+                  Sin período asignado
+                </h2>
+                <p id="payroll-worker-status" class="worker-status"></p>
+                <p id="payroll-worker-paid-at" class="worker-paid-at"></p>
               </div>
-              <p id="payroll-worker-amount"></p>
-              <p id="payroll-worker-status"></p>
-              <p id="payroll-worker-paid-at"></p>
+              <div class="worker-details">
+                <p id="payroll-worker-name" class="worker-name"></p>
+                <p id="payroll-worker-rut" class="worker-rut"></p>
+                <table id="payroll-worker-breakdown" class="payroll-breakdown">
+                  <caption>
+                    Desglose
+                  </caption>
+                  <tbody>
+                    <tr id="payroll-worker-base-salary"></tr>
+                    <tr id="payroll-worker-bonuses"></tr>
+                    <tr id="payroll-worker-discounts"></tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <div id="payroll-worker-empty" hidden>
-              <p>
-                Aún no tienes una liquidación registrada. Pídela al
-                administrador o registra la compra de la que eres parte.
-              </p>
+            <div id="payroll-worker-empty" class="empty-state" hidden>
+              <p>Aún no tienes una liquidación registrada.</p>
             </div>
-            <h2 id="payroll-worker-history-title">Historial de pagos</h2>
-            <table id="payroll-worker-history-table">
+            <h2 id="payroll-worker-history-title" class="section-heading">
+              Historial de pagos
+            </h2>
+            <table id="payroll-worker-history-table" class="recent-movements">
               <thead>
                 <tr>
-                  <th>Fecha de pago</th>
-                  <th>Período</th>
-                  <th>Monto</th>
-                  <th>Estado</th>
+                  <th scope="col">Fecha de pago</th>
+                  <th scope="col">Período</th>
+                  <th scope="col" class="amount">Monto</th>
+                  <th scope="col">Estado</th>
                 </tr>
               </thead>
               <tbody id="payroll-worker-history"></tbody>
             </table>
-            <div id="payroll-worker-history-empty" hidden>
+            <div id="payroll-worker-history-empty" class="empty-state" hidden>
               <p>Aún no tienes pagos registrados.</p>
             </div>
-            <div id="payroll-worker-warning" hidden>
+            <div id="payroll-worker-warning" class="worker-warning" hidden>
               <p id="payroll-worker-warning-message"></p>
             </div>
           </section>

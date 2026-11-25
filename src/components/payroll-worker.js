@@ -2,6 +2,7 @@ import {
   resolveWorkerPaymentHistory,
   resolveWorkerSettlement,
 } from '../payroll.js';
+import { formatCurrencyCLP } from '../format.js';
 import {
   loadEntities,
   loadPayrollSettlements,
@@ -9,39 +10,71 @@ import {
 } from '../storage.js';
 
 const WORKER_MARKUP = `
-  <h1 id="payroll-worker-title">Mi liquidación</h1>
-  <div id="payroll-worker-card">
-    <h2 id="payroll-worker-period">Sin período asignado</h2>
-    <p id="payroll-worker-name"></p>
-    <p id="payroll-worker-rut"></p>
-    <div class="payroll-breakdown">
-      <p id="payroll-worker-base-salary"></p>
-      <p id="payroll-worker-discounts"></p>
-      <p id="payroll-worker-bonuses"></p>
-    </div>
-    <p id="payroll-worker-amount"></p>
-    <p id="payroll-worker-status"></p>
-    <p id="payroll-worker-paid-at"></p>
+  <div
+    id="guide-banner-worker"
+    class="guide-banner"
+    role="region"
+    aria-label="Guía de uso"
+    hidden
+  >
+    <button id="guide-open-worker" class="guide-shortcut" type="button">
+      ¿Primera vez? Ver la guía
+    </button>
+    <button
+      id="guide-dismiss-worker"
+      class="guide-dismiss"
+      type="button"
+      aria-label="Cerrar aviso de la guía"
+    >
+      ✕
+    </button>
   </div>
-  <div id="payroll-worker-empty" hidden>
+  <h1 id="payroll-worker-title">Mi liquidación</h1>
+  <p id="payroll-worker-greeting" class="dashboard-greeting"></p>
+  <div id="payroll-worker-card" class="worker-card">
+    <div class="worker-hero">
+      <p class="worker-hero-label">Monto líquido</p>
+      <p id="payroll-worker-amount" class="worker-amount"></p>
+      <h2 id="payroll-worker-period" class="worker-period">
+        Sin período asignado
+      </h2>
+      <p id="payroll-worker-status" class="worker-status"></p>
+      <p id="payroll-worker-paid-at" class="worker-paid-at"></p>
+    </div>
+    <div class="worker-details">
+      <p id="payroll-worker-name" class="worker-name"></p>
+      <p id="payroll-worker-rut" class="worker-rut"></p>
+      <table id="payroll-worker-breakdown" class="payroll-breakdown">
+        <caption>Desglose</caption>
+        <tbody>
+          <tr id="payroll-worker-base-salary"></tr>
+          <tr id="payroll-worker-bonuses"></tr>
+          <tr id="payroll-worker-discounts"></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div id="payroll-worker-empty" class="empty-state" hidden>
     <p>Aún no tienes una liquidación registrada.</p>
   </div>
-  <h2 id="payroll-worker-history-title">Historial de pagos</h2>
-  <table id="payroll-worker-history-table">
+  <h2 id="payroll-worker-history-title" class="section-heading">
+    Historial de pagos
+  </h2>
+  <table id="payroll-worker-history-table" class="recent-movements">
     <thead>
       <tr>
-        <th>Fecha de pago</th>
-        <th>Período</th>
-        <th>Monto</th>
-        <th>Estado</th>
+        <th scope="col">Fecha de pago</th>
+        <th scope="col">Período</th>
+        <th scope="col" class="amount">Monto</th>
+        <th scope="col">Estado</th>
       </tr>
     </thead>
     <tbody id="payroll-worker-history"></tbody>
   </table>
-  <div id="payroll-worker-history-empty" hidden>
+  <div id="payroll-worker-history-empty" class="empty-state" hidden>
     <p>Aún no tienes pagos registrados.</p>
   </div>
-  <div id="payroll-worker-warning" hidden>
+  <div id="payroll-worker-warning" class="worker-warning" hidden>
     <p id="payroll-worker-warning-message"></p>
   </div>
 `;
@@ -59,8 +92,40 @@ function setHidden(id, hidden) {
   if (element) element.hidden = hidden;
 }
 
-function formatMoney(value) {
-  return Number(value || 0).toLocaleString('es-CL');
+const MONTH_NAMES = [
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
+];
+
+// «2026-10» → «octubre 2026» (constitución v1.1.0, períodos legibles).
+export function readablePeriod(value) {
+  const match = /^(\d{4})-(\d{2})/.exec(String(value ?? ''));
+  if (!match) return String(value ?? '');
+  const name = MONTH_NAMES[Number(match[2]) - 1];
+  return name ? `${name} ${match[1]}` : String(value);
+}
+
+function setBreakdownRow(id, label, value) {
+  const row = document.getElementById(id);
+  if (!row) return;
+  row.textContent = '';
+  const head = document.createElement('th');
+  head.scope = 'row';
+  head.textContent = label;
+  const cell = document.createElement('td');
+  cell.className = 'amount';
+  cell.textContent = formatCurrencyCLP(value);
+  row.append(head, cell);
 }
 
 function periodOf(settlement) {
@@ -110,31 +175,36 @@ export function renderPayrollSettlement(
   setHidden('payroll-worker-empty', hasSettlement);
 
   if (hasSettlement) {
-    setText('payroll-worker-period', periodOf(settlement) || 'Sin período');
+    setText(
+      'payroll-worker-period',
+      readablePeriod(periodOf(settlement)) || 'Sin período'
+    );
     setText('payroll-worker-name', entity?.name || '');
     setText('payroll-worker-rut', entity?.taxId || '');
-    setText(
-      'payroll-worker-base-salary',
-      `Sueldo base: ${formatMoney(breakdownOf(settlement, 'sueldoBase'))}`
+    const base = Number(breakdownOf(settlement, 'sueldoBase')) || 0;
+    const bonuses = Number(breakdownOf(settlement, 'bonos')) || 0;
+    const discounts = Number(breakdownOf(settlement, 'descuentos')) || 0;
+    setBreakdownRow('payroll-worker-base-salary', 'Sueldo base', base);
+    setBreakdownRow('payroll-worker-bonuses', 'Bonos', bonuses);
+    setBreakdownRow('payroll-worker-discounts', 'Descuentos', -discounts);
+    setHidden(
+      'payroll-worker-breakdown',
+      base === 0 && bonuses === 0 && discounts === 0
     );
-    setText(
-      'payroll-worker-discounts',
-      `Descuentos: ${formatMoney(breakdownOf(settlement, 'descuentos'))}`
-    );
-    setText(
-      'payroll-worker-bonuses',
-      `Bonos: ${formatMoney(breakdownOf(settlement, 'bonos'))}`
-    );
-    setText(
-      'payroll-worker-amount',
-      `Monto: ${formatMoney(amountOf(settlement))}`
-    );
+    setText('payroll-worker-amount', formatCurrencyCLP(amountOf(settlement)));
     setText('payroll-worker-status', `Estado: ${statusOf(settlement)}`);
     setText(
       'payroll-worker-paid-at',
       paidAtOf(settlement)
         ? `Fecha de pago: ${paidAtOf(settlement)}`
         : 'Sin pago registrado'
+    );
+    const firstName = String(entity?.name || '')
+      .trim()
+      .split(/\s+/)[0];
+    setText(
+      'payroll-worker-greeting',
+      firstName ? `Hola, ${firstName}` : 'Hola'
     );
   }
 
@@ -149,15 +219,16 @@ export function renderPayrollSettlement(
     const row = document.createElement('tr');
     const values = [
       paidAtOf(item),
-      periodOf(item),
-      formatMoney(amountOf(item)),
+      readablePeriod(periodOf(item)),
+      formatCurrencyCLP(amountOf(item)),
       statusOf(item),
     ];
-    for (const value of values) {
+    values.forEach((value, index) => {
       const cell = document.createElement('td');
       cell.textContent = value;
+      if (index === 2) cell.className = 'amount';
       row.appendChild(cell);
-    }
+    });
     tbody?.appendChild(row);
   }
 

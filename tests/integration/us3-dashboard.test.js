@@ -226,13 +226,13 @@ describe('US3 - panel de inicio', () => {
     expect(document.getElementById('qa-new-payroll').hidden).toBe(false);
   });
 
-  it('muestra la acción nueva liquidación con sesión de finanzas', () => {
+  it('finanzas llega a las liquidaciones desde el menú, no desde un acceso rápido (HU5)', () => {
     setupFinanceSession();
     initApp(DEFAULT_CONFIG);
 
     expect(document.getElementById('view-dashboard').hidden).toBe(false);
-    expect(document.getElementById('qa-new-payroll').hidden).toBe(false);
-    document.getElementById('qa-new-payroll').click();
+    expect(document.getElementById('qa-new-payroll').hidden).toBe(true);
+    document.getElementById('nav-payroll-admin').click();
     expect(document.getElementById('view-payroll-admin').hidden).toBe(false);
   });
 
@@ -531,5 +531,46 @@ describe('US3 - panel de inicio', () => {
     expect(
       document.getElementById('dashboard-movements-body').textContent
     ).toBe('');
+  });
+  it('finanzas ve 4 accesos rápidos con etiquetas de una línea (HU5)', () => {
+    setupFinanceSession();
+    initApp(userConfig);
+
+    expect(visibleQuickActionIds()).toEqual([
+      'qa-new-invoice-sale',
+      'qa-new-invoice-purchase',
+      'qa-cashflow',
+      'qa-search',
+    ]);
+    expect(quickActionLabel('qa-new-invoice-sale')).toBe(
+      'Nueva factura de venta'
+    );
+    expect(quickActionLabel('qa-new-invoice-purchase')).toBe(
+      'Nueva factura de compra'
+    );
+  });
+
+  it('el banner «¿Primera vez?» se descarta por rol y por sesión (HU5)', () => {
+    initApp(userConfig);
+    const banner = document.getElementById('guide-banner-dashboard');
+    expect(banner.hidden).toBe(false);
+    expect(document.getElementById('qa-guide').textContent.trim()).toBe(
+      '¿Primera vez? Ver la guía'
+    );
+
+    document.getElementById('guide-dismiss-dashboard').click();
+    expect(banner.hidden).toBe(true);
+    expect(sessionStorage.getItem('erp.guideDismissed.administrador')).toBe(
+      '1'
+    );
+
+    initApp(userConfig);
+    expect(document.getElementById('guide-banner-dashboard').hidden).toBe(true);
+
+    setupFinanceSession();
+    initApp(userConfig);
+    expect(document.getElementById('guide-banner-dashboard').hidden).toBe(
+      false
+    );
   });
 });

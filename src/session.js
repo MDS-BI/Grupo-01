@@ -97,3 +97,17 @@ export function isSessionValid(session, { records = [], entities = [] } = {}) {
 
   return true;
 }
+
+// Banner «¿Primera vez?» (spec 004, HU5): el descarte dura la sesión del
+// navegador y es independiente por rol. No forma parte del modelo de datos.
+const GUIDE_DISMISSED_PREFIX = 'erp.guideDismissed.';
+
+export function isGuideDismissed(role) {
+  if (typeof sessionStorage === 'undefined' || !role) return false;
+  return sessionStorage.getItem(`${GUIDE_DISMISSED_PREFIX}${role}`) === '1';
+}
+
+export function dismissGuide(role) {
+  if (typeof sessionStorage === 'undefined' || !role) return;
+  sessionStorage.setItem(`${GUIDE_DISMISSED_PREFIX}${role}`, '1');
+}

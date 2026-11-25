@@ -64,17 +64,17 @@ description: "Generated tasks for feature 004-role-dashboard-redesign"
 
 **Independent test**: Finance has max 4 quick actions; guide banner works per role and dismissal is session/role scoped.
 
-- [ ] T023 [US5] Add failing tests for 4 finance quick actions, guide banner and dismissal (`tests/integration/navigation-menu.test.js`, `tests/integration/tutorial.test.js`).
-- [ ] T024 [US5] Implement guide banner helpers and DOM IDs for admin/finance/worker (`src/session.js`, `src/app.js`, `index.html`).
-- [ ] T025 [US5] Update finance quick actions to exactly 4 IDs/labels (`src/components/dashboard.js`, `index.html`).
+- [X] T023 [US5] Add failing tests for 4 finance quick actions, guide banner and dismissal (`tests/integration/navigation-menu.test.js`, `tests/integration/tutorial.test.js`).
+- [X] T024 [US5] Implement guide banner helpers and DOM IDs for admin/finance/worker (`src/session.js`, `src/app.js`, `index.html`).
+- [X] T025 [US5] Update finance quick actions to exactly 4 IDs/labels (`src/components/dashboard.js`, `index.html`).
 
 ## Phase 8: User Story 6 - Worker view clarity (P2)
 
 **Independent test**: Worker view shows name, readable period, big `$` amount, conditional breakdown, history amounts.
 
-- [ ] T026 [US6] Add failing tests for worker view readability, formatted amounts, period, breakdown conditional (`tests/integration/payroll-worker.test.js`).
-- [ ] T027 [US6] Update `src/components/payroll-worker.js` to use `formatCurrencyCLP` and readable period (`src/components/payroll-worker.js`).
-- [ ] T028 [US6] Make breakdown render only when base/discounts/bonuses ≠ 0 (`src/components/payroll-worker.js`).
+- [X] T026 [US6] Add failing tests for worker view readability, formatted amounts, period, breakdown conditional (`tests/integration/payroll-worker.test.js`).
+- [X] T027 [US6] Update `src/components/payroll-worker.js` to use `formatCurrencyCLP` and readable period (`src/components/payroll-worker.js`).
+- [X] T028 [US6] Make breakdown render only when base/discounts/bonuses ≠ 0 (`src/components/payroll-worker.js`).
 
 ## Phase 9: Polish
 

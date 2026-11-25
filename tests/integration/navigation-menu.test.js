@@ -13,14 +13,17 @@ import {
 const byId = (id) => document.getElementById(id);
 
 const PANEL_ACTIONS = [
-  'qa-manage-entities',
   'qa-new-invoice-sale',
   'qa-new-invoice-purchase',
+  'qa-cashflow',
+  'qa-search',
+];
+
+const MENU_ONLY_ACTIONS = [
+  'qa-manage-entities',
   'qa-new-payroll',
   'qa-tracking',
-  'qa-cashflow',
   'qa-movements',
-  'qa-search',
 ];
 
 function setupSession({ role, accessId, entityId = null, password = '1234' }) {
@@ -189,17 +192,21 @@ describe('T147 - menú de utilidades y grilla del Panel', () => {
     expect(byId('session-role').hidden).toBe(true);
   });
 
-  it('muestra la grilla de ocho accesos operativos para finanzas', () => {
+  it('muestra exactamente cuatro accesos rápidos compactos para finanzas (HU5)', () => {
     setupFinanzasSession();
     initApp(userConfig);
 
     expect(byId('view-dashboard').hidden).toBe(false);
     expect(visibleQuickActionIds()).toEqual(PANEL_ACTIONS);
-    for (const id of PANEL_ACTIONS) {
-      expect(byId(id).hidden).toBe(false);
+    for (const id of MENU_ONLY_ACTIONS) {
+      expect(byId(id).hidden).toBe(true);
     }
-    expect(byId('qa-new-payroll').hidden).toBe(false);
     expect(byId('qa-create-payroll').hidden).toBe(true);
+    expect(
+      byId('view-dashboard')
+        .querySelector('.quick-actions')
+        .classList.contains('quick-actions--compact')
+    ).toBe(true);
   });
 
   it('muestra en el Panel del administrador solo los accesos de liquidaciones', () => {
@@ -213,7 +220,7 @@ describe('T147 - menú de utilidades y grilla del Panel', () => {
     ]);
     expect(byId('qa-create-payroll').hidden).toBe(false);
     expect(byId('qa-new-payroll').hidden).toBe(false);
-    for (const id of PANEL_ACTIONS) {
+    for (const id of [...PANEL_ACTIONS, ...MENU_ONLY_ACTIONS]) {
       if (id === 'qa-new-payroll') continue;
       expect(byId(id).hidden).toBe(true);
     }

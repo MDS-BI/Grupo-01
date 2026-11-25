@@ -179,7 +179,7 @@ describe('payroll-create: alta integral de liquidaciones', () => {
       if (view.id === 'view-payroll-worker') continue;
       expect(view.hidden).toBe(true);
     }
-    expect(byId('payroll-worker-period').textContent).toContain('2026-10');
+    expect(byId('payroll-worker-period').textContent).toContain('octubre 2026');
     expect(byId('payroll-worker-amount').textContent).toContain('700');
     const session = JSON.parse(sessionStorage.getItem('erp.session'));
     expect(session).toMatchObject({

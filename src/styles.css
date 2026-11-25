@@ -940,16 +940,6 @@ select[aria-invalid='true'] {
   }
 }
 
-.payroll-breakdown {
-  display: grid;
-  gap: 6px;
-  margin: 16px 0;
-  padding: 14px 16px;
-  background: #eef4ff;
-  border: 1px solid #cbdcff;
-  border-radius: var(--radius);
-}
-
 #payroll-worker-history-title {
   margin-top: 28px;
   font-size: 1.1rem;
@@ -969,6 +959,10 @@ select[aria-invalid='true'] {
   padding: 10px 12px;
   text-align: left;
   border-bottom: 1px solid var(--border);
+}
+
+#payroll-worker-history-table .amount {
+  text-align: right;
 }
 
 #payroll-worker-history-table th {
@@ -1417,6 +1411,159 @@ select[aria-invalid='true'] {
 
 @media (max-width: 900px) {
   .finance-insights {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Accesos rápidos compactos de finanzas (spec 004, HU5). */
+.quick-actions--compact {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.quick-actions--compact .quick-action {
+  min-height: 44px;
+  padding: 8px 12px;
+  color: var(--accent-color);
+  background: var(--surface);
+  border: 1px solid var(--accent-color);
+  white-space: nowrap;
+}
+
+.quick-actions--compact .quick-action:hover,
+.quick-actions--compact .quick-action:focus-visible {
+  background: color-mix(in srgb, var(--accent-color) 8%, var(--surface));
+  box-shadow: none;
+  transform: none;
+}
+
+/* Banner descartable «¿Primera vez?» (spec 004, HU5). */
+.guide-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 8px 8px 8px 16px;
+  color: var(--accent-color);
+  background: color-mix(in srgb, var(--accent-color) 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent-color) 30%, var(--border));
+  border-radius: var(--radius);
+}
+
+.guide-banner .guide-shortcut {
+  margin: 0;
+  padding: 4px 0;
+  color: var(--accent-color);
+  background: none;
+  border: 0;
+  font-weight: 600;
+}
+
+.guide-banner .guide-shortcut:hover,
+.guide-banner .guide-shortcut:focus-visible {
+  text-decoration: underline;
+}
+
+.guide-dismiss {
+  padding: 4px 10px;
+  color: var(--muted);
+  background: none;
+  border: 0;
+}
+
+/* Vista del trabajador (spec 004, HU6). */
+.worker-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  margin: 12px 0 24px;
+}
+
+.worker-hero,
+.worker-details {
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.worker-hero {
+  border-top: 4px solid var(--accent-color);
+}
+
+.worker-hero-label {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.worker-amount {
+  margin: 4px 0;
+  font-size: 2.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.worker-period {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.worker-status,
+.worker-paid-at,
+.worker-rut {
+  margin: 2px 0;
+  color: var(--muted);
+}
+
+.worker-name {
+  margin: 0;
+  font-weight: 600;
+}
+
+.payroll-breakdown {
+  width: 100%;
+  margin-top: 12px;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.payroll-breakdown caption {
+  padding-bottom: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.payroll-breakdown th,
+.payroll-breakdown td {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.payroll-breakdown th {
+  font-weight: 400;
+  text-align: left;
+}
+
+.payroll-breakdown .amount {
+  text-align: right;
+}
+
+.worker-warning {
+  margin-top: 16px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+@media (max-width: 900px) {
+  .quick-actions--compact,
+  .worker-card {
     grid-template-columns: minmax(0, 1fr);
   }
 }

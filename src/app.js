@@ -70,7 +70,13 @@ import {
   migrateLegacyDocuments,
   savePayrollSettlements,
 } from './storage.js';
-import { isSessionValid, loadSession, clearSession } from './session.js';
+import {
+  clearSession,
+  dismissGuide,
+  isGuideDismissed,
+  isSessionValid,
+  loadSession,
+} from './session.js';
 import { initialPassword, normalizeRut } from './auth.js';
 import { generateId } from './utils.js';
 
@@ -386,6 +392,12 @@ function applySession(session) {
       ? null
       : () => state.tutorial?.open(0, qaGuide);
   }
+  wireGuideBanner({
+    bannerId: 'guide-banner-dashboard',
+    dismissId: 'guide-dismiss-dashboard',
+    role: session?.role,
+    visible: canAccess('dashboard', session),
+  });
   clearRestrictedViews();
   refreshInvoiceStatusNotice();
 }
@@ -664,11 +676,36 @@ function refreshWorkerView() {
     }
     return null;
   }
-  return refreshPayrollWorker(state.session, undefined, {
+  const settlement = refreshPayrollWorker(state.session, undefined, {
     entities,
     purchaseInvoices: loadPurchaseInvoices(),
     settlements: loadPayrollSettlements(),
   });
+  const openGuide = byId('guide-open-worker');
+  if (openGuide) {
+    openGuide.onclick = () => state.tutorial?.open(0, openGuide);
+  }
+  wireGuideBanner({
+    bannerId: 'guide-banner-worker',
+    dismissId: 'guide-dismiss-worker',
+    role: state.session?.role,
+    visible: state.session?.role === 'trabajador',
+  });
+  return settlement;
+}
+
+// Banner descartable «¿Primera vez?» (spec 004, FR-029/FR-030).
+function wireGuideBanner({ bannerId, dismissId, role, visible }) {
+  const banner = byId(bannerId);
+  if (!banner) return;
+  banner.hidden = !visible || isGuideDismissed(role);
+  const dismiss = byId(dismissId);
+  if (dismiss) {
+    dismiss.onclick = () => {
+      dismissGuide(role);
+      banner.hidden = true;
+    };
+  }
 }
 
 function confirmAction(message) {

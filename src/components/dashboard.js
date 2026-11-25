@@ -25,6 +25,13 @@ function setQuickActionLabel(id, label) {
 
 let dashboardAction = () => {};
 
+export const FINANCE_QUICK_ACTIONS = Object.freeze([
+  'qa-new-invoice-sale',
+  'qa-new-invoice-purchase',
+  'qa-cashflow',
+  'qa-search',
+]);
+
 export function initDashboard({ config, onAction }) {
   dashboardAction = onAction;
   const labels = config.labels || {};
@@ -36,8 +43,8 @@ export function initDashboard({ config, onAction }) {
 
   const quickLabels = [
     ['qa-manage-entities', labels.entities || 'Entidades'],
-    ['qa-new-invoice-sale', `${documents} de venta`],
-    ['qa-new-invoice-purchase', `${documents} de compra`],
+    ['qa-new-invoice-sale', 'Nueva factura de venta'],
+    ['qa-new-invoice-purchase', 'Nueva factura de compra'],
     [
       'qa-create-payroll',
       labels.payrollCreate || 'Crear liquidación de sueldo',
@@ -176,22 +183,23 @@ export function setDashboardSession(session) {
   const createAction = document.getElementById('qa-create-payroll');
   if (createAction) createAction.hidden = !isAdmin;
 
+  // Accesos rápidos por rol (spec 004, HU5): el administrador ve sus dos
+  // tarjetas de liquidaciones; finanzas, exactamente cuatro accesos compactos.
+  // El resto de los módulos sigue disponible en el menú ☰.
   const payrollAction = document.getElementById('qa-new-payroll');
-  if (payrollAction) {
-    payrollAction.hidden = !['administrador', 'finanzas'].includes(role);
-  }
+  if (payrollAction) payrollAction.hidden = !isAdmin;
 
-  for (const id of [
-    'qa-manage-entities',
-    'qa-new-invoice-sale',
-    'qa-new-invoice-purchase',
-    'qa-tracking',
-    'qa-cashflow',
-    'qa-movements',
-    'qa-search',
-  ]) {
+  for (const id of ['qa-manage-entities', 'qa-tracking', 'qa-movements']) {
     const button = document.getElementById(id);
-    if (button) button.hidden = isAdmin;
+    if (button) button.hidden = true;
+  }
+  for (const id of FINANCE_QUICK_ACTIONS) {
+    const button = document.getElementById(id);
+    if (button) button.hidden = role !== 'finanzas';
+  }
+  const quickActions = document.querySelector('#view-dashboard .quick-actions');
+  if (quickActions) {
+    quickActions.classList.toggle('quick-actions--compact', !isAdmin);
   }
 
   const profile = resolveSessionProfile(session, { entities: [] });
