@@ -129,10 +129,10 @@ describe('US4/US7 - liquidaciones del administrador y de finanzas', () => {
         else setupFinanceSession();
       });
 
-      it('lista liquidaciones con trabajador, RUT, período, monto, estado y factura vinculada', () => {
+      it('lista liquidaciones con trabajador, RUT, período legible, monto, estado y factura de compra', () => {
         const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
         const bruno = worker('45000000-0', 'PE-002', 'Bruno Soto Vega');
-        const first = addSettlement(ana, '2026-10', 700000, 1);
+        addSettlement(ana, '2026-10', 700000, 1);
         addSettlement(bruno, '2026-09', 620000, 2);
 
         initApp(userConfig);
@@ -141,9 +141,10 @@ describe('US4/US7 - liquidaciones del administrador y de finanzas', () => {
         const table = byId('payroll-admin-list');
         expect(table.textContent).toContain('Ana Pérez Soto');
         expect(table.textContent).toContain('22222222-2');
-        expect(table.textContent).toContain('2026-10');
+        expect(table.textContent).toContain('octubre 2026');
         expect(table.textContent).toContain('Emitida');
-        expect(table.textContent).toContain(first.documentId);
+        expect(table.textContent).toContain('Compra LIQ-1');
+        expect(table.textContent).not.toMatch(/doc_[0-9a-f-]{8}/);
         expect(table.textContent).toContain('Bruno Soto Vega');
       });
 
@@ -426,5 +427,103 @@ describe('renderPayrollList - bandera canEdit', () => {
       canAssociate: false,
     });
     expect(host.querySelector('[data-action="edit"]')).not.toBeNull();
+  });
+});
+
+describe('HU7 (spec 004) - formulario de edición de liquidaciones', () => {
+  beforeEach(() => {
+    loadAppMarkup();
+    localStorage.clear();
+    sessionStorage.clear();
+    setupAdminSession();
+  });
+
+  function openEditor() {
+    const ana = worker('22222222-2', 'PE-001', 'Ana Pérez Soto');
+    addSettlement(ana, '2026-10', 700000, 1);
+    initApp(userConfig);
+    byId('nav-payroll-admin').click();
+  }
+
+  it('el formulario solo aparece al pulsar Editar y se cierra con Cancelar', () => {
+    openEditor();
+    expect(byId('payroll-form').hidden).toBe(true);
+
+    byId('payroll-admin-list').querySelector('[data-action="edit"]').click();
+    expect(byId('payroll-form').hidden).toBe(false);
+    expect(byId('payroll-form-subtitle').textContent).toContain(
+      'Ana Pérez Soto'
+    );
+
+    byId('payroll-form-cancel').click();
+    expect(byId('payroll-form').hidden).toBe(true);
+  });
+
+  it('muestra solo los campos de la liquidación y el estado como lista', () => {
+    openEditor();
+    byId('payroll-admin-list').querySelector('[data-action="edit"]').click();
+
+    expect(byId('payroll-field-status').tagName).toBe('SELECT');
+    expect(byId('payroll-field-status').value).toBe('Emitida');
+    for (const removed of [
+      'payroll-field-startDate',
+      'payroll-field-endDate',
+      'payroll-field-centroCosto',
+      'payroll-field-montoPagado',
+    ]) {
+      expect(byId(removed)).toBeNull();
+    }
+    expect(byId('payroll-field-fechaPago-wrapper').hidden).toBe(true);
+  });
+
+  it('calcula el monto líquido desde el desglose y lo guarda', () => {
+    openEditor();
+    byId('payroll-admin-list').querySelector('[data-action="edit"]').click();
+
+    for (const [field, value] of [
+      ['sueldoBase', '500000'],
+      ['bonos', '220000'],
+      ['descuentos', '20000'],
+    ]) {
+      byId(`payroll-field-${field}`).value = value;
+      byId(`payroll-field-${field}`).dispatchEvent(new Event('input'));
+    }
+    expect(byId('payroll-field-totalAmount').textContent).toBe('$700.000');
+
+    byId('payroll-field-bonos').value = '250000';
+    byId('payroll-field-bonos').dispatchEvent(new Event('input'));
+    expect(byId('payroll-field-totalAmount').textContent).toBe('$730.000');
+
+    byId('payroll-form').dispatchEvent(
+      new Event('submit', { bubbles: true, cancelable: true })
+    );
+    const saved = loadPayrollSettlements().find(
+      (item) => item.settlementId === 'set_1'
+    );
+    expect(saved.monto).toBe(730000);
+    expect(saved.bonos).toBe(250000);
+  });
+
+  it('al marcar Pagada pide la fecha de pago y registra el monto pagado', () => {
+    openEditor();
+    byId('payroll-admin-list').querySelector('[data-action="edit"]').click();
+
+    const status = byId('payroll-field-status');
+    status.value = 'Pagada';
+    status.dispatchEvent(new Event('change'));
+    expect(byId('payroll-field-fechaPago-wrapper').hidden).toBe(false);
+
+    byId('payroll-field-fechaPago').value = '2026-10-30';
+    byId('payroll-field-fechaPago').dispatchEvent(new Event('input'));
+    byId('payroll-form').dispatchEvent(
+      new Event('submit', { bubbles: true, cancelable: true })
+    );
+
+    const saved = loadPayrollSettlements().find(
+      (item) => item.settlementId === 'set_1'
+    );
+    expect(saved.estado).toBe('Pagada');
+    expect(saved.fechaPago).toBe('2026-10-30');
+    expect(byId('payroll-admin-list').textContent).toContain('30-10-2026');
   });
 });

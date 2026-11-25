@@ -95,7 +95,7 @@ Requisitos: Node.js 22.22 o superior y npm.
 ```bash
 npm install
 npm run dev      # abre la aplicación en http://localhost:5173/
-npm run check    # lint, formato y pruebas (65 archivos y 385 pruebas al 24-11-2026)
+npm run check    # lint, formato y pruebas (65 archivos y 389 pruebas al 24-11-2026)
 npm run build    # genera la versión de producción en dist/
 ```
 
@@ -107,10 +107,10 @@ Para probar la aplicación:
 
 ## Estado del proyecto (24-11-2026)
 
-- **Especificaciones:** `specs/001-erp-base-module/` (facturación y pagos: HU1 a HU10), `specs/002-payroll-access-control/` (acceso por rol y liquidaciones: HU1 a HU7), `specs/003-payroll-tabs-roles/` (pestañas de liquidación y permisos por rol: HU1 a HU3) y `specs/004-role-dashboard-redesign/` (rediseño visual de los paneles por rol: HU1 a HU6). Cada una tiene `spec.md`, `plan.md`, `data-model.md`, `tasks.md`, `quickstart.md` y `contracts/`.
+- **Especificaciones:** `specs/001-erp-base-module/` (facturación y pagos: HU1 a HU10), `specs/002-payroll-access-control/` (acceso por rol y liquidaciones: HU1 a HU7), `specs/003-payroll-tabs-roles/` (pestañas de liquidación y permisos por rol: HU1 a HU3) y `specs/004-role-dashboard-redesign/` (rediseño visual de los paneles por rol y de la gestión de liquidaciones: HU1 a HU7). Cada una tiene `spec.md`, `plan.md`, `data-model.md`, `tasks.md`, `quickstart.md` y `contracts/`.
 - **Modelo entidad-relación:** `specs/001-erp-base-module/mer.png`, generado desde la sección 13 de `specs/002-payroll-access-control/data-model.md` (MER único del módulo). La spec 004 no cambia el modelo de datos.
 - **Identidad visual (constitución v1.1.0):** nombre «Contabilidad y Finanzas», acento `#0f62fe`, tipografía IBM Plex Sans local con números tabulares, color solo para comunicar estado y montos en pesos chilenos.
-- **Implementación:** todas las historias están implementadas. `npm run check` pasa con 385 pruebas.
+- **Implementación:** todas las historias están implementadas. `npm run check` pasa con 389 pruebas.
 - **Pendiente:** el aviso al superar el límite de crédito (FR-029 de la 001, tarea T026) no está implementado; falta decidir si se implementa o se deja como desarrollo futuro.
 
 ## Registro de decisiones
@@ -153,6 +153,7 @@ Para probar la aplicación:
 | 23-11-2026 | La guía de uso se abre desde el menú ☰ y muestra solo los pasos de las vistas que el rol puede abrir (11 pasos para administrador y finanzas, 2 para trabajador) | Jaime Rivera |
 | 24-11-2026 | Se implementa la spec 003 con el ciclo completo de Speckit (analyze dos veces antes de implementar): el administrador queda limitado al Panel, crear y gestionar liquidaciones y control de accesos; finanzas ve las liquidaciones en solo lectura con búsqueda por RUT; nadie ve los avisos al desarrollador. Se agregaron T041 (pruebas heredadas y guía de uso) y T042 (vista de creación sin selector de tercero ni facturas de proveedores) | Carolina Vasquez
 | 24-11-2026 | Spec 004, rediseño de los paneles por rol según el feedback del profesor (más atractivo e intuitivo). Administrador: Panel solo con resumen de nómina y accesos de liquidaciones, sin datos financieros (corrige un hueco de la 003). Finanzas: 4 indicadores con color por estado y variación favorable/desfavorable respecto al mes anterior, fórmulas en tooltip, gráfico SVG propio de 6 meses, alertas, últimos 5 movimientos y 4 accesos rápidos compactos; se elimina «Deuda pendiente» por sumar lo que nos deben con lo que debemos. Trabajador: monto líquido destacado, período legible y desglose solo si tiene valores. Nombre del sistema «Contabilidad y Finanzas», iniciales de la persona en el círculo y banner de guía descartable por rol. Ciclo Speckit completo (constitution, specify, plan, tasks regeneradas con TDD); las rondas 2 a 4 de implementación se hicieron con ayuda directa de Claude sobre las mismas tareas de `tasks.md`, verificadas con `npm run check` y revisión en el navegador. Nota: el commit `5c55ff7` contiene la ronda 4 aunque su mensaje dice ronda 3 | Carolina Vasquez 
+| 24-11-2026 | Spec 004, HU7 agregada tras la verificación manual: «Gestionar liquidaciones de sueldo» con períodos legibles, estado con color y referencia «Compra serie-folio» en vez del identificador interno; el formulario de edición aparece solo al pulsar «Editar», se reduce a período, estado (lista), sueldo base, bonos y descuentos, y el monto líquido se calcula solo (sueldo base + bonos − descuentos) para evitar liquidaciones inconsistentes. Implementado con ayuda directa de Claude | Carolina Vasquez |
 
 ## Uso de IA (anexo)
 

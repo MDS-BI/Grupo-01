@@ -76,6 +76,15 @@ description: "Generated tasks for feature 004-role-dashboard-redesign"
 - [X] T027 [US6] Update `src/components/payroll-worker.js` to use `formatCurrencyCLP` and readable period (`src/components/payroll-worker.js`).
 - [X] T028 [US6] Make breakdown render only when base/discounts/bonuses ≠ 0 (`src/components/payroll-worker.js`).
 
+## Phase 8b: User Story 7 - Gestión de liquidaciones (P2)
+
+**Independent test**: Admin sees readable table; edit form appears only on Edit; net amount auto-calculated and saved; Cancel closes.
+
+- [X] T033 [US7] Add failing tests: readable period and invoice reference in table, form hidden until Edit, status select, removed fields, auto net amount, Pagada sets payment (`tests/integration/payroll-admin.test.js`).
+- [X] T034 [US7] Render readable table: `formatPeriod`, right-aligned amount, status badge, `Compra <serie>-<folio>` (`src/format.js`, `src/components/payroll-list.js`, `src/app.js`).
+- [X] T035 [US7] Rebuild edit form: hidden until Edit, Cancel, status select, conditional payment date, computed net amount (`index.html`, `src/components/payroll-form.js`).
+- [X] T036 [US7] Style table and edit card consistently with the constitution (`src/styles.css`).
+
 ## Phase 9: Polish
 
 - [X] T029 Ejecutar `npm run check` completo.

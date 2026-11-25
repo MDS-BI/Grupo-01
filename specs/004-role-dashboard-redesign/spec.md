@@ -127,6 +127,25 @@ Como trabajador, quiero entender mi liquidación de un vistazo, para reconocer d
 
 ---
 
+### User Story 7 - Gestión de liquidaciones clara para el administrador (HU7) (Priority: P2)
+
+Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» siga la misma identidad visual y me evite errores al editar, para mantener las liquidaciones consistentes. Se agrega el 24-11-2026, tras la verificación manual de la spec, porque era la única vista del administrador con el estilo anterior.
+
+**Why this priority**: es P2 porque no cambia permisos, pero evita datos inconsistentes (monto distinto del desglose) y elimina información interna sin valor para el usuario.
+
+**Independent Test**: con una sesión de administrador y liquidaciones de demostración, se abre la vista, se comprueba la tabla legible, se pulsa «Editar», se cambia el desglose y se verifica que el monto líquido se recalcula y se guarda.
+
+**Acceptance Scenarios**:
+
+1. **Dado** la tabla de liquidaciones, **cuando** se muestra, **entonces** los períodos aparecen en texto legible, el monto líquido alineado a la derecha, el estado como etiqueta de color y la factura de compra como referencia legible («Compra LIQ-1»), nunca como identificador interno.
+2. **Dado** la vista recién abierta, **cuando** no se ha pulsado «Editar», **entonces** el formulario de edición no se muestra.
+3. **Dado** el formulario abierto, **cuando** se revisan sus campos, **entonces** solo contiene período, estado (lista de estados permitidos), sueldo base, bonos y descuentos; la fecha de pago aparece solo si el estado es «Pagada».
+4. **Dado** un cambio en el desglose, **cuando** se edita, **entonces** el monto líquido se calcula como sueldo base + bonos − descuentos, se muestra sin poder editarse y se guarda en la liquidación y en su factura de compra; si el desglose está vacío se conserva el monto registrado.
+5. **Dado** el estado «Pagada», **cuando** se guarda, **entonces** el monto pagado se registra igual al monto líquido.
+6. **Dado** el formulario abierto, **cuando** se pulsa «Cancelar», **entonces** se cierra sin guardar.
+
+---
+
 ### Edge Cases
 
 - ¿Qué pasa si el administrador tiene datos financieros guardados en el navegador? No se muestran en su Panel: la ausencia de acceso prevalece sobre la existencia de datos.
@@ -217,6 +236,14 @@ Como trabajador, quiero entender mi liquidación de un vistazo, para reconocer d
 
 - **FR-046**: La cobertura automatizada afectada DEBE actualizarse para reflejar el nuevo contenido de los Paneles por rol, la navegación y la configuración del módulo.
 - **FR-047**: DEBEN agregarse pruebas automatizadas para: panel del administrador sin datos financieros, colores por estado, eliminación de «Deuda pendiente», nombre del sistema e iniciales del usuario.
+
+**Gestión de liquidaciones (HU7)**
+
+- **FR-048**: La tabla de «Gestionar liquidaciones de sueldo» DEBE mostrar períodos legibles, montos alineados a la derecha, el estado como etiqueta de color y la factura de compra como referencia legible, sin identificadores internos visibles.
+- **FR-049**: El formulario de edición DEBE mostrarse solo después de pulsar «Editar» y DEBE poder cerrarse con «Cancelar» sin guardar.
+- **FR-050**: El formulario DEBE limitarse a período, estado (lista), sueldo base, bonos y descuentos; la fecha de pago DEBE mostrarse solo con estado «Pagada».
+- **FR-051**: El monto líquido DEBE calcularse como sueldo base + bonos − descuentos y NO DEBE editarse a mano; si el desglose está vacío se conserva el monto registrado.
+- **FR-052**: Con estado «Pagada», el monto pagado DEBE registrarse igual al monto líquido.
 
 ### Key Entities
 

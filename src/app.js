@@ -481,6 +481,7 @@ function refreshPayrollAdmin() {
   renderPayrollList(byId('payroll-admin-list'), {
     settlements,
     entities,
+    documents: purchaseInvoices,
     records: loadAccessRecords(),
     canEdit: state.session?.role === 'administrador',
     canAssociate: state.session?.role === 'administrador',
@@ -493,7 +494,13 @@ function editPayrollSettlement(id) {
   if (state.session?.role !== 'administrador') return;
   const settlement = findPayrollSettlement(id);
   if (!settlement || !payrollForm) return;
-  payrollForm.setDocument(combinedPayrollRecord(settlement));
+  const entity = loadEntities().find(
+    (item) => item.entity_id === settlement.entityId
+  );
+  payrollForm.setDocument({
+    ...combinedPayrollRecord(settlement),
+    workerLabel: [entity?.name, entity?.taxId].filter(Boolean).join(' · '),
+  });
 }
 
 function associatePayrollAccess(id) {

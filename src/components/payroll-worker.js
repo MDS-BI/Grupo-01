@@ -2,7 +2,7 @@ import {
   resolveWorkerPaymentHistory,
   resolveWorkerSettlement,
 } from '../payroll.js';
-import { formatCurrencyCLP } from '../format.js';
+import { formatCurrencyCLP, formatPeriod } from '../format.js';
 import {
   loadEntities,
   loadPayrollSettlements,
@@ -92,28 +92,7 @@ function setHidden(id, hidden) {
   if (element) element.hidden = hidden;
 }
 
-const MONTH_NAMES = [
-  'enero',
-  'febrero',
-  'marzo',
-  'abril',
-  'mayo',
-  'junio',
-  'julio',
-  'agosto',
-  'septiembre',
-  'octubre',
-  'noviembre',
-  'diciembre',
-];
-
-// «2026-10» → «octubre 2026» (constitución v1.1.0, períodos legibles).
-export function readablePeriod(value) {
-  const match = /^(\d{4})-(\d{2})/.exec(String(value ?? ''));
-  if (!match) return String(value ?? '');
-  const name = MONTH_NAMES[Number(match[2]) - 1];
-  return name ? `${name} ${match[1]}` : String(value);
-}
+export const readablePeriod = formatPeriod;
 
 function setBreakdownRow(id, label, value) {
   const row = document.getElementById(id);

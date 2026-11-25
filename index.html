@@ -809,6 +809,7 @@
                   id="payroll-filter-worker"
                   data-invoice-filter
                   type="text"
+                  placeholder="Nombre del trabajador"
                 />
               </div>
               <div class="form-field">
@@ -817,6 +818,7 @@
                   id="payroll-filter-rut"
                   data-invoice-filter
                   type="text"
+                  placeholder="22.222.222-2"
                 />
               </div>
               <div class="form-field">
@@ -824,8 +826,7 @@
                 <input
                   id="payroll-filter-period"
                   data-invoice-filter
-                  type="text"
-                  placeholder="AAAA-MM"
+                  type="month"
                 />
               </div>
             </div>
@@ -836,23 +837,46 @@
             <div id="payroll-admin-empty" hidden>
               <p>No hay liquidaciones registradas.</p>
             </div>
-            <form id="payroll-form" novalidate>
-              <h2 id="payroll-form-title">Editar liquidación</h2>
-              <div id="payroll-form-fields">
+            <form id="payroll-form" class="payroll-edit-card" novalidate hidden>
+              <div class="payroll-edit-head">
+                <h2 id="payroll-form-title">Editar liquidación</h2>
+                <p id="payroll-form-subtitle" class="payroll-edit-subtitle"></p>
+              </div>
+              <div id="payroll-form-fields" class="payroll-edit-grid">
                 <div class="form-field">
-                  <label for="payroll-field-periodoLiquidacion"
-                    >Período (AAAA-MM)</label
-                  >
+                  <label for="payroll-field-periodoLiquidacion">Período</label>
                   <input
                     id="payroll-field-periodoLiquidacion"
                     data-field="periodoLiquidacion"
+                    placeholder="2026-11"
+                    inputmode="numeric"
                   />
+                </div>
+                <div class="form-field">
+                  <label for="payroll-field-status">Estado</label>
+                  <select
+                    id="payroll-field-status"
+                    data-field="status"
+                  ></select>
                 </div>
                 <div class="form-field">
                   <label for="payroll-field-sueldoBase">Sueldo base</label>
                   <input
                     id="payroll-field-sueldoBase"
                     data-field="sueldoBase"
+                    type="number"
+                    min="0"
+                    step="1"
+                  />
+                </div>
+                <div class="form-field">
+                  <label for="payroll-field-bonos">Bonos</label>
+                  <input
+                    id="payroll-field-bonos"
+                    data-field="bonos"
+                    type="number"
+                    min="0"
+                    step="1"
                   />
                 </div>
                 <div class="form-field">
@@ -860,12 +884,30 @@
                   <input
                     id="payroll-field-descuentos"
                     data-field="descuentos"
+                    type="number"
+                    min="0"
+                    step="1"
                   />
                 </div>
-                <div class="form-field">
-                  <label for="payroll-field-bonos">Bonos</label>
-                  <input id="payroll-field-bonos" data-field="bonos" />
+                <div
+                  id="payroll-field-fechaPago-wrapper"
+                  class="form-field"
+                  hidden
+                >
+                  <label for="payroll-field-fechaPago">Fecha de pago</label>
+                  <input
+                    id="payroll-field-fechaPago"
+                    data-field="fechaPago"
+                    type="date"
+                  />
                 </div>
+              </div>
+              <div class="payroll-total" aria-live="polite">
+                <span>Monto líquido (sueldo base + bonos − descuentos)</span>
+                <strong id="payroll-field-totalAmount"></strong>
+                <small id="payroll-total-hint" hidden>
+                  Sin desglose: se conserva el monto registrado.
+                </small>
               </div>
               <p
                 class="invoice-feedback"
@@ -873,7 +915,10 @@
                 data-invoice-feedback
               ></p>
               <div id="payroll-form-errors" class="error" role="alert"></div>
-              <button type="submit">Guardar liquidación</button>
+              <div class="payroll-edit-actions">
+                <button type="button" id="payroll-form-cancel">Cancelar</button>
+                <button type="submit">Guardar liquidación</button>
+              </div>
             </form>
           </section>
 

@@ -1,4 +1,26 @@
-import { formatCurrencyCLP } from '../format.js';
+import { formatCurrencyCLP, formatPeriod } from '../format.js';
+
+const STATUS_TONES = {
+  Borrador: 'draft',
+  Emitida: 'issued',
+  Pagada: 'paid',
+  Anulada: 'void',
+};
+
+function readableDate(value) {
+  const [year, month, day] = String(value ?? '')
+    .slice(0, 10)
+    .split('-');
+  return day ? `${day}-${month}-${year}` : '';
+}
+
+function invoiceReference(document) {
+  if (!document) return '—';
+  const reference = [document.series, document.folio]
+    .filter((part) => part !== undefined && part !== null && part !== '')
+    .join('-');
+  return reference ? `Compra ${reference}` : 'Compra';
+}
 
 const valueOf = (settlement, key, fallbackKey) =>
   settlement?.[key] ?? settlement?.[fallbackKey] ?? '';
@@ -7,6 +29,7 @@ export function renderPayrollList(container, options = {}) {
   const {
     settlements = [],
     entities = [],
+    documents = [],
     records = [],
     canEdit = true,
     canAssociate = true,
@@ -19,6 +42,9 @@ export function renderPayrollList(container, options = {}) {
   const entityById = new Map(
     entities.map((entity) => [entity.entity_id, entity])
   );
+  const documentById = new Map(
+    documents.map((document) => [document.document_id, document])
+  );
   const linkedIds = new Set(
     records
       .filter((record) => record.active && record.role === 'trabajador')
@@ -28,12 +54,14 @@ export function renderPayrollList(container, options = {}) {
   const scroll = document.createElement('div');
   scroll.className = 'invoice-table-scroll';
   const table = document.createElement('table');
-  table.className = 'invoice-table';
+  table.className = 'invoice-table payroll-table';
   table.innerHTML = `
     <thead>
       <tr>
-        <th>Trabajador</th><th>RUT</th><th>Período</th><th>Monto</th>
-        <th>Estado</th><th>Fecha de pago</th><th>Factura vinculada</th><th>Acciones</th>
+        <th scope="col">Trabajador</th><th scope="col">RUT</th>
+        <th scope="col">Período</th><th scope="col" class="amount">Monto líquido</th>
+        <th scope="col">Estado</th><th scope="col">Fecha de pago</th>
+        <th scope="col">Factura de compra</th><th scope="col">Acciones</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -48,25 +76,33 @@ export function renderPayrollList(container, options = {}) {
     const row = document.createElement('tr');
     row.dataset.id = settlementId;
     row.dataset.documentId = documentId;
+    const custom = settlement?.customFields || {};
+    const period = settlement?.periodo ?? custom.periodoLiquidacion ?? '';
+    const status = valueOf(settlement, 'estado', 'status') || '';
+    const paidAt = settlement?.fechaPago ?? custom.fechaPago ?? '';
     const cells = [
       entity?.name || '',
       entity?.taxId || '',
-      valueOf(settlement, 'periodo', 'customFields') || '',
+      formatPeriod(period),
       formatCurrencyCLP(valueOf(settlement, 'monto', 'totalAmount')),
-      valueOf(settlement, 'estado', 'status') || '',
-      valueOf(settlement, 'fechaPago', 'customFields') || 'Sin pago registrado',
-      documentId || '',
+      status,
+      paidAt ? readableDate(paidAt) : 'Sin pago registrado',
+      invoiceReference(documentById.get(documentId)),
     ];
-    for (const [index, value] of cells.entries()) {
+    cells.forEach((value, index) => {
       const cell = document.createElement('td');
-      cell.textContent =
-        index === 2 && typeof value === 'object'
-          ? value?.periodoLiquidacion || ''
-          : index === 5 && typeof value === 'object'
-            ? value?.fechaPago || 'Sin pago registrado'
-            : value;
+      if (index === 3) cell.className = 'amount';
+      if (index === 4) {
+        const badge = document.createElement('span');
+        badge.className = `status-badge status-badge--${STATUS_TONES[value] || 'draft'}`;
+        badge.textContent = value;
+        cell.append(badge);
+      } else {
+        cell.textContent = value;
+      }
+      if (index === 6 && documentId) cell.title = documentId;
       row.append(cell);
-    }
+    });
 
     const actions = document.createElement('td');
     actions.className = 'invoice-table-actions';
@@ -74,6 +110,7 @@ export function renderPayrollList(container, options = {}) {
       const editButton = document.createElement('button');
       editButton.type = 'button';
       editButton.dataset.action = 'edit';
+      editButton.className = 'table-action';
       editButton.textContent = 'Editar';
       editButton.addEventListener('click', () => onEdit(settlementId));
       actions.append(editButton);
