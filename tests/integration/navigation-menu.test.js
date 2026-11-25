@@ -116,20 +116,32 @@ describe('T147 - menú de utilidades y grilla del Panel', () => {
     expect(visibleMenuIds().at(-1)).toBe('menu-logout');
   });
 
-  it('oculta las opciones de administrador para finanzas y trabajador', () => {
-    for (const setup of [setupFinanzasSession, setupWorkerSession]) {
+  it('oculta las opciones de administrador para el trabajador', () => {
+    setupWorkerSession();
+    initApp(userConfig);
+
+    expect(byId('menu-toggle').hidden).toBe(false);
+    expect(byId('menu-access').hidden).toBe(true);
+    expect(byId('menu-dev-notifications')).toBeNull();
+    expect(byId('menu-separator').hidden).toBe(true);
+    expect(visibleMenuIds()).toEqual(['menu-guide', 'menu-logout']);
+    expect(byId('menu-logout').textContent.trim()).toBe('Cerrar sesión');
+  });
+
+  it('mantiene sin cambios los menús de administrador y trabajador (T038)', () => {
+    const expectedMenus = [
+      [setupAdminSession, ['menu-guide', 'menu-access', 'menu-logout']],
+      [setupWorkerSession, ['menu-guide', 'menu-logout']],
+    ];
+
+    for (const [setup, expected] of expectedMenus) {
       loadAppMarkup();
       localStorage.clear();
       sessionStorage.clear();
       setup();
       initApp(userConfig);
 
-      expect(byId('menu-toggle').hidden).toBe(false);
-      expect(byId('menu-access').hidden).toBe(true);
-      expect(byId('menu-dev-notifications')).toBeNull();
-      expect(byId('menu-separator').hidden).toBe(true);
-      expect(visibleMenuIds()).toEqual(['menu-guide', 'menu-logout']);
-      expect(byId('menu-logout').textContent.trim()).toBe('Cerrar sesión');
+      expect(visibleMenuIds()).toEqual(expected);
     }
   });
 

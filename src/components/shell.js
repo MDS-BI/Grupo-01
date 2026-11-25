@@ -23,6 +23,20 @@ const FINANCE_MODULES = [
   'search',
 ];
 
+const FINANCE_MENU_MODULES = [
+  'entities',
+  ...INVOICE_MODULES,
+  'movements',
+  'cashflow',
+  'tracking',
+  'payroll-admin',
+  'search',
+];
+
+const FINANCE_MENU_LABELS = Object.freeze({
+  'payroll-admin': 'Liquidaciones de sueldo',
+});
+
 export const NAV_MODULES = Object.freeze([
   ...new Set([...ADMIN_MODULES, ...FINANCE_MODULES, 'payroll-worker']),
 ]);
@@ -58,6 +72,10 @@ function renderLogo(container, initials) {
 
   svg.append(circle, text);
   container.append(svg);
+}
+
+function financeMenuLabel(config, module) {
+  return FINANCE_MENU_LABELS[module] || navLabel(config, module);
 }
 
 export function navLabel(config, module) {
@@ -162,6 +180,24 @@ export function createShell({
   );
   const menuSeparator = document.getElementById('menu-separator');
   const menuLogout = document.getElementById('menu-logout');
+  const financeMenu = document.getElementById('finance-menu-navigation');
+  const financeMenuButtons = [];
+  if (financeMenu) {
+    financeMenu.replaceChildren();
+    for (const module of FINANCE_MENU_MODULES) {
+      const button = document.createElement('button');
+      const label = financeMenuLabel(config, module);
+      button.id = `menu-nav-${module}`;
+      button.className = 'menu-item';
+      button.type = 'button';
+      button.dataset.module = module;
+      button.textContent = label;
+      button.setAttribute('aria-label', label);
+      button.hidden = true;
+      financeMenu.append(button);
+      financeMenuButtons.push(button);
+    }
+  }
   const backBar = document.getElementById('back-bar');
   const backButton = document.getElementById('back-to-dashboard');
   const backViewName = document.getElementById('back-view-name');
@@ -200,6 +236,7 @@ export function createShell({
     if (utilitiesOverlay) utilitiesOverlay.classList.add('is-open');
 
     const firstOption = [
+      ...financeMenuButtons,
       menuGuide,
       menuAccess,
       menuDevNotifications,
@@ -230,6 +267,18 @@ export function createShell({
         : null;
   }
   const isAdmin = Boolean(session) && session.role === 'administrador';
+  const isFinance = Boolean(session) && session.role === 'finanzas';
+  if (financeMenu) financeMenu.hidden = !isFinance;
+  for (const button of financeMenuButtons) {
+    button.hidden = !isFinance;
+    button.onclick =
+      isFinance && onNavigate
+        ? () => {
+            closeMenu();
+            onNavigate(button.dataset.module);
+          }
+        : null;
+  }
   if (menuAccess) {
     menuAccess.hidden = !isAdmin;
     menuAccess.onclick =
