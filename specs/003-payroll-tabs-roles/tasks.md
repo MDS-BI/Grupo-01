@@ -282,3 +282,50 @@ Task T016: "Instanciar createPurchaseForm en src/app.js"
 **Dependencias de esta corrección**: T043 ∥ T044 ∥ T045 → T046 → T047 ∥ T048 → T049 → T050 → T051 → T052. US1 y US3 son independientes salvo por `src/app.js`, por eso T047, T050 y T051 son secuenciales.
 
 **Checkpoint**: con T052 en verde, las decisiones de `Session 2026-11-24` quedan verificadas sin haber reescrito T001–T042, la spec 004, el modelo de datos ni las claves `erp.*`.
+
+---
+
+## Clarificación 2026-11-25 — tareas nuevas (T053+)
+
+**Alcance**: solo las decisiones registradas en `spec.md` → `Clarifications` → `Session 2026-11-25`. No modificar, renumerar ni desmarcar T001–T052; no tocar la spec 004, el modelo de datos ni las claves `erp.*`.
+
+**Orden de ejecución**: primero las pruebas (T053–T057, deben fallar), luego la implementación (T058–T062) y finalmente T063 (`npm run check`).
+
+### US1 — Formulario propio de crear liquidación (Priority: P1)
+
+**Goal**: la pestaña «Crear liquidación de sueldo» deja de reutilizar el formulario de facturas de compra y muestra únicamente RUT, nombre completo, período `AAAA-MM`, sueldo base, bonos, descuentos, fecha de emisión, fecha de vencimiento, serie y folio; el total se calcula como `sueldo base + bonos − descuentos`, no se escribe a mano, y los ids son propios con prefijo `payroll-create-field-` sin repetirse en la página. La alta automática del trabajador con confirmación permanece intacta.
+
+**Independent Test**: con sesión de `administrador`, abrir `payroll-create`: el formulario contiene solo los diez campos acordados, el total se deriva del desglose, todos los ids son únicos y no aparece ningún id `invoice-purchase-field-`; al enviar con RUT nuevo aparece la confirmación, al aceptar se crean liquidación, tercero personal y acceso `trabajador`, y al cancelar no se persiste nada.
+
+**Tests primero** ⚠️ (deben FALLAR antes de implementar):
+
+- [ ] T053 [P] [US1] Crear `tests/integration/payroll-create-dedicated-form.test.js`: con sesión de administrador y `byId('nav-payroll-create').click()`, verificar que `#payroll-create-form` contiene solo campos visibles con ids `payroll-create-field-rut`, `payroll-create-field-nombreCompleto`, `payroll-create-field-periodoLiquidacion`, `payroll-create-field-sueldoBase`, `payroll-create-field-bonos`, `payroll-create-field-descuentos`, `payroll-create-field-startDate`, `payroll-create-field-endDate`, `payroll-create-field-series` y `payroll-create-field-folio`; que no existen `[data-field]` para `entity_id`, `quantity`, `taxAmount`, `currency`, `paymentTerms`, `centroCosto`, `montoPagado`, `fechaPago` ni `status`; y que las etiquetas son RUT, Nombre completo, Período, Sueldo base, Bonos, Descuentos, Fecha de emisión, Fecha de vencimiento, Serie y Folio (FR-001, FR-002, US1 esc. 1)
+- [ ] T054 [P] [US1] Crear `tests/integration/payroll-create-amount.test.js`: completar sueldo base `500000`, bonos `100000` y descuentos `50000`; verificar que la salida de solo lectura `#payroll-create-field-totalAmount` muestra el total en pesos chilenos correspondiente a `550000` y NO es `input`, `select` ni `textarea`; al enviar, comprobar que `loadPayrollSettlements()` guarda `monto === 550000`, `sueldoBase === 500000`, `bonos === 100000` y `descuentos === 50000` sin propiedades nuevas (FR-002, US1 esc. 9, SC-007)
+- [ ] T055 [P] [US1] Crear `tests/integration/payroll-create-ids.test.js`: recopilar todos los elementos con `id` del documento después de abrir `payroll-create`, afirmar 0 ids duplicados, que cada id con prefijo `payroll-create-field-` está dentro de `#view-payroll-create`, que cada campo visible de `#payroll-create-form` tiene id con ese prefijo y que no existe ningún id `invoice-purchase-field-*` en esa vista (FR-002, SC-007, US1 esc. 1)
+- [ ] T056 [P] [US1] Actualizar `tests/integration/payroll-create.test.js`: reemplazar el helper `fillInvoiceForm()` y las aserciones de ids por los ids `payroll-create-field-*`, fijando sueldo base, bonos y descuentos con total derivado; conservar sin desmarcar los casos de T045/T046 de confirmación con RUT nuevo aceptada, RUT nuevo cancelada y RUT existente sin confirmación, verificando que con el formulario propio se siguen creando los tres registros y que al cancelar no se persiste nada en `erp.payrollSettlements`, `erp.entities` ni `erp.accessRecords` (FR-002, FR-003, SC-001)
+
+### US2 — Listado exclusivo de liquidaciones (Priority: P1)
+
+**Goal**: el listado de la vista de creación muestra solo liquidaciones; sin registros muestra exactamente «No hay liquidaciones registradas» y nunca el mensaje de facturas de compra.
+
+**Independent Test**: con datos de demostración, el listado de `payroll-create` incluye trabajadores con liquidación y no incluye proveedores ni facturas de compra; con almacenamiento vacío, el mismo listado muestra «No hay liquidaciones registradas».
+
+**Tests primero** ⚠️ (deben FALLAR antes de implementar):
+
+- [ ] T057 [P] [US2] Crear `tests/integration/payroll-create-list.test.js`: con datos de demostración verificar que `#payroll-create-list` solo muestra liquidaciones de terceros `personal` (captions «Ana Pérez Soto» y «Bruno Soto Vega», nunca «Proveedores del Sur S.A.») y no botones de factura `data-action="edit"`/`data-action="delete"`; con `localStorage.clear()` verificar que contiene exactamente «No hay liquidaciones registradas» y no «No hay facturas de compra registradas» (FR-001, FR-007, US1 esc. 10, US2 esc. 8, SC-007)
+
+### Implementación
+
+- [ ] T058 [P] [US1] En `index.html`, reemplazar el `<form id="payroll-create-form">` vacío de `#view-payroll-create` por el formulario propio con los diez `data-field` y los ids `payroll-create-field-*` de T053, una salida de solo lectura `#payroll-create-field-totalAmount`, el feedback existente `[data-invoice-feedback]` y las clases visuales actuales; quitar `data-tipo-factura="compra"` de `#payroll-create-list` y no modificar la identidad visual de la spec 004 (FR-001, FR-002, FR-019)
+- [ ] T059 [P] [US1] Crear `src/components/payroll-create-form.js` con `initPayrollCreateForm({ config, root, onSubmit, onDirtyChange })`: enlazar solo los diez campos acordados, calcular `totalAmount = sueldoBase + bonos - descuentos` en tiempo real, exponer `reset`, `setFeedback`, `showErrors`, `focus` y `getDirty`, mantener la confirmación de «cambios sin guardar», y NO importar `createPurchaseForm`/`createInvoiceForm` ni agregar campos de factura (FR-002, US1 esc. 1 y 9)
+- [ ] T060 [US1] En `src/app.js`, sustituir en `initInvoiceForms` la instancia de `createPurchaseForm` usada por `#view-payroll-create` (alrededor de las líneas 1318–1347) por `initPayrollCreateForm`, pasando `extras: { rut, nombreCompleto }` desde los nuevos campos a `submitPayrollCreate`; dejar intactos `confirmAction` en `handlePayrollCreateSubmit`, la creación automática del tercero personal y del acceso `trabajador`, y el flujo de facturas de compra (FR-001, FR-003, SC-001)
+- [ ] T061 [US2] En `src/app.js`, reemplazar `renderPurchaseList(...)` en `refreshPayrollCreateList` (alrededor de las líneas 1210–1232) por un render de liquidaciones obtenido de `loadPayrollSettlements()` filtrado por terceros `personal`, usando `renderPayrollList` sin acciones de editar, asociar ni registrar pago en `#payroll-create-list`, y mostrando `<p class="empty-state">No hay liquidaciones registradas</p>` cuando no haya registros, sin invocar nunca el mensaje de facturas de compra (FR-001, FR-007, US1 esc. 10, US2 esc. 8)
+- [ ] T062 [US1] En `src/app.js`, ajustar `ensurePayrollSettlement` para persistir `sueldoBase`, `bonos`, `descuentos` y el `monto` calculado desde los valores del formulario propio en los campos ya existentes de `erp.payrollSettlements`, sin añadir propiedades, sin cambiar claves `erp.*` ni el modelo de datos y sin afectar la spec 004 (FR-002, FR-019, Key Entities)
+
+### Verificación final
+
+- [ ] T063 Ejecutar `npm run check` desde la raíz del repositorio (`package.json`) y corregir únicamente las regresiones introducidas por T053–T062 hasta dejar lint, format y `npm test -- --run` en verde, sin desmarcar T001–T052 (SC-006)
+
+**Dependencias de esta corrección**: T053 ∥ T054 ∥ T055 ∥ T056 ∥ T057 → T058 ∥ T059 → T060 → T061 → T062 → T063. Las pruebas son paralelas entre sí; la implementación es secuencial en `src/app.js`.
+
+**Checkpoint**: con T063 en verde, las decisiones de `Session 2026-11-25` quedan verificadas sin haber reescrito T001–T052, la spec 004, el modelo de datos ni las claves `erp.*`.
