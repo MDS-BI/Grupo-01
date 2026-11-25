@@ -246,12 +246,12 @@ describe('T147 - menú de utilidades y grilla del Panel', () => {
     expect(byId('cashflow-content').textContent).not.toContain('Ingresos');
   });
 
-  it('oculta el Resumen financiero del Panel al trabajador', () => {
+  it('oculta los indicadores financieros del Panel al trabajador', () => {
     setupWorkerSession();
     initApp(userConfig);
 
     expect(byId('view-dashboard').hidden).toBe(true);
-    for (const id of ['summary-saldo', 'summary-deuda', 'summary-caja']) {
+    for (const id of ['summary-caja', 'kpi-por-cobrar', 'kpi-por-pagar']) {
       expect(byId(id).closest('[hidden]')).not.toBeNull();
       expect(byId(id).textContent).toBe('');
     }

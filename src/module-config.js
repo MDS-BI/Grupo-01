@@ -73,6 +73,12 @@ export const DEFAULT_ACCENT_COLOR = '#0f62fe';
 
 export const ROLES = Object.freeze(['administrador', 'finanzas', 'trabajador']);
 
+export const ROLE_LABELS = Object.freeze({
+  administrador: 'Administrador',
+  finanzas: 'Finanzas',
+  trabajador: 'Trabajador',
+});
+
 export const ACCESS_STORAGE_KEYS = Object.freeze({
   accessRecords: 'erp.accessRecords',
   devNotifications: 'erp.devNotifications',
@@ -124,7 +130,7 @@ export function getInvoiceView(tipoFactura) {
 export const INVOICE_READ_ONLY_FIELDS = ['folio', 'startDate', 'endDate'];
 
 export const userConfig = {
-  moduleName: 'Contabilidad y Finanzas: Facturación y Pagos',
+  moduleName: 'Contabilidad y Finanzas',
   labels: {
     entity: 'Tercero',
     entities: 'Terceros',

@@ -338,8 +338,6 @@ function refreshInvoiceStatusNotice() {
 function clearRestrictedViews() {
   if (!canAccess('dashboard', state.session)) {
     for (const id of [
-      'summary-saldo',
-      'summary-deuda',
       'summary-caja',
       'kpi-por-cobrar',
       'kpi-por-pagar',
@@ -369,6 +367,7 @@ function applySession(session) {
   state.shell = createShell({
     config: state.config,
     session,
+    entities: loadEntities(),
     onNavigate: showModule,
     onLogout: handleLogout,
     onOpenGuide: (opener) => state.tutorial?.open(0, opener),
@@ -1020,6 +1019,13 @@ function handleQuickAction(action) {
     form.reset();
     renderInvoices(tipoFactura, loadEntities(), loadDocuments());
     form.focus();
+  } else if (
+    action === 'list-invoice-sale' ||
+    action === 'list-invoice-purchase'
+  ) {
+    const tipoFactura = action === 'list-invoice-sale' ? 'venta' : 'compra';
+    showModule(getInvoiceView(tipoFactura).module);
+    renderInvoices(tipoFactura, loadEntities(), loadDocuments());
   } else if (action === 'cashflow') {
     showModule('cashflow');
   } else if (action === 'movements') {

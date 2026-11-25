@@ -21,7 +21,7 @@ describe('US13 - shell persistente', () => {
     expect(
       document.getElementById('brand-logo').querySelector('svg')
     ).toBeTruthy();
-    expect(document.getElementById('brand-logo').textContent).toBe('EB');
+    expect(document.getElementById('brand-logo').textContent).toBe('A');
     expect(
       document.getElementById('nav-dashboard').getAttribute('aria-current')
     ).toBe('page');
@@ -87,9 +87,19 @@ describe('US13 - shell persistente', () => {
         document.getElementById(`nav-${modulo}`).getAttribute('aria-current')
       ).toBe('page');
       expect(document.getElementById('brand-name').textContent).toBe(
-        'Contabilidad y Finanzas: Facturación y Pagos'
+        'Contabilidad y Finanzas'
       );
     }
+  });
+
+  it('muestra la identidad del sistema y el círculo de perfil del usuario (T004)', () => {
+    initApp(userConfig);
+
+    expect(document.getElementById('brand-name').textContent).toBe(
+      'Contabilidad y Finanzas'
+    );
+    expect(document.title).toBe('Contabilidad y Finanzas');
+    expect(document.getElementById('brand-logo').textContent).toBe('A');
   });
 
   it('navega entre facturas de venta y compra con listados separados (FR-006)', () => {

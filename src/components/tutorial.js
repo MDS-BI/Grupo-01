@@ -7,7 +7,7 @@ const STEP_DEFINITIONS = [
     module: 'dashboard',
     title: (config) => navLabel(config, 'dashboard'),
     text: ({ config }) =>
-      `Revisa los KPIs, el Resumen financiero, el menú ☰ y los accesos rápidos del ${navLabel(config, 'dashboard')}.`,
+      `Revisa el resumen de tu ${navLabel(config, 'dashboard')}, el menú ☰ y los accesos rápidos.`,
   },
   {
     id: 'payroll-create',

@@ -1,11 +1,16 @@
 :root {
   --accent-color: #0f62fe;
+  --font-sans:
+    'IBM Plex Sans', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-numeric: tabular-nums;
   --bg: #f4f6fb;
   --surface: #ffffff;
   --text: #1b2430;
   --muted: #5c6b7f;
   --border: #d9e0ea;
   --danger: #c62828;
+  --warning: #b26a00;
+  --success: #1b7f4b;
   --topbar-height: 64px;
   --radius: 10px;
 }
@@ -20,7 +25,8 @@
 
 body {
   margin: 0;
-  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans);
+  font-variant-numeric: var(--font-numeric);
   background: var(--bg);
   color: var(--text);
 }
@@ -1105,5 +1111,138 @@ select[aria-invalid='true'] {
 
   .guide-actions #guide-close {
     margin-left: 0;
+  }
+}
+
+.dashboard-greeting {
+  margin: 4px 0 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.dashboard-month {
+  margin: 2px 0 8px;
+  color: var(--muted);
+  text-transform: capitalize;
+}
+
+/* Resumen de nómina del administrador: título arriba y 3 tarjetas en fila. */
+.admin-payroll-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.admin-payroll-summary > .section-heading {
+  grid-column: 1 / -1;
+}
+
+.admin-payroll-summary .stat-card .stat-value {
+  font-size: 1.6rem;
+}
+
+.admin-payroll-summary .stat-card .stat-value.is-empty {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* Indicadores financieros (solo rol finanzas). */
+.finance-indicators {
+  margin-bottom: 8px;
+}
+
+.indicator-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.indicator-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  padding: 16px;
+  font: inherit;
+  text-align: left;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.indicator-card:hover,
+.indicator-card:focus-visible {
+  border-color: color-mix(in srgb, var(--accent-color) 45%, var(--border));
+  box-shadow: 0 6px 16px rgb(27 36 48 / 8%);
+}
+
+.indicator-label {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.indicator-info {
+  margin-left: 4px;
+  cursor: help;
+  color: var(--accent-color);
+}
+
+.indicator-value {
+  font-size: 1.7rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.indicator-variation {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.indicator-variation[data-tone='favorable'] {
+  color: var(--success);
+}
+
+.indicator-variation[data-tone='unfavorable'] {
+  color: var(--danger);
+}
+
+.indicator-card.is-negative {
+  border: 2px solid var(--danger);
+  background: color-mix(in srgb, var(--danger) 6%, var(--surface));
+}
+
+.indicator-card.is-negative .indicator-value {
+  color: var(--danger);
+}
+
+.indicator-card.is-action {
+  border: 2px solid var(--warning);
+  background: color-mix(in srgb, var(--warning) 8%, var(--surface));
+}
+
+.indicator-card.is-action .indicator-value {
+  color: var(--warning);
+}
+
+.indicator-meta {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+@media (max-width: 900px) {
+  .indicator-grid,
+  .admin-payroll-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

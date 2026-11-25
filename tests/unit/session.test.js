@@ -3,6 +3,7 @@ import {
   clearSession,
   isSessionValid,
   loadSession,
+  resolveSessionProfile,
   saveSession,
 } from '../../src/session.js';
 import { ACCESS_STORAGE_KEYS } from '../../src/module-config.js';
@@ -25,13 +26,13 @@ function access(overrides = {}) {
 function entity(tipoTercero = 'personal', entityId = 'ent_worker') {
   return {
     entity_id: entityId,
-    name: 'Ana Pérez Soto',
+    name: 'Ana P�rez Soto',
     customFields: { tipoTercero },
   };
 }
 
 describe('session: ciclo de vida en sessionStorage', () => {
-  it('guarda y lee la sesión en sessionStorage bajo la clave erp.session', () => {
+  it('guarda y lee la sesi�n en sessionStorage bajo la clave erp.session', () => {
     saveSession({
       accessId: '22.222.222-2',
       role: 'trabajador',
@@ -45,7 +46,7 @@ describe('session: ciclo de vida en sessionStorage', () => {
     });
   });
 
-  it('limpia la sesión', () => {
+  it('limpia la sesi�n', () => {
     saveSession({
       accessId: '22.222.222-2',
       role: 'trabajador',
@@ -57,13 +58,13 @@ describe('session: ciclo de vida en sessionStorage', () => {
     expect(sessionStorage.getItem(SESSION_KEY)).toBeNull();
   });
 
-  it('degrada a null cuando no hay sesión guardada', () => {
+  it('degrada a null cuando no hay sesi�n guardada', () => {
     expect(loadSession()).toBeNull();
   });
 });
 
 describe('session: isSessionValid', () => {
-  it('acepta una sesión de trabajador con acceso y tercero personal activos', () => {
+  it('acepta una sesi�n de trabajador con acceso y tercero personal activos', () => {
     const session = {
       accessId: '22.222.222-2',
       role: 'trabajador',
@@ -78,7 +79,7 @@ describe('session: isSessionValid', () => {
     ).toBe(true);
   });
 
-  it('rechaza una sesión de trabajador con acceso inactivo', () => {
+  it('rechaza una sesi�n de trabajador con acceso inactivo', () => {
     const session = {
       accessId: '22.222.222-2',
       role: 'trabajador',
@@ -93,7 +94,7 @@ describe('session: isSessionValid', () => {
     ).toBe(false);
   });
 
-  it('rechaza una sesión cuyo rol cambió respecto al acceso', () => {
+  it('rechaza una sesi�n cuyo rol cambi� respecto al acceso', () => {
     const session = {
       accessId: '22.222.222-2',
       role: 'administrador',
@@ -108,7 +109,7 @@ describe('session: isSessionValid', () => {
     ).toBe(false);
   });
 
-  it('rechaza una sesión de trabajador con tercero personal roto', () => {
+  it('rechaza una sesi�n de trabajador con tercero personal roto', () => {
     const session = {
       accessId: '22.222.222-2',
       role: 'trabajador',
@@ -123,7 +124,7 @@ describe('session: isSessionValid', () => {
     ).toBe(false);
   });
 
-  it('acepta una sesión de administrador sin entidad', () => {
+  it('acepta una sesi�n de administrador sin entidad', () => {
     const session = {
       accessId: '88.888.888-8',
       role: 'administrador',
@@ -145,7 +146,7 @@ describe('session: isSessionValid', () => {
     ).toBe(true);
   });
 
-  it('acepta una sesión de finanzas sin entidad', () => {
+  it('acepta una sesi�n de finanzas sin entidad', () => {
     const session = {
       accessId: '55.555.555-5',
       role: 'finanzas',
@@ -167,7 +168,7 @@ describe('session: isSessionValid', () => {
     ).toBe(true);
   });
 
-  it('rechaza una sesión de finanzas con entidad personal', () => {
+  it('rechaza una sesi�n de finanzas con entidad personal', () => {
     const session = {
       accessId: '55.555.555-5',
       role: 'finanzas',
@@ -187,5 +188,67 @@ describe('session: isSessionValid', () => {
         entities: [entity()],
       })
     ).toBe(false);
+  });
+});
+
+describe('session: resolveSessionProfile (T013)', () => {
+  it('deriva el perfil del administrador', () => {
+    expect(
+      resolveSessionProfile({ role: 'administrador' }, { entities: [] })
+    ).toEqual({
+      role: 'administrador',
+      roleLabel: 'Administrador',
+      displayName: 'Administrador',
+      initials: 'A',
+      source: 'role',
+    });
+  });
+
+  it('deriva el perfil de finanzas', () => {
+    expect(
+      resolveSessionProfile({ role: 'finanzas' }, { entities: [] })
+    ).toEqual({
+      role: 'finanzas',
+      roleLabel: 'Finanzas',
+      displayName: 'Finanzas',
+      initials: 'F',
+      source: 'role',
+    });
+  });
+
+  it('deriva iniciales de la persona del trabajador con nombre y apellido', () => {
+    const profile = resolveSessionProfile(
+      { role: 'trabajador', entityId: 'ent_worker' },
+      { entities: [entity()] }
+    );
+    expect(profile).toEqual({
+      role: 'trabajador',
+      roleLabel: 'Trabajador',
+      displayName: 'Ana P�rez Soto',
+      initials: 'AP',
+      source: 'person',
+    });
+  });
+
+  it('usa la inicial del nombre �nico de un trabajador', () => {
+    const profile = resolveSessionProfile(
+      { role: 'trabajador', entityId: 'ent_worker' },
+      { entities: [{ entity_id: 'ent_worker', name: 'Ana' }] }
+    );
+    expect(profile.displayName).toBe('Ana');
+    expect(profile.initials).toBe('A');
+    expect(profile.source).toBe('person');
+  });
+
+  it('usa la inicial del rol cuando el trabajador no tiene nombre utilizable', () => {
+    expect(
+      resolveSessionProfile({ role: 'trabajador' }, { entities: [] })
+    ).toEqual({
+      role: 'trabajador',
+      roleLabel: 'Trabajador',
+      displayName: 'Trabajador',
+      initials: 'T',
+      source: 'role',
+    });
   });
 });

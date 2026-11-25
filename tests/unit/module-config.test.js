@@ -12,9 +12,8 @@ describe('configuración fundacional de facturación', () => {
   it('carga las etiquetas del módulo sin errores ni colisiones', () => {
     expect(validateConfig(userConfig)).toEqual([]);
     const config = getConfig();
-    expect(config.moduleName).toBe(
-      'Contabilidad y Finanzas: Facturación y Pagos'
-    );
+    expect(config.moduleName).toBe('Contabilidad y Finanzas');
+    expect(userConfig.moduleName).toBe('Contabilidad y Finanzas');
     expect(config.labels).toMatchObject({
       entity: 'Tercero',
       entities: 'Terceros',

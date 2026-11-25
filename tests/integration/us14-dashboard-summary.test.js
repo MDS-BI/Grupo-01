@@ -68,11 +68,11 @@ function text(id) {
 beforeEach(() => {
   loadAppMarkup();
   localStorage.clear();
-  setupAdminSession();
+  setupFinanzasSession();
 });
 
 describe('Panel - resumen financiero y accesos rapidos', () => {
-  it('calcula saldo, deuda y caja desde entidades, facturas y movimientos reales', () => {
+  it('calcula caja, por cobrar y por pagar desde entidades, facturas y movimientos reales, sin saldo ni deuda', () => {
     const cliente = addEntity(
       {
         name: 'Cliente Uno',
@@ -135,8 +135,8 @@ describe('Panel - resumen financiero y accesos rapidos', () => {
 
     initApp(config);
 
-    expect(text('summary-saldo')).toBe('$400');
-    expect(text('summary-deuda')).toBe('$600');
+    expect(document.getElementById('summary-saldo')).toBeNull();
+    expect(document.getElementById('summary-deuda')).toBeNull();
     expect(text('summary-caja')).toBe('$500');
     expect(text('kpi-por-cobrar')).toBe('$500');
     expect(text('kpi-por-pagar')).toBe('$100');
@@ -177,8 +177,6 @@ describe('Panel - resumen financiero y accesos rapidos', () => {
     initApp(config);
 
     expect(text('summary-caja')).toBe('$1.240.000');
-    expect(text('summary-saldo')).toBe('-$2.430.000');
-    expect(text('summary-deuda')).toBe('$2.430.000');
     expect(text('kpi-por-cobrar')).toBe('$0');
     expect(text('kpi-por-pagar')).toBe('$2.430.000');
   });

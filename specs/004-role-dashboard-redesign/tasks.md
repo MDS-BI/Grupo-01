@@ -14,41 +14,41 @@ description: "Generated tasks for feature 004-role-dashboard-redesign"
 
 ## Phase 1: Setup
 
-- [ ] T001 Ejecutar `npm run check` como línea base.
-- [ ] T002 [P] Añadir `@fontsource/ibm-plex-sans` a `package.json` e instalar dependencia (`npm install`).
+- [X] T001 Ejecutar `npm run check` como línea base.
+- [X] T002 [P] Añadir `@fontsource/ibm-plex-sans` a `package.json` e instalar dependencia (`npm install`).
 
 ## Phase 2: Foundational (styles/system identity)
 
-- [ ] T003 [P] Añadir tokens tipográficos/de color en `src/styles.css` (`--font-sans`, `font-variant-numeric`, IBM Plex Sans, acento `#0f62fe`).
+- [X] T003 [P] Añadir tokens tipográficos/de color en `src/styles.css` (`--font-sans`, `font-variant-numeric`, IBM Plex Sans, acento `#0f62fe`).
 
 ## Phase 3: User Story 1 - Admin Panel without financial data (P1)
 
 **Independent test**: Admin sees greeting/month, 2 payroll cards, 3 payroll metrics; no financial data/labels/sections.
 
-- [ ] T004 [US1] Add failing tests: admin Panel no financial data, shell brand/avatar, navigation (`tests/integration/us3-dashboard.test.js`, `tests/integration/us13-shell.test.js`, `tests/integration/navigation-menu.test.js`).
-- [ ] T005 [US1] Implement role-aware dashboard gating so admin panel shows payroll only; no ACCESS_MATRIX changes (`src/app.js`).
-- [ ] T006 [US1] Update `index.html` with `#dashboard-greeting`, `#dashboard-month`, `#admin-payroll-summary` and remove legacy finance visual containers (`index.html`).
-- [ ] T007 [US1] Implement `computeAdminPayrollSummary(entities, accessRecords, settlements, { today = todayISO() } = {})` in `src/components/dashboard.js`.
-- [ ] T008 [US1] Render payroll summary + 2 payroll cards with styles; ensure no finance text (`src/components/dashboard.js`, `src/styles.css`).
+- [X] T004 [US1] Add failing tests: admin Panel no financial data, shell brand/avatar, navigation (`tests/integration/us3-dashboard.test.js`, `tests/integration/us13-shell.test.js`, `tests/integration/navigation-menu.test.js`).
+- [X] T005 [US1] Implement role-aware dashboard gating so admin panel shows payroll only; no ACCESS_MATRIX changes (`src/app.js`).
+- [X] T006 [US1] Update `index.html` with `#dashboard-greeting`, `#dashboard-month`, `#admin-payroll-summary` and remove legacy finance visual containers (`index.html`).
+- [X] T007 [US1] Implement `computeAdminPayrollSummary(entities, accessRecords, settlements, { today = todayISO() } = {})` in `src/components/dashboard.js`.
+- [X] T008 [US1] Render payroll summary + 2 payroll cards with styles; ensure no finance text (`src/components/dashboard.js`, `src/styles.css`).
 
 ## Phase 4: User Story 2 - Finance indicators with state (P1)
 
 **Independent test**: Finance sees 4 cards, no “Deuda pendiente”, variation colored by semantics, tooltips with formulas.
 
-- [ ] T009 [US2] Add failing tests for four indicators, state colors, variation text, formulas tooltip, FR-047 absence of Deuda (`tests/integration/us3-dashboard.test.js`, `tests/integration/us14-dashboard-summary.test.js`).
-- [ ] T010 [US2] Implement `computeFinanceIndicators(documents, entities, movements, { now, previousValue })` using existing data-model formulas (`src/finance.js`).
-- [ ] T011 [US2] Render `#finance-indicators-section` with four exact indicators and labels (`index.html`, `src/components/dashboard.js`).
-- [ ] T012 [US2] Add failing tests for previousValue: “sin dato anterior”, “nuevo” when previousValue is 0, and favorable/unfavorable colors by indicator; then implement variation semantics/tooltips (`tests/unit/cashflow.test.js`, `tests/integration/us3-dashboard.test.js`, `src/components/dashboard.js`).
+- [X] T009 [US2] Add failing tests for four indicators, state colors, variation text, formulas tooltip, FR-047 absence of Deuda (`tests/integration/us3-dashboard.test.js`, `tests/integration/us14-dashboard-summary.test.js`).
+- [X] T010 [US2] Implement `computeFinanceIndicators(documents, entities, movements, { now, previousValue })` using existing data-model formulas (`src/finance.js`).
+- [X] T011 [US2] Render `#finance-indicators-section` with four exact indicators and labels (`index.html`, `src/components/dashboard.js`).
+- [X] T012 [US2] Add failing tests for previousValue: “sin dato anterior”, “nuevo” when previousValue is 0, and favorable/unfavorable colors by indicator; then implement variation semantics/tooltips (`tests/unit/cashflow.test.js`, `tests/integration/us3-dashboard.test.js`, `src/components/dashboard.js`).
 
 ## Phase 5: User Story 3 - Identity visual common (P1)
 
 **Independent test**: System name is “Contabilidad y Finanzas” in topbar/title; avatar shows profile initials, not system/module initials.
 
-- [ ] T013 [US3] Add failing tests: `moduleName` and `<title>` = “Contabilidad y Finanzas”; `resolveSessionProfile` initials for worker (“RF”) and role initials for admin/finance (“A”, “F”); topbar/document.title + avatar show profile initials (`tests/unit/module-config.test.js`, `tests/unit/session.test.js`, `tests/integration/us13-shell.test.js`).
-- [ ] T014 [US3] Set `moduleName` in `src/module-config.js` and `<title>` in `index.html`.
-- [ ] T015 [US3] Implement pure `resolveSessionProfile(session, { entities })` in `src/session.js` per contracts (person/role initial rules).
-- [ ] T016 [US3] Update `src/components/shell.js` + `src/app.js` so avatar/topbar use derived initials; import `@fontsource/ibm-plex-sans` CSS in `src/main.js` before `initApp`.
-- [ ] T017 [US3] Add greeting/month header in Panel (`index.html`, `src/components/dashboard.js`).
+- [X] T013 [US3] Add failing tests: `moduleName` and `<title>` = “Contabilidad y Finanzas”; `resolveSessionProfile` initials for worker (“RF”) and role initials for admin/finance (“A”, “F”); topbar/document.title + avatar show profile initials (`tests/unit/module-config.test.js`, `tests/unit/session.test.js`, `tests/integration/us13-shell.test.js`).
+- [X] T014 [US3] Set `moduleName` in `src/module-config.js` and `<title>` in `index.html`.
+- [X] T015 [US3] Implement pure `resolveSessionProfile(session, { entities })` in `src/session.js` per contracts (person/role initial rules).
+- [X] T016 [US3] Update `src/components/shell.js` + `src/app.js` so avatar/topbar use derived initials; import `@fontsource/ibm-plex-sans` CSS in `src/main.js` before `initApp`.
+- [X] T017 [US3] Add greeting/month header in Panel (`index.html`, `src/components/dashboard.js`).
 
 ## Phase 6: User Story 4 - Finance trend and alerts (P2)
 

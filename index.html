@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ERP Base</title>
+    <title>Contabilidad y Finanzas</title>
     <link rel="stylesheet" href="./src/styles.css" />
   </head>
   <body>
@@ -155,6 +155,123 @@
 
           <section id="view-dashboard" class="view dashboard-view" hidden>
             <h1 id="dashboard-title">Panel</h1>
+            <p id="dashboard-greeting" class="dashboard-greeting"></p>
+            <p id="dashboard-month" class="dashboard-month"></p>
+            <section
+              id="admin-payroll-summary"
+              class="admin-payroll-summary"
+              hidden
+            >
+              <h2 class="section-heading">Resumen de nómina</h2>
+            </section>
+
+            <section
+              id="finance-indicators-section"
+              class="finance-indicators"
+              aria-labelledby="finance-indicators-title"
+              hidden
+            >
+              <h2 id="finance-indicators-title" class="section-heading">
+                Indicadores financieros
+              </h2>
+              <div class="indicator-grid">
+                <button
+                  id="indicator-cash"
+                  class="indicator-card"
+                  type="button"
+                  data-indicator="cash"
+                >
+                  <span class="indicator-label">
+                    Caja neta
+                    <span
+                      class="indicator-info"
+                      role="img"
+                      aria-label="Fórmula"
+                      data-formula-for="cash"
+                      >ⓘ</span
+                    >
+                  </span>
+                  <span id="summary-caja" class="indicator-value"></span>
+                  <span
+                    id="indicator-cash-variation"
+                    class="indicator-variation"
+                  ></span>
+                </button>
+                <button
+                  id="indicator-receivable"
+                  class="indicator-card"
+                  type="button"
+                  data-indicator="receivable"
+                >
+                  <span class="indicator-label">
+                    Por cobrar
+                    <span
+                      class="indicator-info"
+                      role="img"
+                      aria-label="Fórmula"
+                      data-formula-for="receivable"
+                      >ⓘ</span
+                    >
+                  </span>
+                  <span id="kpi-por-cobrar" class="indicator-value"></span>
+                  <span
+                    id="indicator-receivable-variation"
+                    class="indicator-variation"
+                  ></span>
+                </button>
+                <button
+                  id="indicator-payable"
+                  class="indicator-card"
+                  type="button"
+                  data-indicator="payable"
+                >
+                  <span class="indicator-label">
+                    Por pagar
+                    <span
+                      class="indicator-info"
+                      role="img"
+                      aria-label="Fórmula"
+                      data-formula-for="payable"
+                      >ⓘ</span
+                    >
+                  </span>
+                  <span id="kpi-por-pagar" class="indicator-value"></span>
+                  <span
+                    id="indicator-payable-variation"
+                    class="indicator-variation"
+                  ></span>
+                </button>
+                <button
+                  id="indicator-overdue"
+                  class="indicator-card"
+                  type="button"
+                  data-indicator="overdue"
+                >
+                  <span class="indicator-label">
+                    Facturas vencidas
+                    <span
+                      class="indicator-info"
+                      role="img"
+                      aria-label="Fórmula"
+                      data-formula-for="overdue"
+                      >ⓘ</span
+                    >
+                  </span>
+                  <span id="kpi-vencidas" class="indicator-value"></span>
+                  <span
+                    id="indicator-overdue-variation"
+                    class="indicator-variation"
+                  ></span>
+                </button>
+              </div>
+              <p class="indicator-meta">
+                <span id="stat-entities">0</span>
+                <span id="stat-entities-label">Terceros</span>
+                ·
+                <span id="stat-documents">0</span>
+                <span id="stat-documents-label">Facturas</span>
+              </p>
+            </section>
 
             <h2 class="section-heading">Accesos rápidos</h2>
             <div
@@ -342,89 +459,6 @@
             <button id="qa-guide" class="guide-shortcut" type="button" hidden>
               ¿Primera vez? Ver la guía
             </button>
-
-            <h2 class="section-heading">Resumen financiero</h2>
-            <div class="stats summary-stats">
-              <article class="stat-card stat-card--summary">
-                <span id="summary-saldo" class="stat-value">0</span>
-                <span>Saldo neto (por cobrar - por pagar)</span>
-                <svg
-                  class="stat-icon"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                  focusable="false"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M12 3v18M5 7h14" />
-                  <path d="M5 7 2 13h6zM19 7l-3 6h6z" />
-                </svg>
-              </article>
-              <article class="stat-card stat-card--summary">
-                <span id="summary-deuda" class="stat-value">0</span>
-                <span>Deuda pendiente (por cobrar + por pagar)</span>
-                <svg
-                  class="stat-icon"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                  focusable="false"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M12 4 2.5 20h19z" />
-                  <path d="M12 10v5M12 18h.01" />
-                </svg>
-              </article>
-              <article class="stat-card stat-card--summary">
-                <span id="summary-caja" class="stat-value">0</span>
-                <span>Caja neta (cobros - pagos)</span>
-                <svg
-                  class="stat-icon"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                  focusable="false"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M3 7h15a3 3 0 0 1 3 3v8H6a3 3 0 0 1-3-3z" />
-                  <path d="M3 7V6a2 2 0 0 1 2-2h11" />
-                  <circle cx="17" cy="14" r="1" />
-                </svg>
-              </article>
-            </div>
-
-            <h2 class="section-heading">Indicadores</h2>
-            <div class="stats">
-              <article class="stat-card">
-                <span id="stat-entities" class="stat-value">0</span>
-                <span id="stat-entities-label">Entidades</span>
-              </article>
-              <article class="stat-card">
-                <span id="stat-documents" class="stat-value">0</span>
-                <span id="stat-documents-label">Documentos</span>
-              </article>
-              <article class="stat-card">
-                <span id="kpi-por-cobrar" class="stat-value">0</span>
-                <span id="kpi-por-cobrar-label">Total por cobrar</span>
-              </article>
-              <article class="stat-card">
-                <span id="kpi-por-pagar" class="stat-value">0</span>
-                <span id="kpi-por-pagar-label">Total por pagar</span>
-              </article>
-              <article class="stat-card">
-                <span id="kpi-vencidas" class="stat-value">0</span>
-                <span id="kpi-vencidas-label">Facturas vencidas</span>
-              </article>
-            </div>
           </section>
 
           <section id="view-entities" class="view" hidden>

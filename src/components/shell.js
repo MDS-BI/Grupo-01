@@ -1,5 +1,5 @@
 import { INVOICE_VIEWS } from '../module-config.js';
-import { monogram } from '../utils.js';
+import { resolveSessionProfile } from '../session.js';
 
 const INVOICE_MODULES = Object.values(INVOICE_VIEWS).map(
   ({ module }) => module
@@ -30,7 +30,7 @@ export const NAV_MODULES = Object.freeze([
 const MENU_TRANSITION_MS = 180;
 let activeEscapeHandler = null;
 
-function renderLogo(container, moduleName) {
+function renderLogo(container, initials) {
   if (!container) return;
   container.textContent = '';
   const namespace = 'http://www.w3.org/2000/svg';
@@ -54,7 +54,7 @@ function renderLogo(container, moduleName) {
   text.setAttribute('font-size', '16');
   text.setAttribute('font-weight', '700');
   text.setAttribute('fill', '#ffffff');
-  text.textContent = monogram(moduleName);
+  text.textContent = initials;
 
   svg.append(circle, text);
   container.append(svg);
@@ -96,6 +96,7 @@ function registerEscapeHandler(closeMenu) {
 export function createShell({
   config,
   session,
+  entities = [],
   onNavigate,
   onLogout,
   onOpenGuide,
@@ -104,7 +105,8 @@ export function createShell({
   const brandLogo = document.getElementById('brand-logo');
 
   if (brandName) brandName.textContent = config.moduleName;
-  renderLogo(brandLogo, config.moduleName);
+  const profile = resolveSessionProfile(session, { entities });
+  if (brandLogo) renderLogo(brandLogo, profile.initials);
 
   const modules = !session
     ? []
