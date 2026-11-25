@@ -8,6 +8,12 @@
 
 **Input**: User description: "Rediseño visual de los paneles por rol del módulo Contabilidad y Finanzas, según el feedback del profesor (hacerlo más atractivo e intuitivo y mejorar el panel de inicio). Depende de la spec 003-payroll-tabs-roles, ya implementada: respeta su matriz de permisos. HU1 a HU6: panel del administrador sin datos financieros; indicadores de finanzas con estado; tendencia y alertas; accesos rápidos compactos; vista del trabajador clara; identidad visual común."
 
+## Clarifications
+
+### Session 2026-11-25
+
+- Q: ¿Qué opciones debe mostrar el menú ☰ del Panel de finanzas para que las acciones operativas sigan disponibles? → A: Agregar antes de «Guía de uso» una sección de navegación con Terceros, Facturas de venta, Facturas de compra, Movimientos financieros, Flujo de caja, Seguimiento, Liquidaciones de sueldo y Buscar; el administrador y el trabajador no cambian; los accesos rápidos del Panel siguen siendo como máximo cuatro; no se cambian la matriz de permisos, el modelo de datos, las claves erp.* ni la identidad visual de la constitución.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Panel del administrador sin datos financieros (HU1) (Priority: P1)
@@ -96,13 +102,13 @@ Como usuario del módulo, quiero accesos rápidos compactos y una guía descarta
 
 **Why this priority**: es P2 porque reduce fricción y ruido visual, pero no bloquea la corrección de permisos ni de indicadores.
 
-**Independent Test**: con sesiones de los tres roles, se abre el Panel, se descarta la guía y se comprueba que el banner desaparece; con sesión de finanzas se cuentan los accesos rápidos y se verifica que caben en una fila sin cortes de texto.
+**Independent Test**: con sesiones de los tres roles, se abre el Panel, se descarta la guía y se comprueba que el banner desaparece; con sesión de finanzas se cuentan los accesos rápidos y se verifica que caben en una fila sin cortes de texto, y se abre el menú ☰ para comprobar que las ocho opciones de navegación aparecen antes de «Guía de uso» y que los menús de administrador y trabajador no cambian.
 
 **Acceptance Scenarios**:
 
 1. **Dado** un usuario de finanzas, **cuando** abre el Panel, **entonces** ve como máximo cuatro accesos rápidos: «Nueva factura de venta», «Nueva factura de compra», «Flujo de caja» y «Buscar».
 2. **Dado** los accesos rápidos de finanzas, **cuando** se revisa su presentación, **entonces** son botones con borde, están en una sola fila al final del Panel y ninguna etiqueta se corta en dos líneas.
-3. **Dado** el resto de acciones operativas de finanzas, **cuando** se abre el menú, **entonces** siguen disponibles allí y no se agregan como accesos rápidos adicionales.
+3. **Dado** el resto de acciones operativas de finanzas, **cuando** se abre el menú ☰ del Panel, **entonces** siguen disponibles en una sección de navegación antes de «Guía de uso» con «Terceros», «Facturas de venta», «Facturas de compra», «Movimientos financieros», «Flujo de caja», «Seguimiento», «Liquidaciones de sueldo» y «Buscar»; «Registrar pago» se alcanza desde «Liquidaciones de sueldo», no se agregan accesos rápidos adicionales y los menús del administrador y del trabajador no cambian.
 4. **Dado** cualquier rol con sesión iniciada, **cuando** abre el Panel, **entonces** ve arriba del Panel un banner descartable «¿Primera vez?» con acceso a la guía.
 5. **Dado** el banner «¿Primera vez?», **cuando** el usuario lo descarta, **entonces** deja de mostrarse en esa sesión sin afectar al resto de la navegación ni a otros roles.
 
@@ -158,6 +164,8 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 - ¿Qué pasa si el usuario tiene un solo nombre? El círculo de perfil muestra la inicial de ese nombre.
 - ¿Qué pasa si el usuario no tiene nombre cargado? El círculo de perfil muestra la inicial de su rol.
 - ¿Qué pasa si una etiqueta de acceso rápido es extensa? Se conserva en una sola línea sin corte; no se reduce a dos líneas.
+- ¿Qué pasa si finanzas necesita «Registrar pago»? Se accede desde «Liquidaciones de sueldo» en la sección de navegación del menú ☰, sin cambiar la matriz de permisos ni sumar un acceso rápido.
+- ¿Qué pasa si un rol distinto de finanzas abre el menú ☰? El administrador y el trabajador conservan las opciones que tenían; solo el menú de finanzas incorpora la sección de navegación.
 - ¿Qué pasa si la guía ya fue descartada y se recarga la vista dentro de la misma sesión? Sigue oculta durante esa sesión.
 - ¿Qué pasa si el desglose de la liquidación del trabajador está vacío? Se omite la tabla y se mantiene solo el monto líquido destacado.
 - ¿Qué pasa si un monto es negativo? Se muestra con signo `$`, separador de miles y el color rojo definido para valor negativo o crítico.
@@ -170,8 +178,8 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 
 - **FR-001**: La funcionalidad DEBE respetar la matriz de permisos vigente de `003-payroll-tabs-roles` para los roles administrador, finanzas y trabajador.
 - **FR-002**: Ningún panel DEBE mostrar datos ni accesos de un módulo al que el rol no tenga acceso; en particular, el trabajador NO DEBE ver indicadores, gráfico ni alertas, y el administrador NO DEBE ver datos financieros.
-- **FR-003**: Esta funcionalidad NO DEBE modificar las especificaciones 001, 002 ni 003, ni el modelo de datos existente.
-- **FR-004**: Los cambios DEBEN limitarse a contenido del Panel, presentación visual, identidad del sistema y cobertura automatizada derivada de esta especificación.
+- **FR-003**: Esta funcionalidad NO DEBE modificar las especificaciones 001, 002 ni 003, la matriz de permisos vigente, el modelo de datos existente ni las claves erp.*.
+- **FR-004**: Los cambios DEBEN limitarse a contenido del Panel, navegación del menú ☰, presentación visual que conserve la identidad ya fijada y cobertura automatizada derivada de esta especificación.
 - **FR-005**: Los indicadores principales del Panel de finanzas DEBEN ser visibles sin hacer scroll en una ventana de 1366x768.
 
 **Panel del administrador**
@@ -207,7 +215,7 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 
 - **FR-026**: El Panel de finanzas DEBE mostrar como máximo cuatro accesos rápidos: «Nueva factura de venta», «Nueva factura de compra», «Flujo de caja» y «Buscar».
 - **FR-027**: Los accesos rápidos de finanzas DEBEN presentarse como botones con borde, en una sola fila al final del Panel, sin que ninguna etiqueta se corte en dos líneas.
-- **FR-028**: El resto de acciones operativas DEBEN permanecer en el menú correspondiente y NO DEBEN agregarse como accesos rápidos adicionales.
+- **FR-028**: El menú ☰ del Panel de finanzas DEBE incluir, antes de «Guía de uso», una sección de navegación con «Terceros», «Facturas de venta», «Facturas de compra», «Movimientos financieros», «Flujo de caja», «Seguimiento», «Liquidaciones de sueldo» y «Buscar»; «Registrar pago» DEBE alcanzarse desde «Liquidaciones de sueldo». El resto de acciones operativas NO DEBEN agregarse como accesos rápidos adicionales y los menús del administrador y del trabajador NO DEBEN cambiar.
 - **FR-029**: Para todos los roles con sesión iniciada, el Panel DEBE mostrar arriba un banner descartable «¿Primera vez?» que dé acceso a la guía de uso.
 - **FR-030**: Al descartar el banner «¿Primera vez?», este DEBE dejar de mostrarse durante la sesión actual sin afectar la navegación ni a otros roles.
 
@@ -235,7 +243,7 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 **Verificación automatizada**
 
 - **FR-046**: La cobertura automatizada afectada DEBE actualizarse para reflejar el nuevo contenido de los Paneles por rol, la navegación y la configuración del módulo.
-- **FR-047**: DEBEN agregarse pruebas automatizadas para: panel del administrador sin datos financieros, colores por estado, eliminación de «Deuda pendiente», nombre del sistema e iniciales del usuario.
+- **FR-047**: DEBEN agregarse pruebas automatizadas para: panel del administrador sin datos financieros, colores por estado, eliminación de «Deuda pendiente», nombre del sistema e iniciales del usuario, y presencia y orden de las ocho opciones del menú ☰ de finanzas antes de «Guía de uso».
 
 **Gestión de liquidaciones (HU7)**
 
@@ -252,20 +260,20 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 - **Indicador financiero**: valor calculado en lectura para caja neta, por cobrar, por pagar y facturas vencidas, con variación mensual, tooltip de fórmula y estado de color.
 - **Liquidación de sueldo**: entidad ya existente con período, monto líquido y desglose de sueldo base, descuentos y bonos; esta funcionalidad solo cambia su presentación.
 - **Movimiento financiero y factura**: entidades ya existentes que alimentan la tabla de últimos movimientos, el gráfico de tendencia y las listas filtradas de las tarjetas.
-- **Acceso rápido y guía inicial**: elementos de navegación del Panel, gobernados por el rol y por el estado de descarte de la sesión; no modifican el modelo de datos.
+- **Acceso rápido, guía inicial y menú ☰**: elementos de navegación del Panel, gobernados por el rol y por el estado de descarte de la sesión; la sección de navegación del menú de finanzas es derivada de la misma vista; no modifican el modelo de datos.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: El 100 % de las sesiones de prueba por rol muestra únicamente los datos y accesos permitidos por la matriz de la spec 003, con cero apariciones de módulos restringidos en capturas y recorridos de verificación.
+- **SC-001**: El 100 % de las sesiones de prueba por rol muestra únicamente los datos y accesos permitidos por la matriz de la spec 003, con cero apariciones de módulos restringidos en capturas y recorridos de verificación, incluida la navegación del menú ☰.
 - **SC-002**: El Panel del administrador contiene exactamente dos tarjetas destacadas de liquidación, tres métricas de nómina y cero indicadores financieros.
 - **SC-003**: En una ventana de 1366x768, las cuatro tarjetas de indicadores de finanzas son visibles sin scroll en el 100 % de las verificaciones.
 - **SC-004**: El 100 % de los montos visibles usa signo `$`, separador de miles y cifras de ancho fijo; el 100 % de las columnas de montos en tablas está alineada a la derecha.
 - **SC-005**: El 100 % de los períodos visibles aparece en texto legible, con cero ocurrencias del formato `AAAA-MM` en los Paneles incluidos en esta funcionalidad.
 - **SC-006**: No aparece ninguna etiqueta «Deuda pendiente» en el Panel de finanzas ni en las pruebas asociadas, y las cuatro fórmulas de los indicadores están disponibles en tooltip con ícono ⓘ.
 - **SC-007**: En la vista del trabajador, el monto líquido es el elemento de mayor tamaño tipográfico y el período aparece en texto legible junto a él, verificado en el 100 % de los trabajadores de demostración.
-- **SC-008**: Los cuatro accesos rápidos de finanzas caben en una sola fila sin cortes de texto en una ventana de 1366x768, con cero etiquetas partidas en dos líneas.
+- **SC-008**: Los cuatro accesos rápidos de finanzas caben en una sola fila sin cortes de texto en una ventana de 1366x768, con cero etiquetas partidas en dos líneas, y el menú ☰ de finanzas muestra exactamente ocho opciones de navegación antes de «Guía de uso» sin modificar los menús de los otros roles.
 - **SC-009**: El nombre «Contabilidad y Finanzas» aparece en la barra superior y en el título de la pestaña en el 100 % de las vistas, y las iniciales del círculo de perfil son correctas en el 100 % de los usuarios de demostración probados.
 - **SC-010**: Todas las pruebas automatizadas del módulo pasan, incluidas las coberturas nuevas y actualizadas derivadas de esta especificación.
 
