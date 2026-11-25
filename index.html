@@ -273,6 +273,61 @@
               </p>
             </section>
 
+            <div id="finance-insights" class="finance-insights" hidden>
+              <section
+                id="dashboard-trend-section"
+                class="dashboard-card trend-card"
+                aria-labelledby="trend-title"
+              >
+                <h2 id="trend-title" class="section-heading">
+                  Ingresos vs gastos · últimos 6 meses
+                </h2>
+                <div id="trend-chart" class="trend-chart"></div>
+              </section>
+              <section
+                id="dashboard-alerts-section"
+                class="dashboard-card alerts-card"
+                aria-labelledby="alerts-title"
+              >
+                <h2 id="alerts-title" class="section-heading">Alertas</h2>
+                <ul id="dashboard-alerts" class="alert-list"></ul>
+              </section>
+            </div>
+
+            <section
+              id="dashboard-movements-section"
+              class="dashboard-card movements-card"
+              aria-labelledby="recent-movements-title"
+              hidden
+            >
+              <div class="card-head">
+                <h2 id="recent-movements-title" class="section-heading">
+                  Últimos movimientos
+                </h2>
+                <button
+                  id="dashboard-movements-all"
+                  class="link-button"
+                  type="button"
+                >
+                  Ver todos
+                </button>
+              </div>
+              <table class="recent-movements">
+                <thead>
+                  <tr>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Tipo</th>
+                    <th scope="col">Tercero</th>
+                    <th scope="col" class="amount">Monto</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboard-movements-body"></tbody>
+              </table>
+              <p id="dashboard-movements-empty" class="empty-state" hidden>
+                Aún no hay movimientos financieros.
+              </p>
+            </section>
+
             <h2 class="section-heading">Accesos rápidos</h2>
             <div
               class="quick-actions"

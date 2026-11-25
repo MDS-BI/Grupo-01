@@ -408,4 +408,128 @@ describe('US3 - panel de inicio', () => {
       expect(document.getElementById(viewId).hidden).toBe(false);
     }
   });
+  it('finanzas ve el gráfico SVG de 6 meses con leyenda y las alertas al lado (HU4)', () => {
+    setupFinanceSession();
+    loadDemoData(getConfig());
+    initApp(userConfig);
+
+    const trend = document.getElementById('dashboard-trend-section');
+    expect(trend.closest('[hidden]')).toBeNull();
+    const svg = trend.querySelector('svg[role="img"]');
+    expect(svg).not.toBeNull();
+    expect(svg.querySelector('title').textContent).toBe(
+      'Tendencia de ingresos y gastos de los últimos seis meses'
+    );
+    expect(svg.querySelectorAll('.trend-label')).toHaveLength(6);
+    expect(trend.textContent).toContain('Ingresos');
+    expect(trend.textContent).toContain('Gastos');
+
+    const alerts = document.getElementById('dashboard-alerts-section');
+    expect(alerts.closest('[hidden]')).toBeNull();
+    expect(alerts.parentElement).toBe(trend.parentElement);
+  });
+
+  it('las alertas de caja negativa y facturas vencidas enlazan a su detalle (HU4)', () => {
+    setupFinanceSession();
+    loadDemoData(getConfig());
+    initApp(userConfig);
+
+    const cash = document.querySelector('[data-alert="negative-cash"] button');
+    const overdue = document.querySelector(
+      '[data-alert="overdue-invoices"] button'
+    );
+    expect(cash.textContent).toContain('Caja en negativo');
+    expect(overdue.textContent).toContain('vencida');
+
+    cash.click();
+    expect(document.getElementById('view-cashflow').hidden).toBe(false);
+    document.getElementById('nav-dashboard').click();
+    document.querySelector('[data-alert="overdue-invoices"] button').click();
+    expect(document.getElementById('view-tracking').hidden).toBe(false);
+  });
+
+  it('sin caja negativa ni vencidas no se generan alertas (HU4)', () => {
+    setupFinanceSession();
+    initApp(userConfig);
+
+    expect(document.querySelector('[data-alert]')).toBeNull();
+    expect(document.getElementById('dashboard-alerts').textContent).toContain(
+      'Sin alertas'
+    );
+    expect(document.getElementById('trend-chart').textContent).toContain(
+      'Sin movimientos en los últimos seis meses'
+    );
+  });
+
+  it('muestra solo los 5 movimientos más recientes y «Ver todos» abre el listado (HU4)', () => {
+    setupFinanceSession();
+    const config = getConfig();
+    const cliente = addEntity(
+      {
+        name: 'Cliente Mov',
+        code: 'CL-M',
+        customFields: { tipoTercero: 'cliente' },
+      },
+      config
+    );
+    for (let folio = 1; folio <= 4; folio += 1) {
+      const factura = addDocument(
+        {
+          entity_id: cliente.entity_id,
+          series: 'M',
+          folio,
+          startDate: '2026-01-01',
+          endDate: '2026-12-31',
+          totalAmount: 1000 * folio,
+          customFields: { tipoFactura: 'venta' },
+        },
+        config
+      );
+      updateDocument(
+        factura.document_id,
+        { status: 'Emitida', customFields: { tipoFactura: 'venta' } },
+        config
+      );
+      updateDocument(
+        factura.document_id,
+        {
+          status: 'Pagada',
+          customFields: {
+            tipoFactura: 'venta',
+            montoPagado: 1000 * folio,
+            fechaPago: `2026-0${folio}-15`,
+          },
+        },
+        config
+      );
+    }
+    initApp(config);
+
+    const rows = document.querySelectorAll('#dashboard-movements-body tr');
+    expect(rows).toHaveLength(5);
+    expect(rows[0].textContent).toContain('$');
+    expect(rows[0].querySelector('td.amount')).not.toBeNull();
+
+    document.getElementById('dashboard-movements-all').click();
+    expect(document.getElementById('view-movements').hidden).toBe(false);
+  });
+
+  it('administrador y trabajador no ven gráfico, alertas ni movimientos (HU4)', () => {
+    loadDemoData(getConfig());
+    setupAdminSession();
+    initApp(userConfig);
+
+    for (const id of [
+      'dashboard-trend-section',
+      'dashboard-alerts-section',
+      'dashboard-movements-section',
+    ]) {
+      expect(document.getElementById(id).closest('[hidden]')).not.toBeNull();
+    }
+    expect(document.getElementById('trend-chart').textContent).toBe('');
+    expect(document.getElementById('dashboard-alerts').textContent).toBe('');
+    expect(
+      document.getElementById('dashboard-movements-body').textContent
+    ).toBe('');
+  });
 });

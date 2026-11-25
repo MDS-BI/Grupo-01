@@ -54,11 +54,11 @@ description: "Generated tasks for feature 004-role-dashboard-redesign"
 
 **Independent test**: Finance sees SVG trend of last 6 months and alerts beside it; worker/admin do not see trend.
 
-- [ ] T018 [US4] Add failing tests for trend SVG (`role=”img”`, six months, ingested labels, alerts) in `tests/integration/us3-dashboard.test.js`.
-- [ ] T019 [US4] Implement `computeMonthlyIncomeExpense(documents, entities, movements, { months = 6, now = new Date() } = {})` in `src/cashflow.js`.
-- [ ] T020 [US4] Add unit test in `tests/unit/cashflow.test.js` for six consecutive months, zero-activity months in 0, only paid documents.
-- [ ] T021 [US4] Render `#dashboard-trend-section` SVG and `#dashboard-alerts-section` with negative cash and overdue alerts (`src/components/dashboard.js`).
-- [ ] T022 [US4] Render `#dashboard-movements-section` with latest 5 movements + “Ver todos” (`src/components/dashboard.js`).
+- [X] T018 [US4] Add failing tests for trend SVG (`role=”img”`, six months, ingested labels, alerts) in `tests/integration/us3-dashboard.test.js`.
+- [X] T019 [US4] Implement `computeMonthlyIncomeExpense(documents, entities, movements, { months = 6, now = new Date() } = {})` in `src/cashflow.js`.
+- [X] T020 [US4] Add unit test in `tests/unit/cashflow.test.js` for six consecutive months, zero-activity months in 0, only paid documents.
+- [X] T021 [US4] Render `#dashboard-trend-section` SVG and `#dashboard-alerts-section` with negative cash and overdue alerts (`src/components/dashboard.js`).
+- [X] T022 [US4] Render `#dashboard-movements-section` with latest 5 movements + “Ver todos” (`src/components/dashboard.js`).
 
 ## Phase 7: User Story 5 - Compact quick actions + guide banner (P2)
 

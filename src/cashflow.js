@@ -88,3 +88,58 @@ export function computeCashflow(documents, entities, movements) {
     neto: ingresos - egresos,
   };
 }
+
+const SHORT_MONTHS = [
+  'ene',
+  'feb',
+  'mar',
+  'abr',
+  'may',
+  'jun',
+  'jul',
+  'ago',
+  'sep',
+  'oct',
+  'nov',
+  'dic',
+];
+
+function monthKeyOf(date) {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${date.getFullYear()}-${month}`;
+}
+
+// Serie mensual de ingresos y gastos para el gráfico del Panel de finanzas
+// (spec 004, contracts/trend-chart.md). Usa las mismas filas y la misma fecha
+// efectiva de pago que computeCashflow; los meses sin pagos quedan en 0.
+export function computeMonthlyIncomeExpense(
+  documents,
+  entities,
+  movements,
+  { months = 6, now = new Date() } = {}
+) {
+  const points = [];
+  const byKey = new Map();
+  for (let offset = months - 1; offset >= 0; offset -= 1) {
+    const date = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+    const point = {
+      monthKey: monthKeyOf(date),
+      label: SHORT_MONTHS[date.getMonth()],
+      income: 0,
+      expense: 0,
+      net: 0,
+    };
+    points.push(point);
+    byKey.set(point.monthKey, point);
+  }
+
+  for (const row of computeCashflow(documents, entities, movements).rows) {
+    const point = byKey.get(String(row.fecha).slice(0, 7));
+    if (!point) continue;
+    if (row.signo > 0) point.income += row.monto;
+    else point.expense += row.monto;
+  }
+  for (const point of points) point.net = point.income - point.expense;
+
+  return points;
+}
