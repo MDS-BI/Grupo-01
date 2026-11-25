@@ -920,6 +920,44 @@
                 <button type="submit">Guardar liquidación</button>
               </div>
             </form>
+            <form
+              id="payroll-payment-form"
+              class="payroll-edit-card"
+              novalidate
+              hidden
+            >
+              <div class="payroll-edit-head">
+                <h2 id="payroll-payment-form-title">
+                  Registrar pago de liquidación
+                </h2>
+                <p
+                  id="payroll-payment-subtitle"
+                  class="payroll-edit-subtitle"
+                ></p>
+              </div>
+              <div class="form-field">
+                <label for="payroll-payment-fechaPago">Fecha de pago</label>
+                <input
+                  id="payroll-payment-fechaPago"
+                  data-field="fechaPago"
+                  type="date"
+                  required
+                />
+              </div>
+              <p
+                class="invoice-feedback"
+                role="status"
+                data-invoice-feedback
+              ></p>
+              <div class="payroll-edit-actions">
+                <button type="button" id="payroll-payment-cancel">
+                  Cancelar
+                </button>
+                <button type="submit" id="payroll-payment-submit">
+                  Registrar pago
+                </button>
+              </div>
+            </form>
           </section>
 
           <section id="view-access" class="view" hidden>

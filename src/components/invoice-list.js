@@ -12,7 +12,14 @@ export function renderInvoiceList(
   container,
   documents,
   entities,
-  { tipoFactura, columns, filterEntityId, onEdit, onDelete }
+  {
+    tipoFactura,
+    columns,
+    filterEntityId,
+    onEdit,
+    onDelete,
+    readOnlyIds = new Set(),
+  }
 ) {
   container.replaceChildren();
   container.dataset.tipoFactura = tipoFactura;
@@ -69,21 +76,28 @@ export function renderInvoiceList(
       }
       const actions = row.insertCell();
       actions.className = 'invoice-table-actions';
-      for (const [label, action, handler] of [
-        ['Editar', 'edit', onEdit],
-        ['Eliminar', 'delete', onDelete],
-      ]) {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.textContent = label;
-        button.dataset.action = action;
-        button.dataset.id = record.document_id;
-        button.setAttribute(
-          'aria-label',
-          `${label} factura ${displayedValue(record, 'folio')}`
-        );
-        button.onclick = () => handler(record.document_id);
-        actions.append(button);
+      if (readOnlyIds.has(record.document_id)) {
+        const note = document.createElement('span');
+        note.className = 'invoice-readonly-note error';
+        note.textContent = 'Solo lectura';
+        actions.append(note);
+      } else {
+        for (const [label, action, handler] of [
+          ['Editar', 'edit', onEdit],
+          ['Eliminar', 'delete', onDelete],
+        ]) {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = label;
+          button.dataset.action = action;
+          button.dataset.id = record.document_id;
+          button.setAttribute(
+            'aria-label',
+            `${label} factura ${displayedValue(record, 'folio')}`
+          );
+          button.onclick = () => handler(record.document_id);
+          actions.append(button);
+        }
       }
     }
     wrapper.append(table);

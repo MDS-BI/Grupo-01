@@ -289,6 +289,24 @@ describe('US4/US7 - liquidaciones del administrador y de finanzas', () => {
         byId('view-invoice-purchase')
           .querySelector('[data-load-invoice]')
           .click();
+        if (role === 'finanzas') {
+          const row = byId('invoice-purchase-list').querySelector(
+            `tr[data-id="${record.documentId}"]`
+          );
+          expect(row.querySelector('[data-action="edit"]')).toBeNull();
+          expect(row.textContent.toLowerCase()).toContain('solo lectura');
+          expect(
+            byId('view-invoice-purchase').querySelector(
+              '[data-invoice-feedback]'
+            ).textContent
+          ).toContain('solo lectura para finanzas');
+          expect(
+            loadPayrollSettlements().find(
+              (item) => item.settlementId === record.settlementId
+            ).monto
+          ).toBe(700000);
+          return;
+        }
         const amountInput = byId('invoice-purchase-form').querySelector(
           '[name="totalAmount"]'
         );

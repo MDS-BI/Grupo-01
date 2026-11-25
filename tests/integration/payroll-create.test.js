@@ -1,11 +1,13 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { initApp } from '../../src/app.js';
 import { initialPassword } from '../../src/auth.js';
 import {
+  createAccessRecord,
   loadAccessRecords,
   loadDevNotifications,
 } from '../../src/access-storage.js';
 import {
+  addEntity,
   loadEntities,
   loadPayrollSettlements,
   loadPurchaseInvoices,
@@ -87,8 +89,13 @@ describe('payroll-create: alta integral de liquidaciones', () => {
     localStorage.clear();
     sessionStorage.clear();
     loadAppMarkup();
+    window.confirm = () => true;
     setupAdminSession();
     initApp(userConfig);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('muestra el formulario de compra con RUT y nombre completo al abrir la pestaña', () => {
@@ -187,5 +194,75 @@ describe('payroll-create: alta integral de liquidaciones', () => {
       role: 'trabajador',
       entityId: expect.any(String),
     });
+  });
+
+  it('confirma el alta del trabajador con RUT y contraseña inicial antes de guardar', () => {
+    byId('nav-payroll-create').click();
+    fillInvoiceForm();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    submit('payroll-create-form');
+
+    expect(confirmSpy).toHaveBeenCalledTimes(1);
+    const message = confirmSpy.mock.calls[0][0];
+    expect(message).toContain('Se creará');
+    expect(message).toContain(RUT);
+    expect(message).toContain(initialPassword(RUT));
+    expectCreatedRecords();
+  });
+
+  it('no persiste registros al cancelar la confirmación de alta con RUT nuevo', () => {
+    byId('nav-payroll-create').click();
+    fillInvoiceForm();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+    submit('payroll-create-form');
+
+    expect(confirmSpy).toHaveBeenCalledTimes(1);
+    expect(loadPayrollSettlements()).toEqual([]);
+    expect(
+      loadEntities().some((item) => item.customFields?.rut === NORMALIZED_RUT)
+    ).toBe(false);
+    expect(
+      loadAccessRecords().some((item) => item.accessId === NORMALIZED_RUT)
+    ).toBe(false);
+    expect(
+      loadPurchaseInvoices().some(
+        (item) => item.customFields?.rut === NORMALIZED_RUT
+      )
+    ).toBe(false);
+  });
+
+  it('no pide confirmación cuando el RUT ya existe como tercero personal', () => {
+    const worker = addEntity(
+      {
+        name: NOMBRE,
+        code: 'PE-001',
+        taxId: NORMALIZED_RUT,
+        customFields: { tipoTercero: 'personal', rut: NORMALIZED_RUT },
+      },
+      userConfig
+    );
+    createAccessRecord(
+      {
+        accessId: NORMALIZED_RUT,
+        role: 'trabajador',
+        entityId: worker.entity_id,
+        password: initialPassword(RUT),
+      },
+      { entities: [worker], records: loadAccessRecords() }
+    );
+    byId('nav-payroll-create').click();
+    fillInvoiceForm();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    submit('payroll-create-form');
+
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(loadPayrollSettlements()).toHaveLength(1);
+    expect(loadEntities()).toHaveLength(1);
+    expect(
+      loadAccessRecords().filter((item) => item.accessId === NORMALIZED_RUT)
+    ).toHaveLength(1);
   });
 });

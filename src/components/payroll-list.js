@@ -33,8 +33,10 @@ export function renderPayrollList(container, options = {}) {
     records = [],
     canEdit = true,
     canAssociate = true,
+    canRegisterPayment = false,
     onEdit = () => {},
     onAssociate = () => {},
+    onRegisterPayment = () => {},
   } = options;
   if (!container) return;
   container.textContent = '';
@@ -106,30 +108,45 @@ export function renderPayrollList(container, options = {}) {
 
     const actions = document.createElement('td');
     actions.className = 'invoice-table-actions';
-    if (canEdit) {
-      const editButton = document.createElement('button');
-      editButton.type = 'button';
-      editButton.dataset.action = 'edit';
-      editButton.className = 'table-action';
-      editButton.textContent = 'Editar';
-      editButton.addEventListener('click', () => onEdit(settlementId));
-      actions.append(editButton);
-    }
+    if (canRegisterPayment) {
+      if (status === 'Emitida') {
+        const paymentButton = document.createElement('button');
+        paymentButton.type = 'button';
+        paymentButton.dataset.action = 'register-payment';
+        paymentButton.dataset.id = settlementId;
+        paymentButton.className = 'table-action';
+        paymentButton.textContent = 'Registrar pago';
+        paymentButton.addEventListener('click', () =>
+          onRegisterPayment(settlementId)
+        );
+        actions.append(paymentButton);
+      }
+    } else {
+      if (canEdit) {
+        const editButton = document.createElement('button');
+        editButton.type = 'button';
+        editButton.dataset.action = 'edit';
+        editButton.className = 'table-action';
+        editButton.textContent = 'Editar';
+        editButton.addEventListener('click', () => onEdit(settlementId));
+        actions.append(editButton);
+      }
 
-    if (canAssociate && !linkedIds.has(entityId)) {
-      const associateButton = document.createElement('button');
-      associateButton.type = 'button';
-      associateButton.dataset.action = 'associate';
-      associateButton.textContent = 'Asociar acceso';
-      associateButton.addEventListener('click', () =>
-        onAssociate(settlementId)
-      );
-      actions.append(associateButton);
+      if (canAssociate && !linkedIds.has(entityId)) {
+        const associateButton = document.createElement('button');
+        associateButton.type = 'button';
+        associateButton.dataset.action = 'associate';
+        associateButton.textContent = 'Asociar acceso';
+        associateButton.addEventListener('click', () =>
+          onAssociate(settlementId)
+        );
+        actions.append(associateButton);
 
-      const warning = document.createElement('span');
-      warning.className = 'error';
-      warning.textContent = ` El RUT ${entity?.taxId || ''} no tiene un acceso de trabajador activo.`;
-      actions.append(warning);
+        const warning = document.createElement('span');
+        warning.className = 'error';
+        warning.textContent = ` El RUT ${entity?.taxId || ''} no tiene un acceso de trabajador activo.`;
+        actions.append(warning);
+      }
     }
 
     row.append(actions);

@@ -66,6 +66,7 @@ function makeDeps(overrides = {}) {
 describe('creation-flow: alta atómica de liquidaciones', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    window.confirm = () => true;
   });
 
   it('crea tercero personal y acceso para un RUT nuevo', () => {

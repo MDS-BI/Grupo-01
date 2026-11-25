@@ -159,6 +159,7 @@ const state = {
   shell: null,
   invoiceForms: {},
   payrollCreateForm: null,
+  payrollPaymentId: null,
   session: null,
   migration: null,
   accessAdmin: null,
@@ -259,6 +260,14 @@ function renderInvoices(tipoFactura, entities, documents) {
       filterEntityId: form.getFilter(),
       onEdit: editDocument,
       onDelete: requestDeleteDocument,
+      readOnlyIds:
+        state.session?.role === 'finanzas'
+          ? new Set(
+              loadPayrollSettlements()
+                .map((item) => item?.documentId)
+                .filter(Boolean)
+            )
+          : new Set(),
     }
   );
 }
@@ -485,8 +494,10 @@ function refreshPayrollAdmin() {
     records: loadAccessRecords(),
     canEdit: state.session?.role === 'administrador',
     canAssociate: state.session?.role === 'administrador',
+    canRegisterPayment: state.session?.role === 'finanzas',
     onEdit: editPayrollSettlement,
     onAssociate: associatePayrollAccess,
+    onRegisterPayment: openPayrollPaymentForm,
   });
 }
 
@@ -532,6 +543,142 @@ function associatePayrollAccess(id) {
         errors.textContent = error.errors.map((item) => item.message).join(' ');
     }
   }
+}
+
+function paymentFormFeedback(message = '') {
+  const feedback = byId('payroll-payment-form')?.querySelector(
+    '[data-invoice-feedback]'
+  );
+  if (feedback) feedback.textContent = message;
+}
+
+function openPayrollPaymentForm(id) {
+  if (state.session?.role !== 'finanzas') return;
+  const settlement = findPayrollSettlement(id);
+  if (!settlement || settlement.estado !== 'Emitida') return;
+  const form = byId('payroll-payment-form');
+  if (!form) return;
+  state.payrollPaymentId = id;
+  const fechaPago = byId('payroll-payment-fechaPago');
+  if (fechaPago) fechaPago.value = '';
+  paymentFormFeedback('');
+  form.hidden = false;
+  fechaPago?.focus();
+}
+
+function closePayrollPaymentForm() {
+  state.payrollPaymentId = null;
+  const form = byId('payroll-payment-form');
+  if (form) form.hidden = true;
+}
+
+function handlePayrollPaymentSubmit(event) {
+  event.preventDefault();
+  const fechaPago = byId('payroll-payment-fechaPago')?.value;
+  try {
+    registerPayrollPayment(state.payrollPaymentId, { fechaPago });
+    closePayrollPaymentForm();
+    paymentFormFeedback('Pago registrado.');
+    refreshPayrollAdmin();
+  } catch (error) {
+    if (error instanceof ValidationFailure) {
+      paymentFormFeedback(error.errors.map((item) => item.message).join(' '));
+    } else {
+      throw error;
+    }
+  }
+}
+
+export function registerPayrollPayment(id, options = {}) {
+  if (state.session?.role !== 'finanzas') {
+    throw new ValidationFailure([
+      {
+        field: 'role',
+        code: 'FORBIDDEN',
+        message: 'Solo finanzas puede registrar el pago de una liquidación.',
+      },
+    ]);
+  }
+  const settlement = findPayrollSettlement(id);
+  if (!settlement) {
+    throw new ValidationFailure([
+      {
+        field: 'settlementId',
+        code: 'NOT_FOUND',
+        message: 'La liquidación no existe.',
+      },
+    ]);
+  }
+  const documentRecord = loadPurchaseInvoices().find(
+    (item) => item?.document_id === settlement.documentId
+  );
+  if (!documentRecord) {
+    throw new ValidationFailure([
+      {
+        field: 'documentId',
+        code: 'NOT_FOUND',
+        message: 'La factura vinculada no existe.',
+      },
+    ]);
+  }
+  if (settlement.estado !== 'Emitida' || documentRecord.status !== 'Emitida') {
+    throw new ValidationFailure([
+      {
+        field: 'estado',
+        code: 'INVALID_STATUS',
+        message: 'Solo se pueden pagar liquidaciones Emitidas.',
+      },
+    ]);
+  }
+  const fechaPago =
+    options.fechaPago ?? byId('payroll-payment-fechaPago')?.value ?? '';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(fechaPago))) {
+    throw new ValidationFailure([
+      {
+        field: 'fechaPago',
+        code: 'REQUIRED',
+        message: 'La fecha de pago es obligatoria y debe ser válida.',
+      },
+    ]);
+  }
+  const total = Number(documentRecord.totalAmount);
+  const montoPagado =
+    options.montoPagado === undefined ? total : Number(options.montoPagado);
+  if (!Number.isFinite(montoPagado) || montoPagado !== total) {
+    throw new ValidationFailure([
+      {
+        field: 'customFields.montoPagado',
+        code: 'PAYMENT_AMOUNT_MISMATCH',
+        message: 'El monto pagado debe ser igual al monto total.',
+      },
+    ]);
+  }
+  const updatedDocument = updateDocument(
+    documentRecord.document_id,
+    {
+      status: 'Pagada',
+      customFields: {
+        ...documentRecord.customFields,
+        montoPagado,
+        fechaPago,
+      },
+    },
+    state.config || userConfig
+  );
+  const settlements = loadPayrollSettlements();
+  const index = settlements.findIndex(
+    (item) =>
+      item?.settlementId === settlement.settlementId ||
+      item?.documentId === settlement.documentId
+  );
+  settlements[index] = {
+    ...settlements[index],
+    estado: 'Pagada',
+    fechaPago,
+    updatedAt: new Date().toISOString(),
+  };
+  savePayrollSettlements(settlements);
+  return { document: updatedDocument, settlement: settlements[index] };
 }
 
 function handlePayrollSave(id, values, _previous) {
@@ -722,6 +869,20 @@ function confirmAction(message) {
   return true;
 }
 
+export function isLinkedPayrollDocument(id) {
+  return loadPayrollSettlements().some((item) => item?.documentId === id);
+}
+
+function showLinkedInvoiceReadOnly() {
+  const feedback = byId('view-invoice-purchase')?.querySelector(
+    '[data-invoice-feedback]'
+  );
+  if (feedback) {
+    feedback.textContent =
+      'Esta factura está vinculada a una liquidación: solo lectura para finanzas';
+  }
+}
+
 function editEntity(id) {
   const entity = loadEntities().find((item) => item.entity_id === id);
   if (!entity) return;
@@ -741,7 +902,11 @@ function requestDeleteEntity(id) {
   refresh();
 }
 
-function editDocument(id) {
+export function editDocument(id) {
+  if (state.session?.role === 'finanzas' && isLinkedPayrollDocument(id)) {
+    showLinkedInvoiceReadOnly();
+    return;
+  }
   const documentRecord = loadDocuments().find(
     (item) => item.document_id === id || item.id === id
   );
@@ -755,7 +920,11 @@ function editDocument(id) {
   form.focus();
 }
 
-function requestDeleteDocument(id) {
+export function requestDeleteDocument(id) {
+  if (state.session?.role === 'finanzas' && isLinkedPayrollDocument(id)) {
+    showLinkedInvoiceReadOnly();
+    return;
+  }
   const documentRecord = loadDocuments().find(
     (item) => item.document_id === id || item.id === id
   );
@@ -807,6 +976,14 @@ function syncSettlementFromDocument(document) {
 function handleInvoiceSubmit(tipoFactura, values, editingId) {
   const form = state.invoiceForms[tipoFactura];
   values.customFields.tipoFactura = tipoFactura;
+  if (
+    editingId &&
+    state.session?.role === 'finanzas' &&
+    isLinkedPayrollDocument(editingId)
+  ) {
+    showLinkedInvoiceReadOnly();
+    return;
+  }
   try {
     if (editingId) {
       const updated = updateDocument(editingId, values, state.config);
@@ -941,6 +1118,11 @@ export function handlePayrollCreateSubmit(values, extras = {}, deps = {}) {
   });
   if (errors.length > 0) throw new ValidationFailure(errors);
 
+  if (!existingEntity) {
+    const message = `Se creará el trabajador ${nombreCompleto} con RUT ${extras.rut} (${rut}) y su acceso de trabajador. La contraseña inicial será ${initialPassword(rut)}.`;
+    if (!confirmAction(message)) return null;
+  }
+
   const entity = existingEntity ?? saveEntity(candidateEntity, config);
   const accessRecord =
     access ??
@@ -1004,6 +1186,7 @@ function submitPayrollCreate(values, editingId, extras = {}) {
   const form = state.payrollCreateForm;
   try {
     const result = handlePayrollCreateSubmit(values, extras);
+    if (!result) return;
     ensurePayrollSettlement(result.document);
     form?.reset();
     refresh();
@@ -1105,6 +1288,13 @@ function bindManagementControls() {
       if (id) requestDeleteEntity(id);
     };
   }
+
+  const paymentForm = byId('payroll-payment-form');
+  if (paymentForm) {
+    paymentForm.addEventListener('submit', handlePayrollPaymentSubmit);
+  }
+  const paymentCancel = byId('payroll-payment-cancel');
+  if (paymentCancel) paymentCancel.onclick = closePayrollPaymentForm;
 }
 
 function initInvoiceForms(config) {
