@@ -15,6 +15,14 @@
 - Q: ¿Qué opciones debe mostrar el menú ☰ del Panel de finanzas para que las acciones operativas sigan disponibles? → A: Agregar antes de «Guía de uso» una sección de navegación con Terceros, Facturas de venta, Facturas de compra, Movimientos financieros, Flujo de caja, Seguimiento, Liquidaciones de sueldo y Buscar; el administrador y el trabajador no cambian; los accesos rápidos del Panel siguen siendo como máximo cuatro; no se cambian la matriz de permisos, el modelo de datos, las claves erp.* ni la identidad visual de la constitución.
 - Q: ¿Cómo debe organizarse visualmente el menú ☰ del Panel de finanzas? → A: Mostrar primero el subtítulo «Navegación» con las ocho vistas, luego un separador y después el título «Utilidades & Sesión» con «Guía de uso» y «Cerrar sesión», igual que en los otros roles; administrador y trabajador sin cambios; reutilizar los estilos de título y separador existentes sin introducir colores nuevos; sin cambios a permisos, modelo de datos ni claves erp.*.
 
+### Session 2026-11-26
+
+- Q: ¿Qué formato deben usar las fechas y los montos visibles en la interfaz? → A: Toda fecha mostrada como texto usa DD-MM-AAAA; los campos de entrada y el almacenamiento (AAAA-MM-DD) no cambian. Todos los montos visibles usan `formatCurrencyCLP` (por ejemplo «$250.000»), incluidas las listas de Facturas de venta y de compra.
+- Q: Cómo deben mostrarse Movimientos financieros y Control de accesos sin exponer datos internos? → A: Ninguna vista muestra identificadores internos (`doc_`, `ent_`, `set_`) ni nombres internos de campos. Movimientos usa las etiquetas del Panel («Venta emitida», «Pago»), la referencia «Venta serie #folio» o «Compra serie #folio» y «Orden de venta: PED-036»; Control de accesos muestra el nombre del tercero.
+- Q: ¿Qué formato debe tener el RUT visible? → A: Todo RUT visible usa puntos y guion (12.345.678-5), incluso si se ingresó sin puntos; el almacenamiento sigue normalizado como hoy.
+- Q: ¿Cómo debe mostrarse el rol administrador en la interfaz? → A: Se muestra como «Recursos Humanos» en la cabecera («Rol: Recursos Humanos»), el saludo del Panel, la inicial del círculo y el selector de rol de Control de accesos; todos los roles se muestran con mayúscula inicial; la clave interna `administrador` no cambia.
+- Q: ¿Qué debe mostrar la gestión de liquidaciones y cómo debe comportarse a 390 px de ancho? → A: La vista «Gestionar liquidaciones de sueldo» muestra la leyenda «Borrador (RRHH la prepara)», «Emitida (aprobada por RRHH)» y «Pagada (finanzas registró el pago)», sin cambiar los nombres de los estados. A 390 px ninguna vista tiene desborde horizontal de la página y las tablas anchas se desplazan dentro de su contenedor.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Panel del administrador sin datos financieros (HU1) (Priority: P1)
@@ -73,8 +81,9 @@ Como usuario del módulo, quiero reconocer siempre el mismo sistema, la misma ti
 3. **Dado** cualquier vista, **cuando** se revisa la tipografía, **entonces** toda la aplicación usa IBM Plex Sans incluida dentro del proyecto, sin depender de internet para cargarla.
 4. **Dado** cualquier monto o tabla, **cuando** se visualizan cifras, **entonces** usan cifras de ancho fijo para que las columnas numéricas queden alineadas.
 5. **Dado** un usuario con nombre y apellido, **cuando** se muestra el círculo de la esquina superior derecha, **entonces** muestra sus iniciales, no las iniciales del título del sistema ni del módulo.
-6. **Dado** un usuario sin nombre, **cuando** se muestra el círculo de la esquina superior derecha, **entonces** muestra la inicial de su rol.
+6. **Dado** un usuario sin nombre, **cuando** se muestra el círculo de la esquina superior derecha, **entonces** muestra la inicial de la etiqueta visible de su rol.
 7. **Dado** cualquier Panel, **cuando** se muestra su encabezado, **entonces** incluye un saludo y el mes actual.
+8. **Dado** un administrador, **cuando** se revisan cabecera, saludo del Panel, círculo de perfil y selector de rol de Control de accesos, **entonces** el rol se muestra como «Recursos Humanos» con mayúscula inicial, la inicial del círculo es «R» y la clave interna `administrador` no aparece.
 
 ---
 
@@ -131,6 +140,7 @@ Como trabajador, quiero entender mi liquidación de un vistazo, para reconocer d
 4. **Dado** una liquidación sin valores en el desglose, **cuando** se muestra la vista, **entonces** no se muestra la tabla y solo se muestra el monto destacado.
 5. **Dado** un trabajador con pagos anteriores, **cuando** abre su vista, **entonces** ve debajo el historial de pagos con montos en `$`.
 6. **Dado** un trabajador, **cuando** abre su Panel, **entonces** no ve indicadores financieros, gráfico de ingresos y gastos ni alertas de caja o vencimientos.
+7. **Dado** un trabajador con pagos anteriores, **cuando** se muestra la fecha de pago y el historial en «Mi liquidación», **entonces** las fechas aparecen en DD-MM-AAAA y los montos usan el formato canónico de pesos chilenos del proyecto.
 
 ---
 
@@ -150,6 +160,8 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 4. **Dado** un cambio en el desglose, **cuando** se edita, **entonces** el monto líquido se calcula como sueldo base + bonos − descuentos, se muestra sin poder editarse y se guarda en la liquidación y en su factura de compra; si el desglose está vacío se conserva el monto registrado.
 5. **Dado** el estado «Pagada», **cuando** se guarda, **entonces** el monto pagado se registra igual al monto líquido.
 6. **Dado** el formulario abierto, **cuando** se pulsa «Cancelar», **entonces** se cierra sin guardar.
+7. **Dado** la vista «Gestionar liquidaciones de sueldo», **cuando** se muestra, **entonces** incluye una leyenda breve del ciclo: «Borrador (RRHH la prepara)», «Emitida (aprobada por RRHH)» y «Pagada (finanzas registró el pago)», sin cambiar los nombres de los estados.
+8. **Dado** un trabajador con RUT ingresado sin puntos, **cuando** se muestra en los listados de liquidaciones, **entonces** aparece con puntos y guion, por ejemplo «15.432.876-9», sin cambiar su almacenamiento normalizado.
 
 ---
 
@@ -163,13 +175,17 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 - ¿Qué pasa si una tarjeta abre una lista filtrada vacía? Se muestra el estado vacío ya definido para esa lista, conservando el filtro aplicado.
 - ¿Qué pasa si no hay movimientos recientes? La tabla muestra un estado vacío y el enlace «Ver todos» sigue llevando al listado completo.
 - ¿Qué pasa si el usuario tiene un solo nombre? El círculo de perfil muestra la inicial de ese nombre.
-- ¿Qué pasa si el usuario no tiene nombre cargado? El círculo de perfil muestra la inicial de su rol.
+- ¿Qué pasa si el usuario no tiene nombre cargado? El círculo de perfil muestra la inicial de la etiqueta visible de su rol.
 - ¿Qué pasa si una etiqueta de acceso rápido es extensa? Se conserva en una sola línea sin corte; no se reduce a dos líneas.
 - ¿Qué pasa si finanzas necesita «Registrar pago»? Se accede desde «Liquidaciones de sueldo» en la sección de navegación del menú ☰, sin cambiar la matriz de permisos ni sumar un acceso rápido.
 - ¿Qué pasa si un rol distinto de finanzas abre el menú ☰? El administrador y el trabajador conservan el título «Utilidades & Sesión», sus opciones y el separador actuales; no aparece el subtítulo «Navegación» ni la sección de ocho vistas.
 - ¿Qué pasa si la guía ya fue descartada y se recarga la vista dentro de la misma sesión? Sigue oculta durante esa sesión.
 - ¿Qué pasa si el desglose de la liquidación del trabajador está vacío? Se omite la tabla y se mantiene solo el monto líquido destacado.
 - ¿Qué pasa si un monto es negativo? Se muestra con signo `$`, separador de miles y el color rojo definido para valor negativo o crítico.
+- ¿Qué pasa si una fecha aparece como texto en listas, movimientos, flujo de caja, Mi liquidación o gestión de liquidaciones? Se muestra en DD-MM-AAAA; los campos de entrada y el almacenamiento conservan AAAA-MM-DD.
+- ¿Qué pasa si un dato guardado contiene `doc_`, `ent_`, `set_` o un nombre de campo como `salesOrderId`? La vista no lo muestra: usa etiquetas legibles, referencias de documento y el nombre del tercero.
+- ¿Qué pasa si el RUT se ingresó sin puntos? Se muestra con puntos y guion en todas las vistas, incluidos Control de accesos y los listados de liquidaciones, sin cambiar el valor normalizado guardado.
+- ¿Qué pasa si la vista se abre en un celular de 390 px? La página no tiene desbordamiento horizontal; las tablas anchas se desplazan dentro de su contenedor.
 
 ## Requirements *(mandatory)*
 
@@ -235,9 +251,9 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 - **FR-038**: El color de acento `#0f62fe` DEBE mantenerse en toda la aplicación, con fondo gris muy claro y tarjetas blancas.
 - **FR-039**: IBM Plex Sans DEBE usarse en toda la aplicación y DEBE estar incluida dentro del proyecto, sin depender de internet para cargarse.
 - **FR-040**: Todos los montos y las columnas numéricas de tablas DEBEN usar cifras de ancho fijo.
-- **FR-041**: El círculo de la esquina superior derecha DEBE mostrar las iniciales del nombre de la persona que inició sesión; si no tiene nombre, DEBE mostrar la inicial de su rol.
+- **FR-041**: El círculo de la esquina superior derecha DEBE mostrar las iniciales del nombre de la persona que inició sesión; si no tiene nombre, DEBE mostrar la inicial de la etiqueta visible de su rol: «R» para «Recursos Humanos».
 - **FR-042**: El círculo de la esquina superior derecha NO DEBE mostrar las iniciales del título del sistema ni del módulo.
-- **FR-043**: Todos los montos DEBEN mostrarse en pesos chilenos con signo `$` y separador de miles; en tablas, los montos DEBEN alinearse a la derecha.
+- **FR-043**: Todos los montos visibles DEBEN mostrarse con el formato canónico de pesos chilenos del proyecto, con signo `$` y separador de miles; en tablas, los montos DEBEN alinearse a la derecha.
 - **FR-044**: Los períodos DEBEN mostrarse en texto legible en todos los Paneles donde aparezcan.
 - **FR-045**: Las fórmulas de cálculo DEBEN mostrarse en tooltips y NO DEBEN aparecer en las etiquetas visibles.
 
@@ -248,11 +264,23 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 
 **Gestión de liquidaciones (HU7)**
 
-- **FR-048**: La tabla de «Gestionar liquidaciones de sueldo» DEBE mostrar períodos legibles, montos alineados a la derecha, el estado como etiqueta de color y la factura de compra como referencia legible, sin identificadores internos visibles.
+- **FR-048**: La tabla de «Gestionar liquidaciones de sueldo» DEBE mostrar períodos legibles, fechas en DD-MM-AAAA, RUT con puntos y guion, montos alineados a la derecha, el estado como etiqueta de color y la factura de compra como referencia legible, sin identificadores internos visibles.
 - **FR-049**: El formulario de edición DEBE mostrarse solo después de pulsar «Editar» y DEBE poder cerrarse con «Cancelar» sin guardar.
 - **FR-050**: El formulario DEBE limitarse a período, estado (lista), sueldo base, bonos y descuentos; la fecha de pago DEBE mostrarse solo con estado «Pagada».
 - **FR-051**: El monto líquido DEBE calcularse como sueldo base + bonos − descuentos y NO DEBE editarse a mano; si el desglose está vacío se conserva el monto registrado.
 - **FR-052**: Con estado «Pagada», el monto pagado DEBE registrarse igual al monto líquido.
+
+**Presentación consistente de datos visibles**
+
+- **FR-053**: Toda fecha que se muestre como texto DEBE usar DD-MM-AAAA, incluidas las listas de Facturas de venta y de compra, Movimientos financieros, Flujo de caja, Mi liquidación y «Gestionar liquidaciones de sueldo»; los campos de entrada y el almacenamiento DEBEN conservar AAAA-MM-DD.
+- **FR-054**: Todos los montos visibles DEBEN usar el formato canónico de pesos chilenos del proyecto (por ejemplo «$250.000»), incluidas las listas de Facturas de venta y de compra.
+- **FR-055**: Ninguna vista DEBE mostrar identificadores internos con prefijos `doc_`, `ent_` o `set_` ni nombres internos de campos como `salesOrderId`.
+- **FR-056**: Movimientos financieros DEBE mostrar el tipo con las mismas etiquetas que «Últimos movimientos» del Panel («Venta emitida», «Pago»), la referencia del documento como «Venta serie #folio» o «Compra serie #folio» y la orden de venta como «Orden de venta: PED-036».
+- **FR-057**: Control de accesos DEBE mostrar el nombre del tercero en lugar de identificadores `ent_` y el RUT con puntos y guion.
+- **FR-058**: Todo RUT visible DEBE usar puntos y guion (12.345.678-5), incluso si se ingresó sin puntos; el valor guardado DEBE continuar normalizado como hasta ahora.
+- **FR-059**: El rol administrador DEBE mostrarse como «Recursos Humanos» en la cabecera («Rol: Recursos Humanos»), el saludo del Panel, la inicial del círculo y el selector de rol de Control de accesos; todos los roles visibles DEBEN usar mayúscula inicial y la clave interna `administrador` NO DEBE cambiar.
+- **FR-060**: «Gestionar liquidaciones de sueldo» DEBE mostrar una leyenda breve del ciclo: «Borrador (RRHH la prepara)», «Emitida (aprobada por RRHH)» y «Pagada (finanzas registró el pago)», sin cambiar los nombres de los estados.
+- **FR-061**: A 390 px de ancho, ninguna vista DEBE tener desborde horizontal de la página; las tablas anchas DEBEN desplazarse dentro de su contenedor.
 
 ### Key Entities
 
@@ -277,6 +305,12 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 - **SC-008**: Los cuatro accesos rápidos de finanzas caben en una sola fila sin cortes de texto en una ventana de 1366x768, con cero etiquetas partidas en dos líneas, y el menú ☰ de finanzas muestra el subtítulo «Navegación», exactamente ocho opciones en ese orden, un separador y el título «Utilidades & Sesión» con «Guía de uso» y «Cerrar sesión», sin modificar los menús de los otros roles ni introducir colores nuevos.
 - **SC-009**: El nombre «Contabilidad y Finanzas» aparece en la barra superior y en el título de la pestaña en el 100 % de las vistas, y las iniciales del círculo de perfil son correctas en el 100 % de los usuarios de demostración probados.
 - **SC-010**: Todas las pruebas automatizadas del módulo pasan, incluidas las coberturas nuevas y actualizadas derivadas de esta especificación.
+- **SC-011**: El 100 % de las fechas visibles como texto usa DD-MM-AAAA en las vistas afectadas, con cero cadenas AAAA-MM-DD en texto visible y sin cambios en campos de entrada ni almacenamiento.
+- **SC-012**: El 100 % de los montos visibles usa el formato canónico de pesos chilenos del proyecto (por ejemplo «$250.000»), incluidas las listas de Facturas de venta y de compra, con cero valores crudos como «250000 CLP».
+- **SC-013**: Ninguna vista muestra identificadores `doc_`, `ent_` o `set_` ni nombres internos de campos; Movimientos financieros muestra las etiquetas, referencias y orden de venta acordados, y Control de accesos muestra el nombre del tercero.
+- **SC-014**: El 100 % de los RUT visibles usa puntos y guion, incluidos los ingresados sin puntos, y el 100 % de las apariciones del rol administrador dice «Recursos Humanos» con mayúscula inicial, sin cambios en la clave interna.
+- **SC-015**: «Gestionar liquidaciones de sueldo» muestra la leyenda completa de Borrador, Emitida y Pagada en el 100 % de las verificaciones, conservando los nombres de los estados.
+- **SC-016**: A 390 px de ancho, el 100 % de las vistas tiene cero desbordamiento horizontal de la página y las tablas anchas conservan el desplazamiento dentro de su contenedor.
 
 ## Assumptions
 
@@ -284,7 +318,7 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 - El trabajo se realiza localmente en la rama `main`, sin crear ramas nuevas ni publicar cambios, según la convención ya registrada en el repositorio.
 - «Mes actual» significa el mes calendario de la sesión; «últimos seis meses» significa los seis meses calendario consecutivos que terminan en el mes actual.
 - «Mes anterior» significa el mes calendario inmediatamente anterior al mes de la sesión; si no hay datos para ese mes, se usa el texto «sin dato anterior».
-- Las iniciales del usuario se derivan de la primera letra de su primer nombre y de la primera letra de su primer apellido; si solo tiene un nombre, se usa su inicial; si no tiene nombre, se usa la inicial de su rol.
+- Las iniciales del usuario se derivan de la primera letra de su primer nombre y de la primera letra de su primer apellido; si solo tiene un nombre, se usa su inicial; si no tiene nombre, se usa la inicial de la etiqueta visible de su rol («R» para «Recursos Humanos»).
 - La tarjeta «Caja neta» lleva al Flujo de caja, sin alternativa de movimientos financieros; el filtro se conserva al abrirla.
 - «Texto secundario» significa jerarquía visual inferior dentro de la sección de indicadores, sin eliminar la información de totales de «Terceros» y «Facturas».
 - El banner «¿Primera vez?» se descarta guardando el estado en `sessionStorage` del navegador: dura solo la sesión, se conserva al recargar la vista dentro de esa sesión y no modifica el modelo de datos.
