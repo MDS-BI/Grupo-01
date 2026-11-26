@@ -808,6 +808,7 @@ function showModule(name) {
   if (target === 'search') updateSearchResults();
   if (target === 'payroll-worker') refreshWorkerView();
   if (target === 'payroll-admin') refreshPayrollAdmin();
+  if (target === 'payroll-create') refreshPayrollCreateList();
   if (target === 'dev-notifications') devNotifications?.render();
 }
 
