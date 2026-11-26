@@ -128,6 +128,9 @@ export function initPayrollCreateForm({ root, onSubmit, onDirtyChange } = {}) {
       customFields: {
         tipoFactura: 'compra',
         periodoLiquidacion: value('periodoLiquidacion'),
+        // T065: las remuneraciones son un gasto, igual que en los datos de
+        // demostración; sin centro de costo la liquidación no se puede emitir.
+        centroCosto: 'Consumible',
       },
     };
     if (!isBlank(value('series'))) values.series = value('series');

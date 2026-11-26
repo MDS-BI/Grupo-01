@@ -431,6 +431,9 @@ function handleLogout() {
   state.payrollDirty = false;
   state.payrollCreateDirty = false;
   state.payrollCreateForm?.reset();
+  // T066: el siguiente rol no debe ver formularios abiertos por el anterior.
+  payrollForm?.close();
+  closePayrollPaymentForm();
   showLogin();
 }
 
