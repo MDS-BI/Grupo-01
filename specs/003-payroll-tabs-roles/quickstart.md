@@ -1,6 +1,6 @@
 # Quickstart: Pestañas de liquidación de sueldo y permisos por rol
 
-**Feature**: [spec.md](./spec.md) | **Plan**: [plan.md](./plan.md) | **Date**: 2026-11-24
+**Feature**: [spec.md](./spec.md) | **Plan**: [plan.md](./plan.md) | **Date**: 2026-11-24 (actualizado 2026-11-26)
 
 Guía de validación manual end-to-end. Los detalles de contrato están en [contracts/](./contracts/) y el modelo en [data-model.md](./data-model.md); aquí solo el recorrido y los resultados esperados.
 
@@ -24,13 +24,13 @@ npm run test -- --run   # o: npm test -- --run  (suite completa)
 ## Escenario A — US1: crear liquidación con RUT nuevo (admin)
 
 1. Iniciar sesión como `administrador`.
-2. **Esperado**: el nav muestra exactamente «Crear liquidación de sueldo», «Gestionar liquidaciones de sueldo» y «Control de accesos»; el Panel solo enlaza esas dos pestañas; no hay «Avisos al desarrollador» ni entidades/facturas/movimientos/etc. (FR-013, FR-020, SC-004).
-3. Abrir «Crear liquidación de sueldo»: se ve el formulario de factura de compra + campos obligatorios «RUT» y «Nombre completo» (FR-001, FR-002).
-4. Completar con un **RUT nuevo** válido y guardar.
-5. **Esperado**: éxito; en `localStorage` existen la factura de compra, la liquidación vinculada, el tercero `tipoTercero: 'personal'` con ese RUT y un acceso `trabajador` activo cuya contraseña es `initialPassword(rut)` = primeros 4 dígitos del cuerpo del RUT (FR-003, SC-001).
+2. **Esperado**: el nav muestra exactamente el Panel, «Crear liquidación de sueldo», «Gestionar liquidaciones de sueldo» y «Control de accesos»; el Panel solo enlaza esas dos pestañas; no hay «Avisos al desarrollador» ni entidades/facturas/movimientos/etc. (FR-013, FR-020, SC-004).
+3. Abrir «Crear liquidación de sueldo»: **Esperado** un formulario propio con solo diez campos —RUT, Nombre completo, Período (AAAA-MM), Sueldo base, Bonos, Descuentos, Fecha de emisión, Fecha de vencimiento, Serie y Folio—, sin Tercero, Cantidad, Impuesto, Moneda ni Condiciones de pago; el listado de abajo muestra solo liquidaciones o «No hay liquidaciones registradas» (FR-001, FR-002, SC-007).
+4. Escribir sueldo base `500000`, bonos `100000` y descuentos `50000`: **Esperado** el total de solo lectura muestra `$550.000` sin escribirlo a mano.
+5. Completar con un **RUT nuevo** válido y guardar: **Esperado** una confirmación previa que nombra al trabajador, su acceso y la contraseña inicial de 4 dígitos. Cancelar: no se crea nada. Repetir y aceptar: éxito; en `localStorage` existen la factura de compra, la liquidación vinculada con período, desglose y monto calculado, el tercero `tipoTercero: 'personal'` con ese RUT y un acceso `trabajador` activo cuya contraseña es `initialPassword(rut)` = primeros 4 dígitos del cuerpo del RUT (FR-003, SC-001).
 6. Cerrar sesión y entrar con ese RUT + contraseña inicial: primer intento exitoso; se ve solo su liquidación/historial en lectura (SC-002, FR-006).
-7. Repetir el paso 4 con el **mismo RUT**: **Esperado**: solo se crea/actualiza la liquidación; no hay entidad, tercero ni acceso duplicado (FR-004).
-8. Probar RUT con DV inválido y campos vacíos: **Esperado** rechazo con mensaje junto al campo y ningún registro creado (FR-005).
+7. Repetir el paso 5 con el **mismo RUT**: **Esperado**: solo se crea/actualiza la liquidación; no hay entidad, tercero ni acceso duplicado (FR-004).
+8. Probar RUT con DV inválido, campos vacíos y un monto negativo: **Esperado** rechazo con mensaje junto al campo y ningún registro creado (FR-005).
 
 ## Escenario B — US2: listado con búsqueda por RUT
 
@@ -45,7 +45,9 @@ npm run test -- --run   # o: npm test -- --run  (suite completa)
 ## Escenario C — US3: matriz de permisos
 
 1. Como `finanzas`: nav = entidades, facturas venta/compra, movimientos, flujo de caja, seguimiento, búsqueda, Panel y «Gestionar liquidaciones de sueldo»; **sin** control de accesos ni avisos (FR-014).
-2. En el listado de liquidaciones finanzas: **Esperado** búsqueda por RUT funcional pero **cero acciones** «Editar»/«Asociar» (FR-011, SC-005).
+2. En el listado de liquidaciones finanzas: **Esperado** búsqueda por RUT funcional, **cero acciones** «Editar»/«Asociar» y botón «Registrar pago» solo en liquidaciones `Emitidas` (FR-011, SC-005).
+2a. Registrar el pago de una liquidación `Emitida` con una fecha válida: **Esperado** la liquidación y su factura pasan a `Pagada` con monto pagado igual al total; el total y el desglose no cambian. Intentarlo sobre una liquidación que no está `Emitida`: **Esperado** rechazo con mensaje (FR-011, SC-005).
+2b. En «Facturas de compra», intentar editar o eliminar una factura vinculada a una liquidación: **Esperado** se muestra en solo lectura con un aviso claro y la liquidación no cambia (FR-011, FR-014).
 3. Intento directo (URL/estado interno) a `payroll-create` como finanzas o trabajador: **Esperado** redirección a la vista permitida del rol con mensaje, sin datos (FR-016, esc. 7 de US1).
 4. Intento directo a entidades/facturas/etc. como administrador: **Esperado** redirigido a «Gestionar liquidaciones de sueldo» con mensaje (esc. 4 de US3).
 5. Como `trabajador`: sin cambios; solo su liquidación e historial en lectura (FR-015).
@@ -56,6 +58,12 @@ npm run test -- --run   # o: npm test -- --run  (suite completa)
 1. Revisar `specs/002-payroll-access-control/spec.md` y `contracts/payroll-views.md`: **Esperado** notas puntuales «Superseded by 003-payroll-tabs-roles» en las partes contradictorias, sin reescritura del documento (FR-018).
 2. `npm run check`: **Esperado** verde al 100 % salvo tests actualizados explícitamente por esta feature (SC-006).
 
+## Escenario E — Indicadores visibles sin scroll (Constitución III)
+
+1. Con la ventana del navegador en 1366 × 768, iniciar sesión con cada rol.
+2. **Esperado**: sin desplazarse, se ven completos los indicadores del Panel de `finanzas` y de `administrador`, y el monto líquido de «Mi liquidación» del `trabajador`.
+3. Verificado el 2026-11-26 con los datos de demostración: los indicadores terminan a unos 425 px de alto (`finanzas`) y 417 px (`administrador`), dentro de los 768 px.
+
 ## Criterios de éxito medibles
 
 | SC | Verificación |
@@ -64,5 +72,6 @@ npm run test -- --run   # o: npm test -- --run  (suite completa)
 | SC-002 | Escenario A paso 6 |
 | SC-003 | Escenario B pasos 3–4 |
 | SC-004 | Escenarios C pasos 3–4 |
-| SC-005 | Escenario C paso 2 |
+| SC-005 | Escenario C pasos 2, 2a y 2b |
 | SC-006 | Escenario D paso 2 (`npm run check`) |
+| SC-007 | Escenario A pasos 3–4 |

@@ -63,21 +63,21 @@
 
 ## Phase 3: User Story 1 — Crear liquidación con alta automática de trabajador (Priority: P1) 🎯 MVP
 
-**Goal**: Pestaña «Crear liquidación de sueldo» (solo admin) que reutiliza el formulario de factura de compra + campos RUT/nombre, y al guardar un RUT nuevo crea tercero personal + acceso `trabajador` (`password = initialPassword(rut)`); RUT existente ⇒ solo la liquidación, sin duplicados (FR-001…FR-006).
+**Goal**: Pestaña «Crear liquidación de sueldo» (solo admin) que reutiliza el formulario de factura de compra + campos RUT/nombre *(superseded el 2026-11-25: desde T058–T062 la pestaña usa un formulario propio; ver la fase de corrección del 25-11)*, y al guardar un RUT nuevo crea tercero personal + acceso `trabajador` (`password = initialPassword(rut)`); RUT existente ⇒ solo la liquidación, sin duplicados (FR-001…FR-006).
 
 **Independent Test**: Desde sesión admin se completa el form con RUT nuevo y nombre; existen a la vez liquidación, tercero personal y acceso activo; ese trabajador entra con los primeros 4 dígitos del RUT y ve solo su liquidación; repetir con el mismo RUT no duplica nada; finanzas/trabajador son redirigidos.
 
 **Tests primero** ⚠️ (deben FALLAR antes de la implementación):
 
 - [X] T011 [P] [US1] Test unitario de flujo de creación en `tests/unit/creation-flow.test.js` (archivo nuevo): RUT nuevo ⇒ `addEntity` + `createAccessRecord` llamados; RUT ya existente personal ⇒ NO se llama `addEntity` ni `createAccessRecord`; RUT con DV inválido o campos vacíos ⇒ `ValidationFailure` sin registros persistidos; RUT existente pero no personal o con acceso inactivo ⇒ rechazo sin registros persistidos y la incidencia registrada con `appendDevNotification` (FR-003, FR-004, FR-005)
-- [X] T012 [P] [US1] Test de integración end-to-end en `tests/integration/payroll-create.test.js` (archivo nuevo): admin abre la pestaña, ve form de compra + «RUT» + «Nombre completo», guarda con RUT nuevo y comprueba liquidación + tercero `personal` + acceso `trabajador` activo con `initialPassword(rut)`; login del nuevo trabajador muestra solo su liquidación (US1 esc. 1, 2, 6)
+- [X] T012 [P] [US1] Test de integración end-to-end en `tests/integration/payroll-create.test.js` (archivo nuevo): admin abre la pestaña, ve form de compra + «RUT» + «Nombre completo», guarda con RUT nuevo y comprueba liquidación + tercero `personal` + acceso `trabajador` activo con `initialPassword(rut)`; login del nuevo trabajador muestra solo su liquidación (US1 esc. 1, 2, 6) *(superseded en parte por T056: la prueba ya no busca el formulario de compra, sino los ids `payroll-create-field-*`)*
 
 **Implementation**:
 
-- [X] T013 [US1] Añadir la opción opt-in `extraFields` a `createInvoiceForm` en `src/components/invoice-form.js` (inserta RUT y nombre completo requeridos antes del envío; por defecto sin cambios para las vistas de factura existentes, FR-019)
+- [X] T013 [US1] Añadir la opción opt-in `extraFields` a `createInvoiceForm` en `src/components/invoice-form.js` (inserta RUT y nombre completo requeridos antes del envío; por defecto sin cambios para las vistas de factura existentes, FR-019) *(superseded por T058–T062 el 2026-11-25: la pestaña de creación ya no usa `extraFields`; la opción queda en `invoice-form.js` como opt-in sin uso)*
 - [X] T014 [US1] Completar el marcado de `#view-payroll-create` en `index.html`: título «Crear liquidación de sueldo» (`data-form-title`), `<form>` destino, `data-invoice-feedback` y listado de respaldo, siguiendo el patrón de `#view-invoice-purchase` (líneas 521–560)
 - [X] T015 [US1] Implementar `handlePayrollCreateSubmit` en `src/app.js` con el orden atómico de `contracts/creation-flow.md`: validar RUT (`normalizeRut`) y nombre → resolver entidad por `customFields.rut` (reusar si `personal`, rechazar si no) → `createAccessRecord` solo si no hay acceso activo → `addDocument` de compra → `refresh()` + feedback; sin registros parciales
-- [X] T016 [US1] Instanciar `createPurchaseForm` (reutilizado de `src/components/invoice-purchase-form.js`) sobre `#view-payroll-create` con `extraFields: [rut, nombreCompleto]` en `initApp`/`initInvoiceForms` de `src/app.js`, y hacer que `handleQuickAction('new-payroll')` lleve a la nueva pestaña (`src/app.js` ~línea 732)
+- [X] T016 [US1] Instanciar `createPurchaseForm` (reutilizado de `src/components/invoice-purchase-form.js`) sobre `#view-payroll-create` con `extraFields: [rut, nombreCompleto]` en `initApp`/`initInvoiceForms` de `src/app.js`, y hacer que `handleQuickAction('new-payroll')` lleve a la nueva pestaña (`src/app.js` ~línea 732) *(superseded por T059–T060 el 2026-11-25: `createPurchaseForm` se reemplazó por `initPayrollCreateForm`; se mantiene lo de `handleQuickAction`)*
 - [X] T017 [US1] Ejecutar `npm test -- --run tests/unit/creation-flow.test.js tests/integration/payroll-create.test.js` y llevar a verde sin tocar los componentes reutilizados más allá de lo marcado
 
 **Checkpoint**: User Story 1 funcional y verificable de forma independiente (MVP).
@@ -149,7 +149,7 @@
 - [X] T034 Ejecutar los escenarios A–D de `specs/003-payroll-tabs-roles/quickstart.md` manualmente contra `npm run dev` y confirmar SC-001…SC-005
 - [X] T035 Ejecutar `npm run check` (lint + format + `npm test -- --run`) y corregir cualquier regresión hasta dejarlo en verde (SC-006)
 - [X] T036 Confirmar que ningún archivo fue reescrito completo: revisar `git diff --stat` y comprobar que los cambios en `src/app.js`, `src/components/*.js`, `index.html` son aditivos/quirúrgicos (FR-019)
-- [X] T042 Vista Crear liquidación de sueldo: ocultar el selector «Tercero» (el trabajador se define solo con RUT y nombre, FR-002/FR-003) y no mostrar facturas de compra a proveedores en la lista de esa vista (FR-012)
+- [X] T042 Vista Crear liquidación de sueldo: ocultar el selector «Tercero» (el trabajador se define solo con RUT y nombre, FR-002/FR-003) y no mostrar facturas de compra a proveedores en la lista de esa vista (FR-012) *(superseded en parte por T058 y T061: el formulario propio ya no tiene selector de tercero y el listado se arma con `renderPayrollList`)*
 
 **Checkpoint**: Feature completa y verificada.
 
@@ -232,7 +232,7 @@ Task T016: "Instanciar createPurchaseForm en src/app.js"
 - [P] tasks = different files, no dependencies
 - [Story] label maps task to specific user story for traceability
 - Cada historia es independientemente testeable; verificar que los tests fallen antes de implementar
-- Reutilizar `createPurchaseForm`/`createInvoiceForm`, `renderPayrollList` y `createAccessRecord` — NO duplicar componentes (FR-019)
+- Reutilizar `renderPayrollList` y `createAccessRecord` — NO duplicar componentes (FR-019). *(La reutilización de `createPurchaseForm`/`createInvoiceForm` en la pestaña de creación quedó superseded el 2026-11-25 por el formulario propio de T058–T062.)*
 - Commit tras cada fase o grupo lógico (hook opcional `/speckit-git-commit`, local en `main`, sin push)
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
@@ -328,8 +328,10 @@ Task T016: "Instanciar createPurchaseForm en src/app.js"
 
 **Dependencias de esta corrección**: T053 ∥ T054 ∥ T055 ∥ T056 ∥ T057 → T058 ∥ T059 → T060 → T061 → T062 → T063. Las pruebas son paralelas entre sí; la implementación es secuencial en `src/app.js`.
 
-> **Nota de implementación (25-11-2026).** T053–T062 se implementaron con ayuda directa de Claude sobre estas mismas tareas, sin cambiar T001–T052, la spec 004, el modelo de datos ni las claves `erp.*`. El formulario valida además que el sueldo base sea obligatorio y que sueldo base, bonos y descuentos no sean negativos. La «confirmación de cambios sin guardar» se mantiene a través de `state.payrollCreateDirty`, que se suma a la advertencia al cerrar sesión. T063 queda para quien ejecute `npm run check` en su computador.
+> **Nota de implementación (25-11-2026).** T053–T062 se implementaron con ayuda directa de Claude sobre estas mismas tareas, sin cambiar T001–T052, la spec 004, el modelo de datos ni las claves `erp.*`. El formulario valida además que el sueldo base sea obligatorio y que sueldo base, bonos y descuentos no sean negativos. La «confirmación de cambios sin guardar» se mantiene a través de `state.payrollCreateDirty`, que se suma a la advertencia al cerrar sesión. T063 se verificó con `npm run check` en verde antes del commit `431642b` (25-11-2026).
 
 **Checkpoint**: con T063 en verde, las decisiones de `Session 2026-11-25` quedan verificadas sin haber reescrito T001–T052, la spec 004, el modelo de datos ni las claves `erp.*`.
+
+> **Sincronización de documentos (26-11-2026).** Tras `/speckit.analyze` se actualizaron `plan.md`, `research.md` (R2 y R6), `data-model.md`, `quickstart.md` y los tres contratos para reflejar las clarificaciones del 24-11 y 25-11; en este archivo solo se agregaron notas de *superseded*, sin desmarcar ni renumerar tareas.
 
 - [X] T064 [US2] Corregir el listado vacío de `payroll-create` tras «Cargar demostración»: en `src/app.js`, junto a `if (target === 'payroll-admin') refreshPayrollAdmin();` (alrededor de la línea 810), agregar `if (target === 'payroll-create') refreshPayrollCreateList();` en la función de navegación para que `#payroll-create-list` se llene al abrir la vista, sin guardar ni recargar; y crear `tests/integration/payroll-create-list-on-navigation.test.js` que cargue la demostración con `loadDemoData(userConfig)`, inicie sesión con `setupAdminSession()`, llame a `initApp(userConfig)`, haga clic en `nav-payroll-create` y verifique que `#payroll-create-list` muestra «Ana Pérez Soto» y «Bruno Soto Vega» sin enviar el formulario ni recargar la página (FR-007, US2 esc. 8, SC-007). Luego volver a ejecutar `npm run check` desde la raíz del repositorio (`package.json`) sin desmarcar T001–T063.

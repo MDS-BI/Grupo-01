@@ -1,6 +1,6 @@
 # Contract: Matriz de rol ↔ módulos y redirecciones
 
-**Feature**: [spec.md](../spec.md) | **Date**: 2026-11-24
+**Feature**: [spec.md](../spec.md) | **Date**: 2026-11-24 (actualizado 2026-11-26)
 
 Interfaz de navegación/permisos expuesta por la SPA. Fuentes de verdad: `VIEWS`/`ACCESS_MATRIX`/`resolveRoute` (`src/app.js`) y `ADMIN_MODULES`/`FINANCE_MODULES`/`navLabel` (`src/components/shell.js`).
 
@@ -9,7 +9,7 @@ Interfaz de navegación/permisos expuesta por la SPA. Fuentes de verdad: `VIEWS`
 | `data-module` | Etiqueta | administrador | finanzas | trabajador |
 |---|---|---|---|---|
 | `payroll-create` | Crear liquidación de sueldo | ✅ | ❌ | ❌ |
-| `payroll-admin` | Gestionar liquidaciones de sueldo | ✅ | ✅ (solo lectura) | ❌ |
+| `payroll-admin` | Gestionar liquidaciones de sueldo | ✅ | ✅ (solo lectura + «Registrar pago» de `Emitidas`) | ❌ |
 | `payroll-worker` | Mi liquidación | ❌ | ❌ | ✅ |
 | `access` | Control de accesos | ✅ | ❌ | ❌ |
 | `entities` | Entidades | ❌ | ✅ | ❌ |
@@ -22,7 +22,7 @@ Interfaz de navegación/permisos expuesta por la SPA. Fuentes de verdad: `VIEWS`
 | `dev-notifications` | Avisos al desarrollador | ❌ | ❌ | ❌ |
 | `dashboard` | Panel | ✅ (solo 2 pestañas de liquidaciones) | ✅ (sus módulos) | ✅ (su liquidación) |
 
-Invariante: el nav del administrador contiene **exactamente** «Crear liquidación de sueldo», «Gestionar liquidaciones de sueldo» y «Control de accesos» (FR-013); ningún rol muestra «Avisos al desarrollador» (FR-020).
+Invariante: el nav del administrador contiene **exactamente** el Panel, «Crear liquidación de sueldo», «Gestionar liquidaciones de sueldo» y «Control de accesos» (`ADMIN_MODULES = ['dashboard', 'payroll-create', 'payroll-admin', 'access']`, FR-013); ningún rol muestra «Avisos al desarrollador» (FR-020).
 
 ## 2. Acceso directo / navegación no permitida
 
@@ -48,6 +48,14 @@ resolveRoute(view, role):
 | Buscar/filtrar por RUT (en vivo) | ✅ | ✅ |
 | Botón «Editar» | ✅ | ❌ (no se renderiza) |
 | Asociar acceso | ✅ | ❌ |
+| «Registrar pago» | ❌ | ✅ solo en liquidaciones `Emitidas` (FR-011) |
+
+## 3b. Facturas de compra vinculadas a una liquidación
+
+| Acción | administrador | finanzas |
+|---|---|---|
+| Ver en «Facturas de compra» | ❌ (sin acceso al módulo) | ✅ con aviso de solo lectura |
+| Editar o eliminar | ❌ | ❌ bloqueado desde cualquier vista (`isLinkedPayrollDocument`) |
 
 ## 4. Contratos relacionados
 

@@ -16,6 +16,8 @@ Fase 0 del plan. Todos los `NEEDS CLARIFICATION` del contexto técnico quedan re
 
 ## R2. Cómo reutilizar el formulario de factura de compra en la pestaña de creación
 
+> **Superseded (2026-11-25).** Esta decisión fue reemplazada por la `Session 2026-11-25` de la spec: el formulario de compra mostraba campos que no aplican a una liquidación (Cantidad, Impuesto, Moneda, Condiciones de pago) y repetía ids `invoice-purchase-field-*`. La pestaña usa ahora un formulario propio, `src/components/payroll-create-form.js` (T058–T062). Se conserva el texto original como registro de la decisión.
+
 **Decision**: Instanciar `createPurchaseForm(...)` (wrapper de `createInvoiceForm` con `tipoFactura: 'compra'`) apuntando al DOM de `#view-payroll-create`, en un nuevo init equivalente a `initInvoiceForms()` pero para la pestaña de creación; y ampliar `createInvoiceForm` de forma **opt-in** con una opción `extraFields: [{ key, label, type, required, dataset }]` que inserte «RUT» y «Nombre completo» antes de enviar.
 
 **Rationale**: `createInvoiceForm` ya construye el form desde `<template id="invoice-fields">` y los `customFields` de config, expone `reset/focus/showErrors/setFeedback`, y `handleInvoiceSubmit('compra', ...)` ya dispara `addDocument` + backfill de liquidación. La opción `extraFields` evita duplicar el componente (requisito explícito) y solo se activa cuando se pasa, por lo que las vistas de factura existentes no cambian de comportamiento (FR-019).
@@ -58,7 +60,7 @@ Fase 0 del plan. Todos los `NEEDS CLARIFICATION` del contexto técnico quedan re
 ## R6. Recorte de módulos por rol (admin limitado, finanzas conserva los suyos, avisos ocultos)
 
 **Decision**: 
-- `ADMIN_MODULES` en `shell.js` → `['payroll-create', 'payroll-admin']` (el acceso se renderiza como utilidad de sesión aparte, ya existente).
+- `ADMIN_MODULES` en `shell.js` → `['dashboard', 'payroll-create', 'payroll-admin', 'access']`: el Panel y «Control de accesos» se conservan (FR-013, T008). *(Corregido el 2026-11-26: la versión inicial de esta decisión omitía `dashboard` y `access`.)*
 - `FINANCE_MODULES` → se mantiene: entidades, facturas venta/compra, movimientos, cashflow, tracking, search + `payroll-admin`.
 - Ocultar `dev-notifications` del nav para **todos** los roles (quitar de ambas listas y del dashboard/panel), manteniendo `appendDevNotification` en consola/localStorage (FR-020).
 - `ACCESS_MATRIX` en `app.js`: `payroll-create: { administrador: true, finanzas: false, trabajador: false }`; `payroll-admin` admin+finanzas; quitar `dev-notifications` de la lista de vistas accesibles (o marcar `false` para todos + `resolveRoute` redirige).
@@ -95,7 +97,7 @@ Fase 0 del plan. Todos los `NEEDS CLARIFICATION` del contexto técnico quedan re
 | Incógnita | Estado |
 |---|---|
 | Mecanismo de vista/navegación | Resuelto (R1) |
-| Reutilización del form de compra | Resuelto (R2) |
+| Reutilización del form de compra | Resuelto (R2); superseded el 2026-11-25 por el formulario propio |
 | Alta automática sin duplicados | Resuelto (R3) |
 | Búsqueda RUT en vivo | Resuelto (R4) |
 | Solo lectura finanzas | Resuelto (R5) |
