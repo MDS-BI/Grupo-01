@@ -44,6 +44,7 @@ import { renderInvoiceStatusNotice } from './components/invoice-status-notice.js
 import { refreshPayrollWorker } from './components/payroll-worker.js';
 import { renderPayrollList } from './components/payroll-list.js';
 import { initPayrollForm } from './components/payroll-form.js';
+import { initPayrollCreateForm } from './components/payroll-create-form.js';
 import { initDevNotifications } from './components/dev-notifications.js';
 import { createTutorial } from './components/tutorial.js';
 import { resolveAdminSettlements } from './payroll.js';
@@ -159,6 +160,7 @@ const state = {
   shell: null,
   invoiceForms: {},
   payrollCreateForm: null,
+  payrollCreateDirty: false,
   payrollPaymentId: null,
   session: null,
   migration: null,
@@ -419,7 +421,7 @@ function showLogin() {
 }
 
 function handleLogout() {
-  if (state.accessDirty || state.payrollDirty) {
+  if (state.accessDirty || state.payrollDirty || state.payrollCreateDirty) {
     const confirmed = confirmAction(
       'Hay cambios sin guardar. ¿Deseas cerrar sesión de todos modos?'
     );
@@ -427,6 +429,8 @@ function handleLogout() {
   }
   state.accessDirty = false;
   state.payrollDirty = false;
+  state.payrollCreateDirty = false;
+  state.payrollCreateForm?.reset();
   showLogin();
 }
 
@@ -1149,7 +1153,7 @@ export function handlePayrollCreateSubmit(values, extras = {}, deps = {}) {
   };
 }
 
-function ensurePayrollSettlement(document) {
+function ensurePayrollSettlement(document, breakdown = null) {
   const entity = loadEntities().find(
     (item) => item.entity_id === document.entity_id
   );
@@ -1168,9 +1172,9 @@ function ensurePayrollSettlement(document) {
     periodo:
       document.customFields?.periodoLiquidacion ||
       String(document.startDate || '').slice(0, 7),
-    sueldoBase: previous.sueldoBase ?? 0,
-    descuentos: previous.descuentos ?? 0,
-    bonos: previous.bonos ?? 0,
+    sueldoBase: breakdown?.sueldoBase ?? previous.sueldoBase ?? 0,
+    descuentos: breakdown?.descuentos ?? previous.descuentos ?? 0,
+    bonos: breakdown?.bonos ?? previous.bonos ?? 0,
     monto: Number(document.totalAmount) || 0,
     estado: document.status || 'Borrador',
     fechaPago: document.customFields?.fechaPago || null,
@@ -1182,12 +1186,12 @@ function ensurePayrollSettlement(document) {
   savePayrollSettlements(settlements);
 }
 
-function submitPayrollCreate(values, editingId, extras = {}) {
+function submitPayrollCreate(values, editingId, extras = {}, breakdown = null) {
   const form = state.payrollCreateForm;
   try {
     const result = handlePayrollCreateSubmit(values, extras);
     if (!result) return;
-    ensurePayrollSettlement(result.document);
+    ensurePayrollSettlement(result.document, breakdown);
     form?.reset();
     refresh();
     form?.setFeedback(
@@ -1205,29 +1209,33 @@ function submitPayrollCreate(values, editingId, extras = {}) {
 }
 
 function refreshPayrollCreateList() {
-  const form = state.payrollCreateForm;
-  if (!form) return;
+  const container = byId('payroll-create-list');
+  if (!container) return;
   const entities = loadEntities();
   const personalIds = new Set(
     entities
       .filter((entity) => entity?.customFields?.tipoTercero === 'personal')
       .map((entity) => entity.entity_id)
   );
-  const documents = loadDocuments().filter(
-    (document) =>
-      document?.customFields?.tipoFactura === 'compra' &&
-      document?.customFields?.periodoLiquidacion &&
-      personalIds.has(document?.entity_id)
+  const settlements = loadPayrollSettlements().filter((settlement) =>
+    personalIds.has(settlement?.entityId)
   );
-  const names = new Map(
-    entities.map(({ entity_id, name }) => [entity_id, name])
-  );
-  form.setEntities(entities);
-  form.setOptions(documents, names);
-  renderPurchaseList(byId('payroll-create-list'), documents, names, {
-    filterEntityId: form.getFilter(),
-    onEdit: () => {},
-    onDelete: () => {},
+  if (settlements.length === 0) {
+    container.textContent = '';
+    const empty = document.createElement('p');
+    empty.className = 'empty-state';
+    empty.textContent = 'No hay liquidaciones registradas';
+    container.append(empty);
+    return;
+  }
+  renderPayrollList(container, {
+    settlements,
+    entities,
+    documents: loadPurchaseInvoices(),
+    records: loadAccessRecords(),
+    canEdit: false,
+    canAssociate: false,
+    canRegisterPayment: false,
   });
 }
 
@@ -1316,33 +1324,15 @@ function initInvoiceForms(config) {
   }
 
   const payrollRoot = byId('view-payroll-create');
+  state.payrollCreateDirty = false;
   if (payrollRoot) {
-    state.payrollCreateForm = createPurchaseForm({
+    state.payrollCreateForm = initPayrollCreateForm({
       config,
       root: payrollRoot,
       onSubmit: submitPayrollCreate,
-      onEdit: editDocument,
-      onDelete: requestDeleteDocument,
-      onFilter: () => refreshPayrollCreateList(),
-      hideThirdParty: true,
-      extraFields: [
-        {
-          key: 'rut',
-          label: 'RUT',
-          type: 'text',
-          required: true,
-          placeholder: 'Ej. 12.345.678-5',
-        },
-        {
-          key: 'nombreCompleto',
-          label: 'Nombre completo',
-          type: 'text',
-          required: true,
-        },
-      ],
-      formTitle: config.labels.payrollCreate,
-      submitLabel: 'Guardar liquidación',
-      newLabel: 'Nueva liquidación',
+      onDirtyChange: (dirty) => {
+        state.payrollCreateDirty = dirty;
+      },
     });
   }
 }

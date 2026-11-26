@@ -15,7 +15,6 @@ import {
 import { loadDemoData } from '../../src/demo-data.js';
 import { userConfig } from '../../src/module-config.js';
 import {
-  invoiceField,
   loadAppMarkup,
   setupAdminSession,
   submit,
@@ -29,18 +28,23 @@ function byId(id) {
   return document.getElementById(id);
 }
 
-function fillInvoiceForm() {
-  invoiceField('payroll-create', 'folio').value = '20261001';
-  invoiceField('payroll-create', 'startDate').value = '2026-10-01';
-  invoiceField('payroll-create', 'endDate').value = '2026-10-31';
-  invoiceField('payroll-create', 'totalAmount').value = '700000';
-  invoiceField('payroll-create', 'status').value = 'Borrador';
-  const centroCosto = invoiceField('payroll-create', 'centroCosto');
-  if (centroCosto) centroCosto.value = 'Consumible';
+function setField(key, value) {
+  const input = byId(`payroll-create-field-${key}`);
+  input.value = value;
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+}
 
-  const form = byId('payroll-create-form');
-  form.querySelector('[data-extra-field="rut"]').value = RUT;
-  form.querySelector('[data-extra-field="nombreCompleto"]').value = NOMBRE;
+// Formulario propio (T056): desglose de 600.000 + 150.000 − 50.000 = 700.000.
+function fillPayrollForm() {
+  setField('rut', RUT);
+  setField('nombreCompleto', NOMBRE);
+  setField('periodoLiquidacion', '2026-10');
+  setField('sueldoBase', '600000');
+  setField('bonos', '150000');
+  setField('descuentos', '50000');
+  setField('startDate', '2026-10-01');
+  setField('endDate', '2026-10-31');
+  setField('folio', '20261001');
 }
 
 function expectCreatedRecords() {
@@ -81,6 +85,9 @@ function expectCreatedRecords() {
     entityId: entity.entity_id,
     periodo: '2026-10',
     monto: 700000,
+    sueldoBase: 600000,
+    bonos: 150000,
+    descuentos: 50000,
   });
 }
 
@@ -98,24 +105,22 @@ describe('payroll-create: alta integral de liquidaciones', () => {
     vi.restoreAllMocks();
   });
 
-  it('muestra el formulario de compra con RUT y nombre completo al abrir la pestaña', () => {
+  it('muestra el formulario propio con RUT y nombre completo al abrir la pestaña', () => {
     byId('nav-payroll-create').click();
 
     expect(byId('view-payroll-create').hidden).toBe(false);
     expect(byId('payroll-create-form')).not.toBeNull();
-    expect(invoiceField('payroll-create', 'startDate')).not.toBeNull();
-    expect(invoiceField('payroll-create', 'folio')).not.toBeNull();
-    expect(byId('payroll-create-form-title').textContent).toBe(
+    expect(byId('payroll-create-field-startDate')).not.toBeNull();
+    expect(byId('payroll-create-field-folio')).not.toBeNull();
+    expect(byId('payroll-create-form-title').textContent.trim()).toBe(
       'Crear liquidación de sueldo'
     );
 
-    const form = byId('payroll-create-form');
-    const rutField = form.querySelector('[data-extra-field="rut"]');
-    const nameField = form.querySelector('[data-extra-field="nombreCompleto"]');
-    expect(rutField).not.toBeNull();
-    expect(nameField).not.toBeNull();
+    const rutField = byId('payroll-create-field-rut');
+    const nameField = byId('payroll-create-field-nombreCompleto');
     expect(rutField.required).toBe(true);
     expect(nameField.required).toBe(true);
+    const form = byId('payroll-create-form');
     expect(form.textContent).toContain('RUT');
     expect(form.textContent).toContain('Nombre completo');
   });
@@ -123,14 +128,10 @@ describe('payroll-create: alta integral de liquidaciones', () => {
   it('no muestra el selector de tercero en la vista de creación', () => {
     byId('nav-payroll-create').click();
 
-    const thirdParty = byId('payroll-create-form').querySelector(
-      '[data-field="entity_id"]'
-    );
-    expect(thirdParty).not.toBeNull();
-    expect(thirdParty.closest('.form-field').hidden).toBe(true);
-    expect(byId('payroll-create-filter').closest('.form-field').hidden).toBe(
-      true
-    );
+    expect(
+      byId('payroll-create-form').querySelector('[data-field="entity_id"]')
+    ).toBeNull();
+    expect(byId('payroll-create-filter')).toBeNull();
   });
 
   it('no muestra facturas de compra a proveedores en la lista de la vista de creación', () => {
@@ -142,18 +143,15 @@ describe('payroll-create: alta integral de liquidaciones', () => {
     initApp(userConfig);
     byId('nav-payroll-create').click();
 
-    const captions = Array.from(
-      byId('payroll-create-list').querySelectorAll('caption'),
-      (caption) => caption.textContent
-    );
-    expect(captions).toContain('Ana Pérez Soto');
-    expect(captions).toContain('Bruno Soto Vega');
-    expect(captions).not.toContain('Proveedores del Sur S.A.');
+    const text = byId('payroll-create-list').textContent;
+    expect(text).toContain('Ana Pérez Soto');
+    expect(text).toContain('Bruno Soto Vega');
+    expect(text).not.toContain('Proveedores del Sur S.A.');
   });
 
   it('crea liquidación, tercero personal y acceso trabajador con la contraseña inicial', () => {
     byId('nav-payroll-create').click();
-    fillInvoiceForm();
+    fillPayrollForm();
 
     submit('payroll-create-form');
 
@@ -163,15 +161,12 @@ describe('payroll-create: alta integral de liquidaciones', () => {
       byId('view-payroll-create').querySelector('[data-invoice-feedback]')
         .textContent
     ).toContain('Liquidación guardada');
-    expect(
-      byId('payroll-create-form').querySelector('[data-extra-field="rut"]')
-        .value
-    ).toBe('');
+    expect(byId('payroll-create-field-rut').value).toBe('');
   });
 
   it('el trabajador creado ingresa y ve únicamente su liquidación', () => {
     byId('nav-payroll-create').click();
-    fillInvoiceForm();
+    fillPayrollForm();
     submit('payroll-create-form');
     expectCreatedRecords();
 
@@ -198,7 +193,7 @@ describe('payroll-create: alta integral de liquidaciones', () => {
 
   it('confirma el alta del trabajador con RUT y contraseña inicial antes de guardar', () => {
     byId('nav-payroll-create').click();
-    fillInvoiceForm();
+    fillPayrollForm();
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     submit('payroll-create-form');
@@ -213,7 +208,7 @@ describe('payroll-create: alta integral de liquidaciones', () => {
 
   it('no persiste registros al cancelar la confirmación de alta con RUT nuevo', () => {
     byId('nav-payroll-create').click();
-    fillInvoiceForm();
+    fillPayrollForm();
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
 
     submit('payroll-create-form');
@@ -253,7 +248,7 @@ describe('payroll-create: alta integral de liquidaciones', () => {
       { entities: [worker], records: loadAccessRecords() }
     );
     byId('nav-payroll-create').click();
-    fillInvoiceForm();
+    fillPayrollForm();
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     submit('payroll-create-form');

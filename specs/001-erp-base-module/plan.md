@@ -92,6 +92,7 @@ src/
     ├── invoice-list.js (renderizador compartido de listados con columnas por tipo)
     ├── invoice-sale-list.js (listado de factura de venta y sus columnas)
     ├── invoice-purchase-list.js (listado de factura de compra y sus columnas)
+    ├── movements-list.js (listado de solo lectura de movimientos financieros, FR-017 a FR-019)
     ├── search-bar.js   (barra de búsqueda)
     ├── tutorial.js     (guía de uso paso a paso, panel no modal, HU8/FR-031 a FR-035)
     └── tracking.js     (vista de seguimiento de deuda y vencimientos)
@@ -228,4 +229,4 @@ Antes de finalizar cualquier historia:
 **Críticos**: 0. El crítico C1 del análisis del 03-11 (puertas de calidad ausentes en las tareas) se atendió en T048 y en las Notas de `tasks.md`. Los dos MEDIUM del análisis del 05-11 (excepción e2e sin confirmar, hallazgo C1; presupuesto de rendimiento sin tarea, hallazgo C2) se atienden en el registro de desviación de esta sección y en la tarea T070.
 ## Nota de supersedencia por 002 (2026-11-16)
 
-La funcionalidad 002-payroll-access-control supersede el almacenamiento �nico de facturas descrito aqu�: erp.documents se migra de forma idempotente a erp.salesInvoices y erp.purchaseInvoices, con erp.unclassifiedDocuments para los documentos sin tipo. loadDocuments() se conserva como vista unificada de solo lectura para b�squeda, seguimiento y movimientos. La sesi�n de acceso y los accesos por RUT viven en erp.session (sessionStorage) y erp.accessRecords (localStorage).
+La funcionalidad 002-payroll-access-control supersede el almacenamiento único de facturas descrito aquí: erp.documents se migra de forma idempotente a erp.salesInvoices y erp.purchaseInvoices, con erp.unclassifiedDocuments para los documentos sin tipo. loadDocuments() se conserva como vista unificada de solo lectura para búsqueda, seguimiento y movimientos. La sesión de acceso y los accesos por RUT viven en erp.session (sessionStorage) y erp.accessRecords (localStorage).

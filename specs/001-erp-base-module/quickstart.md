@@ -39,10 +39,14 @@
 - Verifique que una compra no se puede emitir sin centro de costo y que el período de liquidación a personal debe ser `YYYY-MM` no posterior a la emisión.
 - Verifique que no se puede pagar con un monto distinto del total ni pasar una factura Pagada a otro estado.
 - Verifique que los movimientos financieros aparecen y no se pueden editar ni eliminar a mano.
-- El aviso al superar el límite de crédito forma parte de T026 de `tasks.md` y sigue pendiente.
+- Verifique que, al emitir una factura de venta que hace superar el límite de crédito del cliente, aparece un aviso con confirmación explícita y que la emisión no se bloquea (FR-029, T121–T125).
 - Verifique que los resultados de búsqueda se actualizan a medida que el usuario escribe.
 - Verifique que la lista permanece consistente tras las acciones de edición y eliminación.
 - Verifique que las estadísticas del panel coinciden con el número de registros almacenados.
+
+### Rendimiento (T070)
+
+El presupuesto de `plan.md` se comprueba en `tests/integration/performance.test.js`, que corre con `npm run check`: búsqueda y filtro de 500 terceros en menos de 100 ms, render de 500 terceros en menos de 200 ms (umbral más holgado porque jsdom es más lento que un navegador real) y filtro y render de las liquidaciones de demostración por RUT en menos de 1 s.
 
 ## Extender el Módulo Base
 

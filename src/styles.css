@@ -1672,3 +1672,20 @@ select[aria-invalid='true'] {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Spec 003 (T058): formulario propio de «Crear liquidación de sueldo». */
+#payroll-create-form .payroll-total,
+#payroll-create-form [data-form-error] {
+  grid-column: 1 / -1;
+}
+
+#payroll-create-form button[type='submit'] {
+  align-self: start;
+  justify-self: start;
+}
+
+/* El listado de la vista de creación es de solo lectura: sin columna de acciones. */
+#payroll-create-list th:last-child,
+#payroll-create-list td:last-child {
+  display: none;
+}

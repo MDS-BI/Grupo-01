@@ -781,29 +781,209 @@
               id="payroll-create-form"
               aria-labelledby="payroll-create-form-title"
               novalidate
-            ></form>
+            >
+              <div class="form-field">
+                <label for="payroll-create-field-rut">RUT *</label>
+                <input
+                  id="payroll-create-field-rut"
+                  name="rut"
+                  data-field="rut"
+                  type="text"
+                  placeholder="Ej. 12.345.678-5"
+                  autocomplete="off"
+                  required
+                  aria-required="true"
+                  aria-describedby="payroll-create-field-rut-error"
+                />
+                <div
+                  id="payroll-create-field-rut-error"
+                  class="error"
+                  data-error="rut"
+                ></div>
+              </div>
+              <div class="form-field">
+                <label for="payroll-create-field-nombreCompleto"
+                  >Nombre completo *</label
+                >
+                <input
+                  id="payroll-create-field-nombreCompleto"
+                  name="nombreCompleto"
+                  data-field="nombreCompleto"
+                  type="text"
+                  required
+                  aria-required="true"
+                  aria-describedby="payroll-create-field-nombreCompleto-error"
+                />
+                <div
+                  id="payroll-create-field-nombreCompleto-error"
+                  class="error"
+                  data-error="nombreCompleto"
+                ></div>
+              </div>
+              <div class="form-field">
+                <label for="payroll-create-field-periodoLiquidacion"
+                  >Período (AAAA-MM) *</label
+                >
+                <input
+                  id="payroll-create-field-periodoLiquidacion"
+                  name="periodoLiquidacion"
+                  data-field="periodoLiquidacion"
+                  type="text"
+                  placeholder="2026-11"
+                  inputmode="numeric"
+                  required
+                  aria-required="true"
+                  aria-describedby="payroll-create-field-periodoLiquidacion-error"
+                />
+                <div
+                  id="payroll-create-field-periodoLiquidacion-error"
+                  class="error"
+                  data-error="periodoLiquidacion"
+                ></div>
+              </div>
+              <div class="form-field">
+                <label for="payroll-create-field-sueldoBase"
+                  >Sueldo base *</label
+                >
+                <input
+                  id="payroll-create-field-sueldoBase"
+                  name="sueldoBase"
+                  data-field="sueldoBase"
+                  type="number"
+                  min="0"
+                  step="1"
+                  required
+                  aria-required="true"
+                  aria-describedby="payroll-create-field-sueldoBase-error"
+                />
+                <div
+                  id="payroll-create-field-sueldoBase-error"
+                  class="error"
+                  data-error="sueldoBase"
+                ></div>
+              </div>
+              <div class="form-field">
+                <label for="payroll-create-field-bonos">Bonos</label>
+                <input
+                  id="payroll-create-field-bonos"
+                  name="bonos"
+                  data-field="bonos"
+                  type="number"
+                  min="0"
+                  step="1"
+                  aria-describedby="payroll-create-field-bonos-error"
+                />
+                <div
+                  id="payroll-create-field-bonos-error"
+                  class="error"
+                  data-error="bonos"
+                ></div>
+              </div>
+              <div class="form-field">
+                <label for="payroll-create-field-descuentos">Descuentos</label>
+                <input
+                  id="payroll-create-field-descuentos"
+                  name="descuentos"
+                  data-field="descuentos"
+                  type="number"
+                  min="0"
+                  step="1"
+                  aria-describedby="payroll-create-field-descuentos-error"
+                />
+                <div
+                  id="payroll-create-field-descuentos-error"
+                  class="error"
+                  data-error="descuentos"
+                ></div>
+              </div>
+              <div class="form-field">
+                <label for="payroll-create-field-startDate"
+                  >Fecha de emisión *</label
+                >
+                <input
+                  id="payroll-create-field-startDate"
+                  name="startDate"
+                  data-field="startDate"
+                  type="date"
+                  required
+                  aria-required="true"
+                  aria-describedby="payroll-create-field-startDate-error"
+                />
+                <div
+                  id="payroll-create-field-startDate-error"
+                  class="error"
+                  data-error="startDate"
+                ></div>
+              </div>
+              <div class="form-field">
+                <label for="payroll-create-field-endDate"
+                  >Fecha de vencimiento *</label
+                >
+                <input
+                  id="payroll-create-field-endDate"
+                  name="endDate"
+                  data-field="endDate"
+                  type="date"
+                  required
+                  aria-required="true"
+                  aria-describedby="payroll-create-field-endDate-error"
+                />
+                <div
+                  id="payroll-create-field-endDate-error"
+                  class="error"
+                  data-error="endDate"
+                ></div>
+              </div>
+              <div class="form-field">
+                <label for="payroll-create-field-series">Serie</label>
+                <input
+                  id="payroll-create-field-series"
+                  name="series"
+                  data-field="series"
+                  type="text"
+                  aria-describedby="payroll-create-field-series-error"
+                />
+                <div
+                  id="payroll-create-field-series-error"
+                  class="error"
+                  data-error="series"
+                ></div>
+              </div>
+              <div class="form-field">
+                <label for="payroll-create-field-folio">Folio *</label>
+                <input
+                  id="payroll-create-field-folio"
+                  name="folio"
+                  data-field="folio"
+                  type="text"
+                  inputmode="numeric"
+                  required
+                  aria-required="true"
+                  aria-describedby="payroll-create-field-folio-error"
+                />
+                <div
+                  id="payroll-create-field-folio-error"
+                  class="error"
+                  data-error="folio"
+                ></div>
+              </div>
+              <div class="payroll-total" aria-live="polite">
+                <span>Monto líquido (sueldo base + bonos − descuentos)</span>
+                <strong id="payroll-create-field-totalAmount">$0</strong>
+                <div
+                  id="payroll-create-field-totalAmount-error"
+                  class="error"
+                  data-error="totalAmount"
+                ></div>
+              </div>
+              <p class="error" role="alert" data-form-error></p>
+              <button type="submit">Guardar liquidación</button>
+            </form>
             <p class="invoice-feedback" role="status" data-invoice-feedback></p>
             <h2 id="payroll-create-list-title">Liquidaciones registradas</h2>
-            <div class="invoice-controls" hidden>
-              <div class="form-field">
-                <label for="payroll-create-filter"
-                  >Filtrar por trabajador</label
-                >
-                <select id="payroll-create-filter" data-invoice-filter></select>
-              </div>
-              <div class="form-field">
-                <label for="payroll-create-edit" data-edit-label
-                  >Editar liquidación</label
-                >
-                <select id="payroll-create-edit" data-invoice-edit></select>
-              </div>
-              <button type="button" data-load-invoice>Cargar</button>
-              <button type="button" data-delete-invoice>Eliminar</button>
-            </div>
             <div
               id="payroll-create-list"
               aria-labelledby="payroll-create-list-title"
-              data-tipo-factura="compra"
             ></div>
           </section>
 
