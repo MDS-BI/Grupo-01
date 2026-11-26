@@ -8,9 +8,9 @@ Módulo de facturación y pagos (por cobrar y por pagar) de un sistema ERP, cons
 
 | Integrante | Historia de usuario original | Aportes principales al repositorio |
 |---|---|---|
-| Rivera Benavente, Jaime Alberto | HU1 Registrar terceros | Organización inicial del repositorio y del README; HU8 guía de uso y tutorial (tarea 6); revisión de privacidad con Speckit en la 002 (sin modo invitado, rol finanzas); MER único; formato en pesos chilenos; registro en Speckit de cambios hechos sin él |
+| Rivera Benavente, Jaime Alberto | HU1 Registrar terceros | Organización inicial del repositorio y del README; HU8 guía de uso y tutorial (tarea 6); revisión de privacidad con Speckit en la 002 (sin modo invitado, rol finanzas); MER único; formato en pesos chilenos; registro en Speckit de cambios hechos sin él; aviso al superar el límite de crédito (FR-029); correcciones con Speckit de la 003 (finanzas sin poder cambiar montos de liquidaciones; clarify y tasks del formulario propio de crear liquidación; T064) y de la 004 (menú de finanzas); revisiones del repositorio contra la rúbrica |
 | Zavala Campos, Elías Ignacio | HU5 Ver la deuda por tercero y las facturas vencidas | Menú desplegable ☰ «Utilidades & Sesión» y reorganización del Panel |
-| Vásquez Mera, Carolina Andrea | HU2 Emitir facturas de venta | Revisión 3 de la spec 001 e implementación de las HU1 a HU7 (05-11); minuta de cambios de la reunión con el profesor (04-11) |
+| Vásquez Mera, Carolina Andrea | HU2 Emitir facturas de venta | Revisión 3 de la spec 001 e implementación de las HU1 a HU7 (05-11); minuta de cambios de la reunión con el profesor (04-11); coordinación del grupo; specs 003 (pestañas de liquidación y permisos por rol) y 004 (rediseño de los paneles por rol y constitución v1.1.0) con su implementación; implementación de T053–T062 y T065–T066 de la 003; cierre de tareas de la 001 |
 | Espinoza Muñoz, Matías Ignacio | HU3 Registrar facturas de compra | Flujo de caja y Resumen financiero del Panel (tareas 7 y 8); desglose de la liquidación e historial de pagos del trabajador (HU3 de la 002) |
 | Ulloa Troncoso, Javier Ignacio | HU4 Registrar el pago y marcar Pagada | Spec 002 (acceso por RUT, liquidaciones de sueldo y separación de facturas) y su primera implementación |
 | Aguayo Puentes, Mauro Alejandro | HU6 Datos de demostración y otros módulos | Separación de las facturas de venta y de compra; revisión del login (rol visible y cierre de sesión) |
@@ -68,6 +68,7 @@ El módulo distingue tres roles de acceso. Cada usuario del negocio entra con un
 - **Contraseña inicial (riesgo conocido):** son los primeros 4 dígitos del RUT y no se puede cambiar. Quien conozca el RUT de un compañero puede entrar como él.
 - **Control solo de interfaz (riesgo conocido):** los permisos se aplican en el navegador, sin servidor ni cifrado. Alguien con conocimientos técnicos podría leer o modificar los datos.
 - **Almacenamiento:** `localStorage` no es seguro; el MVP no debe usarse con datos reales. Los datos de demostración son ficticios.
+- **RUT sin cifrar (riesgo conocido):** los RUT se guardan en texto plano en el navegador. Cifrarlos o guardarlos con *hash* requiere un backend, por lo que queda para la Etapa 4 de desarrollo futuro, como indicó el profesor.
 - **Sesgo en el límite de crédito:** si se fija con criterios subjetivos, puede discriminar a algunos clientes (O'Neil, 2016). Los criterios deben documentarse y, en el futuro, calcularse con una fórmula transparente y revisable.
 - **Sesgo en el seguimiento:** que una factura esté vencida no prueba que el cliente sea mal pagador (puede haber errores de registro o acuerdos de pago). El seguimiento informa, pero no debe usarse solo para castigar a un tercero.
 
@@ -83,7 +84,7 @@ El módulo distingue tres roles de acceso. Cada usuario del negocio entra con un
 | Identificador compartido con CRM, Ventas y Compras | Referencia manual en texto libre, como indicó el ayudante |
 | Contenido de `plan.md` | Incluye las puertas de calidad (`npm run check`) y la tabla de cobertura |
 | Código del template copiado al repositorio | Se partió de esa base y los cambios se hacen con `speckit.implement`, como pidió el profesor |
-| Pruebas e2e | El MVP no tiene e2e: los recorridos se cubren con pruebas de integración en Vitest y jsdom. Pendiente de confirmar con el profesor |
+| Pruebas e2e | El MVP no tiene pruebas e2e: los recorridos se cubren con pruebas de integración en Vitest y jsdom, y el ciclo completo de la demostración (crear, emitir y pagar una liquidación con los tres roles) se ensayó en el navegador el 26-11 |
 | Versión de Speckit y constitución | Se mantiene la del repositorio; el profesor agregó la integración de Speckit con Claude el 15-11 |
 
 ## Cómo ejecutar
@@ -118,13 +119,13 @@ Luego presiona **Cargar demostración** e ingresa, por ejemplo, con `88.888.888-
 
 **La aplicación no abre o falta la tipografía después de un `git pull`.** Ejecuta `npm install` antes de `npm run dev`: la spec 004 agregó la dependencia `@fontsource/ibm-plex-sans`.
 
-## Estado del proyecto (25-11-2026)
+## Estado del proyecto (26-11-2026)
 
 - **Especificaciones:** `specs/001-erp-base-module/` (facturación y pagos: HU1 a HU10), `specs/002-payroll-access-control/` (acceso por rol y liquidaciones: HU1 a HU7), `specs/003-payroll-tabs-roles/` (pestañas de liquidación y permisos por rol: HU1 a HU3) y `specs/004-role-dashboard-redesign/` (rediseño visual de los paneles por rol y de la gestión de liquidaciones: HU1 a HU7). Cada una tiene `spec.md`, `plan.md`, `data-model.md`, `tasks.md`, `quickstart.md` y `contracts/`.
 - **Modelo entidad-relación:** `specs/001-erp-base-module/mer.png`, generado desde la sección 13 de `specs/002-payroll-access-control/data-model.md` (MER único del módulo). La spec 004 no cambia el modelo de datos.
 - **Identidad visual (constitución v1.1.0):** nombre «Contabilidad y Finanzas», acento `#0f62fe`, tipografía IBM Plex Sans local con números tabulares, color solo para comunicar estado y montos en pesos chilenos.
-- **Implementación:** todas las historias están implementadas, incluidos el aviso al superar el límite de crédito (FR-029 de la 001, T121–T125) y el formulario propio para crear liquidaciones de la 003 (T053–T062). La verificación se hace con `npm run check` (lint, formato y pruebas).
-- **Pendiente antes de la presentación:** recorrer la demostración completa (T049 y T052 de la 001) y ejecutar `/speckit.analyze` como revisión final de consistencia (T051 de la 001).
+- **Implementación:** todas las historias están implementadas, incluidos el aviso al superar el límite de crédito (FR-029 de la 001, T121–T125) y el formulario propio para crear liquidaciones de la 003 (T053–T066). Las cuatro specs tienen todas sus tareas marcadas. La verificación se hace con `npm run check` (lint, formato y pruebas).
+- **Revisión final:** se recorrió la demostración completa y se ejecutó `/speckit.analyze` (T049, T051 y T052 de la 001). El 26-11-2026 el grupo acordó cerrar los cambios del repositorio para enfocarse en la presentación.
 
 ## Registro de decisiones
 
@@ -175,6 +176,7 @@ Luego presiona **Cargar demostración** e ingresa, por ejemplo, con `88.888.888-
 | 26-11-2026 | Spec 003 (T064): el listado de «Crear liquidación de sueldo» se refresca al abrir la pestaña, porque quedaba vacío después de «Cargar demostración» hasta guardar una liquidación | Jaime Rivera |
 | 26-11-2026 | `/speckit.analyze` sobre la spec 003 detectó que `plan.md`, `research.md`, `data-model.md`, `quickstart.md` y los contratos seguían describiendo el formulario de compra reutilizado. Se sincronizaron con las clarificaciones del 24-11 (pago por finanzas, facturas vinculadas en solo lectura) y del 25-11 (formulario propio), con notas de *superseded* en `tasks.md` y sin cambios en `spec.md` ni en el código | Carolina Vásquez |
 | 26-11-2026 | Al ensayar la demo en vivo del ciclo completo (crear → emitir → pagar) se detectaron dos errores en la spec 003: una liquidación creada con el formulario propio no se podía emitir por no tener centro de costo (T065, se asigna «Consumible») y los formularios de edición y pago quedaban abiertos al cambiar de rol (T066, se cierran al cerrar sesión). Ambos con prueba previa | Carolina Vásquez |
+| 26-11-2026 | Revisión final del README contra la rúbrica: se actualizan el estado del proyecto y los aportes del equipo; la sección de la funcionalidad 002 se alinea con los permisos de la 003 (describía a finanzas editando liquidaciones y al administrador con todas las funciones); se corrigen los pasos de la guía por rol y se agrega el riesgo del RUT sin cifrar | Jaime Rivera |
 
 ## Uso de IA (anexo)
 
@@ -199,6 +201,7 @@ Según la política del curso, cada consulta a un modelo de IA generativa se reg
 | 24-11-2026 al 25-11-2026 | Jaime Rivera | Claude (Anthropic), modelo configurado en la sesión: claude-opus-5-5; y Big Pickle (modelo por defecto de OpenCode 1.19.5) | Claude: revisión del trabajo del grupo contra la rúbrica y prueba de permisos en el navegador (detectó que finanzas podía cambiar montos de liquidaciones y que no podía llegar a sus vistas), redacción de prompts y revisión de cada resultado; Revert de dos commits que habían reemplazado la spec 002 por una versión antigua. OpenCode: ciclos clarify, tasks e implement en las specs 003 y 004. Claude no hizo commits | (1) "Revisa el repo, mi grupo estuvo trabajando"; (2) "Revisa si está todo bien según la rúbrica"; (3) `/speckit.clarify`, `/speckit.tasks` y `/speckit.implement` en la 003 (T043-T052) y en la 004 (T037-T040); `npm run check` 398/398 |
 | 25-11-2026 | Carolina Vásquez | Claude (Anthropic), modelo configurado en la sesión: claude-opus-5-5 (el modelo que respondió puede variar) | Revisión del repositorio contra los 6 ítems de la rúbrica antes de la presentación; implementación de T053–T062 de la spec 003 (pruebas primero) con verificación en un navegador headless; cierre de tareas de la 001, corrección de la codificación de `plan.md` y actualización de este README. Claude no hizo commits | (1) "Necesito que analices el estado del repo y me digas si estamos listos para armar la presentación, según los 6 puntos que están en el archivo subido al contexto"; (2) "Ayúdame a cerrar lo que queda pendiente" |
 | 26-11-2026 | Carolina Vásquez | Claude (Anthropic), modelo configurado en la sesión: claude-opus-5-5 (el modelo que respondió puede variar) | Corrección de los hallazgos CRITICAL, HIGH y MEDIUM de `/speckit.analyze` en la documentación de diseño de la spec 003, contrastada con el código; también la presentación y la guía de ensayo de la demo (fuera del repositorio); recorrido automatizado de la demo en un navegador, que detectó los errores de T065 y T066, y su corrección con pruebas previas. Claude no hizo commits | (1) "Desarróllame la parte 3 y la parte 4" (guía de ensayo y presentación); (2) "Hacer las correcciones contigo" (sobre el reporte de `/speckit.analyze`); (3) "Necesito modificar qué mostrar y qué decir en la demo en vivo" |
+| 25-11-2026 al 26-11-2026 | Jaime Rivera | Claude (Anthropic), modelo configurado en la sesión: claude-opus-5-5 (el modelo que respondió puede variar); y Big Pickle (modelo por defecto de OpenCode 1.19.5) | Claude: análisis de la conversación con el profesor sobre los roles; prueba en el navegador del formulario de crear liquidación (detectó campos de factura de compra, ids repetidos y el listado vacío corregido en T064); revisión final del repositorio y de la página contra la rúbrica; redacción de los prompts y de esta actualización del README. OpenCode: clarify, tasks e implement de la 003 (T053–T064). Claude no hizo commits | (1) "Analiza lo que respondió el profe para ver con qué seguimos"; (2) `/speckit.clarify` del formulario propio de crear liquidación; (3) `/speckit.tasks` de T053–T063 y de T064; (4) `/speckit.implement` de T064; (5) "Haz una evaluación total del repo, del MVP y de la página según la rúbrica y lo que ha dicho el profe"; (6) "Hagamos todo el ítem A de arreglos" |
 
 ## Referencias
 
@@ -298,11 +301,18 @@ Los roles son administrador, finanzas y trabajador:
 - **Trabajador**: ve solo **Mi liquidación**, la liquidación vigente de su tercero
   personal con sueldo base, descuentos, bonos y el historial de pagos efectuados,
   en modo de solo lectura.
-- **Finanzas**: ve y edita terceros, facturas de venta y compra, liquidaciones,
-  movimientos, flujo de caja, seguimiento y búsqueda. No administra accesos ni ve
-  los avisos del desarrollador.
-- **Administrador**: conserva todas las funciones, incluidas administrar accesos
-  y consultar los avisos del desarrollador.
+- **Finanzas**: ve y edita terceros, facturas de venta y de compra, movimientos,
+  flujo de caja, seguimiento y búsqueda. Ve las liquidaciones de sueldo en solo
+  lectura, con búsqueda por RUT, y su única acción sobre ellas es **Registrar
+  pago** en las liquidaciones `Emitidas`. Las facturas de compra vinculadas a una
+  liquidación también son de solo lectura para este rol. No administra accesos.
+- **Administrador (Recursos Humanos)**: ve el Panel de nómina, **Crear
+  liquidación de sueldo** (formulario propio, con alta automática del trabajador
+  previa confirmación), **Gestionar liquidaciones de sueldo** (editar y emitir) y
+  **Control de accesos**. No ve terceros, facturas ni reportes financieros
+  (spec 003).
+- Ningún rol ve los avisos al desarrollador: se siguen registrando, pero sin una
+  vista en la interfaz (spec 003, FR-020).
 
 Las facturas de venta y compra viven en colecciones separadas
 (`erp.salesInvoices` y `erp.purchaseInvoices`) y la migración desde
@@ -322,13 +332,15 @@ entidades/terceros".
 
 Con sesión iniciada, la opción **Guía de uso** del menú desplegable ☰
 «Utilidades & Sesión» abre un panel no modal para los tres roles. El Panel también
-muestra **¿Primera vez? Ver la guía**, solo para administrador y finanzas; sin
-sesión no aparece ninguna entrada de la guía.
+muestra **¿Primera vez? Ver la guía** para los tres roles; sin sesión no aparece
+ninguna entrada de la guía.
 
-El recorrido se filtra por rol: administrador y finanzas ven Panel, Terceros,
-Facturas de venta, Facturas de compra, Emitir y pagar, Liquidaciones de sueldo,
+El recorrido se filtra por rol. Finanzas ve 11 pasos: Panel, Terceros, Facturas
+de venta, Facturas de compra, Emitir y pagar, Liquidaciones de sueldo,
 Movimientos financieros, Flujo de caja, Seguimiento, el menú ☰ y Cuidados. El
-trabajador ve solo Mi liquidación y Cuidados. La guía usa los permisos existentes,
+administrador ve 6: Panel, Crear liquidación de sueldo, Gestionar liquidaciones
+de sueldo, Control de accesos, el menú ☰ y Cuidados. El trabajador ve 2: Mi
+liquidación y Cuidados. La guía usa los permisos existentes,
 permite "Anterior", "Siguiente"/"Finalizar", "Ir a" y "Cerrar", devuelve el foco
 al control que la abrió y no modifica datos, sesión ni almacenamiento.
 
