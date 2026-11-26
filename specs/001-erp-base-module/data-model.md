@@ -78,8 +78,8 @@ Representa una factura de venta (por cobrar) o de compra (por pagar) como docume
 | entity_id | string | `entity_id` del tercero al que pertenece | Obligatorio, debe existir | Usado |
 | series | string | Serie de la factura | Opcional | Usado |
 | folio | number | Folio que, junto con la serie, forma el número oficial | Obligatorio, entero positivo | Usado |
-| startDate | string | Fecha de inicio (YYYY-MM-DD) | Obligatorio, fecha válida | Usado como **fecha de emisión** *(equivalencia por confirmar con el ayudante)* |
-| endDate | string | Fecha de fin (YYYY-MM-DD) | Obligatorio, fecha válida, igual o posterior a `startDate` | Usado como **fecha de vencimiento** *(equivalencia por confirmar con el ayudante)* |
+| startDate | string | Fecha de inicio (YYYY-MM-DD) | Obligatorio, fecha válida | Usado como **fecha de emisión**, con esa etiqueta en la interfaz (decidido 2026-11-26) |
+| endDate | string | Fecha de fin (YYYY-MM-DD) | Obligatorio, fecha válida, igual o posterior a `startDate` | Usado como **fecha de vencimiento**, con esa etiqueta en la interfaz (decidido 2026-11-26) |
 | quantity | number | Cantidad asociada | Opcional, entero positivo | Disponible, sin uso en el MVP |
 | subtotal | number | Importe antes de descuentos e impuestos | Opcional, no negativo | Usado |
 | discount | number | Descuento sobre el subtotal | Opcional, no negativo, no puede superar el subtotal | Usado |
