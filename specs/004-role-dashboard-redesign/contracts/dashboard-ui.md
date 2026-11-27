@@ -96,7 +96,7 @@ La ocultación se aplica en la capa del Panel, no únicamente en `clearRestricte
   - Si no existe ningún documento con fecha anterior al mes actual, `previousValue` es `null` y se muestra `sin dato anterior`.
   - Si `previousValue` es `0` y el valor actual no es `0`, no se calcula porcentaje: se muestra solo la flecha con el texto `nuevo`.
   - La flecha de `nuevo` es ▲ cuando el valor actual es positivo y ▼ cuando es negativo; el color conserva la semántica del indicador.
-- Fórmulas solo en tooltip accesible señalado con ⓘ; la etiqueta visible contiene únicamente el nombre del indicador.
+- Fórmulas solo en tooltip accesible señalado con un ícono CSS de 16 px, sin usar el carácter «ⓘ»: borde `1px solid #8ECAE6`, fondo tinte claro `color-mix(in srgb, #8ECAE6 18%, #ffffff)` y letra «i» en IBM Plex Sans peso 600 y color `#023047`, centrada y alineada verticalmente con el título; en hover o foco el fondo pasa a `#8ECAE6`. El ícono conserva `role="img"`, `aria-label`, `tabindex="0"` y la fórmula; la etiqueta visible contiene únicamente el nombre del indicador.
 - Las cuatro tarjetas deben ser visibles sin scroll en 1366x768.
 
 ### Accesos rápidos de finanzas

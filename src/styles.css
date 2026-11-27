@@ -1215,9 +1215,37 @@ select[aria-invalid='true'] {
 }
 
 .indicator-info {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
   margin-left: 4px;
+  border: 1px solid #8ecae6;
+  border-radius: 50%;
+  background-color: color-mix(in srgb, #8ecae6 18%, #ffffff);
+  color: #023047;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1;
+  vertical-align: middle;
   cursor: help;
-  color: var(--accent-color);
+}
+
+.indicator-info:hover {
+  background-color: #8ecae6;
+}
+
+.indicator-info:focus {
+  background-color: #8ecae6;
+}
+
+.indicator-info:focus-visible {
+  background-color: #8ecae6;
+  outline: 2px solid #023047;
+  outline-offset: 2px;
 }
 
 .indicator-value {

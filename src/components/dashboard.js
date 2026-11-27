@@ -88,6 +88,7 @@ export function initDashboard({ config, onAction }) {
     if (info) {
       info.title = indicator.formula;
       info.setAttribute('aria-label', `Fórmula: ${indicator.formula}`);
+      info.setAttribute('tabindex', '0');
     }
   }
 }

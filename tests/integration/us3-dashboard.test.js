@@ -291,7 +291,7 @@ describe('US3 - panel de inicio', () => {
     expect(document.getElementById('summary-deuda')).toBeNull();
   });
 
-  it('cada indicador muestra su variación y su fórmula solo en el tooltip ⓘ (HU2)', () => {
+  it('cada indicador muestra su variación y su fórmula solo en el tooltip accesible (HU2)', () => {
     setupFinanceSession();
     loadDemoData(getConfig());
     initApp(userConfig);
@@ -305,7 +305,7 @@ describe('US3 - panel de inicio', () => {
         variation.dataset.tone
       );
       const info = document.querySelector(`[data-formula-for="${id}"]`);
-      expect(info.textContent).toBe('ⓘ');
+      expect(info.textContent).toBe('i');
       expect(info.title.length).toBeGreaterThan(10);
     }
     const label = document
