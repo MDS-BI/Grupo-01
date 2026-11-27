@@ -146,7 +146,7 @@ isSessionValid(session, { records, entities }): boolean
 - El formulario no muestra datos hasta autenticar y no incluye selector de rol.
 - Un error muestra un mensaje claro y no revela si el RUT existe cuando la causa es la contraseña.
 - Si no hay accesos, se indica que la demostración se carga desde `login-demo-load`; la carga no inicia sesión y vuelve al acceso.
-- Al autenticar, se guarda la sesión y se navega a la vista del rol. La cabecera muestra Rol: Administrador, Rol: Finanzas o Rol: Trabajador.
+- Al autenticar, se guarda la sesión y se navega a la vista del rol. La cabecera muestra Rol: Administrador, Rol: Finanzas o Rol: Trabajador. Nota: superseded por 004 (FR-059): «Rol: Administrador» se muestra como «Rol: Recursos Humanos», con saludo «Hola, Recursos Humanos» e inicial «R»; todos los roles visibles usan mayúscula inicial y la clave interna `administrador` no cambia.
 - La última acción del lateral es «Cerrar sesión» para administrador, finanzas y trabajador; no existe «Iniciar sesión» dentro del ERP.
 - Cualquier vista distinta de `login` sin sesión válida redirige a `login` sin exponer datos de negocio.
 - Al regresar al login, se ocultan el lateral y el rol anterior y se limpian los campos y errores del formulario.

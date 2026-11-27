@@ -81,7 +81,7 @@ Las liquidaciones se guardan en `erp.payrollSettlements` (esquema `2.0.0`) vincu
 1. Abrir la aplicación en una pestaña nueva sin sesión.
 2. Verificar que el acceso muestra la tarjeta centrada con RUT y contraseña, «Ingresar» y «Cargar demostración», sin opción de invitado, sin selector de rol y con el lateral oculto.
 3. Pulsar «Cargar demostración» y comprobar que se permanece en el acceso, sin sesión ni datos de negocio visibles.
-4. Ingresar `88.888.888-8` / `8888` y comprobar el Panel y «Rol: Administrador» en la cabecera.
+4. Ingresar `88.888.888-8` / `8888` y comprobar el Panel y «Rol: Administrador» en la cabecera. Nota: superseded por 004 (FR-059): comprobar «Rol: Recursos Humanos», el saludo «Hola, Recursos Humanos» y la inicial «R»; todos los roles visibles usan mayúscula inicial y la clave interna `administrador` no cambia.
 5. Comprobar que «Cerrar sesión» es la última opción del lateral y utilizarla.
 6. Ingresar `55.555.555-5` / `5555` y comprobar el Panel, «Rol: Finanzas», el acceso a la facturación y la ausencia de accesos y avisos del desarrollador.
 7. Cerrar sesión, ingresar `22.222.222-2` / `2222` y comprobar Mi liquidación y «Rol: Trabajador».
