@@ -4,6 +4,7 @@ import { userConfig } from '../../src/module-config.js';
 import {
   addDocument,
   addEntity,
+  loadPayrollSettlements,
   savePayrollSettlements,
   updateDocument,
 } from '../../src/storage.js';
@@ -13,6 +14,7 @@ import {
   loadAppMarkup,
   setupAdminSession,
   setupFinanzasSession,
+  submit,
 } from '../setup/domFixture.js';
 
 const byId = (id) => document.getElementById(id);
@@ -222,5 +224,27 @@ describe('Banner contextual - avisos por rol', () => {
 
     expect(byId('banner-notice').hidden).toBe(true);
     confirmSpy.mockRestore();
+  });
+
+  it('oculta el aviso al emitir una liquidación desde Gestionar liquidaciones sin cambiar de vista', () => {
+    setupAdminSession();
+    seedDrafts(1);
+    initApp(userConfig);
+
+    expect(byId('banner-notice').hidden).toBe(false);
+    expect(byId('banner-notice-text').textContent.trim()).toBe(
+      '1 liquidación en borrador'
+    );
+
+    byId('nav-payroll-admin').click();
+    byId('view-payroll-admin').querySelector('[data-action="edit"]').click();
+
+    const status = byId('payroll-field-status');
+    status.value = 'Emitida';
+    status.dispatchEvent(new Event('change', { bubbles: true }));
+    submit('payroll-form');
+
+    expect(loadPayrollSettlements()[0].estado).toBe('Emitida');
+    expect(byId('banner-notice').hidden).toBe(true);
   });
 });

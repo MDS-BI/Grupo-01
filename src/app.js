@@ -564,6 +564,7 @@ function refreshPayrollAdmin() {
     onAssociate: associatePayrollAccess,
     onRegisterPayment: openPayrollPaymentForm,
   });
+  refreshBannerNotice();
 }
 
 function editPayrollSettlement(id) {
