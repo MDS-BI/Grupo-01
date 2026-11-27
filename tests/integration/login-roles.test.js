@@ -137,7 +137,7 @@ describe('US1 - inicio de sesión con RUT y contraseña', () => {
         rut: ADMIN_RUT,
         password: '8888',
         role: 'administrador',
-        roleLabel: 'Administrador',
+        roleLabel: 'Recursos Humanos',
         view: 'dashboard',
         allowed: 'nav-access',
         denied: 'nav-payroll-worker',
@@ -319,12 +319,12 @@ describe('US1 - inicio de sesión con RUT y contraseña', () => {
     initApp(userConfig);
     login({ rut: ADMIN_RUT, password: '8888' });
 
-    expect(byId('session-role').textContent).toBe('Rol: Administrador');
+    expect(byId('session-role').textContent).toBe('Rol: Recursos Humanos');
     expect(byId('sidebar').hidden).toBe(false);
     expect(byId('app').classList.contains('login-screen')).toBe(false);
     expect(visibleNavIds().at(-1)).toBe('nav-logout');
     byId('nav-entities').click();
-    expect(byId('session-role').textContent).toBe('Rol: Administrador');
+    expect(byId('session-role').textContent).toBe('Rol: Recursos Humanos');
     byId('nav-logout').click();
     expect(byId('sidebar').hidden).toBe(true);
     expect(byId('session-role').hidden).toBe(true);

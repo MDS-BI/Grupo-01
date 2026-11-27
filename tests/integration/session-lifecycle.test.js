@@ -27,7 +27,7 @@ describe('US6 - ciclo de vida de la sesión', () => {
     loadAppMarkup();
     initApp(userConfig);
     expect(byId('view-dashboard').hidden).toBe(false);
-    expect(byId('session-role').textContent).toBe('Rol: Administrador');
+    expect(byId('session-role').textContent).toBe('Rol: Recursos Humanos');
     expect(loadSession()).toMatchObject({
       accessId: '88888888-8',
       role: 'administrador',

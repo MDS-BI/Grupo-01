@@ -88,7 +88,7 @@ describe('US2 - administración de accesos', () => {
       password: '2222',
       active: true,
     });
-    expect(byId('access-list').textContent).toContain('22222222-2');
+    expect(byId('access-list').textContent).toContain('22.222.222-2');
   });
 
   it('muestra la contraseña inicial de solo lectura al escribir el RUT', () => {

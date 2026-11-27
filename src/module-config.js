@@ -74,7 +74,7 @@ export const DEFAULT_ACCENT_COLOR = '#0f62fe';
 export const ROLES = Object.freeze(['administrador', 'finanzas', 'trabajador']);
 
 export const ROLE_LABELS = Object.freeze({
-  administrador: 'Administrador',
+  administrador: 'Recursos Humanos',
   finanzas: 'Finanzas',
   trabajador: 'Trabajador',
 });

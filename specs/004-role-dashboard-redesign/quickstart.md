@@ -22,7 +22,7 @@ npm run dev
 
 | Rol | Acceso | Clave | Perfil esperado |
 |---|---|---|---|
-| Administrador | `88.888.888-8` | `8888` | `Administrador` / `A` |
+| Administrador | `88.888.888-8` | `8888` | `Recursos Humanos` / `R` |
 | Finanzas | `55.555.555-5` | `5555` | `Finanzas` / `F` |
 | Trabajador Ana | `22.222.222-2` | `2222` | `Ana Pérez Soto` / `AP` |
 | Trabajador Bruno | `45000000-0` | `4500` | `Bruno Soto Vega` / `BS` |
@@ -30,17 +30,19 @@ npm run dev
 ## Verificación global
 
 1. Confirmar que el título de la pestaña y `#brand-name` dicen exactamente `Contabilidad y Finanzas`.
-2. Confirmar que el círculo superior derecho muestra `A`, `F`, `AP` o `BS` según el usuario; nunca `ERP` ni iniciales del módulo.
+2. Confirmar que el círculo superior derecho muestra `R`, `F`, `AP` o `BS` según el usuario; nunca `ERP` ni iniciales del módulo.
 3. Confirmar en herramientas de desarrollador que `font-family` resuelve a IBM Plex Sans y que los montos usan cifras de ancho fijo.
 4. Confirmar que la paleta conserva acento `#0f62fe`, fondo gris claro y tarjetas blancas.
-5. Confirmar que los períodos visibles aparecen como texto legible, p. ej. `noviembre 2026`.
+5. Confirmar que los períodos visibles aparecen como texto legible, p. ej. `noviembre 2026`, y que toda fecha visible como texto usa `DD-MM-AAAA` sin cambiar entradas ni almacenamiento `AAAA-MM-DD`.
+6. Confirmar que los RUT visibles usan puntos y guion, p. ej. `22.222.222-2`, y que los montos visibles usan `formatCurrencyCLP`, p. ej. `$250.000`, nunca `250000 CLP`.
+7. Reducir la ventana a 390 px: la página no debe desbordar horizontalmente; las tablas anchas se desplazan dentro de su contenedor.
 
 ## Verificación por rol
 
 ### Administrador
 
 1. Iniciar sesión con `88.888.888-8` / `8888`.
-2. En el Panel, confirmar saludo con `Administrador`, mes legible y dos tarjetas: `Crear liquidación de sueldo` y `Gestionar liquidaciones de sueldo`.
+2. En el Panel, confirmar `Rol: Recursos Humanos`, saludo con `Recursos Humanos`, mes legible y dos tarjetas: `Crear liquidación de sueldo` y `Gestionar liquidaciones de sueldo`.
 3. Confirmar el resumen de nómina con tres métricas: trabajadores con acceso, liquidaciones del mes actual y liquidaciones en borrador.
 4. Buscar en el DOM las palabras `Resumen financiero`, `Indicadores`, `Deuda pendiente`, `Caja neta`, `Por cobrar`, `Por pagar` y `Facturas vencidas`: ninguna debe aparecer visible.
 5. Confirmar que no existe gráfico SVG de tendencia, alertas financieras ni tabla de movimientos.
@@ -72,7 +74,7 @@ npm run dev
 3. Confirmar banner `¿Primera vez?` arriba de la vista del trabajador.
 4. Confirmar nombre visible, período en texto legible y monto líquido destacado con `$` y separador de miles.
 5. Confirmar que la tabla de desglose aparece solo si hay sueldo base, descuentos o bonos con valor.
-6. Confirmar historial con montos en `$`.
+6. Confirmar historial con montos en `$` y fechas de pago en `DD-MM-AAAA`.
 7. Confirmar ausencia de indicadores, gráfico y alertas financieras.
 
 ## Banner y sesión
@@ -99,7 +101,7 @@ npm run build
 - Panel del administrador con dos acciones de liquidación, tres métricas y cero indicadores financieros.
 - Panel de finanzas con cuatro indicadores visibles sin scroll a 1366x768.
 - Sin etiqueta `Deuda pendiente`.
-- Sin `AAAA-MM` en textos visibles.
-- Montos en CLP con `$`, separador de miles y ancho fijo.
-- Nombre del sistema e iniciales correctos en todas las vistas.
+- Sin `AAAA-MM` ni identificadores internos (`doc_`, `ent_`, `set_`, `salesOrderId`) en textos visibles; las fechas visibles usan `DD-MM-AAAA` y los RUT usan puntos y guion.
+- Montos visibles en formato canónico CLP con `$`, separador de miles y ancho fijo, p. ej. `$250.000`.
+- Nombre del sistema e iniciales correctos en todas las vistas, con `Recursos Humanos` / `R` para el rol administrador.
 - Todas las pruebas automatizadas pasan.

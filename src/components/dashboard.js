@@ -7,6 +7,7 @@ import { loadMovements } from '../movements.js';
 import { computeFinanceIndicators, FINANCE_INDICATORS } from '../finance.js';
 import { computeMonthlyIncomeExpense } from '../cashflow.js';
 import { formatCurrencyCLP } from '../format.js';
+import { ROLE_LABELS } from '../module-config.js';
 import { loadAccessRecords } from '../access-storage.js';
 import { loadSession, resolveSessionProfile } from '../session.js';
 import { todayISO } from '../tracking.js';
@@ -203,7 +204,11 @@ export function setDashboardSession(session) {
   }
 
   const profile = resolveSessionProfile(session, { entities: [] });
-  setText('dashboard-greeting', `Hola, ${profile.displayName}`);
+  const displayName =
+    session?.role === 'administrador'
+      ? ROLE_LABELS.administrador
+      : profile.displayName;
+  setText('dashboard-greeting', `Hola, ${displayName}`);
   setText(
     'dashboard-month',
     readableMonthLabel(

@@ -7,6 +7,8 @@ import {
   appendDevNotification,
 } from '../access-storage.js';
 import { initialPassword, normalizeRut } from '../auth.js';
+import { formatRut } from '../format.js';
+import { ROLE_LABELS } from '../module-config.js';
 import { loadEntities } from '../storage.js';
 import { ValidationFailure } from '../storage.js';
 
@@ -24,7 +26,7 @@ const ACCESS_MARKUP = `
       <select id="access-role" name="role">
         <option value="trabajador">Trabajador</option>
         <option value="finanzas">Finanzas</option>
-        <option value="administrador">Administrador</option>
+        <option value="administrador">Recursos Humanos</option>
       </select>
       <div data-error="role" class="error"></div>
     </div>
@@ -59,6 +61,10 @@ function errorText(errors) {
   return errors.map((error) => error.message).join(' ');
 }
 
+function roleLabel(role) {
+  return ROLE_LABELS[role] ?? String(role ?? '');
+}
+
 export function initAccessAdmin({
   config: _config,
   onAccessChange,
@@ -75,6 +81,12 @@ export function initAccessAdmin({
   const entitySelect = document.getElementById('access-entity');
   const entityField = entitySelect?.closest('.form-field');
   const passwordInput = document.getElementById('access-password');
+
+  if (roleSelect) {
+    for (const option of roleSelect.options) {
+      option.textContent = ROLE_LABELS[option.value] ?? option.textContent;
+    }
+  }
 
   let dirty = false;
 
@@ -122,7 +134,7 @@ export function initAccessAdmin({
       for (const entity of availableEntities) {
         const option = document.createElement('option');
         option.value = entity.entity_id;
-        option.textContent = `${entity.name} (${entity.taxId ?? ''})`;
+        option.textContent = `${entity.name} (${formatRut(entity.taxId)})`;
         entitySelect.append(option);
       }
     }
@@ -132,6 +144,9 @@ export function initAccessAdmin({
   function refreshAccessList() {
     if (!listElement) return;
     const records = loadAccessRecords();
+    const entitiesById = new Map(
+      loadEntities().map((entity) => [entity.entity_id, entity])
+    );
     listElement.innerHTML = '';
     if (records.length === 0) {
       listElement.innerHTML =
@@ -141,13 +156,14 @@ export function initAccessAdmin({
     const list = document.createElement('ul');
     list.className = 'record-list';
     for (const record of records) {
+      const entity = entitiesById.get(record.entityId);
       const item = document.createElement('li');
       item.className = 'record-card';
       const label = document.createElement('p');
       label.className = 'record-title';
-      label.textContent = `${record.accessId} · ${record.role}`;
+      label.textContent = `${formatRut(record.accessId)} · ${roleLabel(record.role)}`;
       const details = document.createElement('p');
-      details.textContent = `Tercero: ${record.entityId ?? '—'} · Estado: ${record.active ? 'Activo' : 'Inactivo'}`;
+      details.textContent = `Tercero: ${entity?.name ?? '—'} · Estado: ${record.active ? 'Activo' : 'Inactivo'}`;
       item.append(label, details);
 
       const actions = document.createElement('div');
@@ -233,7 +249,7 @@ export function initAccessAdmin({
       );
       resetForm();
       refreshAccessList();
-      showFeedback(`Acceso creado para ${record.accessId}.`);
+      showFeedback(`Acceso creado para ${formatRut(record.accessId)}.`);
       onAccessChange?.();
     } catch (error) {
       if (error instanceof ValidationFailure) {

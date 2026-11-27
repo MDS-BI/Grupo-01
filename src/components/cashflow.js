@@ -1,5 +1,5 @@
 ﻿import { computeCashflow } from '../cashflow.js';
-import { formatCurrencyCLP } from '../format.js';
+import { formatCurrencyCLP, formatDateDDMMYYYY } from '../format.js';
 import { loadMovements } from '../movements.js';
 import { loadDocuments, loadEntities } from '../storage.js';
 
@@ -74,7 +74,7 @@ export function renderCashflowView(container) {
     const tr = document.createElement('tr');
     tr.dataset.tipo = row.tipo.toLowerCase();
     tr.append(
-      createCell(row.fecha || ''),
+      createCell(formatDateDDMMYYYY(row.fecha)),
       createCell(row.tipo),
       createCell(row.categoria),
       createCell(row.tercero),

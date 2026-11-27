@@ -110,7 +110,7 @@ describe('US3 - mi liquidación del trabajador', () => {
     expect(byId('payroll-worker-discounts').textContent).toContain('20');
     expect(byId('payroll-worker-bonuses').textContent).toContain('220');
     expect(byId('payroll-worker-amount').textContent).toContain('700');
-    expect(byId('payroll-worker-paid-at').textContent).toContain('2026-10-15');
+    expect(byId('payroll-worker-paid-at').textContent).toContain('15-10-2026');
     expect(byId('payroll-worker-empty').hidden).toBe(true);
   });
 

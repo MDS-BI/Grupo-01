@@ -197,9 +197,9 @@ describe('session: resolveSessionProfile (T013)', () => {
       resolveSessionProfile({ role: 'administrador' }, { entities: [] })
     ).toEqual({
       role: 'administrador',
-      roleLabel: 'Administrador',
-      displayName: 'Administrador',
-      initials: 'A',
+      roleLabel: 'Recursos Humanos',
+      displayName: 'Recursos Humanos',
+      initials: 'R',
       source: 'role',
     });
   });

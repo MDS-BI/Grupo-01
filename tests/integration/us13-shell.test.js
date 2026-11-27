@@ -21,7 +21,7 @@ describe('US13 - shell persistente', () => {
     expect(
       document.getElementById('brand-logo').querySelector('svg')
     ).toBeTruthy();
-    expect(document.getElementById('brand-logo').textContent).toBe('A');
+    expect(document.getElementById('brand-logo').textContent).toBe('R');
     expect(
       document.getElementById('nav-dashboard').getAttribute('aria-current')
     ).toBe('page');
@@ -99,7 +99,7 @@ describe('US13 - shell persistente', () => {
       'Contabilidad y Finanzas'
     );
     expect(document.title).toBe('Contabilidad y Finanzas');
-    expect(document.getElementById('brand-logo').textContent).toBe('A');
+    expect(document.getElementById('brand-logo').textContent).toBe('R');
   });
 
   it('navega entre facturas de venta y compra con listados separados (FR-006)', () => {

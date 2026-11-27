@@ -153,12 +153,7 @@ export function createShell({
 
   const roleLabel = document.getElementById('session-role');
   if (roleLabel) {
-    const roleNames = {
-      administrador: 'Administrador',
-      finanzas: 'Finanzas',
-      trabajador: 'Trabajador',
-    };
-    roleLabel.textContent = session ? `Rol: ${roleNames[session.role]}` : '';
+    roleLabel.textContent = session ? `Rol: ${profile.roleLabel}` : '';
     roleLabel.hidden = !session;
   }
 

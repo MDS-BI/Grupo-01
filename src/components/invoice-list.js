@@ -1,10 +1,13 @@
+import { formatCurrencyCLP, formatDateDDMMYYYY } from '../format.js';
+
 function displayedValue(record, key) {
   const value = record[key] ?? record.customFields?.[key];
   if (value === undefined || value === null || value === '') return '—';
   if (key === 'folio')
     return [record.series, `#${value}`].filter(Boolean).join(' ');
-  if (key === 'totalAmount' && record.currency)
-    return `${value} ${record.currency}`;
+  if (key === 'startDate' || key === 'endDate')
+    return formatDateDDMMYYYY(value);
+  if (key === 'totalAmount') return formatCurrencyCLP(value);
   return String(value);
 }
 

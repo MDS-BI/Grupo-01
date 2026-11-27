@@ -1,4 +1,9 @@
-import { formatCurrencyCLP, formatPeriod } from '../format.js';
+import {
+  formatCurrencyCLP,
+  formatDateDDMMYYYY,
+  formatPeriod,
+  formatRut,
+} from '../format.js';
 
 const STATUS_TONES = {
   Borrador: 'draft',
@@ -6,13 +11,6 @@ const STATUS_TONES = {
   Pagada: 'paid',
   Anulada: 'void',
 };
-
-function readableDate(value) {
-  const [year, month, day] = String(value ?? '')
-    .slice(0, 10)
-    .split('-');
-  return day ? `${day}-${month}-${year}` : '';
-}
 
 function invoiceReference(document) {
   if (!document) return '—';
@@ -84,11 +82,11 @@ export function renderPayrollList(container, options = {}) {
     const paidAt = settlement?.fechaPago ?? custom.fechaPago ?? '';
     const cells = [
       entity?.name || '',
-      entity?.taxId || '',
+      formatRut(entity?.taxId),
       formatPeriod(period),
       formatCurrencyCLP(valueOf(settlement, 'monto', 'totalAmount')),
       status,
-      paidAt ? readableDate(paidAt) : 'Sin pago registrado',
+      paidAt ? formatDateDDMMYYYY(paidAt) : 'Sin pago registrado',
       invoiceReference(documentById.get(documentId)),
     ];
     cells.forEach((value, index) => {
@@ -144,7 +142,7 @@ export function renderPayrollList(container, options = {}) {
 
         const warning = document.createElement('span');
         warning.className = 'error';
-        warning.textContent = ` El RUT ${entity?.taxId || ''} no tiene un acceso de trabajador activo.`;
+        warning.textContent = ` El RUT ${formatRut(entity?.taxId)} no tiene un acceso de trabajador activo.`;
         actions.append(warning);
       }
     }
@@ -155,4 +153,10 @@ export function renderPayrollList(container, options = {}) {
 
   scroll.append(table);
   container.append(scroll);
+
+  const legend = document.createElement('p');
+  legend.className = 'payroll-legend';
+  legend.textContent =
+    'Borrador (RRHH la prepara) · Emitida (aprobada por RRHH) · Pagada (finanzas registró el pago)';
+  container.append(legend);
 }

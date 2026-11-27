@@ -55,7 +55,7 @@ La ocultación se aplica en la capa del Panel, no únicamente en `clearRestricte
 
 ## Panel del administrador
 
-- `#dashboard-greeting` usa `Administrador` como nombre visible.
+- `#dashboard-greeting` usa `Recursos Humanos` como nombre visible; la clave interna `administrador` no cambia.
 - `#dashboard-month` usa texto legible, p. ej. `noviembre 2026`.
 - `#admin-payroll-summary` contiene exactamente tres métricas:
   - Trabajadores con acceso.
@@ -142,10 +142,21 @@ Exactamente cuatro, en una sola fila al final del Panel:
 
 - `#view-payroll-worker` muestra el banner de guía y el encabezado con `#payroll-worker-name` legible.
 - `#payroll-worker-period` usa texto legible, nunca `YYYY-MM`.
+- `#payroll-worker-paid-at` y la columna «Fecha de pago» de `#payroll-worker-history` usan `DD-MM-AAAA`.
 - `#payroll-worker-amount` es el elemento de mayor tamaño tipográfico de la vista, con `$` y separador de miles.
 - `.payroll-breakdown` se muestra solo si sueldo base, descuentos o bonos tiene valor; si los tres están vacíos/cero, se oculta.
-- `#payroll-worker-history` muestra montos con `$`.
+- `#payroll-worker-history` muestra montos con `$` mediante `formatCurrencyCLP` y fechas en `DD-MM-AAAA`.
 - No se incluyen indicadores financieros, gráfico ni alertas financieras.
+
+## Formatos visibles (clarificación 2026-11-26)
+
+- Toda fecha visible como texto usa `DD-MM-AAAA`, incluidas las listas de Facturas de venta y compra, Movimientos financieros, Flujo de caja, Mi liquidación y Gestionar liquidaciones de sueldo; los campos de entrada y el almacenamiento conservan `AAAA-MM-DD`.
+- Todos los montos visibles usan `formatCurrencyCLP`, p. ej. `$250.000`, nunca `250000 CLP`; las celdas `.invoice-total` y las columnas numéricas quedan alineadas a la derecha.
+- Todo RUT visible usa puntos y guion, p. ej. `12.345.678-5`, en Control de accesos y en los listados de liquidaciones, sin cambiar el valor normalizado guardado.
+- Ninguna lista visible muestra `doc_`, `ent_`, `set_`, `salesOrderId` ni nombres internos de campos.
+- Movimientos financieros usa `Venta emitida`, `Pago` y `Compra emitida`; las referencias legibles son `Venta A #1`, `Compra B #2` y `Orden de venta: PED-036`.
+- La tabla de liquidaciones incluye la leyenda exacta `Borrador (RRHH la prepara)`, `Emitida (aprobada por RRHH)` y `Pagada (finanzas registró el pago)`.
+- A 390 px, `body`/`#app` no desbordan horizontalmente: `.topbar-left` y `.topbar-right` admiten `min-width: 0`, `.brand-logo` respeta `max-width: 100%` y `.invoice-table-scroll` conserva `overflow-x: auto`.
 
 ## Estilos y accesibilidad
 
@@ -157,7 +168,7 @@ Exactamente cuatro, en una sola fila al final del Panel:
 
 ## Verificación
 
-- Administrador: exactamente dos acciones de liquidación, tres métricas de nómina, cero nodos financieros visibles.
+- Administrador: saludo `Recursos Humanos`, exactamente dos acciones de liquidación, tres métricas de nómina, cero nodos financieros visibles.
 - Finanzas: cuatro indicadores, cuatro accesos rápidos, gráfico, alertas y cinco movimientos como máximo.
 - Trabajador: sin Panel, con vista de liquidación legible y banner propio.
 - Los tres roles: nombre del sistema correcto, tipografía local, colores semánticos y saludo/mes legibles donde aplica.

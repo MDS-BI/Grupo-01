@@ -87,7 +87,7 @@ describe('US3 - panel de inicio', () => {
       'Panel'
     );
     expect(document.getElementById('dashboard-greeting').textContent).toBe(
-      'Hola, Administrador'
+      'Hola, Recursos Humanos'
     );
     expect(document.getElementById('dashboard-month').textContent).toMatch(
       /^[a-z]+ \d{4}$/i

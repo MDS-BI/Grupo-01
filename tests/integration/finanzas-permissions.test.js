@@ -303,7 +303,8 @@ describe('US7 - permisos del rol finanzas', () => {
 
     byId('nav-movements').click();
     expect(byId('view-movements').hidden).toBe(false);
-    expect(byId('movements-list').textContent).toContain(paid.document_id);
+    expect(byId('movements-list').textContent).toContain('Compra FC #10');
+    expect(byId('movements-list').textContent).not.toContain(paid.document_id);
 
     byId('nav-cashflow').click();
     expect(byId('view-cashflow').hidden).toBe(false);

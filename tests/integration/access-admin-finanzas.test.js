@@ -78,8 +78,8 @@ describe('US2 - alta de finanzas por el administrador', () => {
       active: true,
     });
     expect(byId('access-form-error')?.textContent ?? '').toBe('');
-    expect(byId('access-list').textContent).toContain('55555555-5');
-    expect(byId('access-list').textContent).toContain('finanzas');
+    expect(byId('access-list').textContent).toContain('55.555.555-5');
+    expect(byId('access-list').textContent).toContain('Finanzas');
 
     clearSession();
     initApp(userConfig);

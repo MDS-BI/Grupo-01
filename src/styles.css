@@ -670,6 +670,7 @@ select[aria-invalid='true'] {
 
 .invoice-total {
   font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .invoice-badge {
@@ -1688,4 +1689,35 @@ select[aria-invalid='true'] {
 #payroll-create-list th:last-child,
 #payroll-create-list td:last-child {
   display: none;
+}
+
+@media (max-width: 390px) {
+  body,
+  #app {
+    overflow-x: hidden;
+  }
+
+  .topbar {
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .topbar-left,
+  .topbar-right {
+    min-width: 0;
+  }
+
+  .brand-logo {
+    max-width: 100%;
+  }
+
+  .brand-name,
+  .session-role {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .invoice-table-scroll {
+    overflow-x: auto;
+  }
 }

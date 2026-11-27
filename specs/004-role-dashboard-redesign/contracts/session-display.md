@@ -20,7 +20,9 @@
 - IBM Plex Sans se incluye localmente con `@fontsource/ibm-plex-sans`, importado desde `src/main.js` antes de `initApp`.
 - `--font-sans` apunta a IBM Plex Sans con fallbacks del sistema.
 - `body` aplica `font-variant-numeric: tabular-nums` y heredan montos, tablas, botones y entradas.
-- Todo monto visible usa CLP con `$`, separador de miles y alineación derecha en columnas.
+- Todo monto visible usa `formatCurrencyCLP` con `$`, separador de miles y alineación derecha en columnas; p. ej. `$250.000`, nunca `250000 CLP`.
+- Toda fecha visible como texto usa `DD-MM-AAAA`; los campos de entrada y el almacenamiento conservan `AAAA-MM-DD`.
+- Todo RUT visible usa puntos y guion, p. ej. `12.345.678-5`, sin normalizar el valor almacenado.
 - Todo período visible usa texto legible, p. ej. `noviembre 2026`; el formato `YYYY-MM` queda restringido a claves internas y almacenamiento.
 
 ## Perfil derivado de sesión
@@ -49,7 +51,7 @@ Reglas:
 
 | Caso | `displayName` | `initials` | `source` |
 |---|---|---|---|
-| Administrador | `Administrador` | `A` | `role` |
+| Administrador | `Recursos Humanos` | `R` | `role` |
 | Finanzas | `Finanzas` | `F` | `role` |
 | Trabajador con entidad personal y nombre | `entity.name` | Primera letra del primer nombre + primera letra del primer apellido | `person` |
 | Trabajador con un solo nombre | Ese nombre | Una inicial | `person` |
@@ -58,13 +60,14 @@ Reglas:
 - `erp.session` mantiene su forma: `{ accessId, role, entityId, startedAt }`.
 - No se agrega `name`, `displayName` ni `initials` a la sesión ni a los accesos.
 - El resolver es puro y se prueba por separado.
+- La clave persistida sigue siendo `administrador`; solo cambian `roleLabel`, `displayName` e `initials`.
 
 ## Elementos de la barra superior
 
 | ID | Contenido |
 |---|---|
 | `#brand-name` | Nombre del sistema, sin variaciones por rol. |
-| `#session-role` | `Rol: Administrador`, `Rol: Finanzas` o `Rol: Trabajador`. |
+| `#session-role` | `Rol: Recursos Humanos`, `Rol: Finanzas` o `Rol: Trabajador`. |
 | `#brand-logo` | Círculo de perfil con las iniciales derivadas. |
 
 - `#brand-logo` deja de usar `monogram(moduleName)`.
@@ -76,7 +79,7 @@ Reglas:
 
 | Vista | Saludo | Período |
 |---|---|---|
-| Panel del administrador | `#dashboard-greeting` con `Administrador` | `#dashboard-month` con mes actual legible |
+| Panel del administrador | `#dashboard-greeting` con `Recursos Humanos` | `#dashboard-month` con mes actual legible |
 | Panel de finanzas | `#dashboard-greeting` con `Finanzas` | `#dashboard-month` con mes actual legible |
 | Mi liquidación | `#payroll-worker-name` con nombre de la persona | `#payroll-worker-period` con período legible |
 
@@ -100,7 +103,7 @@ Reglas:
 |---|---|
 | Usuario con un solo nombre | Una sola inicial. |
 | Usuario sin nombre | Inicial del rol. |
-| Administrador con datos financieros en navegador | Sigue mostrando `A` y no ve datos financieros. |
+| Administrador con datos financieros en navegador | Sigue mostrando `R`, `Rol: Recursos Humanos` y no ve datos financieros. |
 | Cambio de rol sin cerrar pestaña | Se recalcula perfil, encabezado, banner y visibilidad del Panel. |
 | Recarga dentro de la misma sesión | El banner descartado permanece oculto. |
 | Nueva sesión de otro rol | Banner visible salvo que ese rol ya lo haya descartado. |
@@ -109,5 +112,7 @@ Reglas:
 
 - `document.title === 'Contabilidad y Finanzas'` en cualquier vista.
 - `#brand-name.textContent === 'Contabilidad y Finanzas'`.
-- `#brand-logo` contiene `A`, `F`, `AP` o `BS` según el usuario de demostración, nunca `ERP`.
-- No aparece `YYYY-MM` en textos visibles de Paneles ni de la vista del trabajador.
+- `#brand-logo` contiene `R`, `F`, `AP` o `BS` según el usuario de demostración, nunca `ERP`.
+- No aparece `YYYY-MM` en textos visibles de Paneles ni de la vista del trabajador; las fechas visibles usan `DD-MM-AAAA`.
+- Los RUT visibles usan puntos y guion, p. ej. `12.345.678-5`, sin cambiar el valor normalizado guardado.
+- Los montos visibles usan `formatCurrencyCLP`, p. ej. `$250.000`; no aparece `250000 CLP`.

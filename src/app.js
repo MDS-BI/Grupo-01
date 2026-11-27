@@ -275,7 +275,12 @@ function renderInvoices(tipoFactura, entities, documents) {
 }
 
 function refreshMovements() {
-  renderMovementsList(byId('movements-list'), loadMovements(), loadEntities());
+  renderMovementsList(
+    byId('movements-list'),
+    loadMovements(),
+    loadEntities(),
+    loadDocuments()
+  );
   const empty = byId('movements-empty');
   if (empty) {
     empty.hidden = loadMovements().length > 0;

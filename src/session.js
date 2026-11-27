@@ -38,7 +38,7 @@ export function resolveSessionProfile(session, { entities = [] } = {}) {
     role,
     roleLabel: ROLE_LABELS[role] ?? ROLE_LABELS.trabajador,
     displayName: ROLE_LABELS[role] ?? ROLE_LABELS.trabajador,
-    initials: role === 'administrador' ? 'A' : 'F',
+    initials: ROLE_LABELS[role]?.[0] ?? 'T',
     source: 'role',
   };
 }

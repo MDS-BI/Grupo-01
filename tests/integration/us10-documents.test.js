@@ -46,7 +46,7 @@ describe('US10 - detalle de documentos', () => {
 
     const list = document.getElementById('invoice-sale-list').textContent;
     expect(list).toContain('#7');
-    expect(list).toContain('95 EUR');
+    expect(list).toContain('$95');
   });
 
   it('muestra el error cuando el descuento supera el subtotal', () => {

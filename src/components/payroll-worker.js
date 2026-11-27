@@ -2,7 +2,12 @@ import {
   resolveWorkerPaymentHistory,
   resolveWorkerSettlement,
 } from '../payroll.js';
-import { formatCurrencyCLP, formatPeriod } from '../format.js';
+import {
+  formatCurrencyCLP,
+  formatDateDDMMYYYY,
+  formatPeriod,
+  formatRut,
+} from '../format.js';
 import {
   loadEntities,
   loadPayrollSettlements,
@@ -159,7 +164,7 @@ export function renderPayrollSettlement(
       readablePeriod(periodOf(settlement)) || 'Sin período'
     );
     setText('payroll-worker-name', entity?.name || '');
-    setText('payroll-worker-rut', entity?.taxId || '');
+    setText('payroll-worker-rut', formatRut(entity?.taxId));
     const base = Number(breakdownOf(settlement, 'sueldoBase')) || 0;
     const bonuses = Number(breakdownOf(settlement, 'bonos')) || 0;
     const discounts = Number(breakdownOf(settlement, 'descuentos')) || 0;
@@ -175,7 +180,7 @@ export function renderPayrollSettlement(
     setText(
       'payroll-worker-paid-at',
       paidAtOf(settlement)
-        ? `Fecha de pago: ${paidAtOf(settlement)}`
+        ? `Fecha de pago: ${formatDateDDMMYYYY(paidAtOf(settlement))}`
         : 'Sin pago registrado'
     );
     const firstName = String(entity?.name || '')
@@ -197,7 +202,7 @@ export function renderPayrollSettlement(
   for (const item of rows) {
     const row = document.createElement('tr');
     const values = [
-      paidAtOf(item),
+      formatDateDDMMYYYY(paidAtOf(item)),
       readablePeriod(periodOf(item)),
       formatCurrencyCLP(amountOf(item)),
       statusOf(item),

@@ -70,7 +70,7 @@ describe('US6 - demostración cargada desde la pantalla de acceso', () => {
         rut: '88.888.888-8',
         password: '8888',
         role: 'administrador',
-        label: 'Administrador',
+        label: 'Recursos Humanos',
       },
       {
         rut: '55.555.555-5',

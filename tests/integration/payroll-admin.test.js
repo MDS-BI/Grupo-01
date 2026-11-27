@@ -140,7 +140,7 @@ describe('US4/US7 - liquidaciones del administrador y de finanzas', () => {
 
         const table = byId('payroll-admin-list');
         expect(table.textContent).toContain('Ana Pérez Soto');
-        expect(table.textContent).toContain('22222222-2');
+        expect(table.textContent).toContain('22.222.222-2');
         expect(table.textContent).toContain('octubre 2026');
         expect(table.textContent).toContain('Emitida');
         expect(table.textContent).toContain('Compra LIQ-1');
