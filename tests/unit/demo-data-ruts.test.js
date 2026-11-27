@@ -86,8 +86,10 @@ describe('US6 - RUT y credenciales de la demostración', () => {
       (entity) => entity.customFields.tipoTercero === 'personal'
     );
 
-    expect(settlements).toHaveLength(4);
-    for (const personal of personales) {
+    expect(settlements).toHaveLength(13);
+    for (const personal of personales.filter((entity) =>
+      ['PE-001', 'PE-002'].includes(entity.code)
+    )) {
       const propias = settlements.filter(
         (item) => item.entityId === personal.entity_id
       );
@@ -103,6 +105,14 @@ describe('US6 - RUT y credenciales de la demostración', () => {
         pagadas.length
       );
     }
+    const tercero = personales.find((entity) => entity.code === 'PE-003');
+    expect(tercero).toBeTruthy();
+    expect(
+      settlements.some(
+        (item) =>
+          item.entityId === tercero.entity_id && item.estado === 'Borrador'
+      )
+    ).toBe(true);
   });
 
   it('la segunda carga no duplica accesos ni terceros', () => {

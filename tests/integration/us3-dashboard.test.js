@@ -429,7 +429,7 @@ describe('US3 - panel de inicio', () => {
     expect(alerts.parentElement).toBe(trend.parentElement);
   });
 
-  it('las alertas de caja negativa y facturas vencidas enlazan a su detalle (HU4)', () => {
+  it('sin alerta de caja negativa y con vencidas que enlazan a su detalle (HU6)', () => {
     setupFinanceSession();
     loadDemoData(getConfig());
     initApp(userConfig);
@@ -438,13 +438,13 @@ describe('US3 - panel de inicio', () => {
     const overdue = document.querySelector(
       '[data-alert="overdue-invoices"] button'
     );
-    expect(cash.textContent).toContain('Caja en negativo');
+    expect(cash).toBeNull();
+    expect(document.getElementById('summary-caja').textContent).not.toContain(
+      '-'
+    );
     expect(overdue.textContent).toContain('vencida');
 
-    cash.click();
-    expect(document.getElementById('view-cashflow').hidden).toBe(false);
-    document.getElementById('nav-dashboard').click();
-    document.querySelector('[data-alert="overdue-invoices"] button').click();
+    overdue.click();
     expect(document.getElementById('view-tracking').hidden).toBe(false);
   });
 

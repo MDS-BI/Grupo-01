@@ -20,7 +20,7 @@ describe('payroll-create: listado al navegar tras cargar demostración (T064)', 
   it('muestra las liquidaciones de Ana y Bruno al abrir la vista, sin guardar ni recargar', () => {
     initApp(userConfig);
     byId('login-demo-load').click();
-    expect(loadPayrollSettlements()).toHaveLength(4);
+    expect(loadPayrollSettlements()).toHaveLength(13);
 
     const list = byId('payroll-create-list');
     expect(list.textContent).toContain('No hay liquidaciones registradas');
@@ -35,6 +35,7 @@ describe('payroll-create: listado al navegar tras cargar demostración (T064)', 
     expect(byId('view-payroll-create').hidden).toBe(false);
     expect(list.textContent).toContain('Ana Pérez Soto');
     expect(list.textContent).toContain('Bruno Soto Vega');
+    expect(list.textContent).toContain('Camila Rojas Fuentes');
     expect(list.textContent).not.toContain('No hay liquidaciones registradas');
   });
 });

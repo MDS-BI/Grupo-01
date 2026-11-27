@@ -193,8 +193,10 @@ describe('HU6 - carga de datos de demostración', () => {
     const personales = loadEntities().filter(
       (entity) => entity.customFields.tipoTercero === 'personal'
     );
-    expect(personales).toHaveLength(2);
-    for (const personal of personales) {
+    expect(personales).toHaveLength(3);
+    for (const personal of personales.filter((entity) =>
+      ['PE-001', 'PE-002'].includes(entity.code)
+    )) {
       expect(
         loadPurchaseInvoices().some(
           (item) => item.entity_id === personal.entity_id
@@ -213,6 +215,14 @@ describe('HU6 - carga de datos de demostración', () => {
         ).size
       ).toBeGreaterThanOrEqual(2);
     }
+    const tercero = personales.find((entity) => entity.code === 'PE-003');
+    expect(tercero).toBeTruthy();
+    expect(
+      loadPayrollSettlements().some(
+        (item) =>
+          item.entityId === tercero.entity_id && item.estado === 'Borrador'
+      )
+    ).toBe(true);
   });
 
   it('no duplica accesos de demostración al cargar dos veces', () => {
@@ -250,7 +260,7 @@ describe('HU6 - carga de datos de demostración', () => {
     expect(document.getElementById('sidebar').hidden).toBe(true);
     expect(loadSession()).toBeNull();
     expect(loadAccessRecords()).toHaveLength(4);
-    expect(loadPayrollSettlements()).toHaveLength(4);
+    expect(loadPayrollSettlements()).toHaveLength(13);
     const tercerosPrevios = loadEntities().length;
     const facturasPrevias = loadDocuments().length;
 

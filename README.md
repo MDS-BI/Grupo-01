@@ -186,6 +186,7 @@ Luego presiona **Cargar demostración** e ingresa, por ejemplo, con `88.888.888-
 | 27-11-2026 | Constitución v1.2.0 y spec 004 (T061–T082): paleta «Refreshing Summer Fun» elegida en Coolors, con reglas de accesibilidad para personas daltónicas (sin pares rojo y verde, ningún dato solo por color y contraste WCAG 2.1 AA), a partir del comentario del profesor sobre accesibilidad. El gráfico «Ingresos vs Gastos» pasa de verde y rojo a azul y naranjo | Jaime Rivera |
 | 27-11-2026 | Spec 004 (T083–T089): el ícono «ⓘ» de los indicadores, que la tipografía no incluía y se veía fino y desalineado, se reemplaza por un círculo dibujado con CSS que también se puede enfocar con el teclado | Jaime Rivera |
 | 27-11-2026 | Spec 004 (T090–T102): el banner superior muestra la vista actual y un aviso clickeable según el rol (facturas vencidas para finanzas y liquidaciones en borrador para Recursos Humanos), como sugirió el profesor; el aviso se actualiza apenas cambian los datos (T102). Queda como detalle conocido que en celulares de 390 px el círculo de iniciales se corta | Jaime Rivera |
+| 27-11-2026 | Spec 001 (T126–T146): datos de demostración ampliados, a propuesta de Carolina Vásquez, para que el Panel de finanzas se vea completo: historia de 6 meses en el gráfico, 4 clientes y 3 proveedores, caja neta positiva con ventas mayores y sueldos realistas, una liquidación por trabajador y período, 2 facturas vencidas, un cliente cerca de su límite de crédito y una liquidación en borrador de una trabajadora sin acceso (para el aviso de Recursos Humanos). Además, «hoy» y las fechas de la demostración se calculan con la fecha local, para que no se corran un día después de las 21:00 | Jaime Rivera |
 
 ## Uso de IA (anexo)
 
@@ -213,7 +214,7 @@ Según la política del curso, cada consulta a un modelo de IA generativa se reg
 | 24-11-2026 al 25-11-2026 | Jaime Rivera | Claude (Anthropic), modelo configurado en la sesión: claude-opus-5-5; y Big Pickle (modelo por defecto de OpenCode 1.19.5) | Claude: revisión del trabajo del grupo contra la rúbrica y prueba de permisos en el navegador (detectó que finanzas podía cambiar montos de liquidaciones y que no podía llegar a sus vistas), redacción de prompts y revisión de cada resultado; Revert de dos commits que habían reemplazado la spec 002 por una versión antigua. OpenCode: ciclos clarify, tasks e implement en las specs 003 y 004. Claude no hizo commits | (1) "Revisa el repo, mi grupo estuvo trabajando"; (2) "Revisa si está todo bien según la rúbrica"; (3) `/speckit.clarify`, `/speckit.tasks` y `/speckit.implement` en la 003 (T043-T052) y en la 004 (T037-T040); `npm run check` 398/398 |
 | 25-11-2026 | Carolina Vásquez | Claude (Anthropic), modelo configurado en la sesión: claude-opus-5-5 (el modelo que respondió puede variar) | Revisión del repositorio contra los 6 ítems de la rúbrica antes de la presentación; implementación de T053–T062 de la spec 003 (pruebas primero) con verificación en un navegador headless; cierre de tareas de la 001, corrección de la codificación de `plan.md` y actualización de este README. Claude no hizo commits | (1) "Necesito que analices el estado del repo y me digas si estamos listos para armar la presentación, según los 6 puntos que están en el archivo subido al contexto"; (2) "Ayúdame a cerrar lo que queda pendiente" |
 | 26-11-2026 | Carolina Vásquez | Claude (Anthropic), modelo configurado en la sesión: claude-opus-5-5 (el modelo que respondió puede variar) | Corrección de los hallazgos CRITICAL, HIGH y MEDIUM de `/speckit.analyze` en la documentación de diseño de la spec 003, contrastada con el código; también la presentación y la guía de ensayo de la demo (fuera del repositorio); recorrido automatizado de la demo en un navegador, que detectó los errores de T065 y T066, y su corrección con pruebas previas. Claude no hizo commits | (1) "Desarróllame la parte 3 y la parte 4" (guía de ensayo y presentación); (2) "Hacer las correcciones contigo" (sobre el reporte de `/speckit.analyze`); (3) "Necesito modificar qué mostrar y qué decir en la demo en vivo" |
-| 25-11-2026 al 27-11-2026 | Jaime Rivera | Claude (Anthropic), modelo configurado en la sesión: claude-opus-5-5 (el modelo que respondió puede variar); y Big Pickle (modelo por defecto de OpenCode 1.19.5) | Claude: análisis de la conversación con el profesor sobre los roles; prueba en el navegador del formulario de crear liquidación (detectó campos de factura de compra, ids repetidos y el listado vacío corregido en T064); revisión final del repositorio y de la página contra la rúbrica; redacción de los prompts y de esta actualización del README. OpenCode: clarify, tasks e implement de la 003 (T053–T064); clarify de la 001 y de la 002; clarify, tasks e implement de la 004 (T045–T060); constitución v1.2.0 y clarify, tasks e implement de la 004 para la paleta, el ícono de información y el banner (T061–T102). Claude: análisis de los colores de la página, elección de la paleta por contraste y daltonismo, y revisión en el navegador de cada ronda. Claude no hizo commits | (1) "Analiza lo que respondió el profe para ver con qué seguimos"; (2) `/speckit.clarify` del formulario propio de crear liquidación; (3) `/speckit.tasks` de T053–T063 y de T064; (4) `/speckit.implement` de T064; (5) "Haz una evaluación total del repo, del MVP y de la página según la rúbrica y lo que ha dicho el profe"; (6) "Hagamos todo el ítem A de arreglos"; (7) `/speckit.clarify` de la 001 para cerrar pendientes; (8) "Mejoremos todo lo que queda del repo hasta el más mínimo detalle" (clarify, tasks e implement de la 004); (9) `/speckit.clarify` de la 002 para alinearla con la 004; (10) "De estas paletas, ¿cuál sirve mejor?" (Coolors, pensando en personas daltónicas); (11) `/speckit.constitution` a v1.2.0 y ciclo de la 004 para la paleta; (12) ícono de información de los indicadores; (13) banner superior con la vista actual y avisos por rol |
+| 25-11-2026 al 27-11-2026 | Jaime Rivera | Claude (Anthropic), modelo configurado en la sesión: claude-opus-5-5 (el modelo que respondió puede variar); y Big Pickle (modelo por defecto de OpenCode 1.19.5) | Claude: análisis de la conversación con el profesor sobre los roles; prueba en el navegador del formulario de crear liquidación (detectó campos de factura de compra, ids repetidos y el listado vacío corregido en T064); revisión final del repositorio y de la página contra la rúbrica; redacción de los prompts y de esta actualización del README. OpenCode: clarify, tasks e implement de la 003 (T053–T064); clarify de la 001 y de la 002; clarify, tasks e implement de la 004 (T045–T060); constitución v1.2.0 y clarify, tasks e implement de la 004 para la paleta, el ícono de información y el banner (T061–T102). Claude: análisis de los colores de la página, elección de la paleta por contraste y daltonismo, y revisión en el navegador de cada ronda. Claude no hizo commits | (1) "Analiza lo que respondió el profe para ver con qué seguimos"; (2) `/speckit.clarify` del formulario propio de crear liquidación; (3) `/speckit.tasks` de T053–T063 y de T064; (4) `/speckit.implement` de T064; (5) "Haz una evaluación total del repo, del MVP y de la página según la rúbrica y lo que ha dicho el profe"; (6) "Hagamos todo el ítem A de arreglos"; (7) `/speckit.clarify` de la 001 para cerrar pendientes; (8) "Mejoremos todo lo que queda del repo hasta el más mínimo detalle" (clarify, tasks e implement de la 004); (9) `/speckit.clarify` de la 002 para alinearla con la 004; (10) "De estas paletas, ¿cuál sirve mejor?" (Coolors, pensando en personas daltónicas); (11) `/speckit.constitution` a v1.2.0 y ciclo de la 004 para la paleta; (12) ícono de información de los indicadores; (13) banner superior con la vista actual y avisos por rol; (14) ampliar los datos de demostración de la spec 001 y corregir sueldos, períodos y variaciones (T126–T146) |
 
 ## Referencias
 
@@ -359,9 +360,10 @@ al control que la abrió y no modifica datos, sesión ni almacenamiento.
 ### Datos de demostración
 
 En un navegador sin datos, usar **Cargar demostración** desde la pantalla de
-acceso. La carga precarga los datos ficticios, permanece en la pantalla de acceso,
-no crea sesión ni abre vistas, y es idempotente. Después se ingresa con una de
-estas credenciales ficticias:
+acceso. La carga solo procede con el módulo vacío, permanece en la pantalla de
+acceso, no crea sesión ni abre vistas y es idempotente: un segundo intento
+informa que ya existen datos sin duplicar ni borrar registros. Después se ingresa
+con una de estas credenciales ficticias, sin cambios:
 
 | Rol | RUT | Contraseña inicial |
 |---|---|---|
@@ -370,9 +372,31 @@ estas credenciales ficticias:
 | Trabajador (Ana Pérez Soto) | `22.222.222-2` | `2222` |
 | Trabajador (Bruno Soto Vega) | `45.000.000-0` | `4500` |
 
-Cada trabajador de demostración tiene una liquidación vigente con desglose y al
-menos dos liquidaciones pagadas con fechas de pago distintas para probar el
-historial.
+El perfil ampliado (Session 2026-11-27) incluye:
+
+- Gráfico «Ingresos vs Gastos» con barras en los 6 meses: cada mes tiene 2–3
+  ventas cobradas y 1–2 compras de proveedores pagadas; en los cinco meses
+  anteriores hay liquidaciones pagadas de Ana y Bruno, y en el actual solo la
+  vigente Emitida de cada uno.
+- Los sueldos líquidos de Ana, Bruno y `PE-003` están entre `$600.000` y
+  `$900.000`, con máximo una liquidación por trabajador y período. Los ingresos
+  totales superan los egresos y la caja neta es positiva por ventas mayores, no
+  por sueldos reducidos; el mes anterior es más flojo que el actual, la variación
+  de Caja neta queda entre `10 %` y `60 %`, ninguna variación del Panel supera
+  `100 %` y hay indicadores con ▲ y ▼.
+- Al menos 4 clientes y 3 proveedores ficticios con RUT válido según módulo 11,
+  además de Ana Pérez Soto, Bruno Soto Vega y `PE-003` (Camila Rojas Fuentes),
+  que no tiene acceso.
+- Ana y Bruno conservan una liquidación vigente con desglose y al menos dos
+  pagadas con fechas distintas. `PE-003` tiene una liquidación en Borrador del
+  mes actual que activa el aviso de recursos humanos del banner sin afectar las
+  vistas de Ana ni de Bruno.
+- 2 facturas de venta Emitidas y vencidas, al menos una Emitida por vencer y un
+  cliente con límite de crédito cerca de superarse para mostrar el aviso de
+  FR-029 al emitir.
+- Fechas relativas calculadas con la fecha local del navegador, no con la hora
+  universal, para que después de las 21:00 en Chile no se corran al día
+  siguiente.
 
 La carga anterior desde el panel (`qa-load-demo`) queda superada por la tarea
 T107; la demostración se carga solo desde `login-demo-load`. La tarea T077 queda

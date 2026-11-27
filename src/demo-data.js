@@ -12,10 +12,38 @@ import { createAccessRecord, loadAccessRecords } from './access-storage.js';
 import { normalizeRut } from './auth.js';
 import { userConfig } from './module-config.js';
 
+function localDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function addDays(days) {
-  const date = new Date();
-  date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString().slice(0, 10);
+  const now = new Date();
+  return localDate(
+    new Date(now.getFullYear(), now.getMonth(), now.getDate() + days)
+  );
+}
+
+function monthDate(offset, day) {
+  const now = new Date();
+  const first = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+  const lastDay = new Date(
+    first.getFullYear(),
+    first.getMonth() + 1,
+    0
+  ).getDate();
+  return localDate(
+    new Date(first.getFullYear(), first.getMonth(), Math.min(day, lastDay))
+  );
+}
+
+function paymentDate(offset, day) {
+  const date = monthDate(offset, day);
+  return offset === 0 && date > localDate(new Date())
+    ? localDate(new Date())
+    : date;
 }
 
 function calculaDigitoVerificador(dni) {
@@ -114,6 +142,21 @@ function buildDemoData(config) {
       tipo: 'cliente',
       custom: { referenciaOtroModulo: '' },
     },
+    {
+      name: 'Servicios Cordillera SpA',
+      code: 'CL-003',
+      dni: '11223344',
+      tipo: 'cliente',
+      creditLimit: 1000000,
+      custom: { referenciaOtroModulo: 'CRM: cli-0117' },
+    },
+    {
+      name: 'Exportadora Costa Azul Ltda.',
+      code: 'CL-004',
+      dni: '22334455',
+      tipo: 'cliente',
+      custom: { referenciaOtroModulo: 'CRM: cli-0203' },
+    },
   ];
   const proveedores = [
     {
@@ -122,6 +165,20 @@ function buildDemoData(config) {
       dni: '77777777',
       tipo: 'proveedor',
       custom: { referenciaOtroModulo: 'Compras: ord-0089' },
+    },
+    {
+      name: 'Insumos Pacífico S.A.',
+      code: 'PV-002',
+      dni: '33445566',
+      tipo: 'proveedor',
+      custom: { referenciaOtroModulo: 'Compras: ord-0091' },
+    },
+    {
+      name: 'Logística Andina Ltda.',
+      code: 'PV-003',
+      dni: '44556677',
+      tipo: 'proveedor',
+      custom: { referenciaOtroModulo: 'Compras: ord-0104' },
     },
   ];
   const personal = [
@@ -139,245 +196,323 @@ function buildDemoData(config) {
       tipo: 'personal',
       custom: { referenciaOtroModulo: '' },
     },
+    {
+      name: 'Camila Rojas Fuentes',
+      code: 'PE-003',
+      dni: '55667788',
+      tipo: 'personal',
+      custom: { referenciaOtroModulo: '' },
+    },
   ];
 
   for (const entry of [...clientes, ...proveedores, ...personal]) {
-    const customFields = entry.custom || {};
     addEntity({
       name: entry.name,
       code: entry.code,
       taxId: formatoRut(entry.dni),
-      customFields: { ...customFields, tipoTercero: entry.tipo },
+      creditLimit: entry.creditLimit,
+      customFields: { ...entry.custom, tipoTercero: entry.tipo },
     });
   }
+
   const entities = loadEntities();
-  const byCode = (prefix) => entities.find((e) => e.code.startsWith(prefix));
+  const byCode = (code) => entities.find((entity) => entity.code === code);
+  const [cl1, cl2, cl3, cl4] = ['CL-001', 'CL-002', 'CL-003', 'CL-004'].map(
+    byCode
+  );
+  const [pv1, pv2, pv3] = ['PV-001', 'PV-002', 'PV-003'].map(byCode);
+  const [pe1, pe2, pe3] = ['PE-001', 'PE-002', 'PE-003'].map(byCode);
 
-  const cl1 = byCode('CL-001');
-  const cl2 = byCode('CL-002');
-  const pv1 = byCode('PV-001');
-  const pe1 = byCode('PE-001');
-  const pe2 = byCode('PE-002');
+  const cobradas = [];
+  const compras = [];
+  const liquidaciones = [];
+  let saleFolio = 0;
+  let purchaseFolio = 0;
+  let payrollFolio = 0;
 
-  // Facturas de venta
-  const v1 = addDocument({
-    ...baseFactura(cl1, { folio: 101 }),
-    startDate: addDays(-1),
-    endDate: addDays(29),
-    totalAmount: 250000,
-    customFields: {
+  function addPaidSale(entity, amount, offset, day, reference) {
+    const folio = (saleFolio += 1);
+    const customFields = {
       tipoFactura: 'venta',
-      referenciaOtroModulo: 'Ventas: pedido PED-033',
-    },
-  });
-
-  const v2 = addDocument({
-    ...baseFactura(cl1, { folio: 102 }),
-    startDate: addDays(-2),
-    endDate: addDays(13),
-    totalAmount: 180000,
-    customFields: {
-      tipoFactura: 'venta',
-      salesOrderId: 'PED-036',
-      referenciaOtroModulo: 'Ventas: pedido PED-036',
-    },
-  });
-
-  const v3 = addDocument({
-    ...baseFactura(cl2, { folio: 55 }),
-    startDate: addDays(-40),
-    endDate: addDays(-6),
-    totalAmount: 320000,
-    customFields: {
-      tipoFactura: 'venta',
-      salesOrderId: 'PED-035',
-      referenciaOtroModulo: 'Ventas: pedido PED-035',
-    },
-  });
-
-  const v4 = addDocument({
-    ...baseFactura(cl2, { folio: 56 }),
-    startDate: addDays(-35),
-    endDate: addDays(-5),
-    totalAmount: 150000,
-    customFields: {
-      tipoFactura: 'venta',
-      salesOrderId: 'PED-034',
-      referenciaOtroModulo: 'Ventas: pedido PED-034',
-    },
-  });
-
-  const v5 = addDocument({
-    ...baseFactura(cl1, { folio: 103 }),
-    startDate: addDays(-10),
-    endDate: addDays(5),
-    totalAmount: 90000,
-    customFields: {
-      tipoFactura: 'venta',
-      referenciaOtroModulo: 'Ventas: pedido PED-037',
-    },
-  });
-
-  // Facturas de compra
-  const c1 = addDocument({
-    ...baseFactura(pv1, { folio: 88 }),
-    startDate: addDays(-3),
-    endDate: addDays(27),
-    totalAmount: 420000,
-    customFields: {
-      tipoFactura: 'compra',
-      referenciaOtroModulo: 'Compras: ord-0089',
-    },
-  });
-
-  const c2 = addDocument({
-    ...baseFactura(pe1, { folio: 1, serie: 'LIQ' }),
-    startDate: addDays(-15),
-    endDate: addDays(15),
-    totalAmount: 700000,
-    customFields: {
-      tipoFactura: 'compra',
-      periodoLiquidacion: addDays(-15).slice(0, 7),
-      referenciaOtroModulo: 'Remuneraciones: oct-2026',
-    },
-  });
-
-  const c3 = addDocument({
-    ...baseFactura(pv1, { folio: 87 }),
-    startDate: addDays(-30),
-    endDate: addDays(-2),
-    totalAmount: 260000,
-    customFields: {
-      tipoFactura: 'compra',
-      referenciaOtroModulo: 'Compras: ord-0076',
-    },
-  });
-
-  const c4 = addDocument({
-    ...baseFactura(pe2, { folio: 2, serie: 'LIQ' }),
-    startDate: addDays(-45),
-    endDate: addDays(-10),
-    totalAmount: 620000,
-    customFields: {
-      tipoFactura: 'compra',
-      periodoLiquidacion: addDays(-45).slice(0, 7),
-      referenciaOtroModulo: 'Remuneraciones: sep-2026',
-    },
-  });
-
-  const c5 = addDocument({
-    ...baseFactura(pe1, { folio: 3, serie: 'LIQ' }),
-    startDate: addDays(-50),
-    endDate: addDays(-20),
-    totalAmount: 650000,
-    customFields: {
-      tipoFactura: 'compra',
-      periodoLiquidacion: addDays(-50).slice(0, 7),
-      referenciaOtroModulo: 'Remuneraciones: ago-2026',
-    },
-  });
-
-  const c6 = addDocument({
-    ...baseFactura(pe2, { folio: 4, serie: 'LIQ' }),
-    startDate: addDays(-70),
-    endDate: addDays(-40),
-    totalAmount: 600000,
-    customFields: {
-      tipoFactura: 'compra',
-      periodoLiquidacion: addDays(-70).slice(0, 7),
-      referenciaOtroModulo: 'Remuneraciones: jul-2026',
-    },
-  });
-
-  // Emisiones y pagos vía transiciones del ciclo de vida
-  updateDocument(v1.document_id, { status: 'Emitida' });
-  updateDocument(v2.document_id, { status: 'Emitida' });
-  updateDocument(v3.document_id, { status: 'Emitida' });
-  updateDocument(v4.document_id, { status: 'Emitida' });
-  updateDocument(v4.document_id, {
-    status: 'Pagada',
-    customFields: {
-      tipoFactura: 'venta',
-      salesOrderId: 'PED-034',
-      montoPagado: 150000,
-      fechaPago: addDays(-1),
-      referenciaOtroModulo: 'Ventas: pedido PED-034',
-    },
-  });
-  updateDocument(v1.document_id, {
-    status: 'Pagada',
-    customFields: {
-      tipoFactura: 'venta',
-      referenciaOtroModulo: 'Ventas: pedido PED-033',
-      montoPagado: 250000,
-      fechaPago: addDays(0),
-    },
-  });
-
-  for (const [factura, centroCosto] of [
-    [c1, 'Activo'],
-    [c2, 'Consumible'],
-    [c3, 'Consumible'],
-    [c4, 'Consumible'],
-    [c5, 'Consumible'],
-    [c6, 'Consumible'],
-  ]) {
-    updateDocument(factura.document_id, {
-      status: 'Emitida',
-      customFields: { ...factura.customFields, centroCosto },
+      salesOrderId: reference,
+      referenciaOtroModulo: `Ventas: pedido ${reference}`,
+    };
+    const payment = paymentDate(offset, day);
+    const sale = addDocument({
+      ...baseFactura(entity, { folio, serie: 'V' }),
+      startDate: monthDate(offset, Math.max(1, day - 2)),
+      endDate: monthDate(offset, Math.min(28, day + 5)),
+      totalAmount: amount,
+      customFields,
     });
+    updateDocument(sale.document_id, { status: 'Emitida' });
+    updateDocument(sale.document_id, {
+      status: 'Pagada',
+      customFields: {
+        ...customFields,
+        montoPagado: amount,
+        fechaPago: payment,
+      },
+    });
+    cobradas.push(sale);
   }
 
-  updateDocument(c3.document_id, {
+  const ventasMensuales = [
+    [
+      [cl1, 1200000, 4, 'PED-101'],
+      [cl2, 1800000, 18, 'PED-102'],
+    ],
+    [
+      [cl2, 1700000, 6, 'PED-103'],
+      [cl4, 1500000, 21, 'PED-104'],
+    ],
+    [
+      [cl1, 1400000, 3, 'PED-105'],
+      [cl3, 1100000, 14, 'PED-106'],
+      [cl2, 900000, 25, 'PED-107'],
+    ],
+    [
+      [cl4, 1800000, 5, 'PED-108'],
+      [cl1, 1500000, 20, 'PED-109'],
+    ],
+    [
+      [cl2, 1600000, 7, 'PED-110'],
+      [cl4, 1560000, 22, 'PED-111'],
+    ],
+    [
+      [cl1, 1600000, 27, 'PED-112'],
+      [cl3, 1320000, 19, 'PED-113'],
+      [cl4, 1000000, 9, 'PED-114'],
+    ],
+  ];
+  for (let offset = 5; offset >= 0; offset -= 1) {
+    for (const [entity, amount, day, reference] of ventasMensuales[
+      5 - offset
+    ]) {
+      addPaidSale(entity, amount, offset, day, reference);
+    }
+  }
+
+  function addPaidSupplierPurchase(entity, amount, offset, day, reference) {
+    const folio = (purchaseFolio += 1);
+    const customFields = {
+      tipoFactura: 'compra',
+      centroCosto: 'Consumible',
+      referenciaOtroModulo: `Compras: ${reference}`,
+    };
+    const payment = paymentDate(offset, day);
+    const purchase = addDocument({
+      ...baseFactura(entity, { folio, serie: 'P' }),
+      startDate: monthDate(offset, Math.max(1, day - 2)),
+      endDate: monthDate(offset, Math.min(28, day + 6)),
+      totalAmount: amount,
+      customFields,
+    });
+    updateDocument(purchase.document_id, { status: 'Emitida' });
+    updateDocument(purchase.document_id, {
+      status: 'Pagada',
+      customFields: {
+        ...customFields,
+        montoPagado: amount,
+        fechaPago: payment,
+      },
+    });
+    compras.push(purchase);
+  }
+
+  const comprasMensuales = [
+    [[pv1, 260000, 10, 'ord-0201']],
+    [
+      [pv2, 300000, 8, 'ord-0202'],
+      [pv1, 140000, 20, 'ord-0203'],
+    ],
+    [[pv3, 380000, 12, 'ord-0204']],
+    [
+      [pv1, 330000, 9, 'ord-0205'],
+      [pv2, 190000, 21, 'ord-0206'],
+    ],
+    [[pv3, 310000, 11, 'ord-0207']],
+    [[pv2, 420000, 15, 'ord-0208']],
+  ];
+  for (let offset = 5; offset >= 0; offset -= 1) {
+    for (const [entity, amount, day, reference] of comprasMensuales[
+      5 - offset
+    ]) {
+      addPaidSupplierPurchase(entity, amount, offset, day, reference);
+    }
+  }
+
+  const purchaseAnterior = addDocument({
+    ...baseFactura(pv3, { folio: (purchaseFolio += 1), serie: 'P' }),
+    startDate: monthDate(1, 25),
+    endDate: addDays(10),
+    totalAmount: 2000000,
+    customFields: {
+      tipoFactura: 'compra',
+      centroCosto: 'Activo',
+      referenciaOtroModulo: 'Compras: ord-0199',
+    },
+  });
+  updateDocument(purchaseAnterior.document_id, { status: 'Emitida' });
+  updateDocument(purchaseAnterior.document_id, {
     status: 'Pagada',
+    customFields: {
+      tipoFactura: 'compra',
+      centroCosto: 'Activo',
+      montoPagado: 2000000,
+      fechaPago: paymentDate(0, 6),
+      referenciaOtroModulo: 'Compras: ord-0199',
+    },
+  });
+  compras.push(purchaseAnterior);
+
+  function addPayrollPurchase(worker, amount, offset, day, estado, suffix) {
+    const folio = (payrollFolio += 1);
+    const periodo = monthDate(offset, 1).slice(0, 7);
+    const customFields = {
+      tipoFactura: 'compra',
+      centroCosto: 'Consumible',
+      periodoLiquidacion: periodo,
+      referenciaOtroModulo: `Remuneraciones: ${periodo}`,
+    };
+    const startDate = monthDate(offset, 1);
+    const purchase = addDocument({
+      ...baseFactura(worker, { folio, serie: 'LIQ' }),
+      startDate,
+      endDate: estado === 'Pagada' ? monthDate(offset, 28) : addDays(10),
+      totalAmount: amount,
+      customFields,
+    });
+    updateDocument(purchase.document_id, {
+      status: 'Emitida',
+      customFields,
+    });
+    if (estado === 'Pagada') {
+      updateDocument(purchase.document_id, {
+        status: 'Pagada',
+        customFields: {
+          ...customFields,
+          montoPagado: amount,
+          fechaPago: paymentDate(offset, day),
+        },
+      });
+    }
+    compras.push(purchase);
+    liquidaciones.push(
+      settlementFromDocument(
+        purchase.document_id,
+        `set_demo_${suffix}_${periodo}`,
+        {
+          sueldoBase: Math.round(amount * 0.7),
+          descuentos: Math.round(amount * 0.05),
+          bonos: amount - Math.round(amount * 0.7) + Math.round(amount * 0.05),
+        }
+      )
+    );
+  }
+
+  for (let offset = 5; offset >= 1; offset -= 1) {
+    addPayrollPurchase(pe1, 700000, offset, 12, 'Pagada', 'pe1');
+    addPayrollPurchase(pe2, 730000, offset, 16, 'Pagada', 'pe2');
+  }
+  addPayrollPurchase(pe1, 700000, 0, 12, 'Emitida', 'pe1_vigente');
+  addPayrollPurchase(pe2, 730000, 0, 16, 'Emitida', 'pe2_vigente');
+
+  const draftPeriodo = localDate(new Date()).slice(0, 7);
+  const draftPurchase = addDocument({
+    ...baseFactura(pe3, { folio: (payrollFolio += 1), serie: 'LIQ' }),
+    startDate: monthDate(0, 1),
+    endDate: addDays(10),
+    totalAmount: 760000,
     customFields: {
       tipoFactura: 'compra',
       centroCosto: 'Consumible',
-      montoPagado: 260000,
-      fechaPago: addDays(-1),
-      referenciaOtroModulo: 'Compras: ord-0076',
+      periodoLiquidacion: draftPeriodo,
+      referenciaOtroModulo: `Remuneraciones: ${draftPeriodo}`,
+    },
+  });
+  compras.push(draftPurchase);
+  liquidaciones.push(
+    settlementFromDocument(
+      draftPurchase.document_id,
+      `set_demo_pe3_borrador_${draftPeriodo}`,
+      { sueldoBase: 532000, descuentos: 38000, bonos: 266000 }
+    )
+  );
+
+  const vencidas = [
+    {
+      entity: cl2,
+      folio: 9001,
+      startDate: monthDate(1, 3),
+      endDate: addDays(-3),
+      totalAmount: 320000,
+      reference: 'PED-201',
+    },
+    {
+      entity: cl2,
+      folio: 9002,
+      startDate: monthDate(1, 10),
+      endDate: addDays(-1),
+      totalAmount: 150000,
+      reference: 'PED-202',
+    },
+  ];
+  for (const entry of vencidas) {
+    const customFields = {
+      tipoFactura: 'venta',
+      salesOrderId: entry.reference,
+      referenciaOtroModulo: `Ventas: pedido ${entry.reference}`,
+    };
+    const sale = addDocument({
+      ...baseFactura(entry.entity, { folio: entry.folio, serie: 'V' }),
+      startDate: entry.startDate,
+      endDate: entry.endDate,
+      totalAmount: entry.totalAmount,
+      customFields,
+    });
+    updateDocument(sale.document_id, { status: 'Emitida' });
+  }
+
+  const porVencerCustom = {
+    tipoFactura: 'venta',
+    salesOrderId: 'PED-203',
+    referenciaOtroModulo: 'Ventas: pedido PED-203',
+  };
+  const porVencer = addDocument({
+    ...baseFactura(cl1, { folio: 9003, serie: 'V' }),
+    startDate: monthDate(0, 1),
+    endDate: addDays(5),
+    totalAmount: 200000,
+    customFields: porVencerCustom,
+  });
+  updateDocument(porVencer.document_id, { status: 'Emitida' });
+
+  const limiteCustom = {
+    tipoFactura: 'venta',
+    salesOrderId: 'PED-204',
+    referenciaOtroModulo: 'Ventas: pedido PED-204',
+  };
+  const limiteEmitida = addDocument({
+    ...baseFactura(cl3, { folio: 9004, serie: 'V' }),
+    startDate: monthDate(1, 20),
+    endDate: addDays(10),
+    totalAmount: 900000,
+    customFields: limiteCustom,
+  });
+  updateDocument(limiteEmitida.document_id, { status: 'Emitida' });
+  addDocument({
+    ...baseFactura(cl3, { folio: 9005, serie: 'V' }),
+    startDate: monthDate(0, 2),
+    endDate: addDays(10),
+    totalAmount: 200000,
+    customFields: {
+      tipoFactura: 'venta',
+      salesOrderId: 'PED-205',
+      referenciaOtroModulo: 'Ventas: pedido PED-205',
     },
   });
 
-  for (const [factura, fechaPago] of [
-    [c2, addDays(-1)],
-    [c4, addDays(-10)],
-    [c5, addDays(-40)],
-    [c6, addDays(-60)],
-  ]) {
-    updateDocument(factura.document_id, {
-      status: 'Pagada',
-      customFields: {
-        ...factura.customFields,
-        centroCosto: 'Consumible',
-        montoPagado: factura.totalAmount,
-        fechaPago,
-      },
-    });
-  }
-
-  const liquidaciones = [
-    settlementFromDocument(c2.document_id, 'set_demo_pe1_latest', {
-      sueldoBase: 500000,
-      descuentos: 20000,
-      bonos: 220000,
-    }),
-    settlementFromDocument(c5.document_id, 'set_demo_pe1_previous', {
-      sueldoBase: 480000,
-      descuentos: 15000,
-      bonos: 185000,
-    }),
-    settlementFromDocument(c4.document_id, 'set_demo_pe2_latest', {
-      sueldoBase: 450000,
-      descuentos: 12000,
-      bonos: 182000,
-    }),
-    settlementFromDocument(c6.document_id, 'set_demo_pe2_previous', {
-      sueldoBase: 430000,
-      descuentos: 10000,
-      bonos: 180000,
-    }),
-  ];
   savePayrollSettlements(liquidaciones);
 
   const adminAccess = demoAccess.administrador;
@@ -415,10 +550,10 @@ function buildDemoData(config) {
     );
   }
   for (const worker of demoAccess.trabajadores || []) {
-    const personal = entities.find(
+    const personalWorker = entities.find(
       (entity) => entity.code === worker.personalCode
     );
-    if (!personal) continue;
+    if (!personalWorker) continue;
     if (
       loadAccessRecords().some(
         (item) => item.accessId === normalizeRut(worker.accessId)
@@ -429,7 +564,7 @@ function buildDemoData(config) {
       {
         accessId: worker.accessId,
         role: 'trabajador',
-        entityId: personal.entity_id,
+        entityId: personalWorker.entity_id,
         password: worker.password,
       },
       { entities: loadEntities(), records: loadAccessRecords() }
@@ -442,8 +577,8 @@ function buildDemoData(config) {
     records: {
       terceros: loadEntities().length,
       facturas: loadDocuments().length,
-      cobradas: [v1, v2, v3, v4, v5],
-      compras: [c1, c2, c3, c4, c5, c6],
+      cobradas,
+      compras,
       liquidaciones,
     },
   };

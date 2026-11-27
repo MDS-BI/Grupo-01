@@ -4,7 +4,7 @@
 
 **Creada**: 2026-10-29
 
-**Estado**: Borrador (Revisión 8 — 2026-11-25, precisión de FR-029 sobre el aviso por límite de crédito al emitir facturas de venta; Revisión 7 — 2026-11-23, actualización de la HU8 y del contrato de navegación al acceso obligatorio, el menú ☰ y las vistas nuevas; Revisión 6 — 2026-11-23, registro retroactivo de las HU9 y HU10 implementadas en `ec14932` y de la mejora pendiente de formato de montos; Revisión 5 — 2026-11-16, se agrega la HU8 de guía de uso y tutorial; Revisión 4 — 2026-11-11, clarify de separación aplicado)
+**Estado**: Borrador (Revisión 10 — 2026-11-27, corrección de los datos de demostración: sueldos realistas, una liquidación por período y variaciones del Panel acotadas; Revisión 9 — 2026-11-27, ampliación de los datos de demostración de la HU6 para que el Panel de finanzas se vea completo; Revisión 8 — 2026-11-25, precisión de FR-029 sobre el aviso por límite de crédito al emitir facturas de venta; Revisión 7 — 2026-11-23, actualización de la HU8 y del contrato de navegación al acceso obligatorio, el menú ☰ y las vistas nuevas; Revisión 6 — 2026-11-23, registro retroactivo de las HU9 y HU10 implementadas en `ec14932` y de la mejora pendiente de formato de montos; Revisión 5 — 2026-11-16, se agrega la HU8 de guía de uso y tutorial; Revisión 4 — 2026-11-11, clarify de separación aplicado)
 
 **Entrada**: Módulo de facturación y pagos, por cobrar y por pagar, para un sistema ERP (solo frontend), construido sobre el template `Speckit_Template`.
 
@@ -54,6 +54,18 @@
 - Q: ¿Se conserva la vista «Buscar» y dónde se declara? → A: Se conserva; se agrega a FR-020 y FR-022 como vista de finanzas y se elimina su «(Por confirmar)» de los Supuestos. Desde la spec 003 el administrador ya no la ve. Decidido 2026-11-26.
 - Q: ¿Qué módulos ve el administrador (RRHH) y quién ve los avisos al desarrollador desde la spec 003? → A: El administrador ve solo Panel, Crear liquidación de sueldo, Gestionar liquidaciones de sueldo y Control de accesos; ningún rol ve los avisos al desarrollador. Se registran notas puntuales «superseded por 003» en la HU8 y en el contrato de navegación, sin cambiar las specs 002, 003 ni 004. Decidido 2026-11-26.
 - Q: ¿Se limita esta actualización de la spec 001 a notas puntuales o se ajustan también los roles del contrato? → A: Además de las notas, se ajustan la columna «Roles con acceso» y los accesos rápidos de `contracts/navigation-and-access.md`; no se regenera la spec, no se renumeran IDs y se conservan todas las tareas hechas. Decidido 2026-11-26.
+
+### Session 2026-11-27
+
+- Q: ¿Cómo debe distribuirse la historia de facturas pagadas de la demostración para que el gráfico de seis meses quede completo? → A: En cada uno de los últimos 6 meses, incluido el actual, DEBE haber entre 2 y 3 facturas de venta cobradas y entre 1 y 2 facturas de compra a proveedores pagadas; en los cinco meses anteriores DEBEN existir además liquidaciones pagadas de Ana Pérez Soto y Bruno Soto Vega, mientras que la liquidación del mes actual DEBE ser la vigente y NO DEBE contarse como pagada. Decidido 2026-11-27.
+- Q: ¿Qué aspecto financiero debe tener la empresa ficticia de la demostración? → A: En total los ingresos DEBEN superar a los gastos y la caja neta DEBE ser positiva con ventas mayores, no con sueldos reducidos; el mes anterior DEBE ser más flojo que el actual, con variación de Caja neta entre 10 % y 60 % y ninguna variación del Panel superior al 100 %, de modo que las variaciones muestren ▲ y ▼. Decidido 2026-11-27.
+- Q: ¿Cuántos terceros ficticios debe incluir la demostración y con qué requisito de RUT? → A: Al menos 4 clientes y 3 proveedores ficticios con RUT válido según módulo 11, además de Ana Pérez Soto, Bruno Soto Vega y un tercer trabajador ficticio sin acceso. Decidido 2026-11-27.
+- Q: ¿Qué casos de alerta y avisos DEBEN seguir existiendo tras ampliar la demostración? → A: 2 facturas de venta Emitidas y vencidas, al menos una factura Emitida por vencer, un cliente con límite de crédito cerca de ser superado para mostrar el aviso de FR-029, y 1 liquidación en estado Borrador del mes actual para un tercer trabajador sin acceso, de modo que aparezca el aviso de recursos humanos del banner sin afectar la vista de Ana ni de Bruno. Decidido 2026-11-27.
+- Q: ¿Qué elementos de la demostración actual DEBEN permanecer invariables? → A: Los RUT y contraseñas de los 4 accesos de demostración; que Ana y Bruno tengan cada uno una liquidación vigente con desglose y al menos dos pagadas con fechas distintas; que la carga sea idempotente y solo con el módulo vacío; que todos los datos sean ficticios; y que no cambien el modelo de datos ni las claves `erp.*`. Tampoco se regenera la spec 001, se renumeran IDs ni se descartan tareas hechas. Decidido 2026-11-27.
+- Q: ¿Cómo se calculan las fechas relativas de la demostración? → A: Con la fecha local del navegador, no con la hora universal, para que no se corran un día después de las 21:00 en Chile. Decidido 2026-11-27.
+- Q: ¿Cómo deben ser los sueldos de la demostración y cómo se debe lograr la caja positiva? → A: Los sueldos líquidos de Ana Pérez Soto, Bruno Soto Vega y el tercer trabajador DEBEN estar entre $600.000 y $900.000 mensuales; la caja positiva DEBE lograrse con ventas mayores, no bajando los sueldos. Decidido 2026-11-27.
+- Q: ¿Cuántas liquidaciones puede tener cada trabajador por período en la demostración? → A: Como máximo una por período; la del mes actual es la vigente (Emitida para Ana y Bruno, Borrador para el tercer trabajador) y las de meses anteriores están Pagadas. Decidido 2026-11-27.
+- Q: ¿Qué rango deben tener las variaciones del Panel con la demostración ampliada? → A: El mes anterior DEBE ser más flojo que el actual, pero la variación de Caja neta DEBE quedar entre 10 % y 60 % y ninguna variación del Panel DEBE superar el 100 %. Decidido 2026-11-27.
 
 ## Usuarios
 
@@ -186,11 +198,11 @@ Como gerente, quiero ver cuánto me deben mis clientes, cuánto debo a mis prove
 
 ### Historia de Usuario 6 - Cargar datos de demostración y relacionar con otros módulos (Prioridad: P3)
 
-Como integrante del equipo, quiero cargar ejemplos ficticios de terceros (clientes, proveedores y personal) y de facturas de venta y compra, y guardar sus referencias a otros módulos del ERP, para probar los procesos de cobro y pago y mostrar cómo se relacionan los registros.
+Como integrante del equipo, quiero cargar ejemplos ficticios de terceros (clientes, proveedores y personal), de facturas de venta y compra y de liquidaciones de sueldo con historia de seis meses, y guardar sus referencias a otros módulos del ERP, para probar los procesos de cobro y pago y mostrar el Panel de finanzas completo en la presentación.
 
-**Por qué esta prioridad**: para presentar el módulo necesitamos ejemplos que permitan recorrer sus funciones sin ingresar todos los datos a mano. Estos ejemplos también nos servirán para comprobar que las facturas se asocian al tercero correcto, que los pagos actualizan las deudas, que se generan los movimientos financieros y que se identifican las facturas vencidas.
+**Por qué esta prioridad**: para presentar el módulo necesitamos ejemplos que permitan recorrer sus funciones sin ingresar todos los datos a mano y que llenen el gráfico «Ingresos vs Gastos» de seis meses, dejen la caja neta positiva y activen los avisos de finanzas y recursos humanos del banner. Estos ejemplos también nos servirán para comprobar que las facturas se asocian al tercero correcto, que los pagos actualizan las deudas, que se generan los movimientos financieros y que se identifican las facturas vencidas.
 
-**Prueba independiente**: abrir el módulo sin datos, cargar los ejemplos y comprobar que aparecen terceros de los tres tipos y facturas de venta y compra en distintos estados, con sus movimientos financieros. Recargar la página y verificar que los registros y sus relaciones se mantienen.
+**Prueba independiente**: abrir el módulo sin datos, cargar los ejemplos y comprobar que aparecen al menos 4 clientes, 3 proveedores y personal con RUT válido, facturas de venta y compra en distintos estados con movimientos financieros, barras en los seis meses del gráfico, caja neta positiva, variaciones ▲ y ▼, casos vencidos y por vencer, el aviso por límite de crédito y la liquidación en Borrador que activa el aviso de recursos humanos. Recargar la página y verificar que los registros y sus relaciones se mantienen sin duplicados.
 
 **Escenarios de aceptación**:
 
@@ -199,6 +211,12 @@ Como integrante del equipo, quiero cargar ejemplos ficticios de terceros (client
 3. **Dados** los ejemplos ya cargados, **cuando** intento cargarlos nuevamente, **entonces** el sistema informa que ya existen datos y no genera duplicados.
 4. **Dado** que ya ingresé mis propios registros, **cuando** intento cargar la demostración, **entonces** el sistema informa que la carga requiere un módulo vacío y conserva mis registros.
 5. **Dado** un tercero o una factura, **cuando** guardo una referencia a otro módulo, **entonces** puedo volver a consultarla después de cerrar y abrir el registro.
+6. **Dado** que el módulo está vacío, **cuando** cargo los datos de demostración, **entonces** cada uno de los últimos 6 meses, incluido el actual, tiene entre 2 y 3 facturas de venta cobradas y entre 1 y 2 facturas de compra a proveedores pagadas; los cinco meses anteriores tienen además liquidaciones pagadas de Ana Pérez Soto y Bruno Soto Vega, el mes actual tiene sus liquidaciones vigentes Emitidas que no cuentan como pagadas, y el gráfico «Ingresos vs Gastos» muestra barras en los 6 meses.
+7. **Dados** los ejemplos cargados, **cuando** abro el Panel y el Flujo de caja, **entonces** los ingresos totales superan a los egresos, la caja neta es positiva gracias a ventas mayores y no a sueldos más bajos, el mes anterior es más flojo que el actual, la variación de Caja neta está entre 10 % y 60 %, ninguna variación del Panel supera el 100 % y las variaciones de los indicadores muestran ▲ y ▼.
+8. **Dados** los ejemplos cargados, **cuando** reviso los terceros, **entonces** hay al menos 4 clientes y 3 proveedores ficticios con RUT válido según módulo 11, además de Ana Pérez Soto, Bruno Soto Vega y un tercer trabajador ficticio sin acceso; los RUT y contraseñas de los 4 accesos de demostración no cambian.
+9. **Dados** los ejemplos cargados, **cuando** reviso las alertas, **entonces** existen 2 facturas de venta Emitidas y vencidas, al menos una factura Emitida por vencer, un cliente con límite de crédito cerca de ser superado para mostrar el aviso de FR-029, y 1 liquidación en Borrador del mes actual del tercer trabajador sin acceso, con el aviso de recursos humanos en el banner y sin afectar la vista de Ana ni de Bruno.
+10. **Dados** los ejemplos cargados, **cuando** consulto las liquidaciones de Ana, Bruno y el tercer trabajador, **entonces** cada trabajador tiene como máximo una liquidación por período: la del mes actual es la vigente (Emitida para Ana y Bruno, Borrador para el tercero) y al menos dos de los meses anteriores están Pagadas con fechas distintas; cada una tiene desglose y sueldos líquidos entre $600.000 y $900.000, sin exponer haberes, descuentos ni bonos a otros roles.
+11. **Dada** una hora posterior a las 21:00 en Chile, **cuando** se calculan las fechas relativas de la demostración, **entonces** se usan la fecha local del navegador y no la hora universal, de modo que las facturas, pagos y liquidaciones no se corren un día después.
 
 ---
 
@@ -315,6 +333,11 @@ Como administrador o integrante de finanzas, quiero que el Panel muestre tres in
 - ¿Qué pasa si un trabajador intenta abrir Flujo de caja o el Resumen financiero del Panel, aunque conozca la ruta? La acción se bloquea con un mensaje claro y no se muestran datos del módulo.
 - ¿Qué pasa si un monto mostrado en el Panel, Flujo de caja, Movimientos o Seguimiento es negativo? Conserva el signo delante del símbolo de peso, por ejemplo `-$2.430.000`, con el mismo formato de miles que Mi liquidación (FR-046, pendiente).
 - ¿Qué pasa si "Deuda pendiente" se interpreta como saldo? El Panel la define como volumen total pendiente (total por cobrar + total por pagar), distinto de Saldo neto (total por cobrar − total por pagar).
+- ¿Qué pasa si la demostración se carga con el módulo vacío pero el navegador está en zona horaria de Chile y son más de las 21:00? Las fechas relativas se calculan con la fecha local del navegador, no con la hora universal, para que no se corran al día siguiente.
+- ¿Qué pasa si la demostración ampliada se carga donde ya había datos de demostración anteriores? La carga se rechaza porque el módulo no está vacío; para ver la serie de seis meses completa se necesita un navegador o perfil sin registros, sin alterar la regla de idempotencia.
+- ¿Qué pasa si la liquidación Borrador corresponde al tercer trabajador sin acceso? El aviso de recursos humanos aparece en el banner para el rol autorizado, sin crear un cuarto acceso de demostración ni modificar las vistas de Ana y Bruno.
+- ¿Qué pasa si la demostración genera dos liquidaciones para el mismo trabajador y período? No debe hacerlo: cada trabajador tiene como máximo una liquidación por período; la del mes actual es la vigente (Emitida para Ana y Bruno, Borrador para el tercero) y las anteriores son Pagadas, sin sueldos inferiores a $600.000.
+- ¿Qué pasa si una variación del Panel supera el 100 % o la variación de Caja neta queda fuera del 10 % al 60 %? La serie de demostración DEBE ajustarse con ventas mayores en el mes anterior, sin bajar sueldos ni duplicar liquidaciones, hasta cumplir ambos límites.
 
 ## Requisitos *(obligatorio)*
 
@@ -363,7 +386,7 @@ Como administrador o integrante de finanzas, quiero que el Panel muestre tres in
 **Seguimiento**
 
 - **FR-023**: El sistema DEBE mostrar el total por cobrar de cada cliente y el total por pagar a cada proveedor, contando solo las facturas Emitidas. La fuente de cálculo de estos totales y de los KPIs del home son las facturas; la tabla de movimientos financieros es un registro trazable, no el libro de cálculo.
-- **FR-024**: El sistema DEBE identificar como vencidas las facturas Emitidas cuya fecha de vencimiento es estrictamente anterior al día actual (una factura que vence hoy no está vencida).
+- **FR-024**: El sistema DEBE identificar como vencidas las facturas Emitidas cuya fecha de vencimiento es estrictamente anterior al día actual, obtenido de la fecha local del navegador y no de la hora universal (una factura que vence hoy no está vencida).
 - **FR-025**: El sistema NO DEBE contar las facturas Pagadas como deuda ni como vencidas.
 
 **Datos**
@@ -402,6 +425,16 @@ Como administrador o integrante de finanzas, quiero que el Panel muestre tres in
 - **FR-045**: Las vistas Flujo de caja y Resumen financiero del Panel DEBEN estar disponibles solo para los roles `administrador` y `finanzas` definidos en `specs/002-payroll-access-control`; el rol `trabajador` NO DEBE verlas ni acceder a ellas por enlace directo o acceso rápido. El incumplimiento DEBE bloquearse con un mensaje claro sin exponer datos. **Nota (superseded por 003): solo `finanzas` las ve; `administrador` ya no tiene acceso a estas vistas financieras.**
 - **FR-046**: Todos los montos mostrados en el Panel, el Flujo de caja, Movimientos financieros y Seguimiento DEBEN expresarse en pesos chilenos con separador de miles, con el mismo formato de Mi liquidación; los valores negativos DEBEN conservar el signo delante de `$` (por ejemplo, `$1.240.000` y `-$2.430.000`). Esta mejora está pendiente de implementación.
 
+**Datos de demostración (HU6)**
+
+- **FR-047**: La carga de demostración DEBE generar, en cada uno de los últimos 6 meses incluido el actual, entre 2 y 3 facturas de venta cobradas y entre 1 y 2 facturas de compra a proveedores pagadas, de modo que el gráfico «Ingresos vs Gastos» tenga barras en los 6 meses. En los cinco meses anteriores DEBE generar además liquidaciones pagadas de Ana Pérez Soto y Bruno Soto Vega; la liquidación del mes actual DEBE ser la vigente y NO DEBE contarse como pagada.
+- **FR-048**: Con los datos de demostración, los ingresos totales DEBEN superar a los egresos, la caja neta DEBE ser positiva y el mes anterior DEBE ser más flojo que el actual, de modo que las variaciones del Panel incluyan ▲ y ▼. La caja positiva DEBE lograrse con ventas mayores y NO reduciendo los sueldos de la demostración. La variación de Caja neta DEBE estar entre 10 % y 60 % y ninguna variación del Panel DEBE superar el 100 %.
+- **FR-049**: La demostración DEBE incluir al menos 4 clientes y 3 proveedores ficticios con RUT válido según módulo 11, además de Ana Pérez Soto, Bruno Soto Vega y un tercer trabajador ficticio sin acceso. Todos los datos DEBEN ser ficticios.
+- **FR-050**: La demostración DEBE conservar 2 facturas de venta Emitidas y vencidas, al menos una factura Emitida por vencer, un cliente con límite de crédito cerca de ser superado para mostrar el aviso de FR-029 y 1 liquidación en estado Borrador del mes actual para el tercer trabajador sin acceso. Esa liquidación DEBE activar el aviso de recursos humanos del banner sin afectar la vista de Ana ni de Bruno.
+- **FR-051**: La demostración DEBE conservar los RUT y contraseñas de los 4 accesos existentes. Cada trabajador DEBE tener como máximo una liquidación por período: la del mes actual es la vigente (Emitida para Ana Pérez Soto y Bruno Soto Vega, Borrador para el tercer trabajador) y al menos dos de los meses anteriores están Pagadas con fechas distintas. Ana y Bruno DEBEN tener además una liquidación vigente con desglose. Los sueldos líquidos de Ana, Bruno y el tercer trabajador DEBEN estar entre $600.000 y $900.000 mensuales. La carga DEBE seguir siendo idempotente y solo proceder con el módulo vacío, sin duplicados ni borrado de registros propios.
+- **FR-052**: Las fechas relativas de la demostración DEBEN calcularse con la fecha local del navegador y NO con la hora universal, incluso después de las 21:00 en Chile.
+- **FR-053**: Esta ampliación NO DEBE modificar el modelo de datos, las claves `erp.*` ni los IDs y tareas ya existentes; los requisitos, escenarios y criterios nuevos se agregan al final sin renumerar los anteriores.
+
 ### Entidades Clave
 
 - **Tercero**: cliente, proveedor o personal. Tiene nombre, código, RUT, tipo y, si es cliente, límite de crédito. Un tercero tiene cero o muchas facturas.
@@ -429,6 +462,12 @@ Como administrador o integrante de finanzas, quiero que el Panel muestre tres in
 - **SC-010**: En el 100% de los casos de prueba, los tres indicadores del Resumen financiero coinciden con las fórmulas Saldo neto = por cobrar − por pagar, Deuda pendiente = por cobrar + por pagar y Caja neta = ingresos − egresos del Flujo de caja.
 - **SC-011**: En el 100% de las pruebas de rol, administrador y finanzas ven Flujo de caja y Resumen financiero, mientras que el trabajador no los ve ni puede abrirlos por acceso directo o enlace.
 - **SC-012**: El 100% de los montos visibles en el Panel, Flujo de caja, Movimientos y Seguimiento usa pesos chilenos con separador de miles y conserva el signo en valores negativos, verificable con `$1.240.000` y `-$2.430.000`.
+- **SC-013**: Tras cargar la demostración en un módulo vacío, el 100% de los 6 meses del gráfico «Ingresos vs Gastos» tiene al menos una barra de ingreso y una de gasto, con 2–3 ventas cobradas y 1–2 compras pagadas por mes; en los cinco meses anteriores hay liquidaciones pagadas de Ana y Bruno, con sueldos líquidos entre $600.000 y $900.000, y el mes actual tiene las liquidaciones vigentes Emitidas de Ana y Bruno.
+- **SC-014**: Con la demostración cargada, los ingresos totales son mayores que los egresos, la caja neta es positiva gracias a ventas mayores y no a sueldos reducidos, el mes anterior es más flojo que el actual, la variación de Caja neta está entre 10 % y 60 %, ninguna variación del Panel supera el 100 % y los indicadores muestran al menos una variación ▲ y una ▼.
+- **SC-015**: La demostración contiene al menos 4 clientes y 3 proveedores ficticios con RUT válido (módulo 11), un tercer trabajador sin acceso y los 4 accesos de demostración conservan sus RUT y contraseñas originales.
+- **SC-016**: La demostración preserva 2 facturas Emitidas vencidas, al menos una Emitida por vencer, un cliente con límite de crédito cercano al aviso de FR-029 y una liquidación Borrador del mes actual del tercer trabajador, con el aviso de recursos humanos visible y sin cambios en las vistas de Ana y Bruno.
+- **SC-017**: El 100% de las comprobaciones de fechas relativas de la demostración realizadas después de las 21:00 en Chile coincide con la fecha local del navegador, sin desplazamiento de un día respecto de la hora universal.
+- **SC-018**: El 100% de los trabajadores de la demostración tiene como máximo una liquidación por período: la del mes actual es la vigente (Emitida para Ana y Bruno, Borrador para el tercero) y las de meses anteriores están Pagadas, con sueldos líquidos entre $600.000 y $900.000.
 
 ## Supuestos
 
@@ -457,3 +496,6 @@ Como administrador o integrante de finanzas, quiero que el Panel muestre tres in
 - Las HU9 y HU10 se registran retroactivamente el 2026-11-23: ya fueron implementadas por Matías el 2026-11-16 en el commit `ec14932` (tareas 7 y 8 de la minuta), sin haber pasado por Speckit. Los IDs nuevos se agregan a continuación de los existentes, sin renumerar.
 - La mejora de formato de montos en pesos chilenos con separador de miles (FR-046) está pendiente de implementación al 2026-11-23; no forma parte de lo ya implementado en `ec14932`.
 - El Flujo de caja se ordena por fecha de pago de más antigua a más reciente, según decisión del 2026-11-23 y coincidente con el orden de `ec14932`.
+- La ampliación de los datos de demostración decidida el 2026-11-27 agrega FR-047 a FR-053, los escenarios 6 a 11 de la HU6 y los SC-013 a SC-017 sin regenerar la spec 001, sin renumerar los IDs existentes y conservando todas las tareas hechas. No cambia el modelo de datos ni las claves `erp.*`. Decidido 2026-11-27.
+- Las fechas relativas de la demostración se calculan con la fecha local del navegador, no con la hora universal, para evitar el desplazamiento de un día después de las 21:00 en Chile. Decidido 2026-11-27.
+- La corrección del 2026-11-27 precisa que los sueldos líquidos de los tres trabajadores de demostración están entre $600.000 y $900.000, que la caja positiva se logra con ventas mayores y no con sueldos bajos, que cada trabajador tiene como máximo una liquidación por período y que las variaciones del Panel no superan el 100 %, con Caja neta entre 10 % y 60 %. No regenera la spec, no renumera IDs y conserva todas las tareas hechas. Decidido 2026-11-27.

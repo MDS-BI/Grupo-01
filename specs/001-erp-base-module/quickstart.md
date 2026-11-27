@@ -44,6 +44,37 @@
 - Verifique que la lista permanece consistente tras las acciones de edición y eliminación.
 - Verifique que las estadísticas del panel coinciden con el número de registros almacenados.
 
+### Datos de demostración
+
+Al usar **Cargar demostración** en un navegador sin datos se carga el perfil
+ficticio ampliado (Session 2026-11-27). La carga solo procede con el módulo
+vacío: un segundo intento informa que ya existen datos y conserva los registros
+sin duplicarlos. Las cuatro credenciales de demostración no cambian.
+
+Verifique en el Panel y las vistas relacionadas:
+
+- «Ingresos vs Gastos» muestra barras en los 6 meses; cada mes tiene 2–3 ventas
+  cobradas y 1–2 compras de proveedores pagadas; en los cinco meses anteriores
+  hay liquidaciones pagadas de Ana Pérez Soto y Bruno Soto Vega, y en el actual
+  solo la vigente Emitida de cada uno.
+- Los sueldos líquidos de Ana, Bruno y `PE-003` están entre `$600.000` y
+  `$900.000`, con máximo una liquidación por trabajador y período. Los ingresos
+  totales superan los egresos y la caja neta es positiva por ventas mayores, no
+  por sueldos reducidos; el mes anterior es más flojo que el actual, la variación
+  de Caja neta queda entre `10 %` y `60 %`, ninguna variación del Panel supera
+  `100 %` y las variaciones incluyen ▲ y ▼.
+- Hay al menos 4 clientes y 3 proveedores con RUT válido según módulo 11, además
+  de Ana, Bruno y `PE-003` (Camila Rojas Fuentes), sin acceso para este último.
+- Ana y Bruno tienen cada uno una liquidación vigente con desglose y al menos
+  dos pagadas con fechas distintas. `PE-003` tiene una liquidación en Borrador
+  del mes actual que activa el aviso de recursos humanos del banner sin cambiar
+  las vistas de Ana ni de Bruno.
+- Hay 2 ventas Emitidas vencidas, al menos una Emitida por vencer y un cliente
+  cerca de su límite de crédito que dispara el aviso de FR-029 al emitir la
+  factura Borrador preparada para ese cliente.
+- Las fechas relativas usan la fecha local del navegador; después de las 21:00
+  en Chile no deben correr un día respecto de la fecha local.
+
 ### Rendimiento (T070)
 
 El presupuesto de `plan.md` se comprueba en `tests/integration/performance.test.js`, que corre con `npm run check`: búsqueda y filtro de 500 terceros en menos de 100 ms, render de 500 terceros en menos de 200 ms (umbral más holgado porque jsdom es más lento que un navegador real) y filtro y render de las liquidaciones de demostración por RUT en menos de 1 s.

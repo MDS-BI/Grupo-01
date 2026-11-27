@@ -58,7 +58,7 @@ describe('US6 - demostración cargada desde la pantalla de acceso', () => {
     ).toBe(true);
     expect(loadAccessRecords()).toHaveLength(4);
     expect(loadEntities().length).toBeGreaterThan(0);
-    expect(loadPayrollSettlements()).toHaveLength(4);
+    expect(loadPayrollSettlements()).toHaveLength(13);
   });
 
   it('los accesos de administrador y finanzas funcionan después de la carga', () => {
