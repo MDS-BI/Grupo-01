@@ -36,6 +36,9 @@ npm run dev
 5. Confirmar que los períodos visibles aparecen como texto legible, p. ej. `noviembre 2026`, y que toda fecha visible como texto usa `DD-MM-AAAA` sin cambiar entradas ni almacenamiento `AAAA-MM-DD`.
 6. Confirmar que los RUT visibles usan puntos y guion, p. ej. `22.222.222-2`, y que los montos visibles usan `formatCurrencyCLP`, p. ej. `$250.000`, nunca `250000 CLP`.
 7. Reducir la ventana a 390 px: la página no debe desbordar horizontalmente; las tablas anchas se desplazan dentro de su contenedor.
+8. En el Panel confirmar que `#brand-name` dice solo `Contabilidad y Finanzas` y que `#view-context` está oculto; al abrir otra vista confirmar `Contabilidad y Finanzas › <nombre de la vista>` dentro de `#view-context`, nunca dentro de `#brand-name`.
+9. Confirmar que `#back-bar` sigue mostrando `← Volver al Panel` y el nombre de la vista igual que antes.
+10. Confirmar que cualquier `#banner-notice` visible usa fondo `#FFB703` y texto `#023047`, y que a 390 px se ocultan `#view-context` y `#banner-notice-text` pero siguen visibles `#banner-notice-count` y el `aria-label` completo.
 
 ## Verificación por rol
 
@@ -47,6 +50,7 @@ npm run dev
 4. Buscar en el DOM las palabras `Resumen financiero`, `Indicadores`, `Deuda pendiente`, `Caja neta`, `Por cobrar`, `Por pagar` y `Facturas vencidas`: ninguna debe aparecer visible.
 5. Confirmar que no existe gráfico SVG de tendencia, alertas financieras ni tabla de movimientos.
 6. Intentar abrir módulos financieros desde navegación: se mantiene la redirección de la spec 003.
+7. Con una y con dos liquidaciones en `Borrador`, confirmar `#banner-notice` con `1 liquidación en borrador` o `2 liquidaciones en borrador`, igual `aria-label`, y que al hacer clic abre `view-payroll-admin`; con cero borradores debe estar oculto.
 
 ### Finanzas
 
@@ -68,6 +72,7 @@ npm run dev
 8. Confirmar gráfico SVG al lado de las alertas, con título, descripción, leyenda y seis meses.
 9. Confirmar tabla con máximo cinco movimientos y enlace `Ver todos`.
 10. Contar accesos rápidos: exactamente `Nueva factura de venta`, `Nueva factura de compra`, `Flujo de caja`, `Buscar`, todos en una línea.
+11. Con una y con dos facturas vencidas, confirmar `#banner-notice` con `1 factura vencida` o `2 facturas vencidas`, igual `aria-label`, y que al hacer clic abre `view-tracking`; con cero vencidas debe estar oculto.
 
 ### Trabajador
 
@@ -78,6 +83,7 @@ npm run dev
 5. Confirmar que la tabla de desglose aparece solo si hay sueldo base, descuentos o bonos con valor.
 6. Confirmar historial con montos en `$` y fechas de pago en `DD-MM-AAAA`.
 7. Confirmar ausencia de indicadores, gráfico y alertas financieras.
+8. Confirmar `#view-context` con `Contabilidad y Finanzas › Mi liquidación` y que `#banner-notice` permanece oculto aunque existan datos financieros o borradores de otros roles.
 
 ## Banner y sesión
 
@@ -85,6 +91,12 @@ npm run dev
 2. Descartar el banner con un rol y recargar la página: permanece oculto para ese rol.
 3. Cambiar a otro rol en la misma pestaña: el banner debe aparecer salvo que ese rol también lo haya descartado.
 4. Verificar en `sessionStorage` la clave `erp.guideDismissed.<role>` y confirmar que `erp.session` no cambió.
+5. Para distinguirlo del banner de guía, revisar el encabezado superior: `#view-context` muestra el nombre de la vista solo fuera del Panel y `#banner-notice` muestra el aviso de acción del rol.
+6. Cambiar entre Panel y otra vista con administrador y finanzas: el número del aviso no debe cambiar por navegar, pero el contexto `›` aparece o desaparece según la vista.
+7. Guardar o eliminar una factura vencida con finanzas y una liquidación en borrador con administrador: el aviso debe actualizarse en la misma sesión, sin recargar.
+8. Dejar el número en cero con cada rol: `#banner-notice` debe quedar oculto y sin `aria-label` útil.
+9. Verificar que el clic del aviso abre `view-tracking` para finanzas y `view-payroll-admin` para administrador.
+10. A 390 px, confirmar que solo se ve el número del aviso, que el texto completo sigue en `aria-label` y que `#back-bar` no se ha modificado.
 
 ## Verificación automática
 
@@ -106,4 +118,7 @@ npm run build
 - Sin `AAAA-MM` ni identificadores internos (`doc_`, `ent_`, `set_`, `salesOrderId`) en textos visibles; las fechas visibles usan `DD-MM-AAAA` y los RUT usan puntos y guion.
 - Montos visibles en formato canónico CLP con `$`, separador de miles y ancho fijo, p. ej. `$250.000`.
 - Nombre del sistema e iniciales correctos en todas las vistas, con `Recursos Humanos` / `R` para el rol administrador.
+- `#brand-name` sin `›`; `#view-context` solo fuera del Panel; `#back-bar` sin cambios.
+- Avisos correctos por rol, con singular/plural, destinos `tracking` y `payroll-admin`, ausencia para trabajador y número cero, y actualización sin recargar.
+- Colores `#FFB703`/`#023047` y vista de 390 px con solo el número visible y el nombre accesible completo.
 - Todas las pruebas automatizadas pasan.

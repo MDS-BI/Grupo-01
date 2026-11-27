@@ -121,6 +121,8 @@ export function createShell({
 }) {
   const brandName = document.getElementById('brand-name');
   const brandLogo = document.getElementById('brand-logo');
+  const viewContext = document.getElementById('view-context');
+  const viewContextName = document.getElementById('view-context-name');
 
   if (brandName) brandName.textContent = config.moduleName;
   const profile = resolveSessionProfile(session, { entities });
@@ -335,6 +337,12 @@ export function createShell({
     const isLogin = module === 'login';
     const canUsePanel = Boolean(session) && session.role !== 'trabajador';
     const showBack = canUsePanel && !isLogin && module !== 'dashboard';
+    const showViewContext =
+      Boolean(session) && !isLogin && module !== 'dashboard';
+
+    if (viewContext) viewContext.hidden = !showViewContext;
+    if (showViewContext && viewContextName)
+      viewContextName.textContent = navLabel(config, module);
 
     if (backBar) backBar.hidden = !showBack;
     if (showBack && backViewName)

@@ -18,6 +18,7 @@ describe('US13 - shell persistente', () => {
     initApp(DEFAULT_CONFIG);
 
     expect(document.getElementById('brand-name').textContent).toBe('ERP Base');
+    expect(document.getElementById('view-context').hidden).toBe(true);
     expect(
       document.getElementById('brand-logo').querySelector('svg')
     ).toBeTruthy();
@@ -89,6 +90,16 @@ describe('US13 - shell persistente', () => {
       expect(document.getElementById('brand-name').textContent).toBe(
         'Contabilidad y Finanzas'
       );
+      expect(document.getElementById('brand-name').textContent).not.toContain(
+        '›'
+      );
+      const viewContext = document.getElementById('view-context');
+      expect(viewContext.hidden).toBe(modulo === 'dashboard');
+      if (modulo !== 'dashboard') {
+        expect(
+          document.getElementById('view-context-separator').textContent.trim()
+        ).toBe('›');
+      }
     }
   });
 
@@ -97,6 +108,9 @@ describe('US13 - shell persistente', () => {
 
     expect(document.getElementById('brand-name').textContent).toBe(
       'Contabilidad y Finanzas'
+    );
+    expect(document.getElementById('brand-name').textContent).not.toContain(
+      '›'
     );
     expect(document.title).toBe('Contabilidad y Finanzas');
     expect(document.getElementById('brand-logo').textContent).toBe('R');

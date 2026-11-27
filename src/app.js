@@ -19,6 +19,7 @@ import {
 } from './storage.js';
 import { createShell } from './components/shell.js';
 import {
+  computeAdminPayrollSummary,
   initDashboard,
   refreshDashboard,
   setDashboardSession,
@@ -50,6 +51,7 @@ import { createTutorial } from './components/tutorial.js';
 import { resolveAdminSettlements } from './payroll.js';
 import { validateDocument, validateSettlement } from './validation.js';
 import { loadMovements } from './movements.js';
+import { computeFinanceIndicators } from './finance.js';
 import { computeDebtSummary } from './tracking.js';
 import { formatCurrencyCLP } from './format.js';
 import { loadDemoData } from './demo-data.js';
@@ -331,6 +333,7 @@ function refresh() {
   }
   refreshPayrollCreateList();
   refreshDashboard();
+  refreshBannerNotice();
   refreshMovements();
   refreshCashflow();
   refreshTracking();
@@ -355,6 +358,55 @@ function refreshInvoiceStatusNotice() {
     unclassifiedCount: loadUnclassifiedDocuments().length,
     isAdmin: state.session?.role === 'administrador',
   });
+}
+
+function refreshBannerNotice() {
+  const notice = byId('banner-notice');
+  const count = byId('banner-notice-count');
+  const text = byId('banner-notice-text');
+  if (!notice || !count || !text) return;
+
+  const role = state.session?.role;
+  let value = 0;
+  let message = '';
+
+  if (role === 'finanzas') {
+    value =
+      computeFinanceIndicators(
+        loadDocuments(),
+        loadEntities(),
+        loadMovements()
+      ).find((indicator) => indicator.id === 'overdue')?.value ?? 0;
+    message = value === 1 ? '1 factura vencida' : `${value} facturas vencidas`;
+  } else if (role === 'administrador') {
+    value = computeAdminPayrollSummary(
+      loadEntities(),
+      loadAccessRecords(),
+      loadPayrollSettlements()
+    ).draft;
+    message =
+      value === 1
+        ? '1 liquidación en borrador'
+        : `${value} liquidaciones en borrador`;
+  }
+
+  if (!(value > 0)) {
+    notice.hidden = true;
+    notice.onclick = null;
+    notice.setAttribute('aria-label', '');
+    count.textContent = '';
+    text.textContent = '';
+    return;
+  }
+
+  notice.hidden = false;
+  count.textContent = String(value);
+  text.textContent = message;
+  notice.setAttribute('aria-label', message);
+  notice.onclick =
+    role === 'finanzas'
+      ? () => showModule('tracking')
+      : () => showModule('payroll-admin');
 }
 
 function clearRestrictedViews() {
@@ -416,6 +468,7 @@ function applySession(session) {
   });
   clearRestrictedViews();
   refreshInvoiceStatusNotice();
+  refreshBannerNotice();
 }
 
 function showLogin() {
@@ -804,6 +857,7 @@ function showModule(name) {
     if (element) element.hidden = view !== target;
   }
   if (state.shell) state.shell.setActive(target);
+  refreshBannerNotice();
 
   if (target === 'dashboard') {
     setDashboardSession(state.session);

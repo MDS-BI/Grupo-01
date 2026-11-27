@@ -31,6 +31,9 @@
 ### Session 2026-11-27
 
 - Q: ¿Cómo debe dibujarse y comportarse el ícono de información de la fórmula de los indicadores financieros del Panel? → A: El ícono NO DEBE usar el carácter de texto «ⓘ», que IBM Plex Sans no incluye; DEBE dibujarse con CSS como un círculo de 16 px con fondo tinte claro de `#8ECAE6`, borde de 1 px `#8ECAE6` y letra «i» en IBM Plex Sans con peso 600 y color `#023047`, centrada y alineada verticalmente con el título del indicador. Al pasar el mouse o al enfocarlo con el teclado, el fondo DEBE pasar a `#8ECAE6`. Se conserva su función: muestra la fórmula del indicador en un tooltip, mantiene `role="img"` y `aria-label`, y DEBE poder enfocarse con el teclado mediante `tabindex="0"` para que la fórmula también sea accesible sin mouse. NO DEBEN cambiar los textos de los indicadores, las fórmulas, el modelo de datos, las claves `erp.*` ni los permisos, y NO DEBEN renumerarse los requisitos ni las tareas existentes.
+- Q: ¿Cómo debe usar el banner superior el nombre de la vista actual sin alterar el Panel ni la franja «← Volver al Panel»? → A: Junto a «Contabilidad y Finanzas», el banner DEBE mostrar el nombre de la vista actual separado por «›», por ejemplo «Contabilidad y Finanzas › Facturas de compra»; en el Panel DEBE mostrarse solo «Contabilidad y Finanzas». La franja «← Volver al Panel» (`#back-bar`) DEBE mantenerse como está. El nombre de la vista DEBE tomarse de una etiqueta visible ya existente, sin crear textos nuevos, renumerar requisitos o tareas, ni cambiar permisos, modelo de datos, claves `erp.*` o paleta.
+- Q: Qué aviso breve y clickeable DEBE mostrar el banner según el rol y con qué destino? → A: El banner DEBE mostrar un aviso con estilo de «requiere acción» de la constitución v1.2.0: fondo `#FFB703` y texto `#023047`, siempre con texto. Para finanzas DEBE decir «N facturas vencidas» o «1 factura vencida» y llevar a Seguimiento; para recursos humanos DEBE decir «N liquidaciones en borrador» o «1 liquidación en borrador» y llevar a «Gestionar liquidaciones de sueldo»; para el trabajador NO DEBE mostrar aviso. Si el número es cero, el aviso NO DEBE aparecer. El aviso DEBE actualizarse al cambiar los datos y DEBE usar los mismos cálculos que ya existen en el Panel, sin cambiar modelo de datos, claves `erp.*`, permisos ni paleta.
+- Q: ¿Cómo debe comportarse el banner a 390 px de ancho para no desbordar? → A: A 390 px de ancho, el nombre de la vista actual DEBE ocultarse visualmente y el aviso DEBE mostrar solo el número, conservando el texto completo del aviso como nombre accesible. NO DEBE haber desbordamiento del banner ni cambios en el modelo de datos, las claves `erp.*`, los permisos por rol ni la paleta.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -94,6 +97,10 @@ Como usuario del módulo, quiero reconocer siempre el mismo sistema, la misma ti
 7. **Dado** cualquier Panel, **cuando** se muestra su encabezado, **entonces** incluye un saludo y el mes actual.
 8. **Dado** un administrador, **cuando** se revisan cabecera, saludo del Panel, círculo de perfil y selector de rol de Control de accesos, **entonces** el rol se muestra como «Recursos Humanos» con mayúscula inicial, la inicial del círculo es «R» y la clave interna `administrador` no aparece.
 9. **Dado** cualquier rol con sesión iniciada, **cuando** se revisa la barra superior, **entonces** su fondo es `#023047` con texto e ícono ☰ en blanco, la etiqueta del rol usa fondo `#8ECAE6` con texto `#023047`, y los textos de la interfaz permanecen sin cambios.
+10. **Dado** cualquier vista distinta del Panel, **cuando** se lee el banner superior, **entonces** muestra «Contabilidad y Finanzas › <nombre de la vista actual>» usando una etiqueta visible ya existente; **dado** el Panel, **cuando** se lee el mismo banner, **entonces** muestra solo «Contabilidad y Finanzas»; en ambos casos la franja «← Volver al Panel» (`#back-bar`) permanece como está.
+11. **Dado** un usuario de finanzas con facturas vencidas, **cuando** se revisa el banner, **entonces** aparece un aviso clickeable «N facturas vencidas» o «1 factura vencida» con fondo `#FFB703` y texto `#023047`, que lleva a Seguimiento; **dado** un usuario de recursos humanos con liquidaciones en borrador, **entonces** aparece «N liquidaciones en borrador» o «1 liquidación en borrador» con el mismo estilo, que lleva a «Gestionar liquidaciones de sueldo»; **dado** un trabajador, **entonces** no aparece aviso.
+12. **Dado** cualquier rol con el número del aviso en cero, **cuando** cambian los datos, **entonces** el aviso no aparece o desaparece usando el mismo cálculo que el Panel, sin cambiar el modelo de datos, las claves `erp.*`, los permisos ni la paleta.
+13. **Dado** una vista abierta a 390 px de ancho, **cuando** se revisa el banner, **entonces** el nombre de la vista se oculta visualmente, el aviso muestra solo el número, el texto completo sigue disponible como nombre accesible y no hay desbordamiento del banner.
 
 ---
 
@@ -196,6 +203,11 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 - ¿Qué pasa si un dato guardado contiene `doc_`, `ent_`, `set_` o un nombre de campo como `salesOrderId`? La vista no lo muestra: usa etiquetas legibles, referencias de documento y el nombre del tercero.
 - ¿Qué pasa si el RUT se ingresó sin puntos? Se muestra con puntos y guion en todas las vistas, incluidos Control de accesos y los listados de liquidaciones, sin cambiar el valor normalizado guardado.
 - ¿Qué pasa si la vista se abre en un celular de 390 px? La página no tiene desbordamiento horizontal; las tablas anchas se desplazan dentro de su contenedor.
+- ¿Qué pasa si la vista actual es el Panel? El banner muestra solo «Contabilidad y Finanzas», sin «›» ni nombre de vista adicional, y la franja «← Volver al Panel» (`#back-bar`) no cambia.
+- ¿Qué pasa si el número de facturas vencidas o de liquidaciones en borrador es cero? El aviso del banner no aparece.
+- ¿Qué pasa si el trabajador tiene datos pendientes? El banner no muestra aviso porque ese rol no tiene este aviso, sin exponer datos financieros ni de nómina restringidos.
+- ¿Qué pasa si cambian los datos mientras una vista está abierta? El aviso del banner se actualiza con el mismo cálculo ya usado por el Panel, sin almacenar un nuevo dato.
+- ¿Qué pasa si el banner se ve a 390 px? El nombre de la vista se oculta visualmente y el aviso muestra solo el número, conservando el texto completo del aviso como nombre accesible y sin desbordar.
 
 ## Requirements *(mandatory)*
 
@@ -292,6 +304,13 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 - **FR-060**: «Gestionar liquidaciones de sueldo» DEBE mostrar una leyenda breve del ciclo: «Borrador (RRHH la prepara)», «Emitida (aprobada por RRHH)» y «Pagada (finanzas registró el pago)», sin cambiar los nombres de los estados.
 - **FR-061**: A 390 px de ancho, ninguna vista DEBE tener desborde horizontal de la página; las tablas anchas DEBEN desplazarse dentro de su contenedor.
 
+**Banner superior contextual**
+
+- **FR-062**: El banner superior DEBE mostrar «Contabilidad y Finanzas › <nombre de la vista actual>» en toda vista distinta del Panel, separando ambos textos con «›» y tomando el nombre de la vista de una etiqueta visible ya existente; en el Panel DEBE mostrar solo «Contabilidad y Finanzas». La franja «← Volver al Panel» (`#back-bar`) DEBE mantenerse como está, sin crear textos nuevos ni renumerar requisitos o tareas existentes.
+- **FR-063**: El banner superior DEBE mostrar un aviso breve y clickeable según el rol, con fondo `#FFB703` y texto `#023047` del estado «requiere acción» de la constitución v1.2.0, siempre con texto y usando solo textos ya existentes en el módulo, sin cambiar el fondo base `#023047` del banner ni el resto de la paleta. Para finanzas DEBE decir «N facturas vencidas» o «1 factura vencida» y llevar a Seguimiento; para recursos humanos DEBE decir «N liquidaciones en borrador» o «1 liquidación en borrador» y llevar a «Gestionar liquidaciones de sueldo»; para el trabajador NO DEBE mostrar aviso.
+- **FR-064**: Si el número correspondiente al aviso del banner es cero, el aviso NO DEBE aparecer; si los datos cambian, el aviso DEBE actualizarse usando los mismos cálculos que ya existen en el Panel, sin crear almacenamiento nuevo ni modificar el modelo de datos, las claves `erp.*` ni los permisos por rol.
+- **FR-065**: A 390 px de ancho, el nombre de la vista actual en el banner DEBE ocultarse visualmente y el aviso DEBE mostrar solo el número, conservando el texto completo del aviso como nombre accesible y evitando desbordamiento del banner.
+
 ### Key Entities
 
 - **Perfil de sesión**: rol vigente, nombre opcional de la persona e iniciales derivadas que se muestran en el círculo de usuario. No se crea ni modifica un registro persistente nuevo.
@@ -300,6 +319,7 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 - **Liquidación de sueldo**: entidad ya existente con período, monto líquido y desglose de sueldo base, descuentos y bonos; esta funcionalidad solo cambia su presentación.
 - **Movimiento financiero y factura**: entidades ya existentes que alimentan la tabla de últimos movimientos, el gráfico de tendencia y las listas filtradas de las tarjetas.
 - **Acceso rápido, guía inicial y menú ☰**: elementos de navegación del Panel, gobernados por el rol y por el estado de descarte de la sesión; la sección «Navegación» del menú de finanzas y su separador son derivados de la misma vista; no modifican el modelo de datos.
+- **Aviso del banner**: elemento derivado del rol y de los mismos cálculos del Panel para facturas vencidas o liquidaciones en borrador; es clickeable, no se persiste y no cambia las entidades existentes ni la matriz de permisos.
 
 ## Success Criteria *(mandatory)*
 
@@ -323,6 +343,9 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 - **SC-016**: A 390 px de ancho, el 100 % de las vistas tiene cero desbordamiento horizontal de la página y las tablas anchas conservan el desplazamiento dentro de su contenedor.
 - **SC-017**: El 100 % de los estados favorables, que requieren acción y desfavorables o críticos usa los colores definidos en la constitución v1.2.0, con cero usos de rojo, ámbar o verde heredados y cero pares rojo/verde en el gráfico «Ingresos vs Gastos».
 - **SC-018**: El 100 % de los estados conserva texto, ícono o flecha `▲`/`▼` además del color; el 100 % del texto normal cumple contraste de `4.5:1` y el 100 % de los textos grandes y elementos gráficos cumple `3:1` (WCAG 2.1 AA), verificado con simulación de protanopía, deuteranopía y tritanopía.
+- **SC-019**: El 100 % de las vistas distintas del Panel muestra en el banner «Contabilidad y Finanzas › <nombre de la vista actual>» usando etiquetas visibles existentes, el 100 % de los Paneles muestra solo «Contabilidad y Finanzas» y la franja «← Volver al Panel» (`#back-bar`) permanece sin cambios.
+- **SC-020**: El 100 % de los avisos visibles del banner usa fondo `#FFB703` y texto `#023047`, lleva a Seguimiento en finanzas o a «Gestionar liquidaciones de sueldo» en recursos humanos, muestra texto con singular o plural correcto usando solo textos ya existentes en el módulo, y no aparece para el trabajador ni cuando el número calculado es cero; el 100 % de los cambios de datos se refleja en el aviso con los cálculos del Panel.
+- **SC-021**: A 390 px de ancho, el 100 % de los banners oculta visualmente el nombre de la vista, muestra solo el número en el aviso, conserva el texto completo como nombre accesible y tiene cero desbordamiento.
 
 ## Assumptions
 
@@ -337,3 +360,4 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 - Los nombres concretos de pruebas automatizadas y la dependencia exacta que incorpora la tipografía al proyecto son detalles de implementación; se registrarán en las fases de planificación y tareas, no en esta especificación.
 - Los espaciados, pesos tipográficos y estilo visual se definen aplicando la skill `frontend-design`, respetando la identidad y las reglas de color fijadas en la constitución v1.2.0 del proyecto.
 - Los datos de demostración existentes se conservan; solo se ajustan si una prueba automatizada necesita un caso límite explícito.
+- El nombre de la vista actual mostrado en el banner se toma de la etiqueta visible ya existente en la navegación o en el encabezado de esa vista; no se crean textos nuevos ni se renombran vistas, requisitos o tareas.

@@ -42,6 +42,10 @@ describe('paleta v1.2.0 - barra superior', () => {
       expect(document.getElementById('brand-name').textContent).toBe(
         getConfig().moduleName
       );
+      expect(document.getElementById('brand-name').textContent).not.toContain(
+        '›'
+      );
+      expect(document.getElementById('view-context').hidden).toBe(true);
       expect(document.getElementById('session-role').textContent).toBe(
         `Rol: ${roleLabel}`
       );

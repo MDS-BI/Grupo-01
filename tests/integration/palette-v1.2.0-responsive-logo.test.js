@@ -49,6 +49,9 @@ describe('paleta v1.2.0 - logo a 390 px', () => {
     const rightRole = rulesInBlock(block, '.topbar-right');
     const sessionRole = rulesInBlock(block, '.session-role');
     const brandLogo = rulesInBlock(block, '.brand-logo');
+    const viewContext = rulesInBlock(block, '.view-context');
+    const bannerText = rulesInBlock(block, '.banner-notice-text');
+    const bannerCount = rulesInBlock(block, '.banner-notice-count');
 
     expect(rightRole).toContain('min-width: 0');
     expect(sessionRole).toContain('min-width: 0');
@@ -58,5 +61,8 @@ describe('paleta v1.2.0 - logo a 390 px', () => {
     expect(brandLogo).toContain('flex-shrink: 0');
     expect(brandLogo).toContain('width: 40px');
     expect(brandLogo).toContain('height: 40px');
+    expect(viewContext).toContain('display: none');
+    expect(bannerText).toContain('display: none');
+    expect(bannerCount).toContain('display: inline');
   });
 });

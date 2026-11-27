@@ -84,6 +84,26 @@ Reglas:
 - Si se mantiene un SVG para el fondo del círculo, el texto visible sigue siendo exclusivamente `initials`.
 - `#brand-logo` se actualiza al iniciar sesión, al cambiar de sesión y al cerrar sesión.
 
+## Banner superior contextual
+
+| ID | Contenido |
+|---|---|
+| `#view-context` | `Contabilidad y Finanzas › <nombre de la vista>` fuera del Panel; oculto en `dashboard` y `login`. |
+| `#view-context-separator` | `›`. |
+| `#view-context-name` | Etiqueta visible ya existente de la vista activa, p. ej. `Facturas de compra`, `Seguimiento` o `Mi liquidación`. |
+| `#banner-notice` | Aviso de acción por rol; oculto sin sesión y cuando el número calculado es cero. |
+| `#banner-notice-count` | Número calculado que permanece visible a 390 px. |
+| `#banner-notice-text` | Texto completo del aviso; se oculta visualmente a 390 px. |
+
+- `#brand-name` sigue siendo exactamente `Contabilidad y Finanzas` en todas las vistas; el contexto `›` nunca se escribe dentro de él.
+- En `dashboard` solo se ve `Contabilidad y Finanzas`. Fuera del Panel, incluida `payroll-worker`, se ve `Contabilidad y Finanzas › <nombre de la vista>`.
+- `#back-bar`, `#back-to-dashboard` y `#back-view-name` conservan su contenido y comportamiento anterior; el banner contextual no los reemplaza.
+- Para `finanzas`, el aviso es `1 factura vencida` o `N facturas vencidas`, calculado con `computeFinanceIndicators(loadDocuments(), loadEntities(), loadMovements())`, y abre `tracking`.
+- Para `administrador`, el aviso es `1 liquidación en borrador` o `N liquidaciones en borrador`, calculado con `computeAdminPayrollSummary(loadEntities(), loadAccessRecords(), loadPayrollSettlements()).draft`, y abre `payroll-admin`.
+- No hay aviso para `trabajador`, sin sesión ni con número cero; el mismo texto visible se conserva en `aria-label`.
+- El aviso se recalcula al iniciar sesión, al cambiar de vista y al cambiar los datos que alimentan el Panel, sin recargar ni persistir datos nuevos.
+- `#banner-notice` usa fondo `#FFB703` y texto `#023047`; a 390 px se ocultan `#view-context` y `#banner-notice-text`, mientras `#banner-notice-count` y el `aria-label` completo permanecen disponibles.
+
 ## Encabezados por rol
 
 | Vista | Saludo | Período |
