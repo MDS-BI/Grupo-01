@@ -49,7 +49,7 @@ El componente se monta dentro de `#dashboard-trend-section` y debe cumplir:
 - Un `<svg>` con `viewBox`, `width`/`height` relativos y `preserveAspectRatio` que evite deformación.
 - `role="img"`, `<title>` con `Tendencia de ingresos y gastos de los últimos seis meses` y `<desc>` con resumen de los seis meses.
 - Eje mensual con seis etiquetas, una por punto.
-- Serie de ingresos en verde semántico y serie de gastos en rojo semántico, con leyenda visible `Ingresos` y `Gastos`.
+- Serie de ingresos en `#219EBC` y serie de gastos en `#A84F00`, con leyenda visible `Ingresos` y `Gastos`.
 - Barras o líneas con `<title>` o `aria-label` por punto con mes, ingreso y gasto formateados en CLP.
 - Montos en `$`, separador de miles y `tabular-nums`.
 - Sin animación automática, sin dependencias externas y sin canvas.
@@ -58,7 +58,8 @@ El componente se monta dentro de `#dashboard-trend-section` y debe cumplir:
 ## Diseño visual
 
 - El gráfico es el acento visual principal del Panel de finanzas; las tarjetas de indicadores permanecen sobrias.
-- Usar `#0f62fe` solo como acento general; las series financieras usan verde/rojo semántico ya definidos en la constitución.
+- Usar `#023047` como acento general; las series financieras usan `#219EBC` para ingresos y `#A84F00` para gastos, con `#FB8500` reservado a bordes críticos.
+- `#219EBC`/`#ffffff` cumple `3.14:1` y `#A84F00`/`#ffffff` cumple `5.55:1`; la leyenda y los `<title>` conservan el significado sin depender solo del color.
 - Fondo blanco de tarjeta, sin degradados ni sombras decorativas.
 - Espaciado generoso entre eje, leyenda y título; etiquetas legibles a 1366x768.
 

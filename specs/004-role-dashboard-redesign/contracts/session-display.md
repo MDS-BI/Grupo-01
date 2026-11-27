@@ -25,6 +25,15 @@
 - Todo RUT visible usa puntos y guion, p. ej. `12.345.678-5`, sin normalizar el valor almacenado.
 - Todo período visible usa texto legible, p. ej. `noviembre 2026`; el formato `YYYY-MM` queda restringido a claves internas y almacenamiento.
 
+## Paleta y contraste
+
+- La barra superior usa fondo `#023047` con texto e iconos `#ffffff` (`13.85:1`).
+- `#session-role` usa fondo `#8ECAE6` con texto `#023047` (`7.74:1`).
+- El círculo de perfil usa fondo `#FFB703` con iniciales `#023047` (`7.93:1`).
+- `#126782` y `#A84F00` son los textos favorable y crítico sobre `#ffffff` (`6.39:1` y `5.55:1`).
+- `#219EBC` y `#FB8500` se reservan para gráficos o bordes con contraste mínimo de `3:1` (`3.14:1` y `2.48:1`); nunca como texto pequeño sobre blanco.
+- El color no es la única señal: se conservan flechas ▲/▼, texto `sin dato anterior` y etiquetas de alerta.
+
 ## Perfil derivado de sesión
 
 Entradas:

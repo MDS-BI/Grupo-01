@@ -10,6 +10,7 @@ const STATUS_TONES = {
   Emitida: 'issued',
   Pagada: 'paid',
   Anulada: 'void',
+  Vencida: 'overdue',
 };
 
 function invoiceReference(document) {

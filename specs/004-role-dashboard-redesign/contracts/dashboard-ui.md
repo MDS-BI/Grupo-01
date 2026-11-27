@@ -79,13 +79,13 @@ La ocultación se aplica en la capa del Panel, no únicamente en `clearRestricte
 
 - `Terceros` y `Facturas` aparecen solo como texto secundario dentro de `#finance-indicators-section`.
 - Estado visual:
-  - Caja negativa: número y borde en rojo.
-  - Vencidas > 0: tarjeta en ámbar.
+  - Caja negativa: número en `#A84F00`, borde y tinte claro en `#FB8500`, sin fondo `#FFB703`.
+  - Vencidas > 0: texto en `#A84F00`, borde y tinte claro en `#FB8500`, sin fondo `#FFB703`.
   - Cero y valores normales: neutro.
   - Sin documento anterior al mes actual: `sin dato anterior`, nunca `0 %`.
 - Variación:
-  - Caja: ▲ verde / ▼ rojo.
-  - Por pagar y vencidas: ▲ rojo / ▼ verde.
+  - Caja: ▲ favorable en `#126782` / ▼ desfavorable en `#A84F00`.
+  - Por pagar y vencidas: ▲ desfavorable en `#A84F00` / ▼ favorable en `#126782`.
   - Por cobrar: neutro en ambos sentidos.
 - `previousValue` se reconstruye al último día del mes anterior con los datos existentes, sin snapshot ni cambio de modelo:
   - `cash`: ingresos menos egresos de documentos con `fechaPagoEfectiva <= cutoff`.
@@ -118,8 +118,9 @@ Exactamente cuatro, en una sola fila al final del Panel:
 - `#dashboard-trend-section` contiene el SVG contractual definido en `contracts/trend-chart.md`.
 - `#dashboard-alerts-section` ocupa la misma fila visual que el gráfico cuando el ancho lo permite.
 - Alertas:
-  - Caja negativa: rojo, enlace a `cashflow`.
-  - Facturas vencidas > 0: ámbar, enlace a `tracking`.
+  - Caja negativa: texto `#A84F00` con borde `#FB8500`, enlace a `cashflow`.
+  - Facturas vencidas > 0: texto `#A84F00` con borde o tinte claro `#FB8500`, enlace a `tracking`.
+  - Ninguna alerta usa fondo `#FFB703`.
   - Caja `0` o sin vencidas: no genera alerta.
 - `#dashboard-movements-section` muestra máximo cinco movimientos y enlace `Ver todos`. Sin movimientos: estado vacío + enlace.
 
@@ -160,8 +161,9 @@ Exactamente cuatro, en una sola fila al final del Panel:
 
 ## Estilos y accesibilidad
 
-- `#0f62fe` es el único color de acento.
+- Paleta v1.2.0: `#023047` como acento y texto sobre fondos `#FFB703`/`#8ECAE6`; `#219EBC` para gráficos y estados favorables; `#126782` para texto favorable; `#A84F00` para texto crítico; `#FB8500` para bordes críticos.
 - Fondo gris muy claro, tarjetas blancas, IBM Plex Sans incluida localmente.
+- Contraste verificado: `#023047`/`#ffffff` `13.85:1`, `#023047`/`#8ECAE6` `7.74:1`, `#023047`/`#FFB703` `7.93:1`, `#126782`/`#ffffff` `6.39:1`, `#A84F00`/`#ffffff` `5.55:1`; `#219EBC`/`#ffffff` `3.14:1` y `#FB8500`/`#ffffff` `2.48:1` solo en gráficos o bordes.
 - Montos y columnas numéricas usan `tabular-nums`; columnas de montos alineadas a la derecha.
 - Cambios de estado no dependen solo del color: incluyen ▲/▼, texto `sin dato anterior` o etiqueta de alerta.
 - Los botones y tarjetas clicables conservan foco visible y nombre accesible.

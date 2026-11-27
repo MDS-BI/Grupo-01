@@ -1,5 +1,12 @@
 import { formatCurrencyCLP, formatDateDDMMYYYY } from '../format.js';
 
+const INVOICE_STATUS_CLASSES = {
+  Borrador: 'draft',
+  Emitida: 'issued',
+  Pagada: 'paid',
+  Vencida: 'overdue',
+};
+
 function displayedValue(record, key) {
   const value = record[key] ?? record.customFields?.[key];
   if (value === undefined || value === null || value === '') return '—';
@@ -69,7 +76,7 @@ export function renderInvoiceList(
         const value = displayedValue(record, key);
         if (key === 'status') {
           const badge = document.createElement('span');
-          badge.className = `invoice-badge invoice-badge--${tipoFactura === 'venta' ? 'sale' : 'purchase'}`;
+          badge.className = `invoice-badge invoice-badge--${tipoFactura === 'venta' ? 'sale' : 'purchase'} invoice-badge--${INVOICE_STATUS_CLASSES[record.status] || 'draft'}`;
           badge.textContent = value;
           cell.append(badge);
         } else {

@@ -18,7 +18,7 @@ describe('US6 - etiquetas de dominio', () => {
       },
       customFields: [],
       statusLifecycle: null,
-      theme: { accentColor: '#0f62fe' },
+      theme: { accentColor: '#023047' },
     });
 
     const text = document.body.textContent;

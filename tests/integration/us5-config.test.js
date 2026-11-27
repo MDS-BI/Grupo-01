@@ -48,7 +48,7 @@ describe('US5 - configuración del módulo', () => {
     initApp({ moduleName: 'X', theme: { accentColor: 'bad;;color' } });
     expect(
       document.documentElement.style.getPropertyValue('--accent-color')
-    ).toBe('#0f62fe');
+    ).toBe('#023047');
     expect(document.getElementById('config-banner').hidden).toBe(false);
   });
 });

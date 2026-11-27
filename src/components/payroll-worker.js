@@ -126,6 +126,18 @@ function statusOf(settlement) {
   return settlement?.estado ?? settlement?.status ?? '';
 }
 
+function statusClassOf(settlement) {
+  return (
+    {
+      Borrador: 'draft',
+      Emitida: 'issued',
+      Pagada: 'paid',
+      Anulada: 'void',
+      Vencida: 'overdue',
+    }[statusOf(settlement)] || 'draft'
+  );
+}
+
 function paidAtOf(settlement) {
   return settlement?.fechaPago ?? settlement?.customFields?.fechaPago ?? '';
 }
@@ -177,6 +189,10 @@ export function renderPayrollSettlement(
     );
     setText('payroll-worker-amount', formatCurrencyCLP(amountOf(settlement)));
     setText('payroll-worker-status', `Estado: ${statusOf(settlement)}`);
+    const statusElement = document.getElementById('payroll-worker-status');
+    if (statusElement) {
+      statusElement.className = `worker-status status-badge status-badge--${statusClassOf(settlement)}`;
+    }
     setText(
       'payroll-worker-paid-at',
       paidAtOf(settlement)
@@ -209,7 +225,14 @@ export function renderPayrollSettlement(
     ];
     values.forEach((value, index) => {
       const cell = document.createElement('td');
-      cell.textContent = value;
+      if (index === 3) {
+        const badge = document.createElement('span');
+        badge.className = `status-badge status-badge--${statusClassOf(item)}`;
+        badge.textContent = value;
+        cell.append(badge);
+      } else {
+        cell.textContent = value;
+      }
       if (index === 2) cell.className = 'amount';
       row.appendChild(cell);
     });

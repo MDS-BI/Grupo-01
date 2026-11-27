@@ -1,16 +1,20 @@
 :root {
-  --accent-color: #0f62fe;
+  --accent-color: #023047;
   --font-sans:
-    'IBM Plex Sans', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    'ibm plex sans', 'segoe ui', roboto, helvetica, arial, sans-serif;
   --font-numeric: tabular-nums;
   --bg: #f4f6fb;
   --surface: #ffffff;
   --text: #1b2430;
   --muted: #5c6b7f;
   --border: #d9e0ea;
-  --danger: #c62828;
-  --warning: #b26a00;
-  --success: #1b7f4b;
+  --danger: #a84f00;
+  --warning: #fb8500;
+  --success: #126782;
+  --info: #8ecae6;
+  --chart: #219ebc;
+  --action-bg: #ffb703;
+  --critical-border: #fb8500;
   --topbar-height: 64px;
   --radius: 10px;
 }
@@ -42,8 +46,9 @@ body {
   justify-content: space-between;
   gap: 12px;
   padding: 0 20px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  background: #023047;
+  color: #ffffff;
+  border-bottom: 1px solid #023047;
 }
 
 .topbar-left,
@@ -76,15 +81,16 @@ body {
   padding: 0;
   font-size: 1.35rem;
   line-height: 1;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  color: #ffffff;
+  background: #023047;
+  border: 1px solid #8ecae6;
   border-radius: 8px;
   cursor: pointer;
 }
 
 .menu-toggle[aria-expanded='true'] {
-  border-color: var(--accent-color);
-  background: color-mix(in srgb, var(--accent-color) 12%, var(--surface));
+  border-color: #ffb703;
+  background: color-mix(in srgb, #ffb703 18%, #023047);
 }
 
 .brand-logo {
@@ -314,7 +320,7 @@ button[type='submit'] {
 .quick-action:hover,
 .quick-action:focus-visible {
   transform: translateY(-2px);
-  box-shadow: 0 8px 18px rgb(15 98 254 / 22%);
+  box-shadow: 0 8px 18px rgb(2 48 71 / 22%);
 }
 
 .stats {
@@ -505,28 +511,28 @@ select[aria-invalid='true'] {
 }
 
 .cashflow-table tr[data-tipo='ingreso'] td:last-child {
-  color: #0f7a3d;
+  color: #126782;
   font-weight: 600;
 }
 
 .cashflow-table tr[data-tipo='egreso'] td:last-child {
-  color: var(--danger);
+  color: #a84f00;
   font-weight: 600;
 }
 
 .config-banner {
-  background: #fff4e5;
-  border-bottom: 1px solid #f3c98b;
-  color: #7a4b00;
+  background: color-mix(in srgb, #ffb703 16%, #ffffff);
+  border-bottom: 1px solid #ffb703;
+  color: #023047;
   padding: 10px 20px;
   font-size: 0.9rem;
 }
 
 .route-message {
-  background: #e8f1ff;
-  border: 1px solid #a6c3ff;
+  background: color-mix(in srgb, #8ecae6 18%, #ffffff);
+  border: 1px solid #8ecae6;
   border-radius: 6px;
-  color: #103a8a;
+  color: #023047;
   margin: 0 0 1rem;
   padding: 10px 14px;
   font-size: 0.9rem;
@@ -555,13 +561,13 @@ select[aria-invalid='true'] {
 }
 
 .invoice-view--sale {
-  --invoice-accent: #125b86;
-  --invoice-tint: #e7f3fb;
+  --invoice-accent: #126782;
+  --invoice-tint: color-mix(in srgb, #219ebc 12%, #ffffff);
 }
 
 .invoice-view--purchase {
-  --invoice-accent: #6b4084;
-  --invoice-tint: #f3eafa;
+  --invoice-accent: #a84f00;
+  --invoice-tint: color-mix(in srgb, #fb8500 12%, #ffffff);
 }
 
 .invoice-view {
@@ -686,6 +692,29 @@ select[aria-invalid='true'] {
   background: var(--invoice-tint);
 }
 
+.invoice-badge--issued,
+.status-badge--issued {
+  color: #023047;
+  background: #ffb703;
+  border: 1px solid #ffb703;
+}
+
+.invoice-badge--paid,
+.status-badge--paid {
+  color: #126782;
+  background: color-mix(in srgb, #219ebc 12%, #ffffff);
+  border: 1px solid #219ebc;
+}
+
+.invoice-badge--overdue,
+.status-badge--overdue,
+.invoice-badge--void,
+.status-badge--void {
+  color: #a84f00;
+  background: color-mix(in srgb, #fb8500 10%, #ffffff);
+  border: 1px solid #fb8500;
+}
+
 .invoice-table-actions button {
   padding: 5px 8px;
 }
@@ -786,10 +815,10 @@ select[aria-invalid='true'] {
 .session-role {
   flex-shrink: 0;
   padding: 6px 10px;
-  border: 1px solid var(--border);
+  border: 1px solid #8ecae6;
   border-radius: 999px;
-  background: var(--surface);
-  color: var(--text);
+  background: #8ecae6;
+  color: #023047;
   font-size: 0.9rem;
   font-weight: 600;
 }
@@ -1204,29 +1233,31 @@ select[aria-invalid='true'] {
 }
 
 .indicator-variation[data-tone='favorable'] {
-  color: var(--success);
+  color: #126782;
 }
 
 .indicator-variation[data-tone='unfavorable'] {
-  color: var(--danger);
+  color: #a84f00;
 }
 
 .indicator-card.is-negative {
-  border: 2px solid var(--danger);
-  background: color-mix(in srgb, var(--danger) 6%, var(--surface));
+  border: 2px solid #fb8500;
+  color: #a84f00;
+  background: color-mix(in srgb, #fb8500 10%, #ffffff);
 }
 
 .indicator-card.is-negative .indicator-value {
-  color: var(--danger);
+  color: #a84f00;
 }
 
 .indicator-card.is-action {
-  border: 2px solid var(--warning);
-  background: color-mix(in srgb, var(--warning) 8%, var(--surface));
+  border: 2px solid #fb8500;
+  color: #a84f00;
+  background: color-mix(in srgb, #fb8500 10%, #ffffff);
 }
 
 .indicator-card.is-action .indicator-value {
-  color: var(--warning);
+  color: #a84f00;
 }
 
 .indicator-meta {
@@ -1291,14 +1322,14 @@ select[aria-invalid='true'] {
 
 .trend-legend-item--income::before,
 .trend-bar--income {
-  background: var(--success);
-  fill: var(--success);
+  background: #219ebc;
+  fill: #219ebc;
 }
 
 .trend-legend-item--expense::before,
 .trend-bar--expense {
-  background: var(--danger);
-  fill: var(--danger);
+  background: #a84f00;
+  fill: #a84f00;
 }
 
 .trend-axis {
@@ -1341,13 +1372,15 @@ select[aria-invalid='true'] {
 }
 
 .alert-item--negative .alert-link {
-  color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 10%, var(--surface));
+  color: #a84f00;
+  background: color-mix(in srgb, #fb8500 10%, #ffffff);
+  border: 1px solid #fb8500;
 }
 
 .alert-item--action .alert-link {
-  color: var(--warning);
-  background: color-mix(in srgb, var(--warning) 12%, var(--surface));
+  color: #a84f00;
+  background: color-mix(in srgb, #fb8500 10%, #ffffff);
+  border: 1px solid #fb8500;
 }
 
 .alert-link:hover,
@@ -1445,16 +1478,16 @@ select[aria-invalid='true'] {
   gap: 12px;
   margin: 0 0 16px;
   padding: 8px 8px 8px 16px;
-  color: var(--accent-color);
-  background: color-mix(in srgb, var(--accent-color) 8%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--accent-color) 30%, var(--border));
+  color: #023047;
+  background: color-mix(in srgb, #8ecae6 18%, #ffffff);
+  border: 1px solid #8ecae6;
   border-radius: var(--radius);
 }
 
 .guide-banner .guide-shortcut {
   margin: 0;
   padding: 4px 0;
-  color: var(--accent-color);
+  color: #023047;
   background: none;
   border: 0;
   font-weight: 600;
@@ -1585,19 +1618,17 @@ select[aria-invalid='true'] {
   background: var(--bg);
 }
 
-.status-badge--issued {
-  color: var(--warning);
-  background: color-mix(in srgb, var(--warning) 12%, var(--surface));
+.status-badge--draft {
+  color: #5c6b7f;
+  background: color-mix(in srgb, #8ecae6 12%, #ffffff);
+  border: 1px solid #8ecae6;
 }
 
-.status-badge--paid {
-  color: var(--success);
-  background: color-mix(in srgb, var(--success) 12%, var(--surface));
-}
-
-.status-badge--void {
-  color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 10%, var(--surface));
+.payroll-table .status-badge--paid,
+#payroll-worker-status.status-badge--paid {
+  color: #126782;
+  background: color-mix(in srgb, #219ebc 12%, #ffffff);
+  border: 1px solid #219ebc;
 }
 
 .table-action {
@@ -1708,6 +1739,9 @@ select[aria-invalid='true'] {
   }
 
   .brand-logo {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
     max-width: 100%;
   }
 
@@ -1715,6 +1749,12 @@ select[aria-invalid='true'] {
   .session-role {
     min-width: 0;
     overflow-wrap: anywhere;
+  }
+
+  .session-role {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .invoice-table-scroll {

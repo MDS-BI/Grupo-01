@@ -22,6 +22,11 @@
 - Q: ¿Qué formato debe tener el RUT visible? → A: Todo RUT visible usa puntos y guion (12.345.678-5), incluso si se ingresó sin puntos; el almacenamiento sigue normalizado como hoy.
 - Q: ¿Cómo debe mostrarse el rol administrador en la interfaz? → A: Se muestra como «Recursos Humanos» en la cabecera («Rol: Recursos Humanos»), el saludo del Panel, la inicial del círculo y el selector de rol de Control de accesos; todos los roles se muestran con mayúscula inicial; la clave interna `administrador` no cambia.
 - Q: ¿Qué debe mostrar la gestión de liquidaciones y cómo debe comportarse a 390 px de ancho? → A: La vista «Gestionar liquidaciones de sueldo» muestra la leyenda «Borrador (RRHH la prepara)», «Emitida (aprobada por RRHH)» y «Pagada (finanzas registró el pago)», sin cambiar los nombres de los estados. A 390 px ninguna vista tiene desborde horizontal de la página y las tablas anchas se desplazan dentro de su contenedor.
+- Q: ¿Cómo deben cambiar el banner superior y el color de acento con la paleta de la constitución v1.2.0? → A: El banner superior usa fondo `#023047` con texto e ícono ☰ blancos; la etiqueta del rol usa fondo `#8ECAE6` con texto `#023047`; el círculo de iniciales usa fondo `#FFB703` con letra `#023047`. El acento `#0f62fe` en `src/styles.css` y `module-config.js` pasa a `#023047`: botones principales con texto blanco, enlaces, vista activa y tintes de acento; las sombras azules usan `#023047`.
+- Q: ¿Qué colores deben usar los estados favorables, los que requieren acción y los desfavorables o críticos? → A: Favorable: texto `#126782` sobre blanco o tinte claro de `#219EBC`, y `#219EBC` en gráficos y bordes; aplica a Pagada, variación favorable, ingresos, totales de ingreso en Flujo de caja y Facturas de venta. Requiere acción: fondo `#FFB703` o su tinte claro con texto `#023047`; aplica a Emitida, alertas y avisos de configuración. Desfavorable o crítico: texto y barras `#A84F00`, bordes `#FB8500` o tinte claro de `#FB8500`; aplica a Vencida, variación desfavorable, gastos, egresos, Facturas de compra, errores de formulario y alertas críticas.
+- Q: ¿Cómo deben mostrarse el gráfico «Ingresos vs Gastos» y los mensajes informativos de ruta? → A: Las barras de ingresos usan `#219EBC` y las de gastos `#A84F00`, con leyenda en texto. Los mensajes informativos de ruta usan fondo tinte de `#8ECAE6`, borde `#8ECAE6` y texto `#023047`.
+- Q: ¿Qué partes de la identidad y del producto permanecen sin cambios al aplicar la paleta? → A: Los grises neutros de fondo, tarjetas, texto, texto secundario y bordes, y la tipografía IBM Plex Sans incluida localmente. Tampoco cambian el modelo de datos, las claves `erp.*`, los permisos por rol ni los textos de la interfaz.
+- Q: ¿Qué reglas de accesibilidad visual deben cumplirse con la nueva paleta? → A: Todo estado sigue acompañado de texto, ícono o flecha `▲`/`▼`; el texto normal cumple contraste mínimo de `4.5:1` y los textos grandes y elementos gráficos `3:1` (WCAG 2.1 AA), con verificación mediante simulación de protanopía, deuteranopía y tritanopía.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -49,16 +54,16 @@ Como usuario de finanzas, quiero ver de inmediato si hay un problema, con un ún
 
 **Why this priority**: es P1 porque sustituye indicadores ambiguos por señales claras de estado y evita interpretar erróneamente la deuda como una suma entre lo que nos deben y lo que debemos.
 
-**Independent Test**: con datos de demostración que incluyan caja negativa y facturas vencidas, se entra como finanzas y se verifica que solo hay una fila de cuatro tarjetas, que «Deuda pendiente» no aparece, que los colores de estado son correctos y que cada tarjeta abre su lista filtrada.
+**Independent Test**: con datos de demostración que incluyan caja negativa y facturas vencidas, se entra como finanzas y se verifica que solo hay una fila de cuatro tarjetas, que «Deuda pendiente» no aparece, que los colores de estado siguen la paleta de la constitución v1.2.0 sin pares rojo/verde y que cada tarjeta abre su lista filtrada.
 
 **Acceptance Scenarios**:
 
 1. **Dado** un usuario de finanzas, **cuando** abre el Panel, **entonces** ve una sola fila de cuatro tarjetas: «Caja neta», «Por cobrar», «Por pagar» y «Facturas vencidas».
 2. **Dado** el Panel anterior, **cuando** se comparan sus secciones, **entonces** «Resumen financiero» e «Indicadores financieros» aparecen fusionados en una sola sección, sin duplicar tarjetas.
 3. **Dado** el conjunto de tarjetas, **cuando** se busca el indicador «Deuda pendiente (por cobrar + por pagar)», **entonces** no aparece en el Panel ni en ninguna otra vista derivada de esta funcionalidad.
-4. **Dado** un valor de caja neta negativo, **cuando** se muestra la tarjeta, **entonces** el número y el borde de la tarjeta usan rojo.
-5. **Dado** un número de facturas vencidas mayor que cero, **cuando** se muestra la tarjeta, **entonces** la tarjeta usa ámbar para comunicar que requiere acción.
-6. **Dado** cada tarjeta, **cuando** se visualiza, **entonces** muestra la variación respecto al mes anterior con ▲ o ▼ y un porcentaje; el color indica si el cambio es favorable o desfavorable según el indicador, no el signo: en «Caja neta», sube = verde y baja = rojo; en «Por pagar» y «Facturas vencidas», sube = rojo y baja = verde; en «Por cobrar», neutro en ambos sentidos; sin cambio = neutro.
+4. **Dado** un valor de caja neta negativo, **cuando** se muestra la tarjeta, **entonces** el número usa `#A84F00` y el borde usa `#FB8500` o un tinte claro de `#FB8500`, sin usar rojo heredado.
+5. **Dado** un número de facturas vencidas mayor que cero, **cuando** se muestra la tarjeta, **entonces** el número usa `#A84F00` y el borde usa `#FB8500` o un tinte claro de `#FB8500` para comunicar estado desfavorable o crítico, sin usar ámbar heredado.
+6. **Dado** cada tarjeta, **cuando** se visualiza, **entonces** muestra la variación respecto al mes anterior con ▲ o ▼ y un porcentaje; el color indica si el cambio es favorable o desfavorable según el indicador, no el signo: en «Caja neta», sube = favorable (`#126782` sobre blanco o tinte claro de `#219EBC`) y baja = desfavorable (`#A84F00`); en «Por pagar» y «Facturas vencidas», sube = desfavorable (`#A84F00`) y baja = favorable (`#126782`); en «Por cobrar», neutro en ambos sentidos; sin cambio = neutro.
 7. **Dado** cada tarjeta, **cuando** se lee su etiqueta, **entonces** la etiqueta contiene solo el nombre del indicador; la fórmula de cálculo está disponible en un tooltip señalado con el ícono ⓘ y no aparece como texto visible.
 8. **Dado** el texto secundario de la sección, **cuando** se muestran los totales generales, **entonces** «Terceros» y «Facturas» aparecen como texto secundario, sin competir con las cuatro tarjetas.
 9. **Dado** una tarjeta, **cuando** se activa, **entonces** abre la lista filtrada correspondiente: caja neta al Flujo de caja, por cobrar a facturas de venta, por pagar a facturas de compra y facturas vencidas al seguimiento de vencidas.
@@ -77,13 +82,14 @@ Como usuario del módulo, quiero reconocer siempre el mismo sistema, la misma ti
 **Acceptance Scenarios**:
 
 1. **Dado** el módulo en cualquier vista, **cuando** se lee el nombre del sistema en la barra superior y en el título de la pestaña del navegador, **entonces** dice «Contabilidad y Finanzas» y no «Contabilidad y Finanzas: Facturación y Pagos».
-2. **Dado** cualquier vista, **cuando** se revisa el color de acento, **entonces** se mantiene `#0f62fe` en toda la aplicación, con fondo gris muy claro y tarjetas blancas.
+2. **Dado** cualquier vista, **cuando** se revisa el color de acento, **entonces** se usa `#023047` en toda la aplicación para botones principales con texto blanco, enlaces, vista activa y tintes de acento; las sombras azules usan `#023047`, con fondo gris muy claro y tarjetas blancas, y `#0f62fe` no aparece.
 3. **Dado** cualquier vista, **cuando** se revisa la tipografía, **entonces** toda la aplicación usa IBM Plex Sans incluida dentro del proyecto, sin depender de internet para cargarla.
 4. **Dado** cualquier monto o tabla, **cuando** se visualizan cifras, **entonces** usan cifras de ancho fijo para que las columnas numéricas queden alineadas.
-5. **Dado** un usuario con nombre y apellido, **cuando** se muestra el círculo de la esquina superior derecha, **entonces** muestra sus iniciales, no las iniciales del título del sistema ni del módulo.
-6. **Dado** un usuario sin nombre, **cuando** se muestra el círculo de la esquina superior derecha, **entonces** muestra la inicial de la etiqueta visible de su rol.
+5. **Dado** un usuario con nombre y apellido, **cuando** se muestra el círculo de la esquina superior derecha, **entonces** muestra sus iniciales con fondo `#FFB703` y letra `#023047`, no las iniciales del título del sistema ni del módulo.
+6. **Dado** un usuario sin nombre, **cuando** se muestra el círculo de la esquina superior derecha, **entonces** muestra la inicial de la etiqueta visible de su rol con fondo `#FFB703` y letra `#023047`.
 7. **Dado** cualquier Panel, **cuando** se muestra su encabezado, **entonces** incluye un saludo y el mes actual.
 8. **Dado** un administrador, **cuando** se revisan cabecera, saludo del Panel, círculo de perfil y selector de rol de Control de accesos, **entonces** el rol se muestra como «Recursos Humanos» con mayúscula inicial, la inicial del círculo es «R» y la clave interna `administrador` no aparece.
+9. **Dado** cualquier rol con sesión iniciada, **cuando** se revisa la barra superior, **entonces** su fondo es `#023047` con texto e ícono ☰ en blanco, la etiqueta del rol usa fondo `#8ECAE6` con texto `#023047`, y los textos de la interfaz permanecen sin cambios.
 
 ---
 
@@ -97,10 +103,10 @@ Como usuario de finanzas, quiero ver la tendencia de ingresos y gastos junto con
 
 **Acceptance Scenarios**:
 
-1. **Dado** un usuario de finanzas, **cuando** abre su Panel, **entonces** ve un gráfico de ingresos versus gastos de los últimos seis meses.
+1. **Dado** un usuario de finanzas, **cuando** abre su Panel, **entonces** ve un gráfico de ingresos versus gastos de los últimos seis meses con barras de ingresos `#219EBC`, barras de gastos `#A84F00` y leyenda en texto, sin pares rojo/verde.
 2. **Dado** el gráfico, **cuando** se revisa su ubicación, **entonces** el bloque de alertas aparece a su lado, no debajo ni en otra vista.
-3. **Dado** un valor de caja negativo, **cuando** se muestra el bloque de alertas, **entonces** aparece una alerta de caja negativa con enlace a su detalle.
-4. **Dado** uno o más facturas vencidas, **cuando** se muestra el bloque de alertas, **entonces** aparece una alerta de facturas vencidas con enlace a su detalle.
+3. **Dado** un valor de caja negativo, **cuando** se muestra el bloque de alertas, **entonces** aparece una alerta crítica de caja negativa con texto `#A84F00`, borde `#FB8500` o tinte claro de `#FB8500` y enlace a su detalle.
+4. **Dado** uno o más facturas vencidas, **cuando** se muestra el bloque de alertas, **entonces** aparece una alerta crítica de facturas vencidas con texto `#A84F00`, borde `#FB8500` o tinte claro de `#FB8500` y enlace a su detalle.
 5. **Dado** la tabla de movimientos del Panel, **cuando** hay más de cinco movimientos, **entonces** muestra solo los cinco más recientes y ofrece el enlace «Ver todos».
 6. **Dado** un usuario que no es de finanzas, **cuando** abre su Panel, **entonces** no ve el gráfico, las alertas financieras ni los movimientos restringidos por su rol.
 
@@ -119,7 +125,7 @@ Como usuario del módulo, quiero accesos rápidos compactos y una guía descarta
 1. **Dado** un usuario de finanzas, **cuando** abre el Panel, **entonces** ve como máximo cuatro accesos rápidos: «Nueva factura de venta», «Nueva factura de compra», «Flujo de caja» y «Buscar».
 2. **Dado** los accesos rápidos de finanzas, **cuando** se revisa su presentación, **entonces** son botones con borde, están en una sola fila al final del Panel y ninguna etiqueta se corta en dos líneas.
 3. **Dado** el resto de acciones operativas de finanzas, **cuando** se abre el menú ☰ del Panel, **entonces** aparece primero el subtítulo «Navegación» con «Terceros», «Facturas de venta», «Facturas de compra», «Movimientos financieros», «Flujo de caja», «Seguimiento», «Liquidaciones de sueldo» y «Buscar» en ese orden; a continuación aparece un separador y el título «Utilidades & Sesión» con «Guía de uso» y «Cerrar sesión», igual que en los otros roles. «Registrar pago» se alcanza desde «Liquidaciones de sueldo», no se agregan accesos rápidos adicionales y los menús del administrador y del trabajador no cambian. El subtítulo y el separador reutilizan los estilos existentes del menú, sin introducir colores nuevos.
-4. **Dado** cualquier rol con sesión iniciada, **cuando** abre el Panel, **entonces** ve arriba del Panel un banner descartable «¿Primera vez?» con acceso a la guía.
+4. **Dado** cualquier rol con sesión iniciada, **cuando** abre el Panel, **entonces** ve arriba del Panel un banner descartable «¿Primera vez?» con acceso a la guía y estilo de mensaje informativo: fondo tinte de `#8ECAE6`, borde `#8ECAE6` y texto `#023047`.
 5. **Dado** el banner «¿Primera vez?», **cuando** el usuario lo descarta, **entonces** deja de mostrarse en esa sesión sin afectar al resto de la navegación ni a otros roles.
 
 ---
@@ -154,7 +160,7 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 
 **Acceptance Scenarios**:
 
-1. **Dado** la tabla de liquidaciones, **cuando** se muestra, **entonces** los períodos aparecen en texto legible, el monto líquido alineado a la derecha, el estado como etiqueta de color y la factura de compra como referencia legible («Compra LIQ-1»), nunca como identificador interno.
+1. **Dado** la tabla de liquidaciones, **cuando** se muestra, **entonces** los períodos aparecen en texto legible, el monto líquido alineado a la derecha, el estado como etiqueta de color (Emitida con fondo `#FFB703` y texto `#023047`; Pagada con texto `#126782` y borde `#219EBC`) y la factura de compra como referencia legible («Compra LIQ-1»), nunca como identificador interno.
 2. **Dado** la vista recién abierta, **cuando** no se ha pulsado «Editar», **entonces** el formulario de edición no se muestra.
 3. **Dado** el formulario abierto, **cuando** se revisan sus campos, **entonces** solo contiene período, estado (lista de estados permitidos), sueldo base, bonos y descuentos; la fecha de pago aparece solo si el estado es «Pagada».
 4. **Dado** un cambio en el desglose, **cuando** se edita, **entonces** el monto líquido se calcula como sueldo base + bonos − descuentos, se muestra sin poder editarse y se guarda en la liquidación y en su factura de compra; si el desglose está vacío se conserva el monto registrado.
@@ -169,8 +175,8 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 
 - ¿Qué pasa si el administrador tiene datos financieros guardados en el navegador? No se muestran en su Panel: la ausencia de acceso prevalece sobre la existencia de datos.
 - ¿Qué pasa si no hay trabajadores con acceso, liquidaciones del mes actual ni liquidaciones en borrador? El resumen de nómina muestra tres estados vacíos claros, sin sustituirlos por indicadores financieros.
-- ¿Qué pasa si la caja neta es cero? Se muestra en neutro, sin rojo de valor negativo.
-- ¿Qué pasa si no hay facturas vencidas? La tarjeta de «Facturas vencidas» se muestra en neutro y no genera alerta ámbar.
+- ¿Qué pasa si la caja neta es cero? Se muestra en neutro, sin `#A84F00` ni borde `#FB8500` de valor desfavorable.
+- ¿Qué pasa si no hay facturas vencidas? La tarjeta de «Facturas vencidas» se muestra en neutro y no genera alerta crítica con `#A84F00` ni `#FB8500`.
 - ¿Qué pasa si falta el mes anterior para calcular una variación? Se muestra «sin dato anterior»; no se muestra `0 %` ni se oculta la tarjeta.
 - ¿Qué pasa si una tarjeta abre una lista filtrada vacía? Se muestra el estado vacío ya definido para esa lista, conservando el filtro aplicado.
 - ¿Qué pasa si no hay movimientos recientes? La tabla muestra un estado vacío y el enlace «Ver todos» sigue llevando al listado completo.
@@ -181,7 +187,7 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 - ¿Qué pasa si un rol distinto de finanzas abre el menú ☰? El administrador y el trabajador conservan el título «Utilidades & Sesión», sus opciones y el separador actuales; no aparece el subtítulo «Navegación» ni la sección de ocho vistas.
 - ¿Qué pasa si la guía ya fue descartada y se recarga la vista dentro de la misma sesión? Sigue oculta durante esa sesión.
 - ¿Qué pasa si el desglose de la liquidación del trabajador está vacío? Se omite la tabla y se mantiene solo el monto líquido destacado.
-- ¿Qué pasa si un monto es negativo? Se muestra con signo `$`, separador de miles y el color rojo definido para valor negativo o crítico.
+- ¿Qué pasa si un monto es negativo? Se muestra con signo `$`, separador de miles, texto `#A84F00` y borde `#FB8500` o tinte claro de `#FB8500` para valor desfavorable o crítico.
 - ¿Qué pasa si una fecha aparece como texto en listas, movimientos, flujo de caja, Mi liquidación o gestión de liquidaciones? Se muestra en DD-MM-AAAA; los campos de entrada y el almacenamiento conservan AAAA-MM-DD.
 - ¿Qué pasa si un dato guardado contiene `doc_`, `ent_`, `set_` o un nombre de campo como `salesOrderId`? La vista no lo muestra: usa etiquetas legibles, referencias de documento y el nombre del tercero.
 - ¿Qué pasa si el RUT se ingresó sin puntos? Se muestra con puntos y guion en todas las vistas, incluidos Control de accesos y los listados de liquidaciones, sin cambiar el valor normalizado guardado.
@@ -196,7 +202,7 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 - **FR-001**: La funcionalidad DEBE respetar la matriz de permisos vigente de `003-payroll-tabs-roles` para los roles administrador, finanzas y trabajador.
 - **FR-002**: Ningún panel DEBE mostrar datos ni accesos de un módulo al que el rol no tenga acceso; en particular, el trabajador NO DEBE ver indicadores, gráfico ni alertas, y el administrador NO DEBE ver datos financieros.
 - **FR-003**: Esta funcionalidad NO DEBE modificar las especificaciones 001, 002 ni 003, la matriz de permisos vigente, el modelo de datos existente ni las claves erp.*.
-- **FR-004**: Los cambios DEBEN limitarse a contenido del Panel, navegación del menú ☰, presentación visual que conserve la identidad ya fijada y cobertura automatizada derivada de esta especificación.
+- **FR-004**: Los cambios DEBEN limitarse a contenido del Panel, navegación del menú ☰, presentación visual que aplique la paleta de la constitución v1.2.0 y cobertura automatizada derivada de esta especificación. NO DEBEN cambiar el modelo de datos, las claves `erp.*`, los permisos por rol ni los textos de la interfaz.
 - **FR-005**: Los indicadores principales del Panel de finanzas DEBEN ser visibles sin hacer scroll en una ventana de 1366x768.
 
 **Panel del administrador**
@@ -212,9 +218,9 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 - **FR-011**: El Panel de finanzas DEBE presentar en una sola fila cuatro tarjetas: «Caja neta», «Por cobrar», «Por pagar» y «Facturas vencidas».
 - **FR-012**: Las secciones «Resumen financiero» e «Indicadores financieros» DEBEN quedar fusionadas en una sola sección, sin duplicar tarjetas.
 - **FR-013**: El indicador «Deuda pendiente (por cobrar + por pagar)» DEBE eliminarse del Panel y de cualquier otra vista derivada de esta funcionalidad.
-- **FR-014**: Cuando la caja neta sea negativa, el número y el borde de su tarjeta DEBEN usar rojo.
-- **FR-015**: Cuando el número de facturas vencidas sea mayor que cero, su tarjeta DEBE usar ámbar para comunicar que requiere acción.
-- **FR-016**: Cada tarjeta DEBE mostrar la variación respecto al mes anterior con ▲ o ▼ y un porcentaje; el color DEBE indicar si el cambio es favorable o desfavorable según el indicador, no el signo: «Caja neta» DEBE usar verde cuando sube y rojo cuando baja; «Por pagar» y «Facturas vencidas» DEBEN usar rojo cuando suben y verde cuando bajan; «Por cobrar» DEBE usar neutro en ambos sentidos; sin cambio DEBE usar neutro.
+- **FR-014**: Cuando la caja neta sea negativa, el número de su tarjeta DEBE usar `#A84F00` y el borde DEBE usar `#FB8500` o un tinte claro de `#FB8500`, sin usar rojo heredado.
+- **FR-015**: Cuando el número de facturas vencidas sea mayor que cero, el número de su tarjeta DEBE usar `#A84F00` y el borde DEBE usar `#FB8500` o un tinte claro de `#FB8500` para comunicar estado desfavorable o crítico, sin usar ámbar heredado.
+- **FR-016**: Cada tarjeta DEBE mostrar la variación respecto al mes anterior con ▲ o ▼ y un porcentaje; el color DEBE indicar si el cambio es favorable o desfavorable según el indicador, no el signo: «Caja neta» DEBE usar texto `#126782` sobre blanco o tinte claro de `#219EBC` cuando sube y texto `#A84F00` cuando baja; «Por pagar» y «Facturas vencidas» DEBEN usar texto `#A84F00` cuando suben y texto `#126782` cuando bajan; «Por cobrar» DEBE usar neutro en ambos sentidos; sin cambio DEBE usar neutro.
 - **FR-017**: Cuando no exista información del mes anterior, la tarjeta DEBE indicar «sin dato anterior» en lugar de mostrar una variación calculada.
 - **FR-018**: Las etiquetas visibles de las tarjetas DEBEN contener solo el nombre del indicador; la fórmula de cálculo DEBE mostrarse únicamente en un tooltip señalado con el ícono ⓘ.
 - **FR-019**: Los totales generales de «Terceros» y «Facturas» DEBEN mostrarse como texto secundario dentro de la sección de indicadores.
@@ -222,9 +228,9 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 
 **Tendencia, alertas y movimientos**
 
-- **FR-021**: El Panel de finanzas DEBE incluir un gráfico de ingresos versus gastos de los últimos seis meses.
+- **FR-021**: El Panel de finanzas DEBE incluir un gráfico de ingresos versus gastos de los últimos seis meses, con barras de ingresos `#219EBC`, barras de gastos `#A84F00` y leyenda en texto; NO DEBE usar el par rojo/verde.
 - **FR-022**: El bloque de alertas DEBE ubicarse al lado del gráfico, en la misma fila visual cuando el ancho lo permita.
-- **FR-023**: El bloque de alertas DEBE incluir alertas de caja negativa y de facturas vencidas cuando sus condiciones se cumplan.
+- **FR-023**: El bloque de alertas DEBE incluir alertas de caja negativa y de facturas vencidas cuando sus condiciones se cumplan; como alertas críticas, DEBEN usar texto `#A84F00` y borde `#FB8500` o tinte claro de `#FB8500`, conservando texto, ícono o flecha de estado.
 - **FR-024**: Cada alerta DEBE incluir un enlace a su detalle correspondiente.
 - **FR-025**: El Panel de finanzas DEBE mostrar una tabla con los últimos cinco movimientos y un enlace «Ver todos» hacia el listado completo.
 
@@ -233,7 +239,7 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 - **FR-026**: El Panel de finanzas DEBE mostrar como máximo cuatro accesos rápidos: «Nueva factura de venta», «Nueva factura de compra», «Flujo de caja» y «Buscar».
 - **FR-027**: Los accesos rápidos de finanzas DEBEN presentarse como botones con borde, en una sola fila al final del Panel, sin que ninguna etiqueta se corte en dos líneas.
 - **FR-028**: El menú ☰ del Panel de finanzas DEBE mostrar primero el subtítulo «Navegación» con «Terceros», «Facturas de venta», «Facturas de compra», «Movimientos financieros», «Flujo de caja», «Seguimiento», «Liquidaciones de sueldo» y «Buscar» en ese orden; DEBE incluir a continuación un separador y el título «Utilidades & Sesión» con «Guía de uso» y «Cerrar sesión», igual que en los otros roles. «Registrar pago» DEBE alcanzarse desde «Liquidaciones de sueldo». El subtítulo y el separador DEBEN reutilizar los estilos existentes del menú sin introducir colores nuevos. El resto de acciones operativas NO DEBEN agregarse como accesos rápidos adicionales y los menús del administrador y del trabajador NO DEBEN cambiar.
-- **FR-029**: Para todos los roles con sesión iniciada, el Panel DEBE mostrar arriba un banner descartable «¿Primera vez?» que dé acceso a la guía de uso.
+- **FR-029**: Para todos los roles con sesión iniciada, el Panel DEBE mostrar arriba un banner descartable «¿Primera vez?» que dé acceso a la guía de uso, con fondo tinte de `#8ECAE6`, borde `#8ECAE6` y texto `#023047`.
 - **FR-030**: Al descartar el banner «¿Primera vez?», este DEBE dejar de mostrarse durante la sesión actual sin afectar la navegación ni a otros roles.
 
 **Vista del trabajador**
@@ -248,10 +254,10 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 **Identidad visual y formato**
 
 - **FR-037**: El nombre del sistema DEBE ser «Contabilidad y Finanzas» en la barra superior y en el título de la pestaña del navegador.
-- **FR-038**: El color de acento `#0f62fe` DEBE mantenerse en toda la aplicación, con fondo gris muy claro y tarjetas blancas.
+- **FR-038**: La identidad visual DEBE seguir la paleta «Refreshing Summer Fun» de la constitución v1.2.0: el acento `#0f62fe` en `src/styles.css` y `module-config.js` pasa a `#023047` para botones principales con texto blanco, enlaces, vista activa y tintes de acento, y las sombras azules usan `#023047`; el banner superior DEBE tener fondo `#023047` con texto e ícono ☰ blancos, la etiqueta del rol fondo `#8ECAE6` con texto `#023047` y el círculo de iniciales fondo `#FFB703` con letra `#023047`; los estados favorables DEBEN usar texto `#126782` sobre blanco o tinte claro de `#219EBC` y `#219EBC` en gráficos y bordes (Pagada, variación favorable, ingresos, totales de ingreso en Flujo de caja y Facturas de venta); los estados que requieren acción DEBEN usar fondo `#FFB703` o su tinte claro con texto `#023047` (Emitida, alertas y avisos de configuración); los estados desfavorables o críticos DEBEN usar texto y barras `#A84F00` y bordes `#FB8500` o tinte claro de `#FB8500` (Vencida, variación desfavorable, gastos, egresos, Facturas de compra, errores de formulario y alertas críticas); los mensajes informativos de ruta DEBEN usar fondo tinte de `#8ECAE6`, borde `#8ECAE6` y texto `#023047`; los grises neutros de fondo, tarjetas, texto, texto secundario y bordes y la tipografía IBM Plex Sans incluida localmente NO DEBEN cambiar; todo estado DEBE conservar texto, ícono o flecha `▲`/`▼`, con contraste mínimo de `4.5:1` para texto normal y `3:1` para textos grandes y elementos gráficos (WCAG 2.1 AA), verificado con simulación de protanopía, deuteranopía y tritanopía.
 - **FR-039**: IBM Plex Sans DEBE usarse en toda la aplicación y DEBE estar incluida dentro del proyecto, sin depender de internet para cargarse.
 - **FR-040**: Todos los montos y las columnas numéricas de tablas DEBEN usar cifras de ancho fijo.
-- **FR-041**: El círculo de la esquina superior derecha DEBE mostrar las iniciales del nombre de la persona que inició sesión; si no tiene nombre, DEBE mostrar la inicial de la etiqueta visible de su rol: «R» para «Recursos Humanos».
+- **FR-041**: El círculo de la esquina superior derecha DEBE mostrar las iniciales del nombre de la persona que inició sesión; si no tiene nombre, DEBE mostrar la inicial de la etiqueta visible de su rol: «R» para «Recursos Humanos». En ambos casos DEBE usar fondo `#FFB703` y letra `#023047`.
 - **FR-042**: El círculo de la esquina superior derecha NO DEBE mostrar las iniciales del título del sistema ni del módulo.
 - **FR-043**: Todos los montos visibles DEBEN mostrarse con el formato canónico de pesos chilenos del proyecto, con signo `$` y separador de miles; en tablas, los montos DEBEN alinearse a la derecha.
 - **FR-044**: Los períodos DEBEN mostrarse en texto legible en todos los Paneles donde aparezcan.
@@ -260,11 +266,11 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 **Verificación automatizada**
 
 - **FR-046**: La cobertura automatizada afectada DEBE actualizarse para reflejar el nuevo contenido de los Paneles por rol, la navegación y la configuración del módulo.
-- **FR-047**: DEBEN agregarse pruebas automatizadas para: panel del administrador sin datos financieros, colores por estado, eliminación de «Deuda pendiente», nombre del sistema e iniciales del usuario, y presencia y orden de las ocho opciones del menú ☰ de finanzas bajo «Navegación», con separador y título «Utilidades & Sesión».
+- **FR-047**: DEBEN agregarse pruebas automatizadas para: panel del administrador sin datos financieros, colores por estado de la constitución v1.2.0 con ausencia de `#0f62fe`, rojo, ámbar y verde heredados, ausencia del par rojo/verde en el gráfico «Ingresos vs Gastos», contraste de texto `4.5:1` y de gráficos `3:1`, eliminación de «Deuda pendiente», nombre del sistema e iniciales del usuario, y presencia y orden de las ocho opciones del menú ☰ de finanzas bajo «Navegación», con separador y título «Utilidades & Sesión».
 
 **Gestión de liquidaciones (HU7)**
 
-- **FR-048**: La tabla de «Gestionar liquidaciones de sueldo» DEBE mostrar períodos legibles, fechas en DD-MM-AAAA, RUT con puntos y guion, montos alineados a la derecha, el estado como etiqueta de color y la factura de compra como referencia legible, sin identificadores internos visibles.
+- **FR-048**: La tabla de «Gestionar liquidaciones de sueldo» DEBE mostrar períodos legibles, fechas en DD-MM-AAAA, RUT con puntos y guion, montos alineados a la derecha, el estado como etiqueta de color (Emitida con fondo `#FFB703` y texto `#023047`; Pagada con texto `#126782` y borde `#219EBC`) y la factura de compra como referencia legible, sin identificadores internos visibles; los errores de formulario DEBEN usar texto `#A84F00` y borde `#FB8500` o tinte claro de `#FB8500`.
 - **FR-049**: El formulario de edición DEBE mostrarse solo después de pulsar «Editar» y DEBE poder cerrarse con «Cancelar» sin guardar.
 - **FR-050**: El formulario DEBE limitarse a período, estado (lista), sueldo base, bonos y descuentos; la fecha de pago DEBE mostrarse solo con estado «Pagada».
 - **FR-051**: El monto líquido DEBE calcularse como sueldo base + bonos − descuentos y NO DEBE editarse a mano; si el desglose está vacío se conserva el monto registrado.
@@ -286,7 +292,7 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 
 - **Perfil de sesión**: rol vigente, nombre opcional de la persona e iniciales derivadas que se muestran en el círculo de usuario. No se crea ni modifica un registro persistente nuevo.
 - **Panel por rol**: conjunto de secciones, indicadores, acciones y textos que se muestran según la matriz de permisos de la spec 003. Es una vista derivada; no agrega almacenamiento.
-- **Indicador financiero**: valor calculado en lectura para caja neta, por cobrar, por pagar y facturas vencidas, con variación mensual, tooltip de fórmula y estado de color.
+- **Indicador financiero**: valor calculado en lectura para caja neta, por cobrar, por pagar y facturas vencidas, con variación mensual, tooltip de fórmula y estado de color de la paleta v1.2.0.
 - **Liquidación de sueldo**: entidad ya existente con período, monto líquido y desglose de sueldo base, descuentos y bonos; esta funcionalidad solo cambia su presentación.
 - **Movimiento financiero y factura**: entidades ya existentes que alimentan la tabla de últimos movimientos, el gráfico de tendencia y las listas filtradas de las tarjetas.
 - **Acceso rápido, guía inicial y menú ☰**: elementos de navegación del Panel, gobernados por el rol y por el estado de descarte de la sesión; la sección «Navegación» del menú de finanzas y su separador son derivados de la misma vista; no modifican el modelo de datos.
@@ -303,14 +309,16 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 - **SC-006**: No aparece ninguna etiqueta «Deuda pendiente» en el Panel de finanzas ni en las pruebas asociadas, y las cuatro fórmulas de los indicadores están disponibles en tooltip con ícono ⓘ.
 - **SC-007**: En la vista del trabajador, el monto líquido es el elemento de mayor tamaño tipográfico y el período aparece en texto legible junto a él, verificado en el 100 % de los trabajadores de demostración.
 - **SC-008**: Los cuatro accesos rápidos de finanzas caben en una sola fila sin cortes de texto en una ventana de 1366x768, con cero etiquetas partidas en dos líneas, y el menú ☰ de finanzas muestra el subtítulo «Navegación», exactamente ocho opciones en ese orden, un separador y el título «Utilidades & Sesión» con «Guía de uso» y «Cerrar sesión», sin modificar los menús de los otros roles ni introducir colores nuevos.
-- **SC-009**: El nombre «Contabilidad y Finanzas» aparece en la barra superior y en el título de la pestaña en el 100 % de las vistas, y las iniciales del círculo de perfil son correctas en el 100 % de los usuarios de demostración probados.
-- **SC-010**: Todas las pruebas automatizadas del módulo pasan, incluidas las coberturas nuevas y actualizadas derivadas de esta especificación.
+- **SC-009**: El nombre «Contabilidad y Finanzas» aparece en la barra superior y en el título de la pestaña en el 100 % de las vistas; el banner superior usa `#023047` con texto e ícono ☰ blancos, la etiqueta del rol usa `#8ECAE6` con texto `#023047`, el círculo de perfil usa `#FFB703` con letra `#023047` y el acento es `#023047` en el 100 % de las vistas, con cero apariciones de `#0f62fe`.
+- **SC-010**: Todas las pruebas automatizadas del módulo pasan, incluidas las coberturas nuevas y actualizadas derivadas de esta especificación, con verificaciones explícitas de la paleta v1.2.0, la ausencia del par rojo/verde y los umbrales de contraste.
 - **SC-011**: El 100 % de las fechas visibles como texto usa DD-MM-AAAA en las vistas afectadas, con cero cadenas AAAA-MM-DD en texto visible y sin cambios en campos de entrada ni almacenamiento.
 - **SC-012**: El 100 % de los montos visibles usa el formato canónico de pesos chilenos del proyecto (por ejemplo «$250.000»), incluidas las listas de Facturas de venta y de compra, con cero valores crudos como «250000 CLP».
 - **SC-013**: Ninguna vista muestra identificadores `doc_`, `ent_` o `set_` ni nombres internos de campos; Movimientos financieros muestra las etiquetas, referencias y orden de venta acordados, y Control de accesos muestra el nombre del tercero.
 - **SC-014**: El 100 % de los RUT visibles usa puntos y guion, incluidos los ingresados sin puntos, y el 100 % de las apariciones del rol administrador dice «Recursos Humanos» con mayúscula inicial, sin cambios en la clave interna.
 - **SC-015**: «Gestionar liquidaciones de sueldo» muestra la leyenda completa de Borrador, Emitida y Pagada en el 100 % de las verificaciones, conservando los nombres de los estados.
 - **SC-016**: A 390 px de ancho, el 100 % de las vistas tiene cero desbordamiento horizontal de la página y las tablas anchas conservan el desplazamiento dentro de su contenedor.
+- **SC-017**: El 100 % de los estados favorables, que requieren acción y desfavorables o críticos usa los colores definidos en la constitución v1.2.0, con cero usos de rojo, ámbar o verde heredados y cero pares rojo/verde en el gráfico «Ingresos vs Gastos».
+- **SC-018**: El 100 % de los estados conserva texto, ícono o flecha `▲`/`▼` además del color; el 100 % del texto normal cumple contraste de `4.5:1` y el 100 % de los textos grandes y elementos gráficos cumple `3:1` (WCAG 2.1 AA), verificado con simulación de protanopía, deuteranopía y tritanopía.
 
 ## Assumptions
 
@@ -323,5 +331,5 @@ Como administrador, quiero que la vista «Gestionar liquidaciones de sueldo» si
 - «Texto secundario» significa jerarquía visual inferior dentro de la sección de indicadores, sin eliminar la información de totales de «Terceros» y «Facturas».
 - El banner «¿Primera vez?» se descarta guardando el estado en `sessionStorage` del navegador: dura solo la sesión, se conserva al recargar la vista dentro de esa sesión y no modifica el modelo de datos.
 - Los nombres concretos de pruebas automatizadas y la dependencia exacta que incorpora la tipografía al proyecto son detalles de implementación; se registrarán en las fases de planificación y tareas, no en esta especificación.
-- Los espaciados, pesos tipográficos y estilo visual se definen aplicando la skill `frontend-design`, respetando la identidad y las reglas de color ya fijadas en la constitución del proyecto.
+- Los espaciados, pesos tipográficos y estilo visual se definen aplicando la skill `frontend-design`, respetando la identidad y las reglas de color fijadas en la constitución v1.2.0 del proyecto.
 - Los datos de demostración existentes se conservan; solo se ajustan si una prueba automatizada necesita un caso límite explícito.

@@ -165,14 +165,14 @@ describe('normalización de configuración', () => {
         statuses: ['Borrador', 'Aprobado'],
         transitions: { Borrador: ['Aprobado'] },
       },
-      theme: { accentColor: '#0f62fe' },
+      theme: { accentColor: '#023047' },
     });
     expect(errors).toEqual([]);
     expect(config.moduleName).toBe('Ventas');
     expect(config.labels.entity).toBe('Cliente');
     expect(config.customFields[0].options).toEqual(['A', 'B']);
     expect(config.statusLifecycle.statuses).toEqual(['Borrador', 'Aprobado']);
-    expect(config.theme.accentColor).toBe('#0f62fe');
+    expect(config.theme.accentColor).toBe('#023047');
   });
 
   it('usa valores por defecto con configuración ausente', () => {

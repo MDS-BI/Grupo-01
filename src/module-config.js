@@ -69,7 +69,7 @@ export const DEFAULT_CONFIG = Object.freeze({
   theme: Object.freeze({ accentColor: null }),
 });
 
-export const DEFAULT_ACCENT_COLOR = '#0f62fe';
+export const DEFAULT_ACCENT_COLOR = '#023047';
 
 export const ROLES = Object.freeze(['administrador', 'finanzas', 'trabajador']);
 
@@ -205,7 +205,7 @@ export const userConfig = {
     transitions: { Borrador: ['Emitida'], Emitida: ['Pagada'], Pagada: [] },
   },
   theme: {
-    accentColor: '#0f62fe',
+    accentColor: '#023047',
   },
   demoAccess: Object.freeze({
     administrador: Object.freeze({

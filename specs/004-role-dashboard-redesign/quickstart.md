@@ -32,7 +32,7 @@ npm run dev
 1. Confirmar que el título de la pestaña y `#brand-name` dicen exactamente `Contabilidad y Finanzas`.
 2. Confirmar que el círculo superior derecho muestra `R`, `F`, `AP` o `BS` según el usuario; nunca `ERP` ni iniciales del módulo.
 3. Confirmar en herramientas de desarrollador que `font-family` resuelve a IBM Plex Sans y que los montos usan cifras de ancho fijo.
-4. Confirmar que la paleta conserva acento `#0f62fe`, fondo gris claro y tarjetas blancas.
+4. Confirmar la paleta v1.2.0: acento `#023047`, gráficos `#219EBC`, información `#8ECAE6`, acción `#FFB703` con texto `#023047`, borde crítico `#FB8500`, texto favorable `#126782` y texto crítico `#A84F00`, con fondo gris claro y tarjetas blancas.
 5. Confirmar que los períodos visibles aparecen como texto legible, p. ej. `noviembre 2026`, y que toda fecha visible como texto usa `DD-MM-AAAA` sin cambiar entradas ni almacenamiento `AAAA-MM-DD`.
 6. Confirmar que los RUT visibles usan puntos y guion, p. ej. `22.222.222-2`, y que los montos visibles usan `formatCurrencyCLP`, p. ej. `$250.000`, nunca `250000 CLP`.
 7. Reducir la ventana a 390 px: la página no debe desbordar horizontalmente; las tablas anchas se desplazan dentro de su contenedor.
@@ -55,13 +55,15 @@ npm run dev
 3. Confirmar una sola sección de indicadores con exactamente cuatro tarjetas en una fila: `Caja neta`, `Por cobrar`, `Por pagar`, `Facturas vencidas`.
 4. Confirmar que `Deuda pendiente` no aparece y que `Terceros` y `Facturas` son texto secundario.
 5. Probar los tooltips ⓘ: la fórmula aparece solo al enfocar/hover; la etiqueta visible no contiene la fórmula.
-6. Verificar colores:
-   - Caja negativa: número y borde rojos.
-   - Facturas vencidas > 0: tarjeta ámbar y alerta ámbar.
-   - Variación de caja: sube verde, baja rojo.
-   - Variación de por pagar/vencidas: sube rojo, baja verde.
+6. Verificar colores v1.2.0:
+   - Caja negativa: número `#A84F00`, borde/tinte `#FB8500`, sin fondo `#FFB703`.
+   - Facturas vencidas > 0: texto `#A84F00`, borde/tinte `#FB8500`, sin fondo `#FFB703`.
+   - Variación de caja: sube `#126782`, baja `#A84F00`.
+   - Variación de por pagar/vencidas: sube `#A84F00`, baja `#126782`.
    - Variación de por cobrar: neutra.
+   - Gráfico: ingresos `#219EBC`, gastos `#A84F00`.
    - Sin mes anterior: `sin dato anterior`, nunca `0 %`.
+   - Contraste: texto ≥ `4.5:1`; gráficos y bordes ≥ `3:1`; flechas y etiquetas preservan el significado sin color.
 7. Confirmar que cada tarjeta abre su lista filtrada: caja → Flujo de caja, cobrar → ventas, pagar → compras, vencidas → Seguimiento.
 8. Confirmar gráfico SVG al lado de las alertas, con título, descripción, leyenda y seis meses.
 9. Confirmar tabla con máximo cinco movimientos y enlace `Ver todos`.

@@ -59,7 +59,7 @@ function renderLogo(container, initials) {
   circle.setAttribute('cx', '20');
   circle.setAttribute('cy', '20');
   circle.setAttribute('r', '20');
-  circle.style.fill = 'var(--accent-color)';
+  circle.setAttribute('style', 'fill: #FFB703;');
 
   const text = document.createElementNS(namespace, 'text');
   text.setAttribute('x', '20');
@@ -67,7 +67,7 @@ function renderLogo(container, initials) {
   text.setAttribute('text-anchor', 'middle');
   text.setAttribute('font-size', '16');
   text.setAttribute('font-weight', '700');
-  text.setAttribute('fill', '#ffffff');
+  text.setAttribute('fill', '#023047');
   text.textContent = initials;
 
   svg.append(circle, text);

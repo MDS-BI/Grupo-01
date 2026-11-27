@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { initApp } from '../../src/app.js';
 import { getConfig } from '../../src/module-config.js';
@@ -97,5 +99,28 @@ describe('T100 - formato CLP del Flujo de caja', () => {
     ).map((row) => row.cells[5].textContent);
     expect(montos).toContain('$1.240.000');
     expect(montos).toContain('-$2.430.000');
+  });
+});
+
+describe('T068 - colores del Flujo de caja', () => {
+  const css = fs
+    .readFileSync(path.resolve(process.cwd(), 'src/styles.css'), 'utf8')
+    .toLowerCase();
+
+  function ruleFor(selector) {
+    const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return Array.from(
+      css.matchAll(new RegExp(`${escaped}\\s*\\{([^}]*)\\}`, 'g')),
+      (match) => match[1]
+    ).join(' ');
+  }
+
+  it('usa texto favorable y crítico de la paleta v1.2.0', () => {
+    expect(
+      ruleFor(".cashflow-table tr[data-tipo='ingreso'] td:last-child")
+    ).toContain('#126782');
+    expect(
+      ruleFor(".cashflow-table tr[data-tipo='egreso'] td:last-child")
+    ).toContain('#a84f00');
   });
 });
