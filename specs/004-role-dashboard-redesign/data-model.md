@@ -72,8 +72,8 @@
 | `variationDirection` | `'up' \| 'down' \| 'flat' \| 'unknown'` | Dirección de la variación. |
 | `variationText` | `string` | `sin dato anterior`, `<flecha> nuevo`, `<flecha> <porcentaje> %` o `sin cambio`. |
 | `variationTone` | `'favorable' \| 'unfavorable' \| 'neutral'` | Ver tabla de semántica por indicador. |
-| `stateTone` | `'negative' \| 'action' \| 'neutral'` | Caja negativa → rojo; vencidas > 0 → ámbar; resto neutro. |
-| `formulaTooltip` | `string` | Fórmula visible solo en tooltip con ⓘ. |
+| `stateTone` | `'negative' \| 'action' \| 'neutral'` | Caja negativa → desfavorable o crítico (naranjo `#A84F00`, borde/tinte `#FB8500`). El valor `action` indica requiere acción (amarillo `#FFB703` con texto `#023047`) en estados generales, pero vencidas > 0 conserva el valor `action` y se muestra como crítico (naranjo `#A84F00`, borde/tinte `#FB8500`) según FR-015/FR-023; resto neutro. |
+| `formulaTooltip` | `string` | Fórmula visible solo en tooltip mediante ícono CSS accesible con letra «i» (no ⓘ), `role="img"`, `aria-label` y `tabindex="0"`. |
 | `targetRoute` | `string` | `cashflow`, `invoice-sale`, `invoice-purchase`, `tracking`. |
 
 #### Reconstrucción de `previousValue`
@@ -100,10 +100,10 @@ Semántica de variación:
 
 | Indicador | Sube | Baja | Sin cambio / sin dato |
 |---|---|---|---|
-| `cash` | favorable (verde) | desfavorable (rojo) | neutro |
+| `cash` | favorable (azul `#126782`) | desfavorable o crítico (naranjo `#A84F00`) | neutro |
 | `receivable` | neutro | neutro | neutro |
-| `payable` | desfavorable (rojo) | favorable (verde) | neutro |
-| `overdue` | desfavorable (rojo) | favorable (verde) | neutro |
+| `payable` | desfavorable o crítico (naranjo `#A84F00`) | favorable (azul `#126782`) | neutro |
+| `overdue` | desfavorable o crítico (naranjo `#A84F00`) | favorable (azul `#126782`) | neutro |
 
 Fórmulas del valor actual:
 
@@ -132,7 +132,7 @@ Fórmulas del valor actual:
 |---|---|---|
 | `id` | `'negative-cash' \| 'overdue-invoices'` | Identificador estable. |
 | `message` | `string` | Texto breve con el estado detectado. |
-| `tone` | `'negative' \| 'action'` | Rojo para caja negativa, ámbar para vencidas. |
+| `tone` | `'negative' \| 'action'` | Desfavorable o crítico (naranjo `#A84F00`, borde/tinte `#FB8500`) para caja negativa. El valor `action` indica requiere acción (amarillo `#FFB703` con texto `#023047`) en términos generales, pero las vencidas conservan el valor `action` y se muestran como alerta crítica (naranjo `#A84F00`, borde/tinte `#FB8500`) según FR-023. |
 | `targetRoute` | `string` | Detalle correspondiente. |
 
 - Se genera solo cuando `cash < 0` o `overdue > 0`.

@@ -28,7 +28,7 @@ El enfoque técnico es un SPA Vite + JavaScript ESM sin frameworks: IBM Plex San
 
 **Performance Goals**: cuatro indicadores visibles sin scroll a 1366x768; serie de seis puntos calculada en memoria; sin animaciones automáticas ni re-rendidos innecesarios.
 
-**Constraints**: no frameworks, no librería de gráficos, no CDN de fuentes; no cambios en specs 001-003 ni en el modelo persistente; respetar `ACCESS_MATRIX` de `src/app.js`; acento `#0f62fe`, color solo semántico, IBM Plex Sans con `tabular-nums`, montos CLP y períodos legibles.
+**Constraints**: no frameworks, no librería de gráficos, no CDN de fuentes; no cambios en specs 001-003 ni en el modelo persistente; respetar `ACCESS_MATRIX` de `src/app.js`; paleta «Refreshing Summer Fun» de la constitución v1.2.0: navy `#023047` para acento, banner y botones primarios con texto blanco, azul `#219EBC` y texto favorable `#126782`, celeste claro `#8ECAE6` para información, amarillo `#FFB703` con texto `#023047` para estados que requieren acción, naranjo `#FB8500` y texto `#A84F00` para estados desfavorables o críticos, sin pares rojo/verde; color solo semántico, IBM Plex Sans con `tabular-nums`, montos CLP y períodos legibles.
 
 **Scale/Scope**: tres roles, dos Paneles, una vista del trabajador, cuatro indicadores financieros, seis puntos de tendencia, cuatro accesos rápidos de finanzas y un banner por rol.
 
